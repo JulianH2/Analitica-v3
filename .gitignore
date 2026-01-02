@@ -1,0 +1,85 @@
+# =========================
+# PYTHON BASICS
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# =========================
+# VIRTUAL ENVIRONMENTS
+# =========================
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# =========================
+# IDEs / EDITORS
+# =========================
+.vscode/
+.idea/
+*.iml
+
+# =========================
+# OPERATING SYSTEM
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# PYTHON BUILD / DIST
+# =========================
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# =========================
+# TESTING / COVERAGE
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# =========================
+# LOGS & TEMP FILES
+# =========================
+*.log
+*.tmp
+
+# =========================
+# ENVIRONMENT VARIABLES
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# JUPYTER
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# CACHE / TOOLING
+# =========================
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# =========================
+# DATABASES (LOCAL)
+# =========================
+*.sqlite3
+*.db
+
+# =========================
+# FASTAPI / UVICORN
+# =========================
+*.pid
+
+
+/flask_session
