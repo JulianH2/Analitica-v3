@@ -12,19 +12,30 @@ class ChartWidget:
         config = self.strategy.get_card_config(data_context)
 
         return dmc.Paper(
-            p="md", radius="md", withBorder=True, shadow="sm", mb="xl",
+            p="sm", 
+            radius="md", 
+            withBorder=True, 
+            shadow="sm", 
+            mb="sm",
+            style={"overflow": "hidden", "minWidth": 0},
             children=[
-                dmc.Group(justify="space-between", mb="sm", children=[
-                    dmc.Text(config.get("title"), fw=700, size="lg", c="dark"),
+                dmc.Group(justify="space-between", mb="xs", children=[
+                    dmc.Text(config.get("title"), fw=700, size="xs", c="dimmed", tt="uppercase"),
+                    
                     dmc.ActionIcon(
-                        DashIconify(icon="tabler:dots"), 
-                        variant="subtle", color="gray"
+                        DashIconify(icon="tabler:maximize"), 
+                        variant="subtle", 
+                        color="gray", 
+                        size="xs",
+                        id={"type": "open-smart-detail", "index": self.widget_id} 
                     )
                 ]),
+                
                 dcc.Graph(
+                    id={"type": "interactive-graph", "index": self.widget_id},
                     figure=fig, 
                     config={'displayModeBar': False, 'responsive': True},
-                    style={"width": "100%"}
+                    style={"width": "100%", "height": "auto"} 
                 )
             ]
         )

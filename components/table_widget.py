@@ -5,8 +5,8 @@ class TableWidget:
     def __init__(self, strategy):
         self.strategy = strategy
 
-    def render(self):
-        table_component = self.strategy.render()
+    def render(self, title="Detalle de Datos", **kwargs):
+        table_component = self.strategy.render(**kwargs)
         
         return dmc.Paper(
             p="md", radius="md", withBorder=True, shadow="sm", mt="xl",
@@ -14,12 +14,13 @@ class TableWidget:
                 dmc.Group(justify="space-between", mb="md", children=[
                     dmc.Group([
                         DashIconify(icon="tabler:list-details", width=24, color="#228be6"),
-                        dmc.Text("Detailed Operational Indicators", fw=700, size="lg")
+                        dmc.Text(title, fw=700, size="lg") 
                     ]),
-                    dmc.Badge("Full View", variant="light", color="gray")
+                    dmc.Badge("Vista Completa", variant="light", color="gray")
                 ]),
                 dmc.ScrollArea(
-                    h=400,
+                    h="auto",
+                    mah=500,
                     offsetScrollbars=True,
                     children=table_component
                 )

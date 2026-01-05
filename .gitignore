@@ -83,3 +83,6 @@ htmlcov/
 
 
 /flask_session
+
+pdfs/
+salida_md/

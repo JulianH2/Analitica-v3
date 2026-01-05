@@ -86,23 +86,26 @@ def get_app_shell():
 app.layout = get_app_shell
 
 @app.callback(
-    Output("navbar", "width"),
-    Output("navbar", "children"),
+    Output("app-shell", "navbar"),    
+    Output("navbar", "children"),     
     Input("btn-sidebar-toggle", "n_clicks"),
-    State("navbar", "width"),
+    State("app-shell", "navbar"),     
     prevent_initial_call=True
 )
-def toggle_sidebar(n, current_width):
-    width_val = current_width if isinstance(current_width, int) else 260
-    is_collapsed = width_val == 80
+def toggle_sidebar(n, navbar_config):
+    current_width = navbar_config.get("width", 260)
     
-    new_width = 260 if is_collapsed else 80
-    new_collapsed_state = not is_collapsed
+    is_currently_collapsed = current_width == 80
     
-    return new_width, render_sidebar(collapsed=new_collapsed_state)
+    new_width = 260 if is_currently_collapsed else 80
+    new_collapsed_state = not is_currently_collapsed 
+    
+    navbar_config["width"] = new_width
+    
+    return navbar_config, render_sidebar(collapsed=new_collapsed_state)
 
 @app.callback(
-    Output("app-shell", "navbar"),
+    Output("app-shell", "navbar", allow_duplicate=True), 
     Input("btn-mobile-menu", "opened"),
     State("app-shell", "navbar"),
     prevent_initial_call=True

@@ -6,7 +6,7 @@ data_manager = DataManager()
 
 class MainTrendChartStrategy(KPIStrategy):
     def get_card_config(self, data_context):
-        return {"title": "Financial Trend", "icon": "tabler:chart-bar"}
+        return {"title": "Tendencia Financiera Anual", "icon": "tabler:chart-area-line"}
 
     def render_detail(self, data_context):
         return None 
@@ -20,7 +20,7 @@ class MainTrendChartStrategy(KPIStrategy):
         if "ingresos_anterior" in df.columns:
             fig.add_trace(go.Bar(
                 x=meses, y=df["ingresos_anterior"], name="2024", 
-                marker_color="#e9ecef", hoverinfo="y"
+                marker_color="#f1f3f5", hoverinfo="y"
             ))
         
         y_actual = df.get("ingresos_actual", [])
@@ -31,24 +31,24 @@ class MainTrendChartStrategy(KPIStrategy):
         
         y_meta = df.get("meta", [])
         fig.add_trace(go.Scatter(
-            x=meses, y=y_meta, name="Target", 
+            x=meses, y=y_meta, name="Meta", 
             mode='lines', line=dict(color="#fab005", width=3, dash='dot')
         ))
 
         fig.update_layout(
-            title=dict(text="<b>Revenue Evolution vs Goal</b>", font=dict(size=16, family="Inter")),
+            title=dict(text="<b>Evolución de Ingresos vs Meta</b>", font=dict(size=14, family="Inter")),
             template="plotly_white",
-            margin=dict(t=50, b=30, l=40, r=40),
-            height=320,
+            height=320,  
+            margin=dict(t=40, b=30, l=0, r=0), 
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            font=dict(family="Inter, sans-serif", color="#495057"),
-            yaxis=dict(showgrid=True, gridcolor="#f1f3f5", zeroline=False),
+            font=dict(family="Inter, sans-serif", color="#495057", size=11),
+            yaxis=dict(showgrid=True, gridcolor="#f8f9fa", zeroline=False),
             xaxis=dict(showgrid=False)
         )
         return fig
-
+    
 class OpsFleetStatusStrategy(KPIStrategy):
     def get_card_config(self, data_context):
         return {"title": "Fleet Status", "icon": "tabler:chart-pie"}
@@ -154,5 +154,36 @@ class OpsRoutesChartStrategy(KPIStrategy):
             plot_bgcolor='rgba(0,0,0,0)',
             xaxis=dict(showgrid=True, gridcolor="#f1f3f5"),
             font=dict(family="Inter, sans-serif", color="#495057")
+        )
+        return fig
+    
+class OpsMapStrategy(KPIStrategy):
+    def get_card_config(self, data_context):
+        return {"title": "Monitoreo Geoespacial", "icon": "tabler:map-pin"}
+
+    def render_detail(self, data_context):
+        return dmc.Text("Detalle de coordenadas y paradas en modal...")
+
+    def get_figure(self, data_context):
+        df_map = pd.DataFrame({
+            "Unidad": ["Unidad 01", "Unidad 05", "Unidad 12", "Unidad 88"],
+            "lat": [25.6866, 19.4326, 20.6597, 21.1619], 
+            "lon": [-100.3161, -99.1332, -103.3496, -101.6866],
+            "Estado": ["En Ruta", "Cargando", "Mantenimiento", "En Ruta"],
+            "Color": ["blue", "green", "red", "blue"]
+        })
+
+        fig = px.scatter_mapbox(
+            df_map, lat="lat", lon="lon", hover_name="Unidad",
+            color="Estado", zoom=4, height=350,
+            color_discrete_map={"En Ruta": "#228be6", "Cargando": "#40c057", "Mantenimiento": "#fa5252"}
+        )
+        
+        fig.update_layout(
+            mapbox_style="carto-positron", 
+            margin=dict(r=0, t=0, l=0, b=0),
+            paper_bgcolor='rgba(0,0,0,0)',
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=0.02, xanchor="left", x=0.02)
         )
         return fig

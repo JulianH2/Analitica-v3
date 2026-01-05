@@ -1,78 +1,178 @@
 import dash
-from dash import html, callback, Input, Output, ALL, no_update
+from dash import html, dcc, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 
 from services.data_manager import DataManager
-from components.smart_widget import SmartWidget
 from components.visual_widget import ChartWidget
-from components.table_widget import TableWidget 
+from strategies.operational import (
+    GaugeKPIStrategy, 
+    MonthlyComparisonStrategy, 
+    OpsPieStrategy, 
+    BalanceUnitStrategy
+)
 
-from strategies.operational import TripsStrategy, FleetEfficiencyStrategy, UnitCostStrategy, UnitUtilizationStrategy, ClientImpactStrategy
-from strategies.tabular import OpsUnitTableStrategy
-from strategies.charts import OpsFleetStatusStrategy, OpsUnitPerformanceStrategy, OpsRoutesChartStrategy
-
-dash.register_page(__name__, path='/ops-dashboard', title='Operations Control')
+dash.register_page(__name__, path='/ops-dashboard', title='Control Operativo')
 
 data_manager = DataManager()
 
-CHART_FLEET = ChartWidget("w_ops_fleet_pie", OpsFleetStatusStrategy())
-CHART_UNITS = ChartWidget("w_ops_unit_perf", OpsUnitPerformanceStrategy())
-CHART_ROUTES = ChartWidget("w_ops_routes_bar", OpsRoutesChartStrategy())
+gauge_ingreso = ChartWidget("g_ingreso", GaugeKPIStrategy("ingresos", "Ingreso Total", "#228be6"))
+gauge_viajes = ChartWidget("g_viajes", GaugeKPIStrategy("viajes", "Viajes Totales", "#12b886"))
+gauge_kms = ChartWidget("g_kms", GaugeKPIStrategy("kms", "Kms Recorridos", "#fab005"))
 
-OPS_TABLE = TableWidget(OpsUnitTableStrategy())
+bar_ingresos = ChartWidget("b_ingresos", MonthlyComparisonStrategy("Ingresos", "#228be6"))
+bar_viajes = ChartWidget("b_viajes", MonthlyComparisonStrategy("Viajes", "#fd7e14"))
 
-WIDGET_CONFIG = [
-    SmartWidget("w_ops_trips", TripsStrategy()),
-    SmartWidget("w_ops_units", UnitUtilizationStrategy()),
-    SmartWidget("w_ops_fuel", FleetEfficiencyStrategy()),
-    SmartWidget("w_ops_cost", UnitCostStrategy()),
-]
+pie_ops = ChartWidget("p_ops", OpsPieStrategy())
+bar_balance = ChartWidget("b_balance", BalanceUnitStrategy())
 
-WIDGET_REGISTRY = {w.widget_id: w for w in WIDGET_CONFIG}
+WIDGET_REGISTRY = {
+    "g_ingreso": gauge_ingreso,
+    "g_viajes": gauge_viajes,
+    "g_kms": gauge_kms,
+    "b_ingresos": bar_ingresos,
+    "b_viajes": bar_viajes,
+    "p_ops": pie_ops,
+    "b_balance": bar_balance
+}
 
 def layout():
     data_context = data_manager.get_data()
 
-    return dmc.Container(fluid=True, children=[
-        dmc.Modal(
-            id="ops-smart-modal",
-            size="xl", centered=True, zIndex=10000,
-            children=[html.Div(id="ops-modal-content")]
-        ),
-        dmc.Group(justify="space-between", mb="lg", children=[
-            dmc.Stack(gap=0, children=[
-                dmc.Title("Operations Center", order=2, c="orange"),
-                dmc.Text("Real-time Fleet & Route Monitoring", size="sm", c="dimmed")
-            ]),
-            dmc.Group([
-                dmc.Badge("Operational", color="green", variant="dot"),
-                dmc.ActionIcon(DashIconify(icon="tabler:refresh"), variant="default", size="lg", id="btn-ops-refresh")
-            ])
-        ]),
-        dmc.SimpleGrid(
-            cols={"base": 1, "md": 2, "lg": 4},
-            spacing="lg",
-            mb="xl",
-            children=[w.render(data_context) for w in WIDGET_CONFIG]
-        ),
-        dmc.Grid(gutter="lg", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "md": 4}, children=[
-                CHART_FLEET.render(data_context)
-            ]),
-            dmc.GridCol(span={"base": 12, "md": 8}, children=[
-                dmc.Tabs(value="units", children=[
-                    dmc.TabsList([
-                        dmc.TabsTab("Unit Efficiency", value="units", leftSection=DashIconify(icon="tabler:bus")),
-                        dmc.TabsTab("Top Routes", value="routes", leftSection=DashIconify(icon="tabler:route")),
-                    ]),
-                    dmc.TabsPanel(value="units", pt="xs", children=CHART_UNITS.render(data_context)),
-                    dmc.TabsPanel(value="routes", pt="xs", children=CHART_ROUTES.render(data_context)),
+    def mini_kpi(title, value, subtext, color="blue"):
+        return dmc.Paper(
+            p="xs", withBorder=True, shadow="xs", radius="md",
+            children=[
+                dmc.Text(title, size="xs", c="dimmed", fw=700, tt="uppercase"),
+                dmc.Group(justify="space-between", mt=4, children=[
+                    dmc.Text(value, fw=800, size="lg"),
+                    dmc.Badge(subtext, color=color, variant="light", size="xs")
                 ])
+            ]
+        )
+
+    return dmc.Container(fluid=True, children=[
+        
+        dmc.Modal(id="ops-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="ops-modal-content")]),
+
+        dmc.Group(justify="space-between", mb="sm", children=[
+            dmc.Group([
+                DashIconify(icon="tabler:layout-dashboard", width=28, color="#228be6"),
+                dmc.Title("Tablero Operativo", order=3, c="dark")
+            ]),
+            dmc.Group(gap="xs", children=[
+                dmc.Select(value="2025", data=["2025", "2024"], size="xs", w=100, allowDeselect=False),
+                dmc.Select(value="Septiembre", data=["Agosto", "Septiembre"], size="xs", w=120, allowDeselect=False),
+                dmc.Button(leftSection=DashIconify(icon="tabler:filter"), variant="default", size="xs")
             ])
         ]),
-        dmc.Text("Unit Breakdown", fw=700, size="lg", mb="sm"),
-        OPS_TABLE.render()
+
+        dmc.Grid(gutter="md", children=[
+            
+            dmc.GridCol(span={"base": 12, "xl": 9}, style={"minWidth": 0}, children=[
+                
+                dmc.SimpleGrid(cols={"base": 1, "sm": 3}, spacing="sm", mb="sm", children=[
+                    gauge_ingreso.render(data_context),
+                    gauge_viajes.render(data_context),
+                    gauge_kms.render(data_context),
+                ]),
+
+                dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="sm", mb="sm", children=[
+                    bar_ingresos.render(data_context),
+                    bar_viajes.render(data_context),
+                ]),
+
+                dmc.Text("Indicadores de Eficiencia", size="sm", fw=700, c="dimmed", mb=5),
+                dmc.SimpleGrid(cols={"base": 2, "md": 4}, spacing="sm", mb="sm", children=[
+                    mini_kpi("Ingreso x Viaje", "$29,191", "+11%"),
+                    mini_kpi("Ingreso x Unidad", "$254,889", "+25%"),
+                    mini_kpi("Unidades Activas", "82", "-2 uds", "red"),
+                    mini_kpi("Clientes Activos", "15", "+3 new", "green"),
+                ]),
+
+                dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="sm", children=[
+                    pie_ops.render(data_context),
+                    bar_balance.render(data_context),
+                ])
+            ]),
+
+            dmc.GridCol(span={"base": 12, "xl": 3}, style={"minWidth": 0}, children=[
+                
+                dmc.Paper(withBorder=True, shadow="sm", p="sm", mb="sm", radius="md", bg="gray.0", children=[
+                    dmc.Text("Estado de Flota", size="xs", fw=700, c="dimmed", tt="uppercase", mb="xs"),
+                    dmc.Center(mb="md", children=[
+                        dmc.Stack(gap=0, align="center", children=[
+                            DashIconify(icon="tabler:truck-loading", width=48, color="#40c057"),
+                            dmc.Text("92% Cargado", fw=800, size="xl", c="green")
+                        ])
+                    ]),
+                    dmc.ProgressRoot(size="xl", children=[
+                        dmc.ProgressSection(value=92, color="green", children=[dmc.ProgressLabel("92%")]),
+                        dmc.ProgressSection(value=8, color="gray", children=[dmc.ProgressLabel("8%")])
+                    ])
+                ]),
+
+                dmc.Paper(withBorder=True, shadow="sm", p="xs", mb="sm", radius="md", children=[
+                    dmc.Tabs(value="vacio", color="red", variant="pills", children=[
+                        dmc.TabsList(children=[
+                            dmc.TabsTab("Vacío", value="vacio", style={"fontSize": "0.8rem"}),
+                            dmc.TabsTab("Cargado", value="cargado", style={"fontSize": "0.8rem"}),
+                        ], grow=True, mb="xs"),
+                        
+                        dmc.TabsPanel(value="vacio", children=[
+                            dmc.Table(
+                                data={
+                                    "head": ["Ruta", "Viajes"],
+                                    "body": [
+                                        ["3T-LYCRA", "12"],
+                                        ["APAXCO", "8"],
+                                        ["CANOITAS", "5"],
+                                        ["LA MORITA", "3"],
+                                        ["LA SILLA", "2"],
+                                        ["SALTILLO", "1"],
+                                    ]
+                                },
+                                striped=True, highlightOnHover=True, withTableBorder=False, fz="xs"
+                            )
+                        ]),
+                         dmc.TabsPanel(value="cargado", children=[
+                            dmc.Text("Lista de rutas cargadas...", size="xs", c="dimmed", ta="center", py="xl")
+                        ]),
+                    ])
+                ]),
+
+                dmc.Paper(withBorder=True, shadow="sm", p="xs", radius="md", children=[
+                    dmc.Text("Top Ingresos", size="xs", fw=700, c="dimmed", mb="xs"),
+                    dmc.Tabs(value="cliente", color="blue", variant="default", children=[
+                        dmc.TabsList(children=[
+                            dmc.TabsTab("Cliente", value="cliente", px="xs"),
+                            dmc.TabsTab("Unidad", value="unidad", px="xs"),
+                        ], grow=True, mb="xs"),
+
+                        dmc.TabsPanel(value="cliente", children=[
+                            dmc.ScrollArea(h=300, children=[
+                                dmc.Table(
+                                    data={
+                                        "head": ["Cliente", "Total"],
+                                        "body": [
+                                            ["LITECRETE", "$200k"],
+                                            ["CONCRETOS", "$662k"],
+                                            ["K&P SOL.", "$34k"],
+                                            ["VITRO", "$3.9M"],
+                                            ["OWENS", "$5.4M"],
+                                            ["HELLMANN", "$340k"],
+                                            ["TERNIUM", "$1.2M"],
+                                        ]
+                                    },
+                                    striped=True, highlightOnHover=True, fz="xs"
+                                )
+                            ])
+                        ])
+                    ])
+                ])
+
+            ])
+        ])
     ])
 
 @callback(
@@ -94,14 +194,9 @@ def handle_ops_widget_click(n_clicks):
     
     if widget:
         data_context = data_manager.get_data()
-        content = widget.get_detail(data_context)
-        
+        content = widget.strategy.render_detail(data_context)
         config = widget.strategy.get_card_config(data_context)
-        modal_title = dmc.Group([
-            DashIconify(icon=config.get("icon"), color=config.get("color"), width=24),
-            dmc.Text(config.get("title"), fw=700, size="lg")
-        ])
-        
-        return True, modal_title, content
+        title = dmc.Text(f"Detalle: {config.get('title')}", fw=700)
+        return True, title, content
     
     return no_update, no_update, no_update
