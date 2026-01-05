@@ -27,7 +27,7 @@ def layout():
         dmc.Modal(id="tires-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="tires-modal-content")]),
         
         dmc.Group(justify="space-between", mb="md", children=[
-            dmc.Title("Gestión de Llantas", order=3, c="dark"),
+            dmc.Title("Compras", order=3, c="dark"),
             dmc.Button("Semáforo Presiones", variant="light", size="xs")
         ]),
 

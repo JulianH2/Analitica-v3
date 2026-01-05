@@ -27,7 +27,7 @@ def layout():
         dmc.Modal(id="avail-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="avail-modal-content")]),
         
         dmc.Group(justify="space-between", mb="md", children=[
-            dmc.Title("Disponibilidad de Flota", order=3, c="dark"),
+            dmc.Title("Análisis de Disponibilidad", order=3, c="dark"),
             dmc.Button("Reporte Fallas", variant="default", size="xs")
         ]),
 

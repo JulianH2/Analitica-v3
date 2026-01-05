@@ -31,7 +31,7 @@ def layout():
         dmc.Modal(id="taller-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="taller-modal-content")]),
         
         dmc.Group(justify="space-between", mb="md", children=[
-            dmc.Title("Gestión de Mantenimiento", order=3, c="dark"),
+            dmc.Title("Mantenimiento", order=3, c="dark"),
             dmc.Button("Nueva Orden", leftSection=DashIconify(icon="tabler:plus"), variant="filled", size="xs")
         ]),
 

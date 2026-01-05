@@ -34,7 +34,7 @@ def layout():
         dmc.Modal(id="col-smart-modal", size="lg", centered=True, children=[html.Div(id="col-modal-content")]),
         
         dmc.Group(justify="space-between", mb="md", children=[
-            dmc.Title("Gestión de Cobranza", order=3, c="dark"),
+            dmc.Title("Facturacion y Cobranza", order=3, c="dark"),
             dmc.Group([
                 dmc.Button("Antigüedad", variant="default", size="xs"),
                 dmc.Button("Estados de Cuenta", leftSection=DashIconify(icon="tabler:mail"), variant="filled", color="blue", size="xs")

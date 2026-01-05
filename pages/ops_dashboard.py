@@ -58,7 +58,7 @@ def layout():
         dmc.Group(justify="space-between", mb="sm", children=[
             dmc.Group([
                 DashIconify(icon="tabler:layout-dashboard", width=28, color="#228be6"),
-                dmc.Title("Tablero Operativo", order=3, c="dark")
+                dmc.Title("Dashboard Operaciones", order=3, c="dark")
             ]),
             dmc.Group(gap="xs", children=[
                 dmc.Select(value="2025", data=["2025", "2024"], size="xs", w=100, allowDeselect=False),

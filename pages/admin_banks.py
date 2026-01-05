@@ -11,7 +11,7 @@ from strategies.admin import (
     BankBreakdownStrategy, AdminTableStrategy
 )
 
-dash.register_page(__name__, path='/admin-banks', title='Tesorería')
+dash.register_page(__name__, path='/admin-banks', title='Bancos')
 data_manager = DataManager()
 table_strat = AdminTableStrategy()
 
@@ -33,7 +33,7 @@ def layout():
         dmc.Modal(id="bank-smart-modal", size="lg", centered=True, children=[html.Div(id="bank-modal-content")]),
         
         dmc.Group(justify="space-between", mb="md", children=[
-            dmc.Title("Tesorería y Flujo de Efectivo", order=3, c="dark"),
+            dmc.Title("Bancos", order=3, c="dark"),
             dmc.Button("Conciliación", leftSection=DashIconify(icon="tabler:checks"), variant="light", size="xs")
         ]),
 

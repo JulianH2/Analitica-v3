@@ -29,7 +29,7 @@ def layout():
         dmc.Modal(id="inv-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="inv-modal-content")]),
         
         dmc.Group(justify="space-between", mb="md", children=[
-            dmc.Title("Almacén y Refacciones", order=3, c="dark"),
+            dmc.Title("Almacén", order=3, c="dark"),
             dmc.Button("Surtir Stock", leftSection=DashIconify(icon="tabler:shopping-cart"), variant="filled", color="orange", size="xs")
         ]),
 

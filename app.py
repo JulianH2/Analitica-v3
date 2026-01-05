@@ -63,7 +63,7 @@ def get_app_shell():
                             dmc.Group([
                                 dmc.Burger(id="btn-mobile-menu", hiddenFrom="sm", size="sm"),
                                 DashIconify(icon="tabler:hexagon-letter-a", width=35, color="#4c6ef5"),
-                                dmc.Text("Analytics Pro", size="xl", fw=700, style={"letterSpacing": "-0.5px"})
+                                dmc.Text("Analitica ", size="xl", fw=700, style={"letterSpacing": "-0.5px"})
                             ]),
                             dmc.Group([
                                 dmc.ActionIcon(DashIconify(icon="tabler:bell"), variant="subtle", color="gray"),

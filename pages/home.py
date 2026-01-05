@@ -14,7 +14,7 @@ from strategies.financial import (
 from strategies.operational import FleetEfficiencyStrategy
 from strategies.charts import MainTrendChartStrategy
 
-dash.register_page(__name__, path='/', title='Resumen Ejecutivo')
+dash.register_page(__name__, path='/', title='Dashboard Principal')
 
 data_manager = DataManager()
 
