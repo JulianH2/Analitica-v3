@@ -38,11 +38,11 @@ class TallerRichKPIStrategy(KPIStrategy):
 
         return dmc.Stack(gap=4, mt="sm", children=[
             dmc.Group(justify="space-between", children=[
-                dmc.Text("Meta:", size="xs", style={"color": "var(--mantine-color-dimmed)"}),
+                dmc.Text("Meta:", size="xs", c="dimmed"), # type: ignore
                 dmc.Text(f"{cfg['meta']}", size="xs", fw="normal")
             ]),
             dmc.Group(justify="space-between", children=[
-                dmc.Text("vs 2024:", size="xs", style={"color": "var(--mantine-color-dimmed)"}),
+                dmc.Text("vs 2024:", size="xs", c="dimmed"), # type: ignore
                 dmc.Text(pct(cfg['vs_2024']), size="xs", c="teal")
             ])
         ])
@@ -100,7 +100,7 @@ class RealInventoryTableStrategy:
             
             rows.append(dmc.TableTr([
                 dmc.TableTd(area, style={"fontSize": "11px"}),
-                dmc.TableTd(codigo, style={"color": "var(--mantine-color-dimmed)", "fontSize": "11px"}),
+                dmc.TableTd(codigo, color="dimmed", style={"fontSize": "11px"}),
                 dmc.TableTd(desc, fw="normal", style={"fontSize": "11px"}),
                 dmc.TableTd(cant, fw="bold", c=cant_color, style={"fontSize": "11px"}),
                 dmc.TableTd(precio, style={"fontSize": "11px"})

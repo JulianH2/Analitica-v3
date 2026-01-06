@@ -36,7 +36,7 @@ def layout():
             style={"backgroundColor": f"var(--mantine-color-{color}-0)"}, 
             children=[
                 # 'dimmed' ya no es un valor directo para 'c' en el tipado estricto, mejor usar style.
-                dmc.Text(title, size="xs", style={"color": "var(--mantine-color-dimmed)"}, fw="bold", tt="uppercase"),
+                dmc.Text(title, size="xs", c="dimmed", fw="bold", tt="uppercase"), # type: ignore
                 dmc.Text(value, size="sm", fw="bold"),
                 dmc.Badge(var, size="xs", color="green", variant="light")
             ]
@@ -54,10 +54,10 @@ def layout():
             dmc.GridCol(span= 12, spanMd= 4, children=[
                 dmc.SimpleGrid(cols=2, spacing="sm", children=[
                     dmc.Paper(p="md", withBorder=True, shadow="sm", children=[
-                        dmc.Text("Utilidad Viaje", size="xs", style={"color": "var(--mantine-color-dimmed)"}), dmc.Text("18.19%", fw="bold", size="xl", c="blue")
+                        dmc.Text("Utilidad Viaje", size="xs", c="dimmed"), dmc.Text("18.19%", fw="bold", size="xl", c="blue") # type: ignore
                     ]),
                     dmc.Paper(p="md", withBorder=True, shadow="sm", children=[
-                        dmc.Text("Costo Viaje Total", size="xs", style={"color": "var(--mantine-color-dimmed)"}), dmc.Text("$17.1M", fw="bold", size="xl", c="red")
+                        dmc.Text("Costo Viaje Total", size="xs", c="dimmed"), dmc.Text("$17.1M", fw="bold", size="xl", c="red") # type: ignore
                     ])
                 ])
             ]),

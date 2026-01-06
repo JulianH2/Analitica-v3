@@ -25,7 +25,7 @@ class SmartWidget:
             p="lg", radius="md", withBorder=True, shadow="sm",
             children=[
                 dmc.Group(justify="space-between", mb="xs", children=[
-                    dmc.Text(config.get("title"), size="xs", style={"color": "var(--mantine-color-dimmed)"}, fw="bold", tt="uppercase"),
+                    dmc.Text(config.get("title"), size="xs", c="dimmed", fw="bold", tt="uppercase"),  # type: ignore
                     dmc.ThemeIcon(
                         DashIconify(icon=config.get("icon"), width=20), 
                         variant="light", 
@@ -43,7 +43,7 @@ class SmartWidget:
                         leftSection=DashIconify(icon=icon)
                     )
                 ]),
-                dmc.Text(config.get("meta_text"), size="xs", style={"color": "var(--mantine-color-dimmed)"}, mt=5),
+                dmc.Text(config.get("meta_text"), size="xs", c="dimmed", mt=5), # type: ignore
                 dmc.Divider(my="sm", variant="dashed"),
                 dmc.Button(
                     "View Details",

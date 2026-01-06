@@ -81,15 +81,15 @@ class CostStrategy(KPIStrategy):
             dmc.Text("Estructura de Costos de Mantenimiento", fw="bold", size="lg"),
             dmc.SimpleGrid(cols=3, children=[
                 dmc.Paper(p="sm", withBorder=True, children=[
-                    dmc.Text("Taller Interno", size="xs", style={"color": "var(--mantine-color-dimmed)"}),
+                    dmc.Text("Taller Interno", size="xs", c="dimmed"), # type: ignore
                     dmc.Text(f"${interno:,.0f}", fw="bold", c="blue")
                 ]),
                 dmc.Paper(p="sm", withBorder=True, children=[
-                    dmc.Text("Taller Externo", size="xs", style={"color": "var(--mantine-color-dimmed)"}),
+                    dmc.Text("Taller Externo", size="xs", c="dimmed"), # type: ignore
                     dmc.Text(f"${externo:,.0f}", fw="bold", c="orange")
                 ]),
                 dmc.Paper(p="sm", withBorder=True, children=[
-                    dmc.Text("Llantas", size="xs", style={"color": "var(--mantine-color-dimmed)"}),
+                    dmc.Text("Llantas", size="xs", c="dimmed"), # type: ignore
                     dmc.Text(f"${llantas:,.0f}", fw="bold")
                 ]),
             ]),
@@ -129,8 +129,8 @@ class MarginStrategy(KPIStrategy):
         return dmc.Stack([
             dmc.Alert("Utilidad neta refleja ingreso menos costos directos e indirectos.", title="Margen Operativo", color="green", variant="light"),
             dmc.SimpleGrid(cols=2, children=[
-                dmc.Paper(p="md", withBorder=True, children=[dmc.Text("Utilidad Operativa", style={"color": "var(--mantine-color-dimmed)"}), dmc.Text("$11.2M", fw="bold", size="xl")]),
-                dmc.Paper(p="md", withBorder=True, children=[dmc.Text("EBITDA", style={"color": "var(--mantine-color-dimmed)"}), dmc.Text("18%", fw="bold", size="xl")]),
+                dmc.Paper(p="md", withBorder=True, children=[dmc.Text("Utilidad Operativa", c="dimmed"), dmc.Text("$11.2M", fw="bold", size="xl")]), # type: ignore
+                dmc.Paper(p="md", withBorder=True, children=[dmc.Text("EBITDA", c="dimmed"), dmc.Text("18%", fw="bold", size="xl")]), # type: ignore
             ])
         ])
 
@@ -160,15 +160,15 @@ class BalanceStrategy(KPIStrategy):
             dmc.Text("Flujo de Caja del Periodo", fw="bold", size="lg"),
             dmc.SimpleGrid(cols=3, children=[
                 dmc.Paper(p="md", withBorder=True, style={"backgroundColor": "var(--mantine-color-green-0)"}, children=[
-                    dmc.Text("Entradas", style={"color": "var(--mantine-color-dimmed)"}, size="xs"),
+                    dmc.Text("Entradas", c="dimmed", size="xs"), # type: ignore
                     dmc.Text(f"${ingresos:,.0f}", fw="bold", c="green")
                 ]),
                 dmc.Paper(p="md", withBorder=True, style={"backgroundColor": "var(--mantine-color-red-0)"}, children=[
-                    dmc.Text("Salidas", style={"color": "var(--mantine-color-dimmed)"}, size="xs"),
+                    dmc.Text("Salidas", c="dimmed", size="xs"), # type: ignore
                     dmc.Text(f"${egresos:,.0f}", fw="bold", c="red")
                 ]),
                 dmc.Paper(p="md", withBorder=True, children=[
-                    dmc.Text("Flujo Neto", style={"color": "var(--mantine-color-dimmed)"}, size="xs"),
+                    dmc.Text("Flujo Neto", c="dimmed", size="xs"), # type: ignore
                     dmc.Text(f"${flujo_neto:,.0f}", fw="bold", c="blue")
                 ])
             ]),

@@ -20,7 +20,7 @@ class ChartWidget:
             style={"overflow": "hidden", "minWidth": 0},
             children=[
                 dmc.Group(justify="space-between", mb="xs", children=[
-                    dmc.Text(config.get("title"), fw="bold", size="xs", style={"color": "var(--mantine-color-dimmed)"}, tt="uppercase"),
+                    dmc.Text(config.get("title"), fw="bold", size="xs", c="dimmed", tt="uppercase"), # type: ignore
                     
                     dmc.ActionIcon(
                         DashIconify(icon="tabler:maximize"), 

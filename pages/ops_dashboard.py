@@ -47,7 +47,7 @@ def layout():
         return dmc.Paper(
             p="xs", withBorder=True, shadow="xs", radius="md",
             children=[
-                dmc.Text(title, size="xs", style={"color": "var(--mantine-color-dimmed)"}, fw="bold", tt="uppercase"),
+                dmc.Text(title, size="xs", c="dimmed", fw="bold", tt="uppercase"), # type: ignore
                 dmc.Group(justify="space-between", mt=4, children=[
                     dmc.Text(value, fw="bolder", size="lg"),
                     dmc.Badge(subtext, color="blue", variant="light", size="xs")
@@ -73,7 +73,7 @@ def layout():
 
         dmc.Grid(gutter="md", children=[
             
-            dmc.GridCol(span= 12, spanXl= 9, style={"minWidth": 0}, children=[
+            dmc.GridCol(span= "content", miw=0, children=[
                 
                 dmc.SimpleGrid(cols= 1, spacing="sm", mb="sm", children=[
                     gauge_ingreso.render(data_context),
@@ -86,7 +86,7 @@ def layout():
                     bar_viajes.render(data_context),
                 ]),
 
-                dmc.Text("Indicadores de Eficiencia", size="sm", fw="bold", style={"color": "var(--mantine-color-dimmed)"}, mb=5),
+                dmc.Text("Indicadores de Eficiencia", size="sm", fw="bold", c="dimmed", mb=5), # type: ignore
                 dmc.SimpleGrid(cols= 2, spacing="sm", mb="sm", children=[
                     mini_kpi("Ingreso x Viaje", "$29,191", "+11%"),
                     mini_kpi("Ingreso x Unidad", "$254,889", "+25%"),
@@ -100,10 +100,10 @@ def layout():
                 ])
             ]),
 
-            dmc.GridCol(span=12, spanXl=3, style={"minWidth": 0}, children=[
+            dmc.GridCol(span=12, miw=0, children=[
                 
                 dmc.Paper(withBorder=True, shadow="sm", p="sm", mb="sm", radius="md", style={"backgroundColor": "var(--mantine-color-gray-0)"}, children=[
-                    dmc.Text("Estado de Flota", size="xs", fw="bold", style={"color": "var(--mantine-color-dimmed)"}, tt="uppercase", mb="xs"),
+                    dmc.Text("Estado de Flota", size="xs", fw="bold", c="dimmed", tt="uppercase", mb="xs"), # type: ignore
                     dmc.Center(mb="md", children=[
                         dmc.Stack(gap=0, align="center", children=[
                             DashIconify(icon="tabler:truck-loading", width=48, color="#40c057"),
@@ -140,13 +140,13 @@ def layout():
                             )
                         ]),
                          dmc.TabsPanel(value="cargado", children=[
-                            dmc.Text("Lista de rutas cargadas...", size="xs", style={"color": "var(--mantine-color-dimmed)"}, ta="center", py="xl")
+                            dmc.Text("Lista de rutas cargadas...", size="xs", c="dimmed", ta="center", py="xl") # type: ignore
                         ]),
                     ])
                 ]),
 
                 dmc.Paper(withBorder=True, shadow="sm", p="xs", radius="md", children=[
-                    dmc.Text("Top Ingresos", size="xs", fw="bold", style={"color": "var(--mantine-color-dimmed)"}, mb="xs"),
+                    dmc.Text("Top Ingresos", size="xs", fw="bold", c="dimmed", mb="xs"), # type: ignore
                     dmc.Tabs(value="cliente", color="blue", variant="default", children=[
                         dmc.TabsList(children=[
                             dmc.TabsTab("Cliente", value="cliente", px="xs"),

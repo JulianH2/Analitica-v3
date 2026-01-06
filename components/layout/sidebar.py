@@ -17,7 +17,7 @@ def render_sidebar(collapsed=False):
             label=label if not collapsed else None,
             leftSection=get_icon(icon),
             href=href,
-            active=None,
+            active="exact",
             variant="subtle",
             color="indigo",
             style={"borderRadius": "8px", "marginBottom": "4px"}
@@ -87,7 +87,7 @@ def render_sidebar(collapsed=False):
                         dmc.Avatar(initials, radius="xl", color="indigo"),
                         html.Div([
                             dmc.Text(full_name, size="sm", fw="normal"),
-                            dmc.Text(client_name, size="xs", style={"color": "var(--mantine-color-dimmed)"}),
+                            dmc.Text(client_name, size="xs", c="dimmed"), # type: ignore
                             dmc.Anchor(
                                 dmc.Text("Cerrar Sesión", size="xs", c="red", fw="bold"),
                                 href="/logout",

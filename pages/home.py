@@ -56,7 +56,7 @@ def layout():
         return dmc.Paper(
             p="md", withBorder=True, shadow="sm", radius="md", h="100%",
             children=[
-                dmc.Text("Estado Flota", size="xs", style={"color": "var(--mantine-color-dimmed)"}, fw="bold"),
+                dmc.Text("Estado Flota", size="xs", c="dimmed", fw="bold"), # type: ignore
                 dmc.Center(h=100, children=DashIconify(icon="tabler:truck", width=60, color="green")),
                 dmc.Progress(value=92, color="green", size="lg")
             ]

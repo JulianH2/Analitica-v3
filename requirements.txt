@@ -1,5 +1,5 @@
 dash==3.3.0
-dash-mantine-components==2.4.0
+dash-mantine-components==2.4.1
 dash-iconify==0.1.2
 dash-draggable==0.1.2
 

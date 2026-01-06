@@ -1,6 +1,6 @@
 import dash
-from dash import html, dcc, Input, Output, State, no_update, _dash_renderer
-from flask import Flask, request, redirect, url_for, session
+from dash import Input, Output, State
+from flask import Flask, redirect, url_for, session
 from flask_session import Session
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
@@ -8,8 +8,6 @@ from dash_iconify import DashIconify
 from config import Config
 from components.layout.sidebar import render_sidebar
 from services.auth_service import auth_service
-
-_dash_renderer._set_react_version("18.2.0")
 
 server = Flask(__name__)
 server.config.from_object(Config)
@@ -22,8 +20,6 @@ app = dash.Dash(
     suppress_callback_exceptions=True,
     title="Enterprise Analytics",
     external_stylesheets=[
-        "https://unpkg.com/@mantine/core@7.10.0/styles.css",
-        "https://unpkg.com/@mantine/dates@7.10.0/styles.css",
         "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     ]
 )
@@ -53,6 +49,7 @@ def get_app_shell():
         theme={
             "primaryColor": "indigo",
             "fontFamily": "'Inter', sans-serif",
+            "defaultRadius": "md",
             "components": {
                 "Paper": {"defaultProps": {"radius": "md", "withBorder": True, "shadow": "sm"}},
                 "Button": {"defaultProps": {"radius": "md"}}

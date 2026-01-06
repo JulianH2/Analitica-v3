@@ -42,11 +42,11 @@ class AdminRichKPIStrategy(KPIStrategy):
 
         return dmc.Stack(gap=4, mt="sm", children=[
             dmc.Group(justify="space-between", children=[
-                dmc.Text("Meta:", size="xs", style={"color": "var(--mantine-color-dimmed)"}), 
+                dmc.Text("Meta:", size="xs", c="dimmed"),  # type: ignore
                 dmc.Text(fmt(cfg['meta']), size="xs", fw="normal")
             ]),
             dmc.Group(justify="space-between", children=[
-                dmc.Text("vs 2024:", size="xs", style={"color": "var(--mantine-color-dimmed)"}), 
+                dmc.Text("vs 2024:", size="xs", c="dimmed"),  # type: ignore
                 dmc.Text(pct(cfg['vs_2024']), size="xs", c="red" if cfg.get('vs_2024', 0) < 0 else "teal")
             ]),
             dmc.Divider(my=4),
