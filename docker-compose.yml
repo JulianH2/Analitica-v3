@@ -5,7 +5,7 @@ services:
     build: .
     container_name: analytics_dashboard
     ports:
-      - "8050:8050"
+      - "8000:8000"
     volumes:
       - .:/app
     environment:
