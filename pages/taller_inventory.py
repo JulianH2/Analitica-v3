@@ -1,3 +1,4 @@
+from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
@@ -24,6 +25,9 @@ t_parts = TableWidget(table_strat)
 WIDGET_REGISTRY = { "wi_1": w_val, "wi_2": w_crit, "wi_3": w_rot, "ci_rot": c_rot }
 
 def layout():
+    if not session.get("user"):
+        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
+    
     data_context = data_manager.get_data()
     return dmc.Container(fluid=True, children=[
         dmc.Modal(id="inv-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="inv-modal-content")]),
@@ -38,10 +42,10 @@ def layout():
         ]),
 
         dmc.Grid(gutter="lg", children=[
-            dmc.GridCol(span={"base": 12, "md": 5}, children=[c_rot.render(data_context)]),
-            dmc.GridCol(span={"base": 12, "md": 7}, children=[
+            dmc.GridCol(span=12, spanMd=5, children=[c_rot.render(data_context)]),
+            dmc.GridCol(span=12, spanMd=7, children=[
                 dmc.Paper(p="xs", withBorder=True, shadow="sm", children=[
-                    dmc.Text("Refacciones Críticas (Reorder Point)", fw=700, size="sm", mb="xs"),
+                    dmc.Text("Refacciones Críticas (Reorder Point)", fw="bold", size="sm", mb="xs"),
                     t_parts.render()
                 ])
             ])
@@ -57,12 +61,13 @@ def layout():
     prevent_initial_call=True
 )
 def handle_click(n_clicks):
-    if not dash.ctx.triggered: return no_update, no_update, no_update
+    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict):
+        return no_update, no_update, no_update
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
         config = widget.strategy.get_card_config(ctx)
         content = widget.strategy.render_detail(ctx) or dmc.Text("Sin detalles.")
-        return True, dmc.Text(config["title"], fw=700), content
+        return True, dmc.Text(config["title"], fw="bold"), content
     return no_update, no_update, no_update

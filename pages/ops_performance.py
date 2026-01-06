@@ -1,3 +1,4 @@
+from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
@@ -29,11 +30,14 @@ WIDGET_REGISTRY = {
 }
 
 def layout():
+    if not session.get("user"):
+        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
+    
     data_context = data_manager.get_data()
     
     def simple_table(headers, rows):
         return dmc.Table(
-            striped=True, withTableBorder=True, fz="xs",
+            striped="odd", withTableBorder=True, fz="xs",
             children=[
                 dmc.TableThead(dmc.TableTr([dmc.TableTh(h) for h in headers])),
                 dmc.TableTbody([dmc.TableTr([dmc.TableTd(c) for c in r]) for r in rows])
@@ -48,7 +52,7 @@ def layout():
             dmc.Button("Reporte", leftSection=DashIconify(icon="tabler:download"), variant="light", size="xs")
         ]),
 
-        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="lg", children=[
+        dmc.SimpleGrid(cols= 1, spacing="lg", mb="lg", children=[
             w_gauge_rend.render(data_context),
             w_gauge_kms.render(data_context),
             w_gauge_lts.render(data_context),
@@ -58,16 +62,16 @@ def layout():
             w_chart_trend.render(data_context)
         ]),
 
-        dmc.SimpleGrid(cols={"base": 1, "lg": 3}, spacing="lg", children=[
+        dmc.SimpleGrid(cols= 1, colsLg= 3, spacing="lg", children=[
             w_chart_mix.render(data_context),
             
             dmc.Paper(p="xs", withBorder=True, shadow="sm", children=[
-                dmc.Text("Rendimiento por Unidad", fw=700, size="sm", mb="xs"),
+                dmc.Text("Rendimiento por Unidad", fw="bold", size="sm", mb="xs"),
                 simple_table(["Unidad", "Rend.", "Viajes"], table_data.get_perf_unit_data())
             ]),
 
             dmc.Paper(p="xs", withBorder=True, shadow="sm", children=[
-                dmc.Text("Rendimiento por Operador", fw=700, size="sm", mb="xs"),
+                dmc.Text("Rendimiento por Operador", fw="bold", size="sm", mb="xs"),
                 simple_table(["Operador", "Rend.", "Viajes"], table_data.get_perf_op_data())
             ])
         ]),
@@ -83,12 +87,13 @@ def layout():
     prevent_initial_call=True
 )
 def handle_perf_click(n_clicks):
-    if not dash.ctx.triggered: return no_update, no_update, no_update
+    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict):
+        return no_update, no_update, no_update
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
         cfg = widget.strategy.get_card_config(ctx)
         content = widget.strategy.render_detail(ctx) or dmc.Text("Sin detalles.")
-        return True, dmc.Text(cfg.get("title"), fw=700), content
+        return True, dmc.Text(cfg.get("title"), fw="bold"), content
     return no_update, no_update, no_update

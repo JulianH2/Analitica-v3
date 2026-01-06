@@ -1,3 +1,4 @@
+from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
@@ -46,13 +47,16 @@ WIDGET_REGISTRY = {
 }
 
 def layout():
+    if not session.get("user"):
+        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
+
     data_context = data_manager.get_data()
 
     def truck_visual():
         return dmc.Paper(
             p="md", withBorder=True, shadow="sm", radius="md", h="100%",
             children=[
-                dmc.Text("Estado Flota", size="xs", c="dimmed", fw=700),
+                dmc.Text("Estado Flota", size="xs", style={"color": "var(--mantine-color-dimmed)"}, fw="bold"),
                 dmc.Center(h=100, children=DashIconify(icon="tabler:truck", width=60, color="green")),
                 dmc.Progress(value=92, color="green", size="lg")
             ]
@@ -66,18 +70,18 @@ def layout():
             dmc.Button("Actualizar", leftSection=DashIconify(icon="tabler:refresh"), variant="light", size="xs")
         ]),
 
-        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="lg", children=[
+        dmc.SimpleGrid(cols= 1, spacing="lg", mb="lg", children=[
             w_income.render(data_context),
             w_costs.render(data_context),
             w_margin.render(data_context)
         ]),
 
         dmc.Grid(gutter="lg", mb="lg", children=[
-            dmc.GridCol(span={"base": 12, "lg": 8}, children=[
+            dmc.GridCol(span= 12, children=[
                 w_main_chart.render(data_context)
             ]),
             
-            dmc.GridCol(span={"base": 12, "lg": 4}, children=[
+            dmc.GridCol(span=12, children=[
                 dmc.SimpleGrid(cols=2, spacing="sm", mb="sm", children=[
                     w_ops_viajes.render(data_context),
                     w_ops_units.render(data_context),
@@ -93,7 +97,7 @@ def layout():
             ])
         ]),
 
-        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "lg": 4}, spacing="lg", children=[
+        dmc.SimpleGrid(cols= 1, spacing="lg", children=[
             truck_visual(),                 
             w_yield.render(data_context),   
             w_portfolio.render(data_context), 
@@ -111,7 +115,8 @@ def layout():
     prevent_initial_call=True
 )
 def handle_home_click(n_clicks):
-    if not dash.ctx.triggered: return no_update, no_update, no_update
+    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict):
+        return no_update, no_update, no_update
     btn_id = dash.ctx.triggered_id
     if not btn_id or "index" not in btn_id: return no_update, no_update, no_update
     
@@ -121,6 +126,6 @@ def handle_home_click(n_clicks):
         ctx = data_manager.get_data()
         content = widget.get_detail(ctx) if hasattr(widget, 'get_detail') else widget.strategy.render_detail(ctx)
         cfg = widget.strategy.get_card_config(ctx)
-        title = dmc.Text(cfg.get("title"), fw=700)
+        title = dmc.Text(cfg.get("title"), fw="bold")
         return True, title, content
     return no_update, no_update, no_update

@@ -14,14 +14,14 @@ class TableWidget:
                 dmc.Group(justify="space-between", mb="md", children=[
                     dmc.Group([
                         DashIconify(icon="tabler:list-details", width=24, color="#228be6"),
-                        dmc.Text(title, fw=700, size="lg") 
+                        dmc.Text(title, fw="bold", size="lg") 
                     ]),
                     dmc.Badge("Vista Completa", variant="light", color="gray")
                 ]),
                 dmc.ScrollArea(
                     h="auto",
                     mah=500,
-                    offsetScrollbars=True,
+                    offsetScrollbars="present",
                     children=table_component
                 )
             ]

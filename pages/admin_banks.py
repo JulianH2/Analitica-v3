@@ -1,3 +1,4 @@
+from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
@@ -28,6 +29,9 @@ t_detail = TableWidget(table_strat)
 WIDGET_REGISTRY = { "wb_1": w1, "wb_2": w2, "wb_3": w3, "cb_water": c_water }
 
 def layout():
+    if not session.get("user"):
+        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
+    
     data_context = data_manager.get_data()
     return dmc.Container(fluid=True, children=[
         dmc.Modal(id="bank-smart-modal", size="lg", centered=True, children=[html.Div(id="bank-modal-content")]),
@@ -37,7 +41,7 @@ def layout():
             dmc.Button("Conciliación", leftSection=DashIconify(icon="tabler:checks"), variant="light", size="xs")
         ]),
 
-        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="xl", children=[
+        dmc.SimpleGrid(cols=1, spacing="lg", mb="xl", children=[
             w1.render(data_context), w2.render(data_context), w3.render(data_context)
         ]),
 
@@ -46,10 +50,10 @@ def layout():
         ]),
         
         dmc.Grid(gutter="lg", children=[
-            dmc.GridCol(span={"base": 12, "md": 8}, children=[
+            dmc.GridCol(span=12, spanMd=8, children=[
                 c_daily.render(data_context)
             ]),
-            dmc.GridCol(span={"base": 12, "md": 4}, children=[
+            dmc.GridCol(span=12, spanMd=4, children=[
                 c_pie.render(data_context)
             ])
         ]),
@@ -67,11 +71,12 @@ def layout():
     prevent_initial_call=True
 )
 def handle_click(n_clicks):
-    if not dash.ctx.triggered: return no_update, no_update, no_update
+    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict):
+        return no_update, no_update, no_update
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
         cfg = widget.strategy.get_card_config(ctx)
-        return True, dmc.Text(cfg["title"], fw=700), widget.strategy.render_detail(ctx)
+        return True, dmc.Text(cfg["title"], fw="bold"), widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update

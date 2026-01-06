@@ -38,11 +38,11 @@ class TallerRichKPIStrategy(KPIStrategy):
 
         return dmc.Stack(gap=4, mt="sm", children=[
             dmc.Group(justify="space-between", children=[
-                dmc.Text("Meta:", size="xs", c="dimmed"),
-                dmc.Text(f"{cfg['meta']}", size="xs", fw=500)
+                dmc.Text("Meta:", size="xs", style={"color": "var(--mantine-color-dimmed)"}),
+                dmc.Text(f"{cfg['meta']}", size="xs", fw="normal")
             ]),
             dmc.Group(justify="space-between", children=[
-                dmc.Text("vs 2024:", size="xs", c="dimmed"),
+                dmc.Text("vs 2024:", size="xs", style={"color": "var(--mantine-color-dimmed)"}),
                 dmc.Text(pct(cfg['vs_2024']), size="xs", c="teal")
             ])
         ])
@@ -100,9 +100,9 @@ class RealInventoryTableStrategy:
             
             rows.append(dmc.TableTr([
                 dmc.TableTd(area, style={"fontSize": "11px"}),
-                dmc.TableTd(codigo, c="dimmed", style={"fontSize": "11px"}),
-                dmc.TableTd(desc, fw=500, style={"fontSize": "11px"}),
-                dmc.TableTd(cant, fw=700, c=cant_color, style={"fontSize": "11px"}),
+                dmc.TableTd(codigo, style={"color": "var(--mantine-color-dimmed)", "fontSize": "11px"}),
+                dmc.TableTd(desc, fw="normal", style={"fontSize": "11px"}),
+                dmc.TableTd(cant, fw="bold", c=cant_color, style={"fontSize": "11px"}),
                 dmc.TableTd(precio, style={"fontSize": "11px"})
             ]))
 
@@ -114,7 +114,7 @@ class RealInventoryTableStrategy:
                 dmc.TableTh("Stock"), 
                 dmc.TableTh("Costo")
             ]))] + [dmc.TableTbody(rows)],
-            striped=True, highlightOnHover=True, withTableBorder=True, verticalSpacing="xs"
+            striped="odd", highlightOnHover=True, withTableBorder=True, verticalSpacing="xs"
         )
 
 class AvailabilityGaugeStrategy(KPIStrategy):
@@ -178,8 +178,8 @@ class WorkshopTableStrategy:
         rows = []
         for u, tipo, dias, mec, st in rows_data:
             st_color = "blue" if st == "En Proceso" else "orange"
-            rows.append(dmc.TableTr([dmc.TableTd(u, fw=700), dmc.TableTd(tipo), dmc.TableTd(dias), dmc.TableTd(mec), dmc.TableTd(dmc.Badge(st, color=st_color, variant="light"))]))
-        return dmc.Table([dmc.TableThead(dmc.TableTr([dmc.TableTh("Unidad"), dmc.TableTh("Tipo"), dmc.TableTh("Estadía"), dmc.TableTh("Mecánico"), dmc.TableTh("Estatus")]))] + [dmc.TableTbody(rows)], striped=True, highlightOnHover=True, withTableBorder=True, fz="xs")
+            rows.append(dmc.TableTr([dmc.TableTd(u, fw="bold"), dmc.TableTd(tipo), dmc.TableTd(dias), dmc.TableTd(mec), dmc.TableTd(dmc.Badge(st, color=st_color, variant="light"))]))
+        return dmc.Table([dmc.TableThead(dmc.TableTr([dmc.TableTh("Unidad"), dmc.TableTh("Tipo"), dmc.TableTh("Estadía"), dmc.TableTh("Mecánico"), dmc.TableTh("Estatus")]))] + [dmc.TableTbody(rows)], striped="odd", highlightOnHover=True, withTableBorder=True, fz="xs")
 
 class AvailabilityTrendStrategy(KPIStrategy):
     def get_card_config(self, data_context): return {"title": "Tendencia Disponibilidad"}

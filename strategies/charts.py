@@ -1,6 +1,9 @@
 import plotly.graph_objects as go
 from services.data_manager import DataManager
 from .base_strategy import KPIStrategy
+import dash_mantine_components as dmc
+import pandas as pd
+import plotly.express as px
 
 data_manager = DataManager()
 

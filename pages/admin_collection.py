@@ -1,3 +1,4 @@
+from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
@@ -29,6 +30,8 @@ t_detail = TableWidget(table_strat)
 WIDGET_REGISTRY = { "wc_1": w1, "wc_2": w2, "wc_3": w3, "wc_4": w4, "cc_evol": c_evol, "cc_mix": c_mix, "cc_rank": c_rank }
 
 def layout():
+    if not session.get("user"):
+        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
     data_context = data_manager.get_data()
     return dmc.Container(fluid=True, children=[
         dmc.Modal(id="col-smart-modal", size="lg", centered=True, children=[html.Div(id="col-modal-content")]),
@@ -41,14 +44,14 @@ def layout():
             ])
         ]),
 
-        dmc.SimpleGrid(cols={"base": 1, "md": 4}, spacing="lg", mb="xl", children=[
+        dmc.SimpleGrid(cols= 1, spacing="lg", mb="xl", children=[
             w1.render(data_context), w2.render(data_context), w3.render(data_context), w4.render(data_context)
         ]),
 
         dmc.Grid(gutter="md", mb="lg", children=[
-            dmc.GridCol(span={"base": 12, "lg": 5}, children=[c_evol.render(data_context)]),
-            dmc.GridCol(span={"base": 12, "lg": 3}, children=[c_mix.render(data_context)]),
-            dmc.GridCol(span={"base": 12, "lg": 4}, children=[c_rank.render(data_context)]),
+            dmc.GridCol(span= 12, children=[c_evol.render(data_context)]),
+            dmc.GridCol(span=12, children=[c_mix.render(data_context)]),
+            dmc.GridCol(span=12, children=[c_rank.render(data_context)]),
         ]),
 
         t_detail.render(title="Resumen de Cartera por Área", mode="collection"),
@@ -64,11 +67,13 @@ def layout():
     prevent_initial_call=True
 )
 def handle_click(n_clicks):
-    if not dash.ctx.triggered: return no_update, no_update, no_update
+    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict):
+        return no_update, no_update, no_update
+    
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
         cfg = widget.strategy.get_card_config(ctx)
-        return True, dmc.Text(cfg["title"], fw=700), widget.strategy.render_detail(ctx)
+        return True, dmc.Text(cfg["title"], fw="bold"), widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update

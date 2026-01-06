@@ -1,9 +1,14 @@
+from flask import session
 import dash_mantine_components as dmc
 from dash import html
 from dash_iconify import DashIconify
 
 def render_sidebar(collapsed=False):
-    
+    user_data = session.get("user", {})
+    full_name = user_data.get("name", "Usuario")
+    initials = "".join([n[0] for n in full_name.split()[:2]]).upper() if full_name else "U"
+    client_name = session.get("current_client_name", "Sin Cliente")
+
     def get_icon(icon):
         return DashIconify(icon=icon, width=20)
 
@@ -12,7 +17,7 @@ def render_sidebar(collapsed=False):
             label=label if not collapsed else None,
             leftSection=get_icon(icon),
             href=href,
-            active=False,
+            active=None,
             variant="subtle",
             color="indigo",
             style={"borderRadius": "8px", "marginBottom": "4px"}
@@ -36,7 +41,7 @@ def render_sidebar(collapsed=False):
         p="xs",
         children=[
             dmc.ScrollArea(
-                offsetScrollbars=True,
+                offsetScrollbars="present",
                 type="scroll",
                 style={"flex": 1},
                 children=dmc.Stack(gap=0, children=[
@@ -79,10 +84,16 @@ def render_sidebar(collapsed=False):
                     gap="xs",
                     justify="center" if collapsed else "flex-start",
                     children=[
-                        dmc.Avatar("AD", radius="xl", color="indigo"),
+                        dmc.Avatar(initials, radius="xl", color="indigo"),
                         html.Div([
-                            dmc.Text("Admin User", size="sm", fw=500),
-                            dmc.Text("TINSA", size="xs", c="dimmed")
+                            dmc.Text(full_name, size="sm", fw="normal"),
+                            dmc.Text(client_name, size="xs", style={"color": "var(--mantine-color-dimmed)"}),
+                            dmc.Anchor(
+                                dmc.Text("Cerrar Sesión", size="xs", c="red", fw="bold"),
+                                href="/logout",
+                                refresh=True,
+                                style={"textDecoration": "none"}
+                            )
                         ], style={"display": "none" if collapsed else "block"}),
                     ]
                 )

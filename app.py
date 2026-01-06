@@ -1,12 +1,13 @@
 import dash
 from dash import html, dcc, Input, Output, State, no_update, _dash_renderer
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, url_for, session
 from flask_session import Session
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 
 from config import Config
 from components.layout.sidebar import render_sidebar
+from services.auth_service import auth_service
 
 _dash_renderer._set_react_version("18.2.0")
 
@@ -26,6 +27,20 @@ app = dash.Dash(
         "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
     ]
 )
+
+# --- RUTAS DE AUTENTICACIÓN ---
+@server.route("/login")
+def login():
+    return auth_service.login()
+
+@server.route("/getAToken")
+def get_token():
+    return auth_service.get_token(app) 
+
+@server.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 
 @server.before_request
 def check_authentication():
@@ -52,7 +67,7 @@ def get_app_shell():
                 "collapsed": {"mobile": True}
             },
             padding="md",
-            bg="gray.0", 
+            style={"backgroundColor": "var(--mantine-color-gray-0)"}, 
             children=[
                 dmc.AppShellHeader(
                     px="md",
@@ -63,7 +78,7 @@ def get_app_shell():
                             dmc.Group([
                                 dmc.Burger(id="btn-mobile-menu", hiddenFrom="sm", size="sm"),
                                 DashIconify(icon="tabler:hexagon-letter-a", width=35, color="#4c6ef5"),
-                                dmc.Text("Analitica ", size="xl", fw=700, style={"letterSpacing": "-0.5px"})
+                                dmc.Text("Analitica ", size="xl", fw="bold", style={"letterSpacing": "-0.5px"})
                             ]),
                             dmc.Group([
                                 dmc.ActionIcon(DashIconify(icon="tabler:bell"), variant="subtle", color="gray"),
@@ -83,7 +98,38 @@ def get_app_shell():
         )
     )
 
-app.layout = get_app_shell
+def serve_layout():
+    # Si el login está habilitado y no hay usuario en sesión, redirigir
+    if Config.ENABLE_LOGIN and not session.get("user"):
+        return dmc.MantineProvider(
+            children=dmc.Container(
+                style={"height": "100vh", "display": "flex", "alignItems": "center", "justifyContent": "center"},
+                children=dmc.Stack(
+                    align="center",
+                    children=[
+                        DashIconify(icon="tabler:lock", width=50, color="indigo"),
+                        dmc.Text("Tu sesión ha expirado o no has iniciado sesión.", size="lg", fw="normal"),
+                        dmc.Anchor(
+                            dmc.Button(
+                                "Iniciar sesión con Microsoft",
+                                leftSection=DashIconify(icon="logos:microsoft-icon"),
+                                variant="outline",
+                                size="lg",
+                                fullWidth=True
+                            ),
+                            href="/login",
+                            refresh=True,
+                            underline="never"
+                        ),
+                    ]
+                )
+            )
+        )
+    
+    # Si hay sesión o el login está desactivado, mostrar la App normal
+    return get_app_shell()
+
+app.layout = serve_layout
 
 @app.callback(
     Output("app-shell", "navbar"),    
@@ -115,4 +161,4 @@ def toggle_mobile(opened, navbar_prop):
     return navbar_prop
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8050)
+    app.run(debug=True, port=8000)

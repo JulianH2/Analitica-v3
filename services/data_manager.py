@@ -2,6 +2,8 @@ from services.real_data_service import RealDataService
 
 class DataManager:
     _instance = None
+    service: RealDataService
+    cache = None
 
     def __new__(cls):
         if cls._instance is None:

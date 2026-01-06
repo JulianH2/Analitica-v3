@@ -1,3 +1,4 @@
+from flask import session
 import dash
 from dash import html, dcc, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
@@ -37,16 +38,19 @@ WIDGET_REGISTRY = {
 }
 
 def layout():
+    if not session.get("user"):
+        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
+    
     data_context = data_manager.get_data()
 
     def mini_kpi(title, value, subtext, color="blue"):
         return dmc.Paper(
             p="xs", withBorder=True, shadow="xs", radius="md",
             children=[
-                dmc.Text(title, size="xs", c="dimmed", fw=700, tt="uppercase"),
+                dmc.Text(title, size="xs", style={"color": "var(--mantine-color-dimmed)"}, fw="bold", tt="uppercase"),
                 dmc.Group(justify="space-between", mt=4, children=[
-                    dmc.Text(value, fw=800, size="lg"),
-                    dmc.Badge(subtext, color=color, variant="light", size="xs")
+                    dmc.Text(value, fw="bolder", size="lg"),
+                    dmc.Badge(subtext, color="blue", variant="light", size="xs")
                 ])
             ]
         )
@@ -69,41 +73,41 @@ def layout():
 
         dmc.Grid(gutter="md", children=[
             
-            dmc.GridCol(span={"base": 12, "xl": 9}, style={"minWidth": 0}, children=[
+            dmc.GridCol(span= 12, spanXl= 9, style={"minWidth": 0}, children=[
                 
-                dmc.SimpleGrid(cols={"base": 1, "sm": 3}, spacing="sm", mb="sm", children=[
+                dmc.SimpleGrid(cols= 1, spacing="sm", mb="sm", children=[
                     gauge_ingreso.render(data_context),
                     gauge_viajes.render(data_context),
                     gauge_kms.render(data_context),
                 ]),
 
-                dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="sm", mb="sm", children=[
+                dmc.SimpleGrid(cols= 1, spacing="sm", mb="sm", children=[
                     bar_ingresos.render(data_context),
                     bar_viajes.render(data_context),
                 ]),
 
-                dmc.Text("Indicadores de Eficiencia", size="sm", fw=700, c="dimmed", mb=5),
-                dmc.SimpleGrid(cols={"base": 2, "md": 4}, spacing="sm", mb="sm", children=[
+                dmc.Text("Indicadores de Eficiencia", size="sm", fw="bold", style={"color": "var(--mantine-color-dimmed)"}, mb=5),
+                dmc.SimpleGrid(cols= 2, spacing="sm", mb="sm", children=[
                     mini_kpi("Ingreso x Viaje", "$29,191", "+11%"),
                     mini_kpi("Ingreso x Unidad", "$254,889", "+25%"),
                     mini_kpi("Unidades Activas", "82", "-2 uds", "red"),
                     mini_kpi("Clientes Activos", "15", "+3 new", "green"),
                 ]),
 
-                dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="sm", children=[
+                dmc.SimpleGrid(cols= 1, spacing="sm", children=[
                     pie_ops.render(data_context),
                     bar_balance.render(data_context),
                 ])
             ]),
 
-            dmc.GridCol(span={"base": 12, "xl": 3}, style={"minWidth": 0}, children=[
+            dmc.GridCol(span=12, spanXl=3, style={"minWidth": 0}, children=[
                 
-                dmc.Paper(withBorder=True, shadow="sm", p="sm", mb="sm", radius="md", bg="gray.0", children=[
-                    dmc.Text("Estado de Flota", size="xs", fw=700, c="dimmed", tt="uppercase", mb="xs"),
+                dmc.Paper(withBorder=True, shadow="sm", p="sm", mb="sm", radius="md", style={"backgroundColor": "var(--mantine-color-gray-0)"}, children=[
+                    dmc.Text("Estado de Flota", size="xs", fw="bold", style={"color": "var(--mantine-color-dimmed)"}, tt="uppercase", mb="xs"),
                     dmc.Center(mb="md", children=[
                         dmc.Stack(gap=0, align="center", children=[
                             DashIconify(icon="tabler:truck-loading", width=48, color="#40c057"),
-                            dmc.Text("92% Cargado", fw=800, size="xl", c="green")
+                            dmc.Text("92% Cargado", fw="bolder", size="xl", c="green")
                         ])
                     ]),
                     dmc.ProgressRoot(size="xl", children=[
@@ -132,17 +136,17 @@ def layout():
                                         ["SALTILLO", "1"],
                                     ]
                                 },
-                                striped=True, highlightOnHover=True, withTableBorder=False, fz="xs"
+                                striped="odd", highlightOnHover=True, withTableBorder=False, fz="xs"
                             )
                         ]),
                          dmc.TabsPanel(value="cargado", children=[
-                            dmc.Text("Lista de rutas cargadas...", size="xs", c="dimmed", ta="center", py="xl")
+                            dmc.Text("Lista de rutas cargadas...", size="xs", style={"color": "var(--mantine-color-dimmed)"}, ta="center", py="xl")
                         ]),
                     ])
                 ]),
 
                 dmc.Paper(withBorder=True, shadow="sm", p="xs", radius="md", children=[
-                    dmc.Text("Top Ingresos", size="xs", fw=700, c="dimmed", mb="xs"),
+                    dmc.Text("Top Ingresos", size="xs", fw="bold", style={"color": "var(--mantine-color-dimmed)"}, mb="xs"),
                     dmc.Tabs(value="cliente", color="blue", variant="default", children=[
                         dmc.TabsList(children=[
                             dmc.TabsTab("Cliente", value="cliente", px="xs"),
@@ -164,7 +168,7 @@ def layout():
                                             ["TERNIUM", "$1.2M"],
                                         ]
                                     },
-                                    striped=True, highlightOnHover=True, fz="xs"
+                                    striped="odd", highlightOnHover=True, fz="xs"
                                 )
                             ])
                         ])
@@ -196,7 +200,7 @@ def handle_ops_widget_click(n_clicks):
         data_context = data_manager.get_data()
         content = widget.strategy.render_detail(data_context)
         config = widget.strategy.get_card_config(data_context)
-        title = dmc.Text(f"Detalle: {config.get('title')}", fw=700)
+        title = dmc.Text(f"Detalle: {config.get('title')}", fw="bold")
         return True, title, content
     
     return no_update, no_update, no_update

@@ -36,9 +36,9 @@ class IncomeStrategy(KPIStrategy):
 
         return dmc.Stack([
             dmc.Alert("Ingresos superan la meta mensual proyectada.", title="Análisis de Ingresos", color="green", variant="light"),
-            dmc.Text("Desglose por Cliente (Top 10)", fw=700, mt="md"),
+            dmc.Text("Desglose por Cliente (Top 10)", fw="bold", mt="md"),
             dmc.Table(
-                striped=True, withTableBorder=True, highlightOnHover=True,
+                striped="odd", withTableBorder=True, highlightOnHover=True,
                 children=[
                     dmc.TableThead(dmc.TableTr([dmc.TableTh("Cliente"), dmc.TableTh("Viajes"), dmc.TableTh("Monto/Kms")])),
                     dmc.TableTbody(rows)
@@ -78,35 +78,35 @@ class CostStrategy(KPIStrategy):
         pct_interno = (interno / total * 100) if total > 0 else 0
 
         return dmc.Stack([
-            dmc.Text("Estructura de Costos de Mantenimiento", fw=700, size="lg"),
+            dmc.Text("Estructura de Costos de Mantenimiento", fw="bold", size="lg"),
             dmc.SimpleGrid(cols=3, children=[
                 dmc.Paper(p="sm", withBorder=True, children=[
-                    dmc.Text("Taller Interno", size="xs", c="dimmed"),
-                    dmc.Text(f"${interno:,.0f}", fw=700, c="blue")
+                    dmc.Text("Taller Interno", size="xs", style={"color": "var(--mantine-color-dimmed)"}),
+                    dmc.Text(f"${interno:,.0f}", fw="bold", c="blue")
                 ]),
                 dmc.Paper(p="sm", withBorder=True, children=[
-                    dmc.Text("Taller Externo", size="xs", c="dimmed"),
-                    dmc.Text(f"${externo:,.0f}", fw=700, c="orange")
+                    dmc.Text("Taller Externo", size="xs", style={"color": "var(--mantine-color-dimmed)"}),
+                    dmc.Text(f"${externo:,.0f}", fw="bold", c="orange")
                 ]),
                 dmc.Paper(p="sm", withBorder=True, children=[
-                    dmc.Text("Llantas", size="xs", c="dimmed"),
-                    dmc.Text(f"${llantas:,.0f}", fw=700)
+                    dmc.Text("Llantas", size="xs", style={"color": "var(--mantine-color-dimmed)"}),
+                    dmc.Text(f"${llantas:,.0f}", fw="bold")
                 ]),
             ]),
             dmc.Box([
                 dmc.Group(justify="space-between", mb=5, children=[
-                    dmc.Text("Distribución Gasto Interno", size="sm", fw=500),
-                    dmc.Text(f"{int(pct_interno)}%", size="sm", fw=700, c="blue")
+                    dmc.Text("Distribución Gasto Interno", size="sm", fw="normal"),
+                    dmc.Text(f"{int(pct_interno)}%", size="sm", fw="bold", c="blue")
                 ]),
                 dmc.ProgressRoot(size="xl", children=[
                     dmc.ProgressSection(value=pct_interno, color="blue", children=[dmc.ProgressLabel(f"{int(pct_interno)}%")]),
                     dmc.ProgressSection(value=100-pct_interno, color="gray", children=[dmc.ProgressLabel("Ext")])
                 ])
             ]),
-            dmc.Text("Top Fallas Recurrentes", fw=700, mt="md"),
+            dmc.Text("Top Fallas Recurrentes", fw="bold", mt="md"),
             dmc.Table(
                 data={"head": ["Sistema", "Costo"], "body": [["Motor", "$129k"], ["Frenos", "$111k"], ["Remolques", "$99k"]]},
-                striped=True, withTableBorder=True
+                striped="odd", withTableBorder=True
             )
         ])
 
@@ -129,8 +129,8 @@ class MarginStrategy(KPIStrategy):
         return dmc.Stack([
             dmc.Alert("Utilidad neta refleja ingreso menos costos directos e indirectos.", title="Margen Operativo", color="green", variant="light"),
             dmc.SimpleGrid(cols=2, children=[
-                dmc.Paper(p="md", withBorder=True, children=[dmc.Text("Utilidad Operativa", c="dimmed"), dmc.Text("$11.2M", fw=700, size="xl")]),
-                dmc.Paper(p="md", withBorder=True, children=[dmc.Text("EBITDA", c="dimmed"), dmc.Text("18%", fw=700, size="xl")]),
+                dmc.Paper(p="md", withBorder=True, children=[dmc.Text("Utilidad Operativa", style={"color": "var(--mantine-color-dimmed)"}), dmc.Text("$11.2M", fw="bold", size="xl")]),
+                dmc.Paper(p="md", withBorder=True, children=[dmc.Text("EBITDA", style={"color": "var(--mantine-color-dimmed)"}), dmc.Text("18%", fw="bold", size="xl")]),
             ])
         ])
 
@@ -157,19 +157,19 @@ class BalanceStrategy(KPIStrategy):
         flujo_neto = ingresos - egresos
 
         return dmc.Stack([
-            dmc.Text("Flujo de Caja del Periodo", fw=700, size="lg"),
+            dmc.Text("Flujo de Caja del Periodo", fw="bold", size="lg"),
             dmc.SimpleGrid(cols=3, children=[
-                dmc.Paper(p="md", withBorder=True, bg="green.0", children=[
-                    dmc.Text("Entradas", c="dimmed", size="xs"),
-                    dmc.Text(f"${ingresos:,.0f}", fw=700, c="green")
+                dmc.Paper(p="md", withBorder=True, style={"backgroundColor": "var(--mantine-color-green-0)"}, children=[
+                    dmc.Text("Entradas", style={"color": "var(--mantine-color-dimmed)"}, size="xs"),
+                    dmc.Text(f"${ingresos:,.0f}", fw="bold", c="green")
                 ]),
-                dmc.Paper(p="md", withBorder=True, bg="red.0", children=[
-                    dmc.Text("Salidas", c="dimmed", size="xs"),
-                    dmc.Text(f"${egresos:,.0f}", fw=700, c="red")
+                dmc.Paper(p="md", withBorder=True, style={"backgroundColor": "var(--mantine-color-red-0)"}, children=[
+                    dmc.Text("Salidas", style={"color": "var(--mantine-color-dimmed)"}, size="xs"),
+                    dmc.Text(f"${egresos:,.0f}", fw="bold", c="red")
                 ]),
                 dmc.Paper(p="md", withBorder=True, children=[
-                    dmc.Text("Flujo Neto", c="dimmed", size="xs"),
-                    dmc.Text(f"${flujo_neto:,.0f}", fw=700, c="blue")
+                    dmc.Text("Flujo Neto", style={"color": "var(--mantine-color-dimmed)"}, size="xs"),
+                    dmc.Text(f"${flujo_neto:,.0f}", fw="bold", c="blue")
                 ])
             ]),
             dmc.Alert("Saldo consolidado Bancos Moneda Nacional.", title="Tesorería", color="gray", variant="light")

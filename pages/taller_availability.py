@@ -1,3 +1,4 @@
+from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
@@ -22,6 +23,9 @@ c_reasons = ChartWidget("ca_reasons", DowntimeReasonsStrategy())
 WIDGET_REGISTRY = { "wa_1": w_mtbf, "wa_2": w_mttr, "wa_3": w_downtime, "ca_trend": c_trend, "ca_reasons": c_reasons }
 
 def layout():
+    if not session.get("user"):
+        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
+    
     data_context = data_manager.get_data()
     return dmc.Container(fluid=True, children=[
         dmc.Modal(id="avail-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="avail-modal-content")]),
@@ -36,8 +40,8 @@ def layout():
         ]),
 
         dmc.Grid(gutter="lg", children=[
-            dmc.GridCol(span={"base": 12, "md": 8}, children=[c_trend.render(data_context)]),
-            dmc.GridCol(span={"base": 12, "md": 4}, children=[c_reasons.render(data_context)])
+            dmc.GridCol(span=12, spanMd=8, children=[c_trend.render(data_context)]),
+            dmc.GridCol(span=12, spanMd=4, children=[c_reasons.render(data_context)])
         ]),
         dmc.Space(h=50)
     ])
@@ -50,12 +54,13 @@ def layout():
     prevent_initial_call=True
 )
 def handle_click(n_clicks):
-    if not dash.ctx.triggered: return no_update, no_update, no_update
+    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict):
+        return no_update, no_update, no_update
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
         config = widget.strategy.get_card_config(ctx)
         content = widget.strategy.render_detail(ctx) or dmc.Text("Sin detalles.")
-        return True, dmc.Text(config["title"], fw=700), content
+        return True, dmc.Text(config["title"], fw="bold"), content
     return no_update, no_update, no_update

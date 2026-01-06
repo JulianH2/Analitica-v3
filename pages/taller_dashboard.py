@@ -1,3 +1,4 @@
+from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
@@ -26,6 +27,9 @@ t_piso = TableWidget(table_strat)
 WIDGET_REGISTRY = { "wt_1": w_disp, "wt_2": w_taller, "wt_3": w_ordenes, "wt_4": w_costo, "ct_status": c_status, "ct_pareto": c_pareto }
 
 def layout():
+    if not session.get("user"):
+        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
+    
     data_context = data_manager.get_data()
     return dmc.Container(fluid=True, children=[
         dmc.Modal(id="taller-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="taller-modal-content")]),
@@ -35,17 +39,17 @@ def layout():
             dmc.Button("Nueva Orden", leftSection=DashIconify(icon="tabler:plus"), variant="filled", size="xs")
         ]),
 
-        dmc.SimpleGrid(cols={"base": 1, "md": 4}, spacing="lg", mb="xl", children=[
+        dmc.SimpleGrid(cols= 1, spacing="lg", mb="xl", children=[
             w_disp.render(data_context), w_taller.render(data_context), w_ordenes.render(data_context), w_costo.render(data_context)
         ]),
 
         dmc.Grid(gutter="lg", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "md": 4}, children=[c_status.render(data_context)]),
-            dmc.GridCol(span={"base": 12, "md": 8}, children=[c_pareto.render(data_context)])
+            dmc.GridCol(span= 12, spanMd= 4, children=[c_status.render(data_context)]),
+            dmc.GridCol(span=12, spanMd=8, children=[c_pareto.render(data_context)])
         ]),
 
         dmc.Paper(p="xs", withBorder=True, shadow="sm", children=[
-            dmc.Text("Control de Piso (Unidades en Servicio)", fw=700, size="sm", mb="xs"),
+            dmc.Text("Control de Piso (Unidades en Servicio)", fw="bold", size="sm", mb="xs"),
             t_piso.render()
         ]),
         dmc.Space(h=50)
@@ -59,12 +63,13 @@ def layout():
     prevent_initial_call=True
 )
 def handle_click(n_clicks):
-    if not dash.ctx.triggered: return no_update, no_update, no_update
+    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict):
+        return no_update, no_update, no_update
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
         config = widget.strategy.get_card_config(ctx)
         content = widget.strategy.render_detail(ctx) or dmc.Text("Sin detalles.")
-        return True, dmc.Text(config["title"], fw=700), content
+        return True, dmc.Text(config["title"], fw="bold"), content
     return no_update, no_update, no_update

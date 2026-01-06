@@ -42,17 +42,17 @@ class AdminRichKPIStrategy(KPIStrategy):
 
         return dmc.Stack(gap=4, mt="sm", children=[
             dmc.Group(justify="space-between", children=[
-                dmc.Text("Meta:", size="xs", c="dimmed"), 
-                dmc.Text(fmt(cfg['meta']), size="xs", fw=500)
+                dmc.Text("Meta:", size="xs", style={"color": "var(--mantine-color-dimmed)"}), 
+                dmc.Text(fmt(cfg['meta']), size="xs", fw="normal")
             ]),
             dmc.Group(justify="space-between", children=[
-                dmc.Text("vs 2024:", size="xs", c="dimmed"), 
+                dmc.Text("vs 2024:", size="xs", style={"color": "var(--mantine-color-dimmed)"}), 
                 dmc.Text(pct(cfg['vs_2024']), size="xs", c="red" if cfg.get('vs_2024', 0) < 0 else "teal")
             ]),
             dmc.Divider(my=4),
             dmc.Group(justify="space-between", children=[
-                dmc.Text("YTD:", size="xs", fw=700), 
-                dmc.Text(pct(cfg['ytd']), size="xs", fw=700, c="blue")
+                dmc.Text("YTD:", size="xs", fw="bold"), 
+                dmc.Text(pct(cfg['ytd']), size="xs", fw="bold", c="blue")
             ])
         ])
 
@@ -227,7 +227,7 @@ class BankBreakdownStrategy(KPIStrategy):
     def render_detail(self, data_context): return None
 
 class AdminTableStrategy:
-    def render(self, mode="collection"):
+    def render(self, data_context, mode="collection"):
         if mode == "collection":
             headers = ["Cliente", "Facturado", "Cobrado", "Saldo", "Antigüedad", "Estatus"]
             rows_data = [
@@ -263,14 +263,16 @@ class AdminTableStrategy:
 
         return dmc.Table(
             [dmc.TableThead(dmc.TableTr([dmc.TableTh(h) for h in headers]))] + [dmc.TableTbody(rows)],
-            striped=True, highlightOnHover=True, withTableBorder=True, verticalSpacing="xs"
+            striped="odd", highlightOnHover=True, withTableBorder=True, verticalSpacing="xs"
         )
 
 class PayablesListStrategy(AdminTableStrategy):
-    def render(self): return super().render(mode="payables")
+    def render(self, data_context, mode=None): 
+        return super().render(data_context, mode="payables")
 
 class TreasuryTableStrategy(AdminTableStrategy):
-    def render(self): return super().render(mode="banks")
+    def render(self, data_context, mode=None): 
+        return super().render(data_context, mode="banks")
 
 class ComplexKPIStrategy(KPIStrategy):
     def __init__(self, title, value, subtext, trend, color, icon):
