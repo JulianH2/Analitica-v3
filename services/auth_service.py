@@ -1,80 +1,90 @@
-from flask import session, url_for, request, redirect
-import msal
+import logging
+from authlib.integrations.flask_client import OAuth
+from flask import url_for, redirect, session
 from config import Config
-from services import user_service
+from services.user_service import UserService
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class AuthService:
-    def __init__(self):
-        self.app = msal.ConfidentialClientApplication(
-            Config.MSAL_CLIENT_ID,
-            authority=Config.MSAL_AUTHORITY,
-            client_credential=Config.MSAL_CLIENT_SECRET,
-        )
-
-    def build_auth_flow(self, redirect_uri):
-        return self.app.initiate_auth_code_flow(
-            Config.MSAL_SCOPE,
-            redirect_uri=redirect_uri
-        )
-
-    def get_token_from_flow(self, flow, auth_response):
-        return self.app.acquire_token_by_auth_code_flow(
-            flow,
-            auth_response
-        )
-
-    def login(self):
-        """Paso 1: Generar la URL de autenticación de Microsoft"""
-        #redirect_uri = url_for("get_token", _external=True)
-        redirect_uri = "http://localhost:8000/getAToken"
+    def __init__(self, server=None):
+        self.oauth = OAuth()
+        if server:
+            self.init_app(server)
+            
+    def init_app(self, server):
+        self.oauth.init_app(server)
         
-        flow = self.app.initiate_auth_code_flow(
-            Config.MSAL_SCOPE,
-            redirect_uri=redirect_uri
+        self.oauth.register(
+            name='azure',
+            client_id=Config.MSAL_CLIENT_ID,
+            client_secret=Config.MSAL_CLIENT_SECRET,
+            server_metadata_url=f'{Config.MSAL_AUTHORITY}/v2.0/.well-known/openid-configuration',
+            client_kwargs={'scope': 'openid email profile User.Read'}
         )
-        
-        # Guardamos el 'flow' en la sesión para validarlo en el paso 2
-        session["flow"] = flow
-        return redirect(flow["auth_uri"])
 
-    def get_token(self, app):
-        """Paso 2: Procesar la respuesta de Azure y obtener el Token"""
+        self.oauth.register(
+            name='google',
+            client_id=Config.GOOGLE_CLIENT_ID,
+            client_secret=Config.GOOGLE_CLIENT_SECRET,
+            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+            client_kwargs={'scope': 'openid email profile'}
+        )
+
+    def login_local(self, email, password):
+        """Valida usuario y contraseña contra base de datos local"""
+        user_service = UserService()
+        user = user_service.validate_local_login(email, password)
+        if user:
+            return user_service.load_user_session(user)
+        return "Correo o contraseña incorrectos."
+
+    def login_social(self, provider_name):
+        if provider_name == 'azure':
+            redirect_uri = "http://localhost:8000/getAToken"
+        else:
+            redirect_uri = url_for('auth_callback', provider=provider_name, _external=True)
+            if "127.0.0.1" in redirect_uri:
+                redirect_uri = redirect_uri.replace("127.0.0.1", "localhost")
+
+        client = self.oauth.create_client(provider_name)
+        if not client:
+            return f"Proveedor de autenticación '{provider_name}' no configurado."
+        return client.authorize_redirect(redirect_uri)
+
+    def handle_social_callback(self, provider_name):
         try:
-            flow = session.get("flow")
-            if not flow:
-                return redirect(url_for("login"))
-
-            # Validar el código recibido contra el flujo original
-            result = self.app.acquire_token_by_auth_code_flow(flow, request.args)
-            session.pop("flow", None) # Limpiar flujo usado
-
-            if "error" in result:
-                return f"Error de Autenticación: {result.get('error_description')}"
-
-            # Extraer información del usuario (claims)
-            claims = result.get("id_token_claims")
-            if not claims:
-                return "Error: No se pudieron obtener los datos del usuario (claims)."
-            user_email = claims.get("preferred_username") or claims.get("email")
+            client = self.oauth.create_client(provider_name)
+            if not client:
+                return f"Proveedor de autenticación '{provider_name}' no configurado."
             
-            # Obtener acceso a bases de datos mediante tu servicio original
-            databases, role_id = user_service.UserService().get_user_databases(user_email)
-            
-            if not databases:
-                return "Tu usuario no tiene bases de datos asignadas en el sistema."
-
-            # Guardar todo en la sesión de Flask
-            session["user"] = claims
-            session["token"] = result.get("access_token")
-            session["databases"] = databases
-            session["role_id"] = role_id
-            session["current_db"] = databases[0]["base_de_datos"]
-            session["current_client_name"] = databases[0]["nombre_cliente"]
-
-            return redirect("/") # Regresar al Dashboard principal
+            token = client.authorize_access_token()
             
         except Exception as e:
-            session.clear()
-            return f"Error crítico: {str(e)} <a href='/login'>Reintentar</a>"
+            return f"Error de conexión con {provider_name}: {e}"
         
+        email = None
+        
+        if provider_name == 'azure':
+            user_info = token.get('userinfo')
+
+            if user_info:
+                email = user_info.get('preferred_username') or user_info.get('email')
+        
+        elif provider_name == 'google':
+            user_info = token.get('userinfo')
+            email = user_info.get('email')
+
+        if not email:
+            return f"No pudimos identificar tu correo con {provider_name}."
+
+        user_service = UserService()
+        user = user_service.get_user_by_email(email)
+        
+        if user:
+            return user_service.load_user_session(user)
+        else:
+            return f"El correo {email} no tiene permisos en este sistema."
+
 auth_service = AuthService()

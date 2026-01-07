@@ -23,7 +23,6 @@ class DBEngine:
                     max_overflow=20,
                     pool_pre_ping=True
                 )
-                logger.info("✅ Motor de Base de Datos inicializado.")
             except Exception as e:
                 logger.error(f"⚠️ Error al conectar a BD: {e}")
                 logger.warning("⚠️ Corriendo en modo desconectado (Mock Data).")

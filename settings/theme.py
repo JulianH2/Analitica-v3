@@ -1,3 +1,4 @@
+from typing import Any
 import plotly.graph_objects as go
 import plotly.io as pio
 
@@ -23,9 +24,8 @@ class DesignSystem:
     CHART_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"]
 
     @staticmethod
-    def get_mantine_theme():
+    def get_mantine_theme()-> Any:
         return {
-            "colorScheme": "dark",
             "fontFamily": "'Inter', sans-serif",
             "primaryColor": "brand",
             "defaultRadius": "md",
