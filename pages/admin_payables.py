@@ -42,19 +42,19 @@ def layout():
             dmc.Button("Programar Pagos", leftSection=DashIconify(icon="tabler:calendar-dollar"), variant="filled", color="red", size="xs")
         ]),
 
-        dmc.SimpleGrid(cols=1, spacing="lg", mb="xl", children=[
+        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="xl", children=[ # type: ignore
             w1.render(data_context), w2.render(data_context), w3.render(data_context)
         ]),
 
         dmc.Grid(gutter="lg", children=[
-            dmc.GridCol(span=12, spanMd=7, children=[
+            dmc.GridCol(span={"base": 12, "md": 7}, children=[ # type: ignore
                 dmc.SimpleGrid(cols=2, spacing="md", mb="md", children=[
                     c_aging.render(data_context),
                     c_mix.render(data_context)
                 ]),
                 c_fore.render(data_context)
             ]),
-            dmc.GridCol(span=12, spanMd=5, children=[
+            dmc.GridCol(span={"base": 12, "md": 5}, children=[ # type: ignore
                 c_rank.render(data_context)
             ])
         ]),

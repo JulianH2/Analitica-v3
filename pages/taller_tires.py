@@ -40,8 +40,8 @@ def layout():
         ]),
 
         dmc.Grid(gutter="lg", children=[
-            dmc.GridCol(span=12, spanMd=4, children=[c_press.render(data_context)]),
-            dmc.GridCol(span=12, spanMd=8, children=[c_cost.render(data_context)])
+            dmc.GridCol(span={"base": 12, "md": 4}, children=[c_press.render(data_context)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 8}, children=[c_cost.render(data_context)]) # type: ignore
         ]),
         dmc.Space(h=50)
     ])

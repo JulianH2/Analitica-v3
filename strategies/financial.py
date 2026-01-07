@@ -159,11 +159,11 @@ class BalanceStrategy(KPIStrategy):
         return dmc.Stack([
             dmc.Text("Flujo de Caja del Periodo", fw="bold", size="lg"),
             dmc.SimpleGrid(cols=3, children=[
-                dmc.Paper(p="md", withBorder=True, style={"backgroundColor": "var(--mantine-color-green-0)"}, children=[
+                dmc.Paper(p="md", withBorder=True, bg="green", children=[
                     dmc.Text("Entradas", c="dimmed", size="xs"), # type: ignore
                     dmc.Text(f"${ingresos:,.0f}", fw="bold", c="green")
                 ]),
-                dmc.Paper(p="md", withBorder=True, style={"backgroundColor": "var(--mantine-color-red-0)"}, children=[
+                dmc.Paper(p="md", withBorder=True, bg="red", children=[
                     dmc.Text("Salidas", c="dimmed", size="xs"), # type: ignore
                     dmc.Text(f"${egresos:,.0f}", fw="bold", c="red")
                 ]),

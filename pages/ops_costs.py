@@ -29,18 +29,11 @@ def layout():
     data_context = data_manager.get_data()
 
     def cost_block(title, value, var, color="green"):
-        return dmc.Paper(
-            p="xs", 
-            withBorder=True, 
-            # bg ya no acepta '{color}.0'. Usamos style para forzar el color de fondo exacto.
-            style={"backgroundColor": f"var(--mantine-color-{color}-0)"}, 
-            children=[
-                # 'dimmed' ya no es un valor directo para 'c' en el tipado estricto, mejor usar style.
+        return dmc.Paper(p="xs", withBorder=True, style={"backgroundColor": f"var(--mantine-color-{color}-0)"}, children=[
                 dmc.Text(title, size="xs", c="dimmed", fw="bold", tt="uppercase"), # type: ignore
                 dmc.Text(value, size="sm", fw="bold"),
                 dmc.Badge(var, size="xs", color="green", variant="light")
-            ]
-        )
+        ])
 
     return dmc.Container(fluid=True, children=[
         dmc.Modal(id="cost-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="cost-modal-content")]),
@@ -51,7 +44,7 @@ def layout():
         ]),
 
         dmc.Grid(gutter="md", mb="lg", children=[
-            dmc.GridCol(span= 12, spanMd= 4, children=[
+            dmc.GridCol(span={"base": 12, "md": 4}, children=[ #  # type: ignore
                 dmc.SimpleGrid(cols=2, spacing="sm", children=[
                     dmc.Paper(p="md", withBorder=True, shadow="sm", children=[
                         dmc.Text("Utilidad Viaje", size="xs", c="dimmed"), dmc.Text("18.19%", fw="bold", size="xl", c="blue") # type: ignore
@@ -61,7 +54,7 @@ def layout():
                     ])
                 ])
             ]),
-            dmc.GridCol(span=12, spanMd=8, children=[
+            dmc.GridCol(span={"base": 12, "md": 8}, children=[ #  # type: ignore
                 dmc.SimpleGrid(cols=4, spacing="xs", children=[
                     cost_block("Combustible", "$8.5M", "+2%", "red"),
                     cost_block("Sueldos", "$4.2M", "-1%", "green"),
@@ -75,7 +68,7 @@ def layout():
             ])
         ]),
 
-        dmc.SimpleGrid(cols=1, colMd=2, spacing="lg", mb="lg", children=[
+        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="lg", children=[ # type: ignore
             w_concept_chart.render(data_context),
             w_trend_chart.render(data_context)
         ]),

@@ -100,7 +100,7 @@ class RealInventoryTableStrategy:
             
             rows.append(dmc.TableTr([
                 dmc.TableTd(area, style={"fontSize": "11px"}),
-                dmc.TableTd(codigo, color="dimmed", style={"fontSize": "11px"}),
+                dmc.TableTd(codigo, c="dimmed", style={"fontSize": "11px"}), # type: ignore
                 dmc.TableTd(desc, fw="normal", style={"fontSize": "11px"}),
                 dmc.TableTd(cant, fw="bold", c=cant_color, style={"fontSize": "11px"}),
                 dmc.TableTd(precio, style={"fontSize": "11px"})

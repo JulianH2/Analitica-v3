@@ -73,36 +73,36 @@ def layout():
 
         dmc.Grid(gutter="md", children=[
             
-            dmc.GridCol(span= "content", miw=0, children=[
+            dmc.GridCol(span={"base": 12, "xl": 9}, miw=0, children=[ # type: ignore
                 
-                dmc.SimpleGrid(cols= 1, spacing="sm", mb="sm", children=[
+                dmc.SimpleGrid(cols={"base": 1, "sm": 3}, spacing="sm", mb="sm", children=[ # type: ignore
                     gauge_ingreso.render(data_context),
                     gauge_viajes.render(data_context),
                     gauge_kms.render(data_context),
                 ]),
 
-                dmc.SimpleGrid(cols= 1, spacing="sm", mb="sm", children=[
+                dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="sm", mb="sm", children=[ # type: ignore
                     bar_ingresos.render(data_context),
                     bar_viajes.render(data_context),
                 ]),
 
                 dmc.Text("Indicadores de Eficiencia", size="sm", fw="bold", c="dimmed", mb=5), # type: ignore
-                dmc.SimpleGrid(cols= 2, spacing="sm", mb="sm", children=[
+                dmc.SimpleGrid(cols={"base": 2, "md": 4}, spacing="sm", mb="sm", children=[ # type: ignore
                     mini_kpi("Ingreso x Viaje", "$29,191", "+11%"),
                     mini_kpi("Ingreso x Unidad", "$254,889", "+25%"),
                     mini_kpi("Unidades Activas", "82", "-2 uds", "red"),
                     mini_kpi("Clientes Activos", "15", "+3 new", "green"),
                 ]),
 
-                dmc.SimpleGrid(cols= 1, spacing="sm", children=[
+                dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="sm", children=[ # type: ignore
                     pie_ops.render(data_context),
                     bar_balance.render(data_context),
                 ])
             ]),
 
-            dmc.GridCol(span=12, miw=0, children=[
+            dmc.GridCol(span={"base": 12, "xl": 3}, miw=0, children=[   # type: ignore
                 
-                dmc.Paper(withBorder=True, shadow="sm", p="sm", mb="sm", radius="md", style={"backgroundColor": "var(--mantine-color-gray-0)"}, children=[
+                dmc.Paper(withBorder=True, shadow="sm", p="sm", mb="sm", radius="md", bg="gray", children=[
                     dmc.Text("Estado de Flota", size="xs", fw="bold", c="dimmed", tt="uppercase", mb="xs"), # type: ignore
                     dmc.Center(mb="md", children=[
                         dmc.Stack(gap=0, align="center", children=[

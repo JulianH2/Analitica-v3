@@ -42,8 +42,8 @@ def layout():
         ]),
 
         dmc.Grid(gutter="lg", children=[
-            dmc.GridCol(span=12, spanMd=5, children=[c_rot.render(data_context)]),
-            dmc.GridCol(span=12, spanMd=7, children=[
+            dmc.GridCol(span={"base": 12, "md": 5}, children=[c_rot.render(data_context)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 7}, children=[ # type: ignore
                 dmc.Paper(p="xs", withBorder=True, shadow="sm", children=[
                     dmc.Text("Refacciones Críticas (Reorder Point)", fw="bold", size="sm", mb="xs"),
                     t_parts.render()

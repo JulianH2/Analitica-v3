@@ -70,18 +70,18 @@ def layout():
             dmc.Button("Actualizar", leftSection=DashIconify(icon="tabler:refresh"), variant="light", size="xs")
         ]),
 
-        dmc.SimpleGrid(cols= 1, spacing="lg", mb="lg", children=[
+        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="lg", children=[ # type: ignore
             w_income.render(data_context),
             w_costs.render(data_context),
             w_margin.render(data_context)
         ]),
 
         dmc.Grid(gutter="lg", mb="lg", children=[
-            dmc.GridCol(span= 12, children=[
+            dmc.GridCol(span={"base": 12, "lg": 8}, children=[ # type: ignore
                 w_main_chart.render(data_context)
             ]),
             
-            dmc.GridCol(span=12, children=[
+            dmc.GridCol(span={"base": 12, "lg": 4}, children=[ # type: ignore
                 dmc.SimpleGrid(cols=2, spacing="sm", mb="sm", children=[
                     w_ops_viajes.render(data_context),
                     w_ops_units.render(data_context),
@@ -97,7 +97,7 @@ def layout():
             ])
         ]),
 
-        dmc.SimpleGrid(cols= 1, spacing="lg", children=[
+        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "lg": 4}, spacing="lg", children=[ # type: ignore
             truck_visual(),                 
             w_yield.render(data_context),   
             w_portfolio.render(data_context), 

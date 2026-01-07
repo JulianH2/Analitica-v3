@@ -44,14 +44,14 @@ def layout():
             ])
         ]),
 
-        dmc.SimpleGrid(cols= 1, spacing="lg", mb="xl", children=[
+        dmc.SimpleGrid(cols={"base": 1, "md": 4}, spacing="lg", mb="xl", children=[ # type: ignore
             w1.render(data_context), w2.render(data_context), w3.render(data_context), w4.render(data_context)
         ]),
 
         dmc.Grid(gutter="md", mb="lg", children=[
-            dmc.GridCol(span= 12, children=[c_evol.render(data_context)]),
-            dmc.GridCol(span=12, children=[c_mix.render(data_context)]),
-            dmc.GridCol(span=12, children=[c_rank.render(data_context)]),
+            dmc.GridCol(span={"base": 12, "lg": 5}, children=[c_evol.render(data_context)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 3}, children=[c_mix.render(data_context)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 4}, children=[c_rank.render(data_context)]), # type: ignore
         ]),
 
         t_detail.render(title="Resumen de Cartera por Área", mode="collection"),

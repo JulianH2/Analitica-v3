@@ -50,10 +50,7 @@ class OpsUnitTableStrategy:
             rows.append(dmc.TableTr([
                 dmc.TableTd(dmc.Badge(u.get("unidad", "N/A"), variant="outline", color="gray")),
                 dmc.TableTd(f"{loaded:,.0f}", c="blue", fw="normal"),
-                dmc.TableTd(
-                    f"{empty:,.0f}", 
-                    style={"color": "var(--mantine-color-orange-filled)" if empty > 0 else "var(--mantine-color-dimmed)"}
-                ),
+                dmc.TableTd(f"{empty:,.0f}", c="orange" if empty > 0 else "dimmed"), # type: ignore
                 dmc.TableTd(f"{total:,.0f}", fw="bold"),
                 dmc.TableTd(
                     dmc.Badge("Optimal", color="green") if is_efficient else dmc.Badge("Review", color="red")

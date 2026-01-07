@@ -41,7 +41,7 @@ def layout():
             dmc.Button("Conciliación", leftSection=DashIconify(icon="tabler:checks"), variant="light", size="xs")
         ]),
 
-        dmc.SimpleGrid(cols=1, spacing="lg", mb="xl", children=[
+        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="xl", children=[  # type: ignore
             w1.render(data_context), w2.render(data_context), w3.render(data_context)
         ]),
 
@@ -50,10 +50,10 @@ def layout():
         ]),
         
         dmc.Grid(gutter="lg", children=[
-            dmc.GridCol(span=12, spanMd=8, children=[
+            dmc.GridCol(span={"base": 12, "md": 8}, children=[ # type: ignore
                 c_daily.render(data_context)
             ]),
-            dmc.GridCol(span=12, spanMd=4, children=[
+            dmc.GridCol(span={"base": 12, "md": 4}, children=[ # type: ignore
                 c_pie.render(data_context)
             ])
         ]),

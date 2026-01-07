@@ -39,13 +39,13 @@ def layout():
             dmc.Button("Nueva Orden", leftSection=DashIconify(icon="tabler:plus"), variant="filled", size="xs")
         ]),
 
-        dmc.SimpleGrid(cols= 1, spacing="lg", mb="xl", children=[
+        dmc.SimpleGrid(cols={"base": 1, "md": 4}, spacing="lg", mb="xl", children=[ # type: ignore
             w_disp.render(data_context), w_taller.render(data_context), w_ordenes.render(data_context), w_costo.render(data_context)
         ]),
 
         dmc.Grid(gutter="lg", mb="xl", children=[
-            dmc.GridCol(span= 12, spanMd= 4, children=[c_status.render(data_context)]),
-            dmc.GridCol(span=12, spanMd=8, children=[c_pareto.render(data_context)])
+            dmc.GridCol(span={"base": 12, "md": 4}, children=[c_status.render(data_context)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 8}, children=[c_pareto.render(data_context)]) # type: ignore
         ]),
 
         dmc.Paper(p="xs", withBorder=True, shadow="sm", children=[

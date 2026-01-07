@@ -52,7 +52,7 @@ def layout():
             dmc.Button("Reporte", leftSection=DashIconify(icon="tabler:download"), variant="light", size="xs")
         ]),
 
-        dmc.SimpleGrid(cols= 1, spacing="lg", mb="lg", children=[
+        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="lg", children=[ # type: ignore
             w_gauge_rend.render(data_context),
             w_gauge_kms.render(data_context),
             w_gauge_lts.render(data_context),
@@ -62,7 +62,7 @@ def layout():
             w_chart_trend.render(data_context)
         ]),
 
-        dmc.SimpleGrid(cols= 1, colsLg= 3, spacing="lg", children=[
+        dmc.SimpleGrid(cols={"base": 1, "lg": 3}, spacing="lg", children=[ # type: ignore
             w_chart_mix.render(data_context),
             
             dmc.Paper(p="xs", withBorder=True, shadow="sm", children=[
