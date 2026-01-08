@@ -58,7 +58,7 @@ def render_sidebar(collapsed=False):
                         render_group("MANTENIMIENTO", "tabler:tool", [
                         render_link("Mantenimiento", "/taller-dashboard", "tabler:activity"),
                         render_link("Análisis de Disponibilidad", "/taller-availability", "tabler:clock-play"),
-                        render_link("Compras",  "/taller-tires", "tabler:circle"), 
+                        render_link("Compras",  "/taller-purchases", "tabler:circle"), 
                         render_link("Almacén", "/taller-inventory", "tabler:packages"),
             
                     ]),

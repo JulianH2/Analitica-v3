@@ -1,220 +1,262 @@
-import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 import plotly.graph_objects as go
-import plotly.express as px
-import numpy as np
-from typing import Dict, Any
+import dash_mantine_components as dmc
 from .base_strategy import KPIStrategy
-from services.data_manager import DataManager
-
-data_manager = DataManager()
-
-class TripsStrategy(KPIStrategy):
-    def get_card_config(self, data_context) -> Dict[str, Any]:
-        val = 716
-        meta = 720
-        trend = -0.5
-        return {"title": "Viajes Totales", "value": str(val), "meta_text": f"Meta: {meta}", "trend": trend, "icon": "tabler:truck", "color": "orange"}
-    
-    def render_detail(self, data_context):
-        return dmc.Stack([dmc.Alert("Volumen de tráfico vs periodo anterior.", color="orange", variant="light")])
 
 class FleetEfficiencyStrategy(KPIStrategy):
-    def get_card_config(self, data_context) -> Dict[str, Any]:
-        val = 1.91
-        return {"title": "Rendimiento", "value": f"{val} km/L", "meta_text": "Meta: 2.1 km/L", "trend": -9.0, "icon": "tabler:gas-station", "color": "cyan"}
-    
+    def get_card_config(self, data_context):
+        return {"title": "Eficiencia de Flota"}
+
+    def get_figure(self, data_context):
+        val = data_context.get("operaciones", {}).get("dashboard", {}).get("utilizacion", {}).get("valor", 0)
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=val,
+            number={'suffix': "%"},
+            gauge={'axis': {'range': [None, 100]}, 'bar': {'color': "#40c057"}}
+        ))
+        fig.update_layout(height=180, margin=dict(l=10, r=10, t=30, b=10))
+        return fig
+
     def render_detail(self, data_context):
-        return dmc.Text("Detalle de eficiencia de combustible.")
+        return None
 
-class UnitCostStrategy(KPIStrategy):
-    def get_card_config(self, data_context) -> Dict[str, Any]:
-        val = 12.50
-        return {"title": "Costo por Km", "value": f"${val:.2f}", "meta_text": "Costo Viaje / Km", "trend": 0, "icon": "tabler:calculator", "color": "indigo", "reverse_trend": True}
-    def render_detail(self, data_context): return dmc.Text("Desglose de costos...")
-
-class UnitUtilizationStrategy(KPIStrategy):
-    def get_card_config(self, data_context) -> Dict[str, Any]:
-        return {"title": "Unidades Activas", "value": "85", "meta_text": "En operación", "trend": 0, "icon": "tabler:bus", "color": "teal"}
-    def render_detail(self, data_context): return dmc.Text("Lista de unidades...")
-
-class ClientImpactStrategy(KPIStrategy):
-    def get_card_config(self, data_context) -> Dict[str, Any]:
-        return {"title": "Clientes Activos", "value": "12", "meta_text": "Periodo actual", "trend": 0, "icon": "tabler:users", "color": "violet"}
-    def render_detail(self, data_context): return dmc.Text("Lista de clientes...")
-
-class GaugeKPIStrategy(KPIStrategy):
-    def __init__(self, kpi_key, title, color):
-        self.kpi_key = kpi_key
+class OpsGaugeStrategy(KPIStrategy):
+    def __init__(self, title, key, color, prefix="$", section="dashboard"):
         self.title = title
+        self.key = key
         self.color = color
+        self.prefix = prefix
+        self.section = section
 
-    def get_card_config(self, data_context) -> Dict[str, Any]:
+    def get_card_config(self, data_context):
         return {"title": self.title}
 
     def get_figure(self, data_context):
-        val = 75 
-        meta = 100
+        node = data_context["operaciones"][self.section]["indicadores"].get(self.key, {})
         fig = go.Figure(go.Indicator(
-            mode="gauge+number+delta",
-            value=val,
-            domain={'x': [0, 1], 'y': [0, 1]},
-            delta={'reference': meta, 'increasing': {'color': "green"}},
-            number={'prefix': ""},
-            title={'text': ""},
-            gauge={
-                'axis': {'range': [None, meta * 1.2], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                'bar': {'color': self.color},
-                'bgcolor': "white",
-                'borderwidth': 0,
-                'steps': [{'range': [0, meta], 'color': "#f8f9fa"}],
-            }
+            mode="gauge+number",
+            value=node.get("valor", 0),
+            number={'prefix': self.prefix, 'font': {'size': 18}},
+            gauge={'axis': {'range': [None, node.get("meta", 100) * 1.2]}, 'bar': {'color': self.color}}
         ))
-        
-        fig.update_layout(
-            height=160, 
-            margin=dict(l=25, r=25, t=10, b=10),
-            paper_bgcolor='rgba(0,0,0,0)',
-            font={'color': "darkblue", 'family': "Inter, sans-serif"}
-        )
+        fig.add_annotation(x=0.5, y=-0.15, text=f"Mes: {node.get('label_mes', '')}", showarrow=False, font=dict(size=10, color="gray"))
+        fig.add_annotation(x=0.5, y=-0.30, text=f"YTD: {node.get('label_ytd', '')}", showarrow=False, font=dict(size=10, color="gray"))
+        fig.update_layout(height=200, margin=dict(l=10, r=10, t=40, b=40), paper_bgcolor='rgba(0,0,0,0)')
         return fig
 
     def render_detail(self, data_context):
-        return dmc.Text(f"Detalle histórico de {self.title}")
+        return dmc.Text("Detalle histórico...")
 
-class MonthlyComparisonStrategy(KPIStrategy):
-    def __init__(self, metric_name, color):
-        self.metric_name = metric_name
+class OpsComparisonStrategy(KPIStrategy):
+    def __init__(self, title, data_key, color, section="dashboard"):
+        self.title = title
+        self.data_key = data_key
         self.color = color
+        self.section = section
 
-    def get_card_config(self, data_context) -> Dict[str, Any]:
-        return {"title": f"{self.metric_name} vs Anterior"}
+    def get_card_config(self, data_context):
+        return {"title": self.title}
 
     def get_figure(self, data_context):
-        meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
-        actual = [25, 22, 24, 25, 22, 24, 14, 28, 22, 24, 18, 19]
-        anterior = [19, 20, 22, 20, 20, 21, 25, 20, 18, 20, 15, 16]
-
+        ds = data_context["operaciones"][self.section]["graficas"].get(self.data_key, {"meses": [], "actual": [], "anterior": []})
         fig = go.Figure()
-        fig.add_trace(go.Bar(name='24', x=meses, y=anterior, marker_color='#adb5bd'))
-        fig.add_trace(go.Bar(name='25', x=meses, y=actual, marker_color=self.color))
-
-        fig.update_layout(
-            barmode='group', height=200, margin=dict(l=0, r=0, t=30, b=0),
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            showlegend=True, legend=dict(orientation="h", y=1.1, x=1),
-            title=dict(text=f"<b>{self.metric_name} comparativo</b>", font=dict(size=12))
-        )
+        fig.add_trace(go.Bar(x=ds["meses"], y=ds["actual"], name="2025", marker_color=self.color))
+        fig.add_trace(go.Bar(x=ds["meses"], y=ds["anterior"], name="2024", marker_color="#ced4da"))
+        
+        if "meta" in ds:
+            fig.add_trace(go.Scatter(x=ds["meses"], y=ds["meta"], name="Meta", line=dict(color="red", dash="dot")))
+            
+        fig.update_layout(height=300, barmode='group', margin=dict(l=0, r=0, t=30, b=0), legend=dict(orientation="h", y=1.1))
         return fig
 
     def render_detail(self, data_context):
-        return dmc.Alert(f"Análisis mensual de {self.metric_name}", color="blue", variant="light")
+        return None
 
 class OpsPieStrategy(KPIStrategy):
-    def get_card_config(self, data_context) -> Dict[str, Any]: return {"title": "Mix Operativo"}
+    def get_card_config(self, data_context):
+        return {"title": "Ingreso Viaje Por Tipo Operación"}
+
     def get_figure(self, data_context):
-        fig = go.Figure(data=[go.Pie(labels=['Full', 'Sencillo', 'Refrig.'], values=[35, 40, 25], hole=.6, marker_colors=["#228be6", "#40c057", "#fab005"])])
-        fig.update_layout(height=250, margin=dict(l=10, r=10, t=30, b=10), showlegend=True, legend=dict(orientation="h", y=-0.1))
+        ds = data_context["operaciones"]["dashboard"]["graficas"]["mix_operacion"]
+        fig = go.Figure(data=[go.Pie(labels=ds["labels"], values=ds["values"], hole=.6)])
+        fig.update_layout(height=250, margin=dict(l=10, r=10, t=30, b=10))
         return fig
-    def render_detail(self, data_context): return None
+
+    def render_detail(self, data_context):
+        return None
 
 class BalanceUnitStrategy(KPIStrategy):
-    def get_card_config(self, data_context) -> Dict[str, Any]: return {"title": "Top Ingreso Unidad"}
+    def get_card_config(self, data_context):
+        return {"title": "Balanceo Ingresos por Unidad"}
+
     def get_figure(self, data_context):
-        fig = go.Figure(go.Bar(x=[144, 99, 107, 143, 154], y=['U-101', 'U-102', 'U-103', 'U-104', 'U-105'], orientation='h', marker_color="#228be6"))
-        fig.update_layout(height=250, margin=dict(l=0, r=0, t=30, b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis=dict(showgrid=False), yaxis=dict(showgrid=False))
+        ds = data_context["operaciones"]["dashboard"]["graficas"]["balanceo_unidades"]
+        fig = go.Figure(go.Bar(y=ds["unidades"], x=ds["montos"], orientation='h', marker_color="#228be6"))
+        fig.update_layout(height=250, margin=dict(l=0, r=0, t=30, b=0), yaxis=dict(autorange="reversed"))
         return fig
-    def render_detail(self, data_context): return None
+
+    def render_detail(self, data_context):
+        return None
+
+class OpsTableStrategy:
+    def render_rutas(self, data_context):
+        ds = data_context["operaciones"]["dashboard"]["tablas"]["rutas_cargado"]
+        return dmc.Table([
+            dmc.TableThead(dmc.TableTr([dmc.TableTh(h) for h in ds["h"]])),
+            dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c)) for c in r]) for r in ds["r"]])
+        ], striped=True, withTableBorder=True)
+
+    def render_tabbed_table(self, data_context, tab_key):
+        return dmc.Text(f"Información de {tab_key} cargada dinámicamente...", size="sm", py="xl", ta="center", c="dimmed")
+
+class CostUtilityStackedStrategy(KPIStrategy):
+    def get_card_config(self, data_context):
+        return {"title": "Costo Viaje Total y Monto Utilidad"}
+
+    def get_figure(self, data_context):
+        ds = data_context["operaciones"]["costos"]["graficas"]["mensual_utilidad"]
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=ds["meses"], y=ds["costo"], name="Costo Total (M)", marker_color="#228be6"))
+        fig.add_trace(go.Scatter(x=ds["meses"], y=ds["utilidad_pct"], name="% Utilidad", yaxis="y2", line=dict(color="#40c057", width=3)))
+        fig.update_layout(
+            height=350, margin=dict(l=0, r=0, t=30, b=0), legend=dict(orientation="h", y=1.1),
+            yaxis2=dict(overlaying="y", side="right", range=[0, 100], ticksuffix="%")
+        )
+        return fig
+
+    def render_detail(self, data_context):
+        return None
+
+class CostBreakdownStrategy(KPIStrategy):
+    def get_card_config(self, data_context):
+        return {"title": "Costo Total por Concepto"}
+
+    def get_figure(self, data_context):
+        ds = data_context["operaciones"]["costos"]["graficas"]["desglose_conceptos"]
+        fig = go.Figure(go.Bar(x=ds["montos"], y=ds["conceptos"], orientation='h', marker_color="#fa5252"))
+        fig.update_layout(height=350, margin=dict(l=0, r=0, t=30, b=0), yaxis=dict(autorange="reversed"))
+        return fig
+
+    def render_detail(self, data_context):
+        return None
+
+class CostTableStrategy:
+    def render_margen_ruta(self, data_context):
+        ds = data_context["operaciones"]["costos"]["tablas"]["margen_ruta"]
+        return dmc.Table([
+            dmc.TableThead(dmc.TableTr([dmc.TableTh(h, style={"fontSize": "11px"}) for h in ds["h"]])),
+            dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in r]) for r in ds["r"]])
+        ], striped=True, withTableBorder=True)
 
 class PerformanceGaugeStrategy(KPIStrategy):
-    def __init__(self, title, value, meta, suffix=""):
+    def __init__(self, title, key, color, prefix="", section="rendimientos"):
         self.title = title
-        self.value = value
-        self.meta = meta
-        self.suffix = suffix
+        self.key = key
+        self.color = color
+        self.prefix = prefix
+        self.section = section
 
-    def get_card_config(self, data_context) -> Dict[str, Any]: return {"title": self.title}
-    
+    def get_card_config(self, data_context):
+        return {"title": self.title}
+
     def get_figure(self, data_context):
+        node = data_context["operaciones"][self.section]["indicadores"].get(self.key, {})
+        val = node.get("valor", 0)
+        target = node.get("meta") or val
+        
         fig = go.Figure(go.Indicator(
-            mode = "gauge+number+delta",
-            value = self.value,
-            domain = {'x': [0, 1], 'y': [0, 1]},
-            delta = {'reference': self.meta, 'increasing': {'color': "green"}, 'decreasing': {'color': "red"}, "position": "bottom"},
-            number = {'suffix': self.suffix, 'font': {'size': 24, 'color': "#228be6"}},
-            gauge = {
-                'axis': {'range': [None, self.meta*1.5], 'visible': False},
-                'bar': {'color': "#228be6"}, 
-                'bgcolor': "white", 
-                'borderwidth': 0,
-                'steps': [{'range': [0, self.meta], 'color': "#e7f5ff"}],
-            }
+            mode="gauge+number",
+            value=val,
+            number={'prefix': self.prefix, 'font': {'size': 18}},
+            gauge={'axis': {'range': [None, target * 1.2]}, 'bar': {'color': self.color}}
         ))
-        fig.update_layout(height=140, margin=dict(l=20, r=20, t=20, b=20), paper_bgcolor='rgba(0,0,0,0)')
+        
+        fig.add_annotation(x=0.5, y=-0.15, text=f"Mes: {node.get('label_mes', '')}", showarrow=False, font=dict(size=10))
+        fig.add_annotation(x=0.5, y=-0.30, text=f"YTD: {node.get('label_ytd', '')}", showarrow=False, font=dict(size=10))
+        
+        extra = node.get("extra_info")
+        if extra:
+            fig.add_annotation(x=0.5, y=0.4, text=f"<b>{extra[0]}</b><br>{extra[1]}", showarrow=False, font=dict(size=11, color="#1c7ed6"))
+
+        fig.update_layout(height=220, margin=dict(l=10, r=10, t=40, b=50), paper_bgcolor='rgba(0,0,0,0)')
         return fig
-    def render_detail(self, data_context): return dmc.Text(f"Detalle de {self.title}")
+
+    def render_detail(self, data_context):
+        return dmc.Text("Detalle técnico de rendimientos...")
 
 class PerformanceTrendStrategy(KPIStrategy):
-    def get_card_config(self, data_context) -> Dict[str, Any]: return {"title": "Rendimiento Real 2025 vs 2024"}
+    def get_card_config(self, data_context):
+        return {"title": "Tendencia Rendimiento Real (Kms/Lt)"}
+
     def get_figure(self, data_context):
-        meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
-        real = [2.8, 1.9, 1.95, 2.0, 1.98, 2.05, 2.1, 2.0, 1.95, 2.0, 1.9, 1.95]
-        meta = [1.95] * 12
+        ds = data_context["operaciones"]["rendimientos"]["graficas"]["tendencia"]
         fig = go.Figure()
-        fig.add_trace(go.Bar(x=meses, y=real, name="Real", marker_color="#228be6"))
-        fig.add_trace(go.Scatter(x=meses, y=meta, name="Meta", mode='lines+markers', line=dict(color='#fd7e14', width=2)))
-        fig.update_layout(height=280, margin=dict(l=0, r=0, t=30, b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=True, legend=dict(orientation="h", y=1.1), title=dict(text="<b>Rendimiento Real vs Meta</b>", font=dict(size=12)))
+        fig.add_trace(go.Scatter(x=ds["meses"], y=ds["actual"], name="2025", line=dict(color="#228be6", width=3)))
+        fig.add_trace(go.Scatter(x=ds["meses"], y=ds["anterior"], name="2024", line=dict(color="#ced4da", dash="dash")))
+        fig.update_layout(height=350, margin=dict(l=0, r=0, t=30, b=0), legend=dict(orientation="h", y=1.1, x=0))
         return fig
-    def render_detail(self, data_context): return None
+
+    def render_detail(self, data_context):
+        return None
 
 class PerformanceMixStrategy(KPIStrategy):
-    def get_card_config(self, data_context) -> Dict[str, Any]: return {"title": "Rend. por Tipo Op."}
+    def get_card_config(self, data_context):
+        return {"title": "Distribución por Operación"}
+
     def get_figure(self, data_context):
-        fig = go.Figure(data=[go.Pie(labels=['Foráneo', 'Local', 'Patio'], values=[60, 30, 10], hole=.6, marker_colors=["#228be6", "#fab005", "#e9ecef"], textinfo='percent')])
-        fig.update_layout(height=200, margin=dict(l=0, r=0, t=20, b=10), showlegend=True)
+        ds = data_context["operaciones"]["rendimientos"]["graficas"]["mix_operacion"]
+        fig = go.Figure(data=[go.Pie(labels=ds["labels"], values=ds["values"], hole=.6)])
+        fig.update_layout(height=350, margin=dict(l=10, r=10, t=30, b=10))
         return fig
-    def render_detail(self, data_context): return None
 
-class CostConceptStrategy(KPIStrategy):
-    def get_card_config(self, data_context) -> Dict[str, Any]: return {"title": "Costo por Clasificación"}
+    def render_detail(self, data_context):
+        return None
+
+class PerformanceTableStrategy:
+    def render_unit(self, data_context):
+        ds = data_context["operaciones"]["rendimientos"]["tablas"]["unidad"]
+        return dmc.Table([
+            dmc.TableThead(dmc.TableTr([dmc.TableTh(h, style={"fontSize": "11px"}) for h in ds["h"]])),
+            dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in r]) for r in ds["r"]])
+        ], striped=True, withTableBorder=True)
+
+    def render_operador(self, data_context):
+        ds = data_context["operaciones"]["rendimientos"]["tablas"]["operador"]
+        return dmc.Table([
+            dmc.TableThead(dmc.TableTr([dmc.TableTh(h, style={"fontSize": "11px"}) for h in ds["h"]])),
+            dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in r]) for r in ds["r"]])
+        ], striped=True, withTableBorder=True)
+
+class RouteMapStrategy(KPIStrategy):
+    def get_card_config(self, data_context):
+        return {"title": "Mapa de Rutas"}
+
     def get_figure(self, data_context):
-        concepts = ["Combustible", "Sueldos", "Llantas", "Mtto", "Peajes"]
-        values = [8.5, 4.2, 1.5, 1.2, 0.8]
-        fig = go.Figure(go.Bar(x=values, y=concepts, orientation='h', marker_color="#228be6", text=[f"${v}M" for v in values], textposition="auto"))
-        fig.update_layout(height=250, margin=dict(l=0, r=0, t=30, b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', yaxis=dict(autorange="reversed"))
+        ds = data_context["operaciones"]["rutas"]["mapa"]["puntos"]
+        lats = [p["lat"] for p in ds]
+        lons = [p["lon"] for p in ds]
+        nombres = [p["nombre"] for p in ds]
+        
+        fig = go.Figure(go.Scattermapbox(
+            lat=lats, lon=lons, mode='markers+lines',
+            marker=dict(size=12, color='#228be6'),
+            text=nombres
+        ))
+        fig.update_layout(
+            mapbox_style="carto-positron",
+            mapbox_zoom=4,
+            mapbox_center={"lat": 23.6, "lon": -102.5},
+            height=400, margin=dict(l=0, r=0, t=0, b=0)
+        )
         return fig
-    def render_detail(self, data_context): return None
 
-class CostTrendVerticalStrategy(KPIStrategy):
-    def get_card_config(self, data_context) -> Dict[str, Any]: return {"title": "Costo Total 2025 vs 2024"}
-    def get_figure(self, data_context):
-        meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun"]
-        actual = [1.5, 1.6, 1.55, 1.7, 1.8, 1.6]
-        anterior = [1.4, 1.5, 1.5, 1.6, 1.6, 1.5]
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=meses, y=anterior, name="2024", marker_color="#adb5bd"))
-        fig.add_trace(go.Bar(x=meses, y=actual, name="2025", marker_color="#228be6"))
-        fig.update_layout(barmode='group', height=250, margin=dict(l=0, r=0, t=30, b=0), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', legend=dict(orientation="h", y=1.1))
-        return fig
-    def render_detail(self, data_context): return None
+    def render_detail(self, data_context):
+        return None
 
-class TableDataStrategy:
-    def get_routes_data(self): return [["261", "3T-LYCRA", "1", "29", "$5.5k"], ["355", "APAXCO", "1", "854", "$0"], ["1", "CANOITAS", "1", "680", "$0"]]
-    def get_income_data(self): return [["32", "LITECRETE", "$200k", "0.9%"], ["35", "CONCRETOS", "$662k", "3.1%"], ["12", "VITRO", "$3.9M", "18%"]]
-    def get_perf_unit_data(self): return [["U-105", "2.4", "5"], ["U-33", "2.35", "7"], ["U-12", "2.3", "5"], ["U-99", "2.28", "8"]]
-    def get_perf_op_data(self): return [["Juan Perez", "2.4", "5"], ["Luis G.", "2.35", "7"], ["Carlos R.", "2.3", "5"]]
-
-class SimpleTextStrategy(KPIStrategy):
-    def __init__(self, key, title, prefix="", suffix="", color="gray", icon="tabler:circle"):
-        self.key = key
-        self.title = title
-        self.prefix = prefix
-        self.suffix = suffix
-        self.color = color
-        self.icon = icon
-
-    def get_card_config(self, data_context) -> Dict[str, Any]:
-        val = 1234 
-        return {"title": self.title, "value": f"{self.prefix}{val}{self.suffix}", "color": self.color, "icon": self.icon, "is_simple": True}
-    
-    def render_detail(self, data_context): return dmc.Text(f"Detalle de {self.title}")
+class RouteDetailTableStrategy:
+    def render_tabla_rutas(self, data_context):
+        ds = data_context["operaciones"]["rutas"]["tablas"]["detalle_rutas"]
+        return dmc.Table([
+            dmc.TableThead(dmc.TableTr([dmc.TableTh(h, style={"fontSize": "11px"}) for h in ds["h"]])),
+            dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in r]) for r in ds["r"]])
+        ], striped=True, withTableBorder=True, highlightOnHover=True)

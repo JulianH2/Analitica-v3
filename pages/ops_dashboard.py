@@ -1,206 +1,128 @@
 from flask import session
 import dash
-from dash import html, dcc, callback, Input, Output, ALL, no_update
+from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-
 from services.data_manager import DataManager
 from components.visual_widget import ChartWidget
+from components.smart_widget import SmartWidget
 from strategies.operational import (
-    GaugeKPIStrategy, 
-    MonthlyComparisonStrategy, 
-    OpsPieStrategy, 
-    BalanceUnitStrategy
+    OpsGaugeStrategy, OpsComparisonStrategy, OpsPieStrategy, 
+    BalanceUnitStrategy, OpsTableStrategy
 )
+from strategies.admin import AdminRichKPIStrategy
 
-dash.register_page(__name__, path='/ops-dashboard', title='Control Operativo')
-
+dash.register_page(__name__, path='/ops-dashboard', title='Operaciones')
 data_manager = DataManager()
+table_ops_mgr = OpsTableStrategy()
 
-gauge_ingreso = ChartWidget("g_ingreso", GaugeKPIStrategy("ingresos", "Ingreso Total", "#228be6"))
-gauge_viajes = ChartWidget("g_viajes", GaugeKPIStrategy("viajes", "Viajes Totales", "#12b886"))
-gauge_kms = ChartWidget("g_kms", GaugeKPIStrategy("kms", "Kms Recorridos", "#fab005"))
+gauge_ops_income = ChartWidget("go_income", OpsGaugeStrategy("Ingreso Viaje", "ingreso_viaje", "#228be6"))
+gauge_ops_trips = ChartWidget("go_trips", OpsGaugeStrategy("Viajes", "viajes", "#40c057", prefix=""))
+gauge_ops_kms = ChartWidget("go_kms", OpsGaugeStrategy("Kilómetros", "kilometros", "#fab005", prefix=""))
 
-bar_ingresos = ChartWidget("b_ingresos", MonthlyComparisonStrategy("Ingresos", "#228be6"))
-bar_viajes = ChartWidget("b_viajes", MonthlyComparisonStrategy("Viajes", "#fd7e14"))
+chart_ops_inc_comp = ChartWidget("co_inc_comp", OpsComparisonStrategy("Ingresos 2025 vs 2024", "ingresos_anual", "#228be6"))
+chart_ops_trips_comp = ChartWidget("co_trips_comp", OpsComparisonStrategy("Viajes 2025 vs 2024", "viajes_anual", "#40c057"))
+chart_ops_mix = ChartWidget("co_mix", OpsPieStrategy())
+chart_ops_unit_bal = ChartWidget("co_unit_bal", BalanceUnitStrategy())
 
-pie_ops = ChartWidget("p_ops", OpsPieStrategy())
-bar_balance = ChartWidget("b_balance", BalanceUnitStrategy())
+kpi_ops_avg_trip = SmartWidget("ko_avg_trip", AdminRichKPIStrategy("operaciones", "ingreso_viaje", "Ingreso x Viaje", "tabler:truck-delivery", "blue", sub_section="promedios"))
+kpi_ops_avg_unit = SmartWidget("ko_avg_unit", AdminRichKPIStrategy("operaciones", "ingreso_unit", "Ingreso x Unidad", "tabler:engine", "green", sub_section="promedios"))
+kpi_ops_units_qty = SmartWidget("ko_units", AdminRichKPIStrategy("operaciones", "unidades_utilizadas", "Unidades Utilizadas", "tabler:truck", "orange", sub_section="promedios"))
+kpi_ops_clients_qty = SmartWidget("ko_clients", AdminRichKPIStrategy("operaciones", "clientes_servidos", "Clientes Servidos", "tabler:users", "indigo", sub_section="promedios"))
 
 WIDGET_REGISTRY = {
-    "g_ingreso": gauge_ingreso,
-    "g_viajes": gauge_viajes,
-    "g_kms": gauge_kms,
-    "b_ingresos": bar_ingresos,
-    "b_viajes": bar_viajes,
-    "p_ops": pie_ops,
-    "b_balance": bar_balance
+    "go_income": gauge_ops_income, "go_trips": gauge_ops_trips, "go_kms": gauge_ops_kms,
+    "co_inc_comp": chart_ops_inc_comp, "co_trips_comp": chart_ops_trips_comp,
+    "co_mix": chart_ops_mix, "co_unit_bal": chart_ops_unit_bal,
+    "ko_avg_trip": kpi_ops_avg_trip, "ko_avg_unit": kpi_ops_avg_unit,
+    "ko_units": kpi_ops_units_qty, "ko_clients": kpi_ops_clients_qty
 }
 
 def layout():
-    if not session.get("user"):
-        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
-    
-    data_context = data_manager.get_data()
-
-    def mini_kpi(title, value, subtext, color="blue"):
-        return dmc.Paper(
-            p="xs", withBorder=True, shadow="xs", radius="md",
-            children=[
-                dmc.Text(title, size="xs", c="dimmed", fw="bold", tt="uppercase"), # type: ignore
-                dmc.Group(justify="space-between", mt=4, children=[
-                    dmc.Text(value, fw="bolder", size="lg"),
-                    dmc.Badge(subtext, color="blue", variant="light", size="xs")
-                ])
-            ]
-        )
-
+    if not session.get("user"): return dmc.Text("No autorizado...")
+    ctx = data_manager.get_data()
     return dmc.Container(fluid=True, children=[
+        dmc.Modal(id="ops-smart-modal", size="lg", centered=True, children=[html.Div(id="ops-modal-content")]),
         
-        dmc.Modal(id="ops-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="ops-modal-content")]),
-
-        dmc.Group(justify="space-between", mb="sm", children=[
-            dmc.Group([
-                DashIconify(icon="tabler:layout-dashboard", width=28, color="#228be6"),
-                dmc.Title("Dashboard Operaciones", order=3, c="dark")
-            ]),
-            dmc.Group(gap="xs", children=[
-                dmc.Select(value="2025", data=["2025", "2024"], size="xs", w=100, allowDeselect=False),
-                dmc.Select(value="Septiembre", data=["Agosto", "Septiembre"], size="xs", w=120, allowDeselect=False),
-                dmc.Button(leftSection=DashIconify(icon="tabler:filter"), variant="default", size="xs")
+        dmc.Paper(p="md", withBorder=True, mb="lg", children=[
+            dmc.SimpleGrid(cols={"base": 2, "md": 5}, spacing="xs", children=[
+                dmc.Select(label="Año", data=["2025"], value="2025", size="xs"),
+                dmc.Select(label="Mes", data=["septiembre"], value="septiembre", size="xs"),
+                dmc.Select(label="Área", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Unidad", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Cliente", data=["Todas"], value="Todas", size="xs"),
             ])
         ]),
 
-        dmc.Grid(gutter="md", children=[
-            
-            dmc.GridCol(span={"base": 12, "xl": 9}, miw=0, children=[ # type: ignore
-                
-                dmc.SimpleGrid(cols={"base": 1, "sm": 3}, spacing="sm", mb="sm", children=[ # type: ignore
-                    gauge_ingreso.render(data_context),
-                    gauge_viajes.render(data_context),
-                    gauge_kms.render(data_context),
-                ]),
+        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="xl", children=[
+            gauge_ops_income.render(ctx), gauge_ops_trips.render(ctx), gauge_ops_kms.render(ctx)
+        ]),
+        
+        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="xl", children=[
+            chart_ops_inc_comp.render(ctx), chart_ops_trips_comp.render(ctx)
+        ]),
+        
+        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="xl", children=[
+            chart_ops_mix.render(ctx), chart_ops_unit_bal.render(ctx)
+        ]),
 
-                dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="sm", mb="sm", children=[ # type: ignore
-                    bar_ingresos.render(data_context),
-                    bar_viajes.render(data_context),
-                ]),
-
-                dmc.Text("Indicadores de Eficiencia", size="sm", fw="bold", c="dimmed", mb=5), # type: ignore
-                dmc.SimpleGrid(cols={"base": 2, "md": 4}, spacing="sm", mb="sm", children=[ # type: ignore
-                    mini_kpi("Ingreso x Viaje", "$29,191", "+11%"),
-                    mini_kpi("Ingreso x Unidad", "$254,889", "+25%"),
-                    mini_kpi("Unidades Activas", "82", "-2 uds", "red"),
-                    mini_kpi("Clientes Activos", "15", "+3 new", "green"),
-                ]),
-
-                dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="sm", children=[ # type: ignore
-                    pie_ops.render(data_context),
-                    bar_balance.render(data_context),
-                ])
-            ]),
-
-            dmc.GridCol(span={"base": 12, "xl": 3}, miw=0, children=[   # type: ignore
-                
-                dmc.Paper(withBorder=True, shadow="sm", p="sm", mb="sm", radius="md", bg="gray", children=[
-                    dmc.Text("Estado de Flota", size="xs", fw="bold", c="dimmed", tt="uppercase", mb="xs"), # type: ignore
-                    dmc.Center(mb="md", children=[
-                        dmc.Stack(gap=0, align="center", children=[
-                            DashIconify(icon="tabler:truck-loading", width=48, color="#40c057"),
-                            dmc.Text("92% Cargado", fw="bolder", size="xl", c="green")
-                        ])
+        dmc.Grid(gutter="lg", mb="xl", children=[
+            dmc.GridCol(span={"base": 12, "md": 4}, children=[
+                dmc.Paper(p="md", withBorder=True, radius="md", children=[
+                    dmc.Group(justify="space-between", mb="md", children=[
+                        dmc.Text("Utilización de Flota", fw="bold", size="xs"),
+                        dmc.Anchor(DashIconify(icon="tabler:map-2", width=20), href="/ops-routes", underline="never")
                     ]),
-                    dmc.ProgressRoot(size="xl", children=[
+                    dmc.Center(dmc.Stack(align="center", gap=0, children=[
+                        DashIconify(icon="tabler:truck-loading", width=48, color="green"),
+                        dmc.Text("92% Cargado", fw=900, size="xl", c="green")
+                    ])),
+                    dmc.ProgressRoot(size="xl", mt="md", children=[
                         dmc.ProgressSection(value=92, color="green", children=[dmc.ProgressLabel("92%")]),
                         dmc.ProgressSection(value=8, color="gray", children=[dmc.ProgressLabel("8%")])
                     ])
-                ]),
-
-                dmc.Paper(withBorder=True, shadow="sm", p="xs", mb="sm", radius="md", children=[
-                    dmc.Tabs(value="vacio", color="red", variant="pills", children=[
-                        dmc.TabsList(children=[
-                            dmc.TabsTab("Vacío", value="vacio", style={"fontSize": "0.8rem"}),
-                            dmc.TabsTab("Cargado", value="cargado", style={"fontSize": "0.8rem"}),
-                        ], grow=True, mb="xs"),
-                        
-                        dmc.TabsPanel(value="vacio", children=[
-                            dmc.Table(
-                                data={
-                                    "head": ["Ruta", "Viajes"],
-                                    "body": [
-                                        ["3T-LYCRA", "12"],
-                                        ["APAXCO", "8"],
-                                        ["CANOITAS", "5"],
-                                        ["LA MORITA", "3"],
-                                        ["LA SILLA", "2"],
-                                        ["SALTILLO", "1"],
-                                    ]
-                                },
-                                striped="odd", highlightOnHover=True, withTableBorder=False, fz="xs"
-                            )
-                        ]),
-                         dmc.TabsPanel(value="cargado", children=[
-                            dmc.Text("Lista de rutas cargadas...", size="xs", c="dimmed", ta="center", py="xl") # type: ignore
-                        ]),
-                    ])
-                ]),
-
-                dmc.Paper(withBorder=True, shadow="sm", p="xs", radius="md", children=[
-                    dmc.Text("Top Ingresos", size="xs", fw="bold", c="dimmed", mb="xs"), # type: ignore
-                    dmc.Tabs(value="cliente", color="blue", variant="default", children=[
-                        dmc.TabsList(children=[
-                            dmc.TabsTab("Cliente", value="cliente", px="xs"),
-                            dmc.TabsTab("Unidad", value="unidad", px="xs"),
-                        ], grow=True, mb="xs"),
-
-                        dmc.TabsPanel(value="cliente", children=[
-                            dmc.ScrollArea(h=300, children=[
-                                dmc.Table(
-                                    data={
-                                        "head": ["Cliente", "Total"],
-                                        "body": [
-                                            ["LITECRETE", "$200k"],
-                                            ["CONCRETOS", "$662k"],
-                                            ["K&P SOL.", "$34k"],
-                                            ["VITRO", "$3.9M"],
-                                            ["OWENS", "$5.4M"],
-                                            ["HELLMANN", "$340k"],
-                                            ["TERNIUM", "$1.2M"],
-                                        ]
-                                    },
-                                    striped="odd", highlightOnHover=True, fz="xs"
-                                )
-                            ])
-                        ])
-                    ])
                 ])
-
+            ]),
+            dmc.GridCol(span={"base": 12, "md": 8}, children=[
+                dmc.Tabs(value="rutas", children=[
+                    dmc.TabsList([dmc.TabsTab("Rutas Cargado", value="rutas"), dmc.TabsTab("Rutas Vacío", value="vacio")]),
+                    dmc.TabsPanel(table_ops_mgr.render_rutas(ctx), value="rutas", pt="xs"),
+                    dmc.TabsPanel(dmc.Text("Sin datos de rutas vacías", py="xl", ta="center", c="dimmed"), value="vacio")
+                ])
             ])
-        ])
+        ]),
+
+        dmc.Text("PROMEDIOS OPERATIVOS", fw="bold", mb="md", size="sm", c="dimmed"),
+        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "md": 4}, spacing="sm", mb="xl", children=[
+            kpi_ops_avg_trip.render(ctx), kpi_ops_avg_unit.render(ctx), 
+            kpi_ops_units_qty.render(ctx), kpi_ops_clients_qty.render(ctx)
+        ]),
+
+        dmc.Paper(p="md", withBorder=True, children=[
+            dmc.Tabs(value="cliente", children=[
+                dmc.TabsList([
+                    dmc.TabsTab("Ingreso Cliente", value="cliente"), 
+                    dmc.TabsTab("Ingreso Operador", value="operador"), 
+                    dmc.TabsTab("Ingreso Unidad", value="unidad")
+                ]),
+                dmc.TabsPanel(table_ops_mgr.render_tabbed_table(ctx, "cliente"), value="cliente", pt="md"),
+                dmc.TabsPanel(table_ops_mgr.render_tabbed_table(ctx, "operador"), value="operador", pt="md"),
+                dmc.TabsPanel(table_ops_mgr.render_tabbed_table(ctx, "unidad"), value="unidad", pt="md"),
+            ])
+        ]),
+        dmc.Space(h=50)
     ])
 
 @callback(
-    Output("ops-smart-modal", "opened"),
-    Output("ops-smart-modal", "title"),
-    Output("ops-modal-content", "children"),
-    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"),
-    prevent_initial_call=True
+    Output("ops-smart-modal", "opened"), Output("ops-smart-modal", "title"), Output("ops-modal-content", "children"),
+    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"), prevent_initial_call=True
 )
-def handle_ops_widget_click(n_clicks):
-    ctx = dash.callback_context
-    if not ctx.triggered: return no_update, no_update, no_update
-    
-    button_id = ctx.triggered_id
-    if not button_id or "index" not in button_id: return no_update, no_update, no_update
-
-    widget_id = button_id["index"]
-    widget = WIDGET_REGISTRY.get(widget_id)
-    
+def handle_ops_dashboard_modal(n_clicks):
+    if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
+    w_id = dash.ctx.triggered_id["index"]
+    widget = WIDGET_REGISTRY.get(w_id)
     if widget:
-        data_context = data_manager.get_data()
-        content = widget.strategy.render_detail(data_context)
-        config = widget.strategy.get_card_config(data_context)
-        title = dmc.Text(f"Detalle: {config.get('title')}", fw="bold")
-        return True, title, content
-    
+        ctx = data_manager.get_data()
+        cfg = widget.strategy.get_card_config(ctx)
+        return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update

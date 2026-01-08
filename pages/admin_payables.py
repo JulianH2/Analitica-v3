@@ -2,65 +2,89 @@ from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from services.data_manager import DataManager
 from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
 from components.table_widget import TableWidget
 from strategies.admin import (
-    AdminRichKPIStrategy, PayablesForecastStrategy, SupplierMixStrategy, 
-    PayablesRankingStrategy, PayablesAgingStrategy, AdminTableStrategy
+    AdminRichKPIStrategy, PayablesGaugeStrategy, PayablesComparisonStrategy,
+    PayablesMixStrategy, SupplierSaldoStrategy, PayablesAgingTableStrategy
 )
 
 dash.register_page(__name__, path='/admin-payables', title='Cuentas por Pagar')
 data_manager = DataManager()
-table_strat = AdminTableStrategy()
 
-w1 = SmartWidget("wp_1", AdminRichKPIStrategy("cuentas_por_pagar", "total_cxp", "Total CXP", "tabler:file-dollar", "red"))
-w2 = SmartWidget("wp_2", AdminRichKPIStrategy("cuentas_por_pagar", "vencido", "Saldo Vencido", "tabler:alert-triangle", "orange"))
-w3 = SmartWidget("wp_3", AdminRichKPIStrategy("cuentas_por_pagar", "proveedores_activos", "Prov. Activos", "tabler:users", "blue"))
+gauge_pay_efficiency = ChartWidget("gp_efficiency", PayablesGaugeStrategy("CXP vs Pagado", "cxp_vs_pagado", "cxp_vs_pagado", "#228be6"))
+gauge_pay_timing = ChartWidget("gp_timing", PayablesGaugeStrategy("Promedio Días Pago", "promedio_pago", "promedio_pago", "#fab005"))
 
-c_aging = ChartWidget("cp_aging", PayablesAgingStrategy())
-c_mix = ChartWidget("cp_mix", SupplierMixStrategy())
-c_rank = ChartWidget("cp_rank", PayablesRankingStrategy())
-c_fore = ChartWidget("cp_fore", PayablesForecastStrategy())
+kpi_pay_acc_initial = SmartWidget("kp_initial", AdminRichKPIStrategy("cuentas_por_pagar", "saldo_inicial", "Saldo Inicial", "tabler:database-import", "blue", sub_section="acumulado"))
+kpi_pay_acc_cxp = SmartWidget("kp_cxp", AdminRichKPIStrategy("cuentas_por_pagar", "cxp", "CxP", "tabler:file-invoice", "indigo", sub_section="acumulado"))
+kpi_pay_acc_debit = SmartWidget("kp_debit", AdminRichKPIStrategy("cuentas_por_pagar", "notas_cargo", "Notas Cargo", "tabler:file-plus", "gray", sub_section="acumulado"))
+kpi_pay_acc_credit = SmartWidget("kp_credit", AdminRichKPIStrategy("cuentas_por_pagar", "notas_credito", "Notas Crédito", "tabler:file-minus", "red", sub_section="acumulado"))
+kpi_pay_acc_advances = SmartWidget("kp_advances", AdminRichKPIStrategy("cuentas_por_pagar", "anticipo", "Anticipo", "tabler:receipt-2", "teal", sub_section="acumulado"))
+kpi_pay_acc_total = SmartWidget("kp_total", AdminRichKPIStrategy("cuentas_por_pagar", "cxp_total", "CxP Total", "tabler:sum", "blue", sub_section="acumulado"))
+kpi_pay_acc_payments = SmartWidget("kp_payments", AdminRichKPIStrategy("cuentas_por_pagar", "pago_proveedores", "Pago Proveedores", "tabler:truck-delivery", "green", sub_section="acumulado"))
+kpi_pay_acc_balance = SmartWidget("kp_balance", AdminRichKPIStrategy("cuentas_por_pagar", "saldo", "Saldo", "tabler:wallet", "orange", sub_section="acumulado"))
 
-t_detail = TableWidget(table_strat)
+chart_pay_mix = ChartWidget("cp_mix", PayablesMixStrategy())
+chart_pay_supplier_stack = ChartWidget("cp_stack", SupplierSaldoStrategy())
+chart_pay_comparison = ChartWidget("cp_comp", PayablesComparisonStrategy())
+table_pay_aging = TableWidget(PayablesAgingTableStrategy())
 
-WIDGET_REGISTRY = { "wp_1": w1, "wp_2": w2, "wp_3": w3, "cp_aging": c_aging }
+WIDGET_REGISTRY = {
+    "gp_efficiency": gauge_pay_efficiency, 
+    "gp_timing": gauge_pay_timing,
+    "kp_initial": kpi_pay_acc_initial, 
+    "kp_cxp": kpi_pay_acc_cxp,
+    "kp_debit": kpi_pay_acc_debit, 
+    "kp_credit": kpi_pay_acc_credit,
+    "kp_advances": kpi_pay_acc_advances, 
+    "kp_total": kpi_pay_acc_total, 
+    "kp_payments": kpi_pay_acc_payments, 
+    "kp_balance": kpi_pay_acc_balance,
+    "cp_mix": chart_pay_mix, 
+    "cp_stack": chart_pay_supplier_stack, 
+    "cp_comp": chart_pay_comparison
+}
 
 def layout():
-    if not session.get("user"):
-        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
+    if not session.get("user"): return dmc.Text("No autorizado...")
+    ctx = data_manager.get_data()
     
-    data_context = data_manager.get_data()
     return dmc.Container(fluid=True, children=[
         dmc.Modal(id="pay-smart-modal", size="lg", centered=True, children=[html.Div(id="pay-modal-content")]),
         
-        dmc.Group(justify="space-between", mb="md", children=[
-            dmc.Title("Cuentas por Pagar", order=3, c="dark"),
-            dmc.Button("Programar Pagos", leftSection=DashIconify(icon="tabler:calendar-dollar"), variant="filled", color="red", size="xs")
-        ]),
-
-        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="xl", children=[ # type: ignore
-            w1.render(data_context), w2.render(data_context), w3.render(data_context)
-        ]),
-
-        dmc.Grid(gutter="lg", children=[
-            dmc.GridCol(span={"base": 12, "md": 7}, children=[ # type: ignore
-                dmc.SimpleGrid(cols=2, spacing="md", mb="md", children=[
-                    c_aging.render(data_context),
-                    c_mix.render(data_context)
-                ]),
-                c_fore.render(data_context)
-            ]),
-            dmc.GridCol(span={"base": 12, "md": 5}, children=[ # type: ignore
-                c_rank.render(data_context)
+        dmc.Paper(p="md", withBorder=True, mb="lg", children=[
+            dmc.SimpleGrid(cols={"base": 2, "md": 6}, spacing="xs", children=[
+                dmc.Select(label="Año", data=["2025"], value="2025", size="xs"),
+                dmc.Select(label="Mes", data=["09-Sep"], value="09-Sep", size="xs"),
+                dmc.Select(label="Empresa Área", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Proveedor", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Tipo Proveedor", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Concepto Proveedor", data=["Todas"], value="Todas", size="xs"),
             ])
         ]),
 
-        t_detail.render(title="Próximos Vencimientos", mode="payables"),
-        
+        dmc.Text("INDICADORES CLAVE", fw="bold", mb="md", size="sm", c="dimmed"),
+        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="xl", children=[
+            gauge_pay_efficiency.render(ctx), gauge_pay_timing.render(ctx)
+        ]),
+
+        dmc.Text("RESUMEN ACUMULADO", fw="bold", mb="md", size="sm", c="dimmed"),
+        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "md": 4}, spacing="sm", mb="xl", children=[
+            kpi_pay_acc_initial.render(ctx), kpi_pay_acc_cxp.render(ctx), 
+            kpi_pay_acc_debit.render(ctx), kpi_pay_acc_credit.render(ctx),
+            kpi_pay_acc_advances.render(ctx), kpi_pay_acc_total.render(ctx), 
+            kpi_pay_acc_payments.render(ctx), kpi_pay_acc_balance.render(ctx)
+        ]),
+
+        dmc.Grid(gutter="lg", mb="lg", children=[
+            dmc.GridCol(span={"base": 12, "md": 4}, children=[chart_pay_mix.render(ctx)]),
+            dmc.GridCol(span={"base": 12, "md": 8}, children=[chart_pay_supplier_stack.render(ctx)]),
+        ]),
+
+        table_pay_aging.render(ctx, title="ANTIGÜEDAD DE SALDOS"),
+        dmc.Paper(p="md", withBorder=True, mt="lg", children=[chart_pay_comparison.render(ctx)]),
         dmc.Space(h=50)
     ])
 
@@ -71,14 +95,12 @@ def layout():
     Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"),
     prevent_initial_call=True
 )
-def handle_click(n_clicks):
-    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict): 
-        return no_update, no_update, no_update
-    
+def handle_payables_modal_click(n_clicks):
+    if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
         cfg = widget.strategy.get_card_config(ctx)
-        return True, dmc.Text(cfg["title"], fw="bold"), widget.strategy.render_detail(ctx)
+        return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update

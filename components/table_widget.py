@@ -5,8 +5,8 @@ class TableWidget:
     def __init__(self, strategy):
         self.strategy = strategy
 
-    def render(self, title="Detalle de Datos", **kwargs):
-        table_component = self.strategy.render(**kwargs)
+    def render(self, data_context, title="Detalle de Datos", **kwargs):
+        table_component = self.strategy.render(data_context, **kwargs)
         
         return dmc.Paper(
             p="md", radius="md", withBorder=True, shadow="sm", mt="xl",
@@ -19,9 +19,7 @@ class TableWidget:
                     dmc.Badge("Vista Completa", variant="light", color="gray")
                 ]),
                 dmc.ScrollArea(
-                    h="auto",
-                    mah=500,
-                    offsetScrollbars="present",
+                    h="auto", mah=500, offsetScrollbars="present",
                     children=table_component
                 )
             ]

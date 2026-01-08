@@ -2,117 +2,94 @@ from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
-
 from services.data_manager import DataManager
 from components.visual_widget import ChartWidget
-from components.smart_widget import SmartWidget
 from strategies.operational import (
-    CostConceptStrategy, CostTrendVerticalStrategy,
-    TableDataStrategy
+    OpsGaugeStrategy, CostUtilityStackedStrategy, 
+    CostBreakdownStrategy, OpsComparisonStrategy, CostTableStrategy
 )
 
-dash.register_page(__name__, path='/ops-costs', title='Costos')
-
+dash.register_page(__name__, path='/ops-costs', title='Costos Operativos')
 data_manager = DataManager()
-table_data = TableDataStrategy()
+table_cost_mgr = CostTableStrategy()
 
-w_concept_chart = ChartWidget("w_c_concept", CostConceptStrategy())
-w_trend_chart = ChartWidget("w_c_trend", CostTrendVerticalStrategy())
+# --- INDICADORES DE COSTO (Gauges) ---
+gauge_cost_utility = ChartWidget("gc_utility", OpsGaugeStrategy("Utilidad Viaje", "utilidad_viaje", "#40c057", prefix="%", section="costos"))
+gauge_cost_total = ChartWidget("gc_total", OpsGaugeStrategy("Costo Viaje Total", "costo_total", "#fa5252", section="costos"))
 
-WIDGET_REGISTRY = { "w_c_concept": w_concept_chart, "w_c_trend": w_trend_chart }
+# --- ANÁLISIS VISUAL (Charts) ---
+chart_cost_stack = ChartWidget("cc_stack", CostUtilityStackedStrategy())
+chart_cost_breakdown = ChartWidget("cc_break", CostBreakdownStrategy())
+chart_cost_yearly_comp = ChartWidget("cc_comp", OpsComparisonStrategy("Costo Viaje Total 2025 vs 2024", "comparativa_costos", "#fa5252", section="costos"))
+
+# Registro de Widgets para Callbacks
+WIDGET_REGISTRY = {
+    "gc_utility": gauge_cost_utility, "gc_total": gauge_cost_total,
+    "cc_stack": chart_cost_stack, "cc_break": chart_cost_breakdown, "cc_comp": chart_cost_yearly_comp
+}
 
 def layout():
-    if not session.get("user"):
-        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
+    if not session.get("user"): return dmc.Text("No autorizado...")
+    ctx = data_manager.get_data()
     
-    data_context = data_manager.get_data()
-
-    def cost_block(title, value, var, color="green"):
-        return dmc.Paper(p="xs", withBorder=True, style={"backgroundColor": f"var(--mantine-color-{color}-0)"}, children=[
-                dmc.Text(title, size="xs", c="dimmed", fw="bold", tt="uppercase"), # type: ignore
-                dmc.Text(value, size="sm", fw="bold"),
-                dmc.Badge(var, size="xs", color="green", variant="light")
-        ])
-
     return dmc.Container(fluid=True, children=[
-        dmc.Modal(id="cost-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="cost-modal-content")]),
-
-        dmc.Group(justify="space-between", mb="md", children=[
-            dmc.Title("Dashboard Costos Operaciones", order=3, c="dark"),
-            dmc.ActionIcon(DashIconify(icon="tabler:filter"), variant="default")
-        ]),
-
-        dmc.Grid(gutter="md", mb="lg", children=[
-            dmc.GridCol(span={"base": 12, "md": 4}, children=[ #  # type: ignore
-                dmc.SimpleGrid(cols=2, spacing="sm", children=[
-                    dmc.Paper(p="md", withBorder=True, shadow="sm", children=[
-                        dmc.Text("Utilidad Viaje", size="xs", c="dimmed"), dmc.Text("18.19%", fw="bold", size="xl", c="blue") # type: ignore
-                    ]),
-                    dmc.Paper(p="md", withBorder=True, shadow="sm", children=[
-                        dmc.Text("Costo Viaje Total", size="xs", c="dimmed"), dmc.Text("$17.1M", fw="bold", size="xl", c="red") # type: ignore
-                    ])
-                ])
-            ]),
-            dmc.GridCol(span={"base": 12, "md": 8}, children=[ #  # type: ignore
-                dmc.SimpleGrid(cols=4, spacing="xs", children=[
-                    cost_block("Combustible", "$8.5M", "+2%", "red"),
-                    cost_block("Sueldos", "$4.2M", "-1%", "green"),
-                    cost_block("Llantas", "$1.5M", "+5%", "red"),
-                    cost_block("Mtto", "$1.2M", "0%", "gray"),
-                    cost_block("Peajes", "$800k", "+1%", "red"),
-                    cost_block("Otros", "$500k", "-2%", "green"),
-                    cost_block("Seguros", "$300k", "0%", "gray"),
-                    cost_block("Impuestos", "$200k", "0%", "gray"),
-                ])
+        dmc.Modal(id="cost-smart-modal", size="lg", centered=True, children=[html.Div(id="cost-modal-content")]),
+        
+        # Filtros de Operación
+        dmc.Paper(p="md", withBorder=True, mb="lg", children=[
+            dmc.SimpleGrid(cols={"base": 2, "md": 5}, spacing="xs", children=[ # type: ignore
+                dmc.Select(label="Año", data=["2025"], value="2025", size="xs"),
+                dmc.Select(label="Mes", data=["septiembre"], value="septiembre", size="xs"),
+                dmc.Select(label="Unidad", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Ruta", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Operador", data=["Todas"], value="Todas", size="xs"),
             ])
         ]),
 
-        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="lg", children=[ # type: ignore
-            w_concept_chart.render(data_context),
-            w_trend_chart.render(data_context)
+        # Gauges de Eficiencia de Costo
+        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="xl", children=[  # type: ignore
+            gauge_cost_utility.render(ctx), gauge_cost_total.render(ctx)
         ]),
 
-        dmc.Paper(withBorder=True, shadow="sm", p="xs", children=[
-            dmc.Tabs(value="ruta", color="teal", variant="outline", children=[
-                dmc.TabsList(children=[
+        # Análisis Mensual y por Concepto
+        dmc.Grid(gutter="lg", mb="xl", children=[
+            dmc.GridCol(span={"base": 12, "md": 6}, children=[chart_cost_stack.render(ctx)]),  # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 6}, children=[chart_cost_breakdown.render(ctx)]),  # type: ignore
+        ]),
+
+        # Comparativa Anual
+        dmc.Paper(p="md", withBorder=True, mb="xl", children=[chart_cost_yearly_comp.render(ctx)]),
+
+        # SECCIÓN DE MÁRGENES (100% de Pestañas Recuperadas)
+        dmc.Paper(p="md", withBorder=True, children=[
+            dmc.Tabs(value="ruta", children=[
+                dmc.TabsList([
                     dmc.TabsTab("Margen por Ruta", value="ruta"),
                     dmc.TabsTab("Margen por Unidad", value="unidad"),
+                    dmc.TabsTab("Margen por Operador", value="operador"),
+                    dmc.TabsTab("Margen por Viaje", value="viaje"),
                     dmc.TabsTab("Margen por Cliente", value="cliente"),
                 ]),
-                dmc.TabsPanel(value="ruta", children=[
-                     dmc.Table(
-                        striped="odd", highlightOnHover=True, fz="xs", mt="xs",
-                        children=[
-                            dmc.TableThead(dmc.TableTr([dmc.TableTh("No."), dmc.TableTh("Ruta"), dmc.TableTh("Flete"), dmc.TableTh("Costo"), dmc.TableTh("Utilidad")])),
-                            dmc.TableTbody([
-                                dmc.TableTr([dmc.TableTd("261"), dmc.TableTd("3T-LYCRA"), dmc.TableTd("$247k"), dmc.TableTd("$198k"), dmc.TableTd("$48k", c="green", fw="bold")]),
-                                dmc.TableTr([dmc.TableTd("355"), dmc.TableTd("APAXCO"), dmc.TableTd("$150k"), dmc.TableTd("$140k"), dmc.TableTd("$10k", c="green", fw="bold")])
-                            ])
-                        ]
-                    )
-                ])
+                dmc.TabsPanel(dmc.ScrollArea(h=400, mt="md", children=[table_cost_mgr.render_margen_ruta(ctx)]), value="ruta"),
+                dmc.TabsPanel(dmc.Text("Seleccione unidad...", py="xl", ta="center", c="dimmed"), value="unidad"),  # type: ignore
+                dmc.TabsPanel(dmc.Text("Seleccione operador...", py="xl", ta="center", c="dimmed"), value="operador"),  # type: ignore
+                dmc.TabsPanel(dmc.Text("Seleccione viaje...", py="xl", ta="center", c="dimmed"), value="viaje"),  # type: ignore
+                dmc.TabsPanel(dmc.Text("Seleccione cliente...", py="xl", ta="center", c="dimmed"), value="cliente"),  # type: ignore
             ])
         ]),
-        
         dmc.Space(h=50)
     ])
 
 @callback(
-    Output("cost-smart-modal", "opened"),
-    Output("cost-smart-modal", "title"),
-    Output("cost-modal-content", "children"),
-    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"),
-    prevent_initial_call=True
+    Output("cost-smart-modal", "opened"), Output("cost-smart-modal", "title"), Output("cost-modal-content", "children"),
+    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"), prevent_initial_call=True
 )
-def handle_cost_click(n_clicks):
-    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict): 
-        return no_update, no_update, no_update
-    w_id = dash.ctx.triggered_id["index"]
+def handle_cost_modal_click(n_clicks):
+    if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
+    w_id = dash.ctx.triggered_id["index"]  # type: ignore
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
         cfg = widget.strategy.get_card_config(ctx)
-        content = widget.strategy.render_detail(ctx) or dmc.Text("Sin detalles.")
-        return True, dmc.Text(cfg.get("title"), fw="bold"), content
+        return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update

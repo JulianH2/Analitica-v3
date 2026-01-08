@@ -2,98 +2,84 @@ from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
-
 from services.data_manager import DataManager
 from components.visual_widget import ChartWidget
-from components.smart_widget import SmartWidget
 from strategies.operational import (
-    PerformanceGaugeStrategy, PerformanceTrendStrategy, PerformanceMixStrategy,
-    TableDataStrategy
+    PerformanceGaugeStrategy, PerformanceTrendStrategy, 
+    PerformanceMixStrategy, PerformanceTableStrategy
 )
 
-dash.register_page(__name__, path='/ops-performance', title='Rendimiento')
-
+dash.register_page(__name__, path='/ops-performance', title='Rendimientos')
 data_manager = DataManager()
-table_data = TableDataStrategy()
+table_perf_mgr = PerformanceTableStrategy()
 
-w_gauge_rend = ChartWidget("w_p_rend", PerformanceGaugeStrategy("Rend. Real/Lt", 1.86, 2.1, " km/L"))
-w_gauge_kms = ChartWidget("w_p_kms", PerformanceGaugeStrategy("Kms Reales", 513, 600, "k"))
-w_gauge_lts = ChartWidget("w_p_lts", PerformanceGaugeStrategy("Litros", 275, 300, "k"))
+gauge_perf_kms_lt = ChartWidget("gp_kms_lt", PerformanceGaugeStrategy("Kms. Reales/Lt", "kms_lt", "#228be6"))
+gauge_perf_kms_total = ChartWidget("gp_kms_total", PerformanceGaugeStrategy("Kms. Reales", "kms_reales", "#40c057"))
+gauge_perf_litros = ChartWidget("gp_litros", PerformanceGaugeStrategy("Litros Totales", "litros", "#fab005"))
 
-w_chart_trend = ChartWidget("w_p_trend", PerformanceTrendStrategy())
-w_chart_mix = ChartWidget("w_p_mix", PerformanceMixStrategy())
+chart_perf_trend = ChartWidget("cp_trend", PerformanceTrendStrategy())
+chart_perf_mix = ChartWidget("cp_mix", PerformanceMixStrategy())
 
 WIDGET_REGISTRY = {
-    "w_p_rend": w_gauge_rend, "w_p_kms": w_gauge_kms, "w_p_lts": w_gauge_lts,
-    "w_p_trend": w_chart_trend, "w_p_mix": w_chart_mix
+    "gp_kms_lt": gauge_perf_kms_lt,
+    "gp_kms_total": gauge_perf_kms_total,
+    "gp_litros": gauge_perf_litros,
+    "cp_trend": chart_perf_trend,
+    "cp_mix": chart_perf_mix
 }
 
 def layout():
-    if not session.get("user"):
-        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
+    if not session.get("user"): return dmc.Text("No autorizado...")
+    ctx = data_manager.get_data()
     
-    data_context = data_manager.get_data()
-    
-    def simple_table(headers, rows):
-        return dmc.Table(
-            striped="odd", withTableBorder=True, fz="xs",
-            children=[
-                dmc.TableThead(dmc.TableTr([dmc.TableTh(h) for h in headers])),
-                dmc.TableTbody([dmc.TableTr([dmc.TableTd(c) for c in r]) for r in rows])
-            ]
-        )
-
     return dmc.Container(fluid=True, children=[
-        dmc.Modal(id="perf-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="perf-modal-content")]),
-
-        dmc.Group(justify="space-between", mb="md", children=[
-            dmc.Title("Dashboard Rendimientos", order=3, c="dark"),
-            dmc.Button("Reporte", leftSection=DashIconify(icon="tabler:download"), variant="light", size="xs")
-        ]),
-
-        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="lg", children=[ # type: ignore
-            w_gauge_rend.render(data_context),
-            w_gauge_kms.render(data_context),
-            w_gauge_lts.render(data_context),
-        ]),
-
-        dmc.Paper(p="xs", withBorder=True, shadow="sm", mb="lg", children=[
-            w_chart_trend.render(data_context)
-        ]),
-
-        dmc.SimpleGrid(cols={"base": 1, "lg": 3}, spacing="lg", children=[ # type: ignore
-            w_chart_mix.render(data_context),
-            
-            dmc.Paper(p="xs", withBorder=True, shadow="sm", children=[
-                dmc.Text("Rendimiento por Unidad", fw="bold", size="sm", mb="xs"),
-                simple_table(["Unidad", "Rend.", "Viajes"], table_data.get_perf_unit_data())
-            ]),
-
-            dmc.Paper(p="xs", withBorder=True, shadow="sm", children=[
-                dmc.Text("Rendimiento por Operador", fw="bold", size="sm", mb="xs"),
-                simple_table(["Operador", "Rend.", "Viajes"], table_data.get_perf_op_data())
+        dmc.Modal(id="perf-smart-modal", size="lg", centered=True, children=[html.Div(id="perf-modal-content")]),
+        
+        dmc.Paper(p="md", withBorder=True, mb="lg", children=[
+            dmc.SimpleGrid(cols={"base": 2, "md": 5}, spacing="xs", children=[  # type: ignore
+                dmc.Select(label="Año", data=["2025"], value="2025", size="xs"),
+                dmc.Select(label="Mes", data=["septiembre"], value="septiembre", size="xs"),
+                dmc.Select(label="Empresa Área", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Unidad", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Operador", data=["Todas"], value="Todas", size="xs"),
             ])
         ]),
-        
+        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="xl", children=[  # type: ignore
+            gauge_perf_kms_lt.render(ctx), gauge_perf_kms_total.render(ctx), gauge_perf_litros.render(ctx)
+        ]),
+
+        dmc.Grid(gutter="lg", mb="xl", children=[
+            dmc.GridCol(span={"base": 12, "md": 8}, children=[chart_perf_trend.render(ctx)]),  # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 4}, children=[chart_perf_mix.render(ctx)]),  # type: ignore
+        ]),
+
+        dmc.Grid(gutter="lg", children=[
+            dmc.GridCol(span={"base": 12, "md": 4}, children=[  # type: ignore
+                dmc.Paper(p="md", withBorder=True, children=[
+                    dmc.Text("Rendimiento Real por Unidad", fw="bold", size="sm", mb="md"),
+                    table_perf_mgr.render_unit(ctx)
+                ])
+            ]),
+            dmc.GridCol(span={"base": 12, "md": 8}, children=[  # type: ignore
+                dmc.Paper(p="md", withBorder=True, children=[
+                    dmc.Text("Rendimiento por Operador", fw="bold", size="sm", mb="md"),
+                    dmc.ScrollArea(h=300, children=[table_perf_mgr.render_operador(ctx)])
+                ])
+            ])
+        ]),
         dmc.Space(h=50)
     ])
 
 @callback(
-    Output("perf-smart-modal", "opened"),
-    Output("perf-smart-modal", "title"),
-    Output("perf-modal-content", "children"),
-    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"),
-    prevent_initial_call=True
+    Output("perf-smart-modal", "opened"), Output("perf-smart-modal", "title"), Output("perf-modal-content", "children"),
+    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"), prevent_initial_call=True
 )
-def handle_perf_click(n_clicks):
-    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict):
-        return no_update, no_update, no_update
+def handle_perf_modal_click(n_clicks):
+    if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
         cfg = widget.strategy.get_card_config(ctx)
-        content = widget.strategy.render_detail(ctx) or dmc.Text("Sin detalles.")
-        return True, dmc.Text(cfg.get("title"), fw="bold"), content
+        return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update

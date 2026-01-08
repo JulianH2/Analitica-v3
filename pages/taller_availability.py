@@ -2,65 +2,71 @@ from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 from services.data_manager import DataManager
 from components.visual_widget import ChartWidget
-from components.smart_widget import SmartWidget
 from strategies.taller import (
-    AvailabilityTrendStrategy, DowntimeReasonsStrategy, ComplexKPIStrategy
+    TallerGaugeStrategy, AvailabilityMonthlyStrategy, 
+    AvailabilityKmEntriesStrategy, AvailabilityTableStrategy
 )
 
 dash.register_page(__name__, path='/taller-availability', title='Disponibilidad')
 data_manager = DataManager()
+table_avail_mgr = AvailabilityTableStrategy()
 
-w_mtbf = SmartWidget("wa_1", ComplexKPIStrategy("MTBF", "250 hrs", "Tiempo entre fallas", 5, "green", "tabler:clock-play"))
-w_mttr = SmartWidget("wa_2", ComplexKPIStrategy("MTTR", "4.5 hrs", "Tiempo reparación", -10, "red", "tabler:clock-stop"))
-w_downtime = SmartWidget("wa_3", ComplexKPIStrategy("Horas Paro", "120 hrs", "Acumulado Mes", 0, "orange", "tabler:alert-triangle"))
+ga_pct_disp = ChartWidget("ga_disp", TallerGaugeStrategy("% Disponibilidad", "pct_disponibilidad", "#fab005", suffix="%", section="disponibilidad"))
+ga_entries = ChartWidget("ga_ent", TallerGaugeStrategy("Entradas a Taller", "entradas_taller", "#228be6", prefix="", section="disponibilidad"))
 
-c_trend = ChartWidget("ca_trend", AvailabilityTrendStrategy())
-c_reasons = ChartWidget("ca_reasons", DowntimeReasonsStrategy())
+ca_trend = ChartWidget("ca_trend", AvailabilityMonthlyStrategy())
+ca_km_entry = ChartWidget("ca_km_entry", AvailabilityKmEntriesStrategy())
 
-WIDGET_REGISTRY = { "wa_1": w_mtbf, "wa_2": w_mttr, "wa_3": w_downtime, "ca_trend": c_trend, "ca_reasons": c_reasons }
+WIDGET_REGISTRY = {"ga_disp": ga_pct_disp, "ga_ent": ga_entries, "ca_trend": ca_trend, "ca_km_entry": ca_km_entry}
 
 def layout():
-    if not session.get("user"):
-        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
-    
-    data_context = data_manager.get_data()
+    if not session.get("user"): return dmc.Text("No autorizado...")
+    ctx = data_manager.get_data()
     return dmc.Container(fluid=True, children=[
-        dmc.Modal(id="avail-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="avail-modal-content")]),
+        dmc.Modal(id="avail-smart-modal", size="lg", centered=True, children=[html.Div(id="avail-modal-content")]),
         
-        dmc.Group(justify="space-between", mb="md", children=[
-            dmc.Title("Análisis de Disponibilidad", order=3, c="dark"),
-            dmc.Button("Reporte Fallas", variant="default", size="xs")
+        dmc.Paper(p="md", withBorder=True, mb="lg", children=[
+            dmc.SimpleGrid(cols={"base": 2, "md": 4, "lg": 8}, spacing="xs", children=[
+                dmc.Select(label="Año", data=["2025"], value="2025", size="xs"),
+                dmc.Select(label="Mes", data=["07-Jul"], value="07-Jul", size="xs"),
+                dmc.Select(label="Empresa/Área", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Unidad", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Tipo Operación", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Clasificación", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Razón Reparación", data=["Todas"], value="Todas", size="xs"),
+                dmc.Select(label="Tipo Motor", data=["Todas"], value="Todas", size="xs"),
+            ])
         ]),
 
-        dmc.SimpleGrid(cols=3, spacing="lg", mb="xl", children=[
-            w_mtbf.render(data_context), w_mttr.render(data_context), w_downtime.render(data_context)
+        dmc.Text("INDICADORES DE DISPONIBILIDAD", fw="bold", mb="md", size="sm", c="dimmed"),
+        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="xl", children=[
+            ga_pct_disp.render(ctx), ga_entries.render(ctx)
         ]),
 
-        dmc.Grid(gutter="lg", children=[
-            dmc.GridCol(span={"base": 12, "md": 8}, children=[c_trend.render(data_context)]), # type: ignore
-            dmc.GridCol(span={"base": 12, "md": 4}, children=[c_reasons.render(data_context)]) # type: ignore
+        dmc.Grid(gutter="lg", mb="xl", children=[
+            dmc.GridCol(span={"base": 12, "md": 6}, children=[ca_trend.render(ctx)]),
+            dmc.GridCol(span={"base": 12, "md": 6}, children=[ca_km_entry.render(ctx)]),
+        ]),
+
+        dmc.Paper(p="md", withBorder=True, children=[
+            dmc.Text("DETALLE DE DISPONIBILIDAD POR ÁREA / UNIDAD", fw="bold", mb="md", size="xs"),
+            dmc.ScrollArea(h=450, children=[table_avail_mgr.render(ctx)])
         ]),
         dmc.Space(h=50)
     ])
 
 @callback(
-    Output("avail-smart-modal", "opened"),
-    Output("avail-smart-modal", "title"),
-    Output("avail-modal-content", "children"),
-    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"),
-    prevent_initial_call=True
+    Output("avail-smart-modal", "opened"), Output("avail-smart-modal", "title"), Output("avail-modal-content", "children"),
+    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"), prevent_initial_call=True
 )
 def handle_click(n_clicks):
-    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict):
-        return no_update, no_update, no_update
+    if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
-        config = widget.strategy.get_card_config(ctx)
-        content = widget.strategy.render_detail(ctx) or dmc.Text("Sin detalles.")
-        return True, dmc.Text(config["title"], fw="bold"), content
+        cfg = widget.strategy.get_card_config(ctx)
+        return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update
