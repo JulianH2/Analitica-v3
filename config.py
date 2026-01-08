@@ -9,9 +9,12 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-12345")
     SESSION_TYPE = "filesystem"
     SESSION_PERMANENT = False
+    SESSION_COOKIE_SECURE = False
+    SESSION_USE_SIGNER = True
+    SESSION_KEY_PREFIX = "analytics_v3_"
     
     # Control de autenticación
-    ENABLE_LOGIN = True # Cámbialo a True para activar el guardián
+    ENABLE_LOGIN = True
 
     # --- MSAL / Azure AD (Configuración Original) ---
     MSAL_CLIENT_ID = os.getenv("MSAL_CLIENT_ID")
@@ -20,6 +23,10 @@ class Config:
     MSAL_SCOPE = ["User.Read"]
     REDIRECT_PATH = "/getAToken"
     
+    # --- GOOGLE OAuth2 (Nueva Configuración) ---
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+
     # --- Base de Datos (Azure SQL con Driver 18) ---
     SQL_SERVER = os.getenv("AZURE_SQL_SERVER")
     SQL_DATABASE = os.getenv("AZURE_SQL_DATABASE")
@@ -32,7 +39,6 @@ class Config:
     def get_connection_string(cls):
         """Genera la cadena de conexión compatible con Driver 18"""
         if not all([cls.SQL_SERVER, cls.SQL_DATABASE, cls.SQL_USERNAME, cls.SQL_PASSWORD]):
-            print("⚠️ Faltan variables de entorno para la base de datos.")
             return None
             
         # IMPORTANTE: Driver 18 requiere TrustServerCertificate=yes si no tienes certificados SSL configurados

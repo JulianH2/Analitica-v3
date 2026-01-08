@@ -1,17 +1,25 @@
+import logging
 import dash
 from dash import Input, Output, State
-from flask import Flask, redirect, url_for, session
+from flask import Flask, redirect, request, session, url_for
 from flask_session import Session
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 
 from config import Config
 from components.layout.sidebar import render_sidebar
+from pages.auth import get_error_layout, get_login_layout
 from services.auth_service import auth_service
+from settings.theme import DesignSystem
 
 server = Flask(__name__)
 server.config.from_object(Config)
 Session(server)
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+auth_service.init_app(server)
 
 app = dash.Dash(
     __name__,
@@ -24,37 +32,65 @@ app = dash.Dash(
     ]
 )
 
-# --- RUTAS DE AUTENTICACIÓN ---
-@server.route("/login")
-def login():
-    return auth_service.login()
+@server.route("/login/local", methods=["POST"])
+def login_local_route():
+    email = request.form.get("email")
+    password = request.form.get("password")
+    result = auth_service.login_local(email, password)
+    
+    if result is True:
+        return redirect("/")
+    else:
+        session["auth_error"] = result
+        return redirect("/")
+
+@server.route("/login/<provider>")
+def login_social_route(provider):
+    return auth_service.login_social(provider)
 
 @server.route("/getAToken")
-def get_token():
-    return auth_service.get_token(app) 
+def azure_callback_compatibility():
+    try:
+        result = auth_service.handle_social_callback('azure')
+        
+        if result is True:
+            return redirect("/")
+        
+        session["auth_error"] = result
+    except Exception as e:
+        session["auth_error"] = f"Error crítico: {str(e)}"
+    
+    return redirect("/")
+
+@server.route("/auth/<provider>/callback")
+def auth_callback(provider):
+    try:
+        result = auth_service.handle_social_callback(provider)
+        if result is True:
+            return redirect("/")
+        session["auth_error"] = result
+    except Exception as e:
+        session["auth_error"] = f"Error callback {provider}: {str(e)}"
+    
+    return redirect("/")
 
 @server.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect("/")
 
 @server.before_request
 def check_authentication():
+    if request.path.startswith("/assets") or request.path.startswith("/_dash-component"):
+        return None
     if not Config.ENABLE_LOGIN:
         return None
     pass
 
 def get_app_shell():
     return dmc.MantineProvider(
-        theme={
-            "primaryColor": "indigo",
-            "fontFamily": "'Inter', sans-serif",
-            "defaultRadius": "md",
-            "components": {
-                "Paper": {"defaultProps": {"radius": "md", "withBorder": True, "shadow": "sm"}},
-                "Button": {"defaultProps": {"radius": "md"}}
-            }
-        },
+        forceColorScheme="dark",
+        theme=DesignSystem.get_mantine_theme(),
         children=dmc.AppShell(
             id="app-shell",
             header={"height": 60},
@@ -84,46 +120,20 @@ def get_app_shell():
                         ]
                     )
                 ),
-                
-                dmc.AppShellNavbar(
-                    id="navbar",
-                    children=render_sidebar(collapsed=False)
-                ),
-                
+                dmc.AppShellNavbar(id="navbar", children=render_sidebar(collapsed=False)),
                 dmc.AppShellMain(children=dash.page_container)
             ]
         )
     )
 
 def serve_layout():
-    # Si el login está habilitado y no hay usuario en sesión, redirigir
-    if Config.ENABLE_LOGIN and not session.get("user"):
-        return dmc.MantineProvider(
-            children=dmc.Container(
-                style={"height": "100vh", "display": "flex", "alignItems": "center", "justifyContent": "center"},
-                children=dmc.Stack(
-                    align="center",
-                    children=[
-                        DashIconify(icon="tabler:lock", width=50, color="indigo"),
-                        dmc.Text("Tu sesión ha expirado o no has iniciado sesión.", size="lg", fw="normal"),
-                        dmc.Anchor(
-                            dmc.Button(
-                                "Iniciar sesión con Microsoft",
-                                leftSection=DashIconify(icon="logos:microsoft-icon"),
-                                variant="outline",
-                                size="lg",
-                                fullWidth=True
-                            ),
-                            href="/login",
-                            refresh=True,
-                            underline="never"
-                        ),
-                    ]
-                )
-            )
-        )
+    if session.get("auth_error"):
+        error_msg = session.pop("auth_error")
+        return get_error_layout(error_msg)
     
-    # Si hay sesión o el login está desactivado, mostrar la App normal
+    if Config.ENABLE_LOGIN and not session.get("user"):
+        return get_login_layout()
+    
     return get_app_shell()
 
 app.layout = serve_layout

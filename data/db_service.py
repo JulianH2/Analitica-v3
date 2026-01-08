@@ -10,7 +10,7 @@ class DBService:
         if conn_str:
             self.engine = create_engine(conn_str, echo=False)
         else:
-            print("⚠️ No se pudo crear el Connection String. Revisa tu .env")
+            print("⚠️ No se pudo crear el Connection String. Verifica la configuración de la base de datos.")
 
     def run_query(self, query, params=None):
         if not self.engine:
