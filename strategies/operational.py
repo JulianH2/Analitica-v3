@@ -104,10 +104,10 @@ class OpsTableStrategy:
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([dmc.TableTh(h) for h in ds["h"]])),
             dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c)) for c in r]) for r in ds["r"]])
-        ], striped=True, withTableBorder=True)
+        ], striped=True, withTableBorder=True) # type: ignore
 
     def render_tabbed_table(self, data_context, tab_key):
-        return dmc.Text(f"Información de {tab_key} cargada dinámicamente...", size="sm", py="xl", ta="center", c="dimmed")
+        return dmc.Text(f"Información de {tab_key} cargada dinámicamente...", size="sm", py="xl", ta="center", c="dimmed") # type: ignore
 
 class CostUtilityStackedStrategy(KPIStrategy):
     def get_card_config(self, data_context):
@@ -146,7 +146,7 @@ class CostTableStrategy:
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([dmc.TableTh(h, style={"fontSize": "11px"}) for h in ds["h"]])),
             dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in r]) for r in ds["r"]])
-        ], striped=True, withTableBorder=True)
+        ], striped=True, withTableBorder=True) # type: ignore
 
 class PerformanceGaugeStrategy(KPIStrategy):
     def __init__(self, title, key, color, prefix="", section="rendimientos"):
@@ -218,14 +218,14 @@ class PerformanceTableStrategy:
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([dmc.TableTh(h, style={"fontSize": "11px"}) for h in ds["h"]])),
             dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in r]) for r in ds["r"]])
-        ], striped=True, withTableBorder=True)
+        ], striped=True, withTableBorder=True) # type: ignore
 
     def render_operador(self, data_context):
         ds = data_context["operaciones"]["rendimientos"]["tablas"]["operador"]
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([dmc.TableTh(h, style={"fontSize": "11px"}) for h in ds["h"]])),
             dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in r]) for r in ds["r"]])
-        ], striped=True, withTableBorder=True)
+        ], striped=True, withTableBorder=True) # type: ignore
 
 class RouteMapStrategy(KPIStrategy):
     def get_card_config(self, data_context):
@@ -259,4 +259,4 @@ class RouteDetailTableStrategy:
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([dmc.TableTh(h, style={"fontSize": "11px"}) for h in ds["h"]])),
             dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in r]) for r in ds["r"]])
-        ], striped=True, withTableBorder=True, highlightOnHover=True)
+        ], striped=True, withTableBorder=True, highlightOnHover=True) # type: ignore

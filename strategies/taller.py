@@ -52,11 +52,11 @@ class TallerGaugeStrategy(KPIStrategy):
 
         return dmc.Stack(gap=2, children=[
             dmc.Group(justify="space-between", children=[
-                dmc.Text("vs 2024:", size="xs", c="dimmed"),
+                dmc.Text("vs 2024:", size="xs", c="dimmed"), # type: ignore
                 dmc.Text(f"{self.prefix}{vs:,.0f}", size="xs")
             ]),
             dmc.Group(justify="space-between", children=[
-                dmc.Text("YTD:", size="xs", c="dimmed"),
+                dmc.Text("YTD:", size="xs", c="dimmed"), # type: ignore
                 dmc.Text(f"{self.prefix}{ytd:,.0f}", size="xs", c="blue")
             ])
         ])
@@ -139,7 +139,7 @@ class AvailabilityTableStrategy:
                     ) for c in row
                 ]) for row in ds["r"]
             ])
-        ], striped=True, withTableBorder=True)
+        ], striped=True, withTableBorder=True) # type: ignore
 
 class TallerTrendStrategy(KPIStrategy):
     def get_card_config(self, data_context):
@@ -330,7 +330,7 @@ class WorkshopPurchasesTableStrategy:
                     dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in row
                 ]) for row in r
             ])
-        ], striped=True, withTableBorder=True, highlightOnHover=True)
+        ], striped=True, withTableBorder=True, highlightOnHover=True) # type: ignore
 
     def render_proveedor(self, data_context):
         ds = data_context["mantenimiento"]["compras"]["tablas"]["proveedores"]
@@ -385,11 +385,11 @@ class InventoryDetailedTableStrategy:
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([dmc.TableTh(x, style={"fontSize": "11px"}) for x in ds["h"]])),
             dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in row]) for row in ds["r"]])
-        ], striped=True, withTableBorder=True)
+        ], striped=True, withTableBorder=True) # type: ignore
 
     def render_history(self, data_context):
         ds = data_context["mantenimiento"]["almacen"]["tablas"]["historico"]
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([dmc.TableTh(x, style={"fontSize": "11px"}) for x in ds["h"]])),
             dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in row]) for row in ds["r"]])
-        ], striped=True, withTableBorder=True)
+        ], striped=True, withTableBorder=True) # type: ignore

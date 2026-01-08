@@ -45,7 +45,7 @@ def layout():
         dmc.Modal(id="ops-smart-modal", size="lg", centered=True, children=[html.Div(id="ops-modal-content")]),
         
         dmc.Paper(p="md", withBorder=True, mb="lg", children=[
-            dmc.SimpleGrid(cols={"base": 2, "md": 5}, spacing="xs", children=[
+            dmc.SimpleGrid(cols={"base": 2, "md": 5}, spacing="xs", children=[ # type: ignore
                 dmc.Select(label="Año", data=["2025"], value="2025", size="xs"),
                 dmc.Select(label="Mes", data=["septiembre"], value="septiembre", size="xs"),
                 dmc.Select(label="Área", data=["Todas"], value="Todas", size="xs"),
@@ -54,20 +54,20 @@ def layout():
             ])
         ]),
 
-        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="xl", children=[
+        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="xl", children=[ # type: ignore
             gauge_ops_income.render(ctx), gauge_ops_trips.render(ctx), gauge_ops_kms.render(ctx)
         ]),
         
-        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="xl", children=[
+        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="xl", children=[ # type: ignore
             chart_ops_inc_comp.render(ctx), chart_ops_trips_comp.render(ctx)
         ]),
         
-        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="xl", children=[
+        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="xl", children=[ # type: ignore
             chart_ops_mix.render(ctx), chart_ops_unit_bal.render(ctx)
         ]),
 
         dmc.Grid(gutter="lg", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "md": 4}, children=[
+            dmc.GridCol(span={"base": 12, "md": 4}, children=[ # type: ignore
                 dmc.Paper(p="md", withBorder=True, radius="md", children=[
                     dmc.Group(justify="space-between", mb="md", children=[
                         dmc.Text("Utilización de Flota", fw="bold", size="xs"),
@@ -75,7 +75,7 @@ def layout():
                     ]),
                     dmc.Center(dmc.Stack(align="center", gap=0, children=[
                         DashIconify(icon="tabler:truck-loading", width=48, color="green"),
-                        dmc.Text("92% Cargado", fw=900, size="xl", c="green")
+                        dmc.Text("92% Cargado", fw=900, size="xl", c="green") # type: ignore
                     ])),
                     dmc.ProgressRoot(size="xl", mt="md", children=[
                         dmc.ProgressSection(value=92, color="green", children=[dmc.ProgressLabel("92%")]),
@@ -83,17 +83,17 @@ def layout():
                     ])
                 ])
             ]),
-            dmc.GridCol(span={"base": 12, "md": 8}, children=[
+            dmc.GridCol(span={"base": 12, "md": 8}, children=[ # type: ignore
                 dmc.Tabs(value="rutas", children=[
                     dmc.TabsList([dmc.TabsTab("Rutas Cargado", value="rutas"), dmc.TabsTab("Rutas Vacío", value="vacio")]),
                     dmc.TabsPanel(table_ops_mgr.render_rutas(ctx), value="rutas", pt="xs"),
-                    dmc.TabsPanel(dmc.Text("Sin datos de rutas vacías", py="xl", ta="center", c="dimmed"), value="vacio")
+                    dmc.TabsPanel(dmc.Text("Sin datos de rutas vacías", py="xl", ta="center", c="dimmed"), value="vacio") # type: ignore
                 ])
             ])
         ]),
 
-        dmc.Text("PROMEDIOS OPERATIVOS", fw="bold", mb="md", size="sm", c="dimmed"),
-        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "md": 4}, spacing="sm", mb="xl", children=[
+        dmc.Text("PROMEDIOS OPERATIVOS", fw="bold", mb="md", size="sm", c="dimmed"), # type: ignore
+        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "md": 4}, spacing="sm", mb="xl", children=[ # type: ignore
             kpi_ops_avg_trip.render(ctx), kpi_ops_avg_unit.render(ctx), 
             kpi_ops_units_qty.render(ctx), kpi_ops_clients_qty.render(ctx)
         ]),
@@ -119,7 +119,7 @@ def layout():
 )
 def handle_ops_dashboard_modal(n_clicks):
     if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
-    w_id = dash.ctx.triggered_id["index"]
+    w_id = dash.ctx.triggered_id["index"]  # type: ignore
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()

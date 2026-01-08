@@ -23,7 +23,7 @@ def layout():
         dmc.Modal(id="route-smart-modal", size="lg", centered=True, children=[html.Div(id="route-modal-content")]),
         
         dmc.Paper(p="md", withBorder=True, mb="lg", children=[
-            dmc.SimpleGrid(cols={"base": 2, "md": 4, "lg": 6}, spacing="xs", children=[
+            dmc.SimpleGrid(cols={"base": 2, "md": 4, "lg": 6}, spacing="xs", children=[ # type: ignore
                 dmc.Select(label="Año", data=["2025"], value="2025", size="xs"),
                 dmc.Select(label="Mes", data=["septiembre"], value="septiembre", size="xs"),
                 dmc.Select(label="Empresa Área", data=["Todas"], value="Todas", size="xs"),
@@ -42,13 +42,13 @@ def layout():
 
         # --- 2. MAPA DE RUTAS ---
         dmc.Paper(p="md", withBorder=True, mb="xl", children=[
-            dmc.Text("MAPA ANÁLISIS DE RUTAS", fw="bold", size="xs", c="dimmed", mb="md"),
+            dmc.Text("MAPA ANÁLISIS DE RUTAS", fw="bold", size="xs", c="dimmed", mb="md"), # type: ignore
             chart_route_map.render(ctx)
         ]),
 
         # --- 3. TABLA DE DETALLE ---
         dmc.Paper(p="md", withBorder=True, children=[
-            dmc.Text("DETALLE DE RUTAS Y UTILIZACIÓN", fw="bold", size="xs", c="dimmed", mb="md"),
+            dmc.Text("DETALLE DE RUTAS Y UTILIZACIÓN", fw="bold", size="xs", c="dimmed", mb="md"), # type: ignore
             dmc.ScrollArea(h=500, children=[table_route_mgr.render_tabla_rutas(ctx)])
         ]),
         
@@ -61,7 +61,7 @@ def layout():
 )
 def handle_route_modal_click(n_clicks):
     if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
-    w_id = dash.ctx.triggered_id["index"]
+    w_id = dash.ctx.triggered_id["index"] # type: ignore
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()

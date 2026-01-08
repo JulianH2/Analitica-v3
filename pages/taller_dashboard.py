@@ -19,15 +19,15 @@ def kpi_block(title, key, color, widget_id, data_context, prefix="$", suffix="")
     return dmc.Paper(p="xs", withBorder=True, children=[
         dmc.Group(justify="space-between", children=[
             dmc.Stack(gap=0, children=[
-                dmc.Text(title, size="xs", fw="bold", c="dimmed"),
-                dmc.Text(f"{prefix}{node['valor']:,.2f}{suffix}", size="md", fw=900),
+                dmc.Text(title, size="xs", fw="bold", c="dimmed"), # type: ignore
+                dmc.Text(f"{prefix}{node['valor']:,.2f}{suffix}", size="md", fw=900), # type: ignore
             ]),
             html.Div(gauge.render(data_context), style={"width": "100px"})
         ]),
         dmc.SimpleGrid(cols=3, mt="xs", children=[
-            dmc.Stack(gap=0, children=[dmc.Text("Meta", size="10px", c="dimmed"), dmc.Text(f"{prefix}{node['meta']:,.0f}{suffix}", size="xs")]),
-            dmc.Stack(gap=0, children=[dmc.Text("vs 2024", size="10px", c="dimmed"), dmc.Text(f"{prefix}{node['vs_2024']:,.0f}", size="xs", c="red")]),
-            dmc.Stack(gap=0, children=[dmc.Text("YTD", size="10px", c="dimmed"), dmc.Text(f"{prefix}{node['ytd']:,.0f}", size="xs", c="blue")]),
+            dmc.Stack(gap=0, children=[dmc.Text("Meta", size="10px", c="dimmed"), dmc.Text(f"{prefix}{node['meta']:,.0f}{suffix}", size="xs")]), # type: ignore
+            dmc.Stack(gap=0, children=[dmc.Text("vs 2024", size="10px", c="dimmed"), dmc.Text(f"{prefix}{node['vs_2024']:,.0f}", size="xs", c="red")]), # type: ignore               
+            dmc.Stack(gap=0, children=[dmc.Text("YTD", size="10px", c="dimmed"), dmc.Text(f"{prefix}{node['ytd']:,.0f}", size="xs", c="blue")]),  # type: ignore
         ])
     ])
     
@@ -54,7 +54,7 @@ def layout():
         dmc.Modal(id="taller-smart-modal", size="lg", centered=True, children=[html.Div(id="taller-modal-content")]),
         
         dmc.Paper(p="md", withBorder=True, mb="lg", children=[
-            dmc.SimpleGrid(cols={"base": 2, "md": 4, "lg": 8}, spacing="xs", children=[
+            dmc.SimpleGrid(cols={"base": 2, "md": 4, "lg": 8}, spacing="xs", children=[ # type: ignore
                 dmc.Select(label="Año", data=["2025"], value="2025", size="xs"),
                 dmc.Select(label="Mes", data=["07-Jul"], value="07-Jul", size="xs"),
                 dmc.Select(label="Empresa/Área", data=["Todas"], value="Todas", size="xs"),
@@ -99,7 +99,7 @@ def layout():
 )
 def handle_modal_click(n_clicks):
     if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
-    w_id = dash.ctx.triggered_id["index"]
+    w_id = dash.ctx.triggered_id["index"] # type: ignore
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()

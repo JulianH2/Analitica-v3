@@ -23,7 +23,7 @@ class AdminRichKPIStrategy(KPIStrategy):
         return {"title": self.title, "value": val, "color": self.color, "icon": self.icon}
 
     def render_detail(self, data_context):
-        return dmc.Text("Cargando detalle dinámico...", size="sm", c="dimmed")
+        return dmc.Text("Cargando detalle dinámico...", size="sm", c="dimmed") # type: ignore
 
 class CollectionGaugeStrategy(KPIStrategy):
     def __init__(self, title, val_key, target_key, color):
@@ -107,7 +107,7 @@ class CollectionAgingTableStrategy:
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([dmc.TableTh(x) for x in ds["h"]])),
             dmc.TableTbody([dmc.TableTr([dmc.TableTd(c) for c in r]) for r in ds["r"]])
-        ], striped=True, withTableBorder=True)
+        ], striped=True, withTableBorder=True) # type: ignore
 
 class BankDailyEvolutionStrategy(KPIStrategy):
     def get_card_config(self, data_context):
@@ -148,7 +148,7 @@ class BankConceptsStrategy:
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([dmc.TableTh(x) for x in ds["h"]])),
             dmc.TableTbody([dmc.TableTr([dmc.TableTd(c) for c in r]) for r in ds["r"]])
-        ], striped=True, withTableBorder=True)
+        ], striped=True, withTableBorder=True) # type: ignore
 
 class PayablesGaugeStrategy(KPIStrategy):
     def __init__(self, title, val_key, target_key, color):
@@ -237,4 +237,4 @@ class PayablesAgingTableStrategy:
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([dmc.TableTh(x, style={"fontSize": "11px"}) for x in ds["h"]])),
             dmc.TableTbody([dmc.TableTr([dmc.TableTd(c, style={"fontSize": "11px"}) for c in r]) for r in ds["r"]])
-        ], striped=True, withTableBorder=True)
+        ], striped=True, withTableBorder=True) # type: ignore

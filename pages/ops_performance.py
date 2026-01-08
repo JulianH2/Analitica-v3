@@ -76,7 +76,7 @@ def layout():
 )
 def handle_perf_modal_click(n_clicks):
     if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
-    w_id = dash.ctx.triggered_id["index"]
+    w_id = dash.ctx.triggered_id["index"]  # type: ignore
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
