@@ -16,39 +16,69 @@ COLOR_MAP = {
 
 class TallerGaugeStrategy(KPIStrategy):
     def __init__(self, title, key, color, prefix="$", suffix="", section="dashboard"):
-        self.title, self.key, self.color, self.prefix, self.suffix, self.section = title, key, color, prefix, suffix, section
+        self.title = title
+        self.key = key
+        self.color = color
+        self.prefix = prefix
+        self.suffix = suffix
+        self.section = section
 
-    def get_card_config(self, data_context): return {"title": self.title}
+    def get_card_config(self, data_context):
+        return {"title": self.title}
 
     def get_figure(self, data_context):
         try:
             node = data_context["mantenimiento"][self.section]["indicadores"][self.key]
             val = node.get("valor", 0)
-            meta = node.get("meta", 100)
-        except (KeyError, TypeError): val, meta = 0, 100
+            meta = node.get("meta", 0)
+        except (KeyError, TypeError): val, meta = 0, 0
         
-        hex_color = COLOR_MAP.get(self.color, DesignSystem.BRAND[5])
+        hex_color = COLOR_MAP.get(self.color, "#228be6")
+
+        if meta > 0:
+            pct_val = (val / meta) * 100
+            max_range = 100 
+        else:
+            pct_val = 100 if val > 0 else 0
+            max_range = 100
 
         fig = go.Figure(go.Indicator(
-            mode="gauge+number", value=val,
-            number={'prefix': self.prefix, 'suffix': self.suffix, 'font': {'size': 16}},
-            gauge={'axis': {'range': [None, meta * 1.5 if meta > 0 else 100]}, 'bar': {'color': hex_color}}
+            mode="gauge+number",
+            value=pct_val,
+            number={
+                'suffix': "%", 
+                'font': {'size': 15, 'weight': 'bold', 'color': "#495057"} 
+            },
+            gauge={
+                'shape': "angular",
+                'axis': {
+                    'range': [None, max(pct_val, max_range)], 
+                    'visible': True, 
+                    'tickwidth': 1, 
+                    'tickcolor': "white", 
+                    'ticklen': 5,
+                    'tickmode': 'array',
+                    'tickvals': [0, 50, 100], 
+                    'showticklabels': False 
+                }, 
+                'bar': {'color': hex_color, 'thickness': 0.8}, 
+                'bgcolor': "rgba(0,0,0,0.08)", 
+                'borderwidth': 0,
+                'bordercolor': "rgba(0,0,0,0)"
+            }
         ))
-        fig.update_layout(height=100, margin=dict(l=5, r=5, t=20, b=10), paper_bgcolor='rgba(0,0,0,0)')
+        
+        fig.update_layout(
+            height=75,
+            margin=dict(l=15, r=15, t=10, b=0), 
+            paper_bgcolor='rgba(0,0,0,0)', 
+            plot_bgcolor='rgba(0,0,0,0)',
+            font={'family': "Arial"}
+        )
         return fig
 
     def render_detail(self, data_context):
-        try:
-            node = data_context["mantenimiento"][self.section]["indicadores"][self.key]
-            vs = node.get("vs_2024", 0)
-            ytd = node.get("ytd", 0)
-        except (KeyError, TypeError): vs, ytd = 0, 0
-
-        return dmc.Stack(gap=2, children=[
-            dmc.Group(justify="space-between", children=[dmc.Text("vs 2024:", size="xs", c="gray"), dmc.Text(f"{self.prefix}{vs:,.0f}", size="xs")]),
-            dmc.Group(justify="space-between", children=[dmc.Text("YTD:", size="xs", c="gray"), dmc.Text(f"{self.prefix}{ytd:,.0f}", size="xs", c="indigo")])
-        ])
-
+        return None
 class AvailabilityMonthlyStrategy(KPIStrategy):
     def get_card_config(self, data_context): return {"title": "% Disponibilidad Unidades 2025 vs. 2024"}
     def get_figure(self, data_context):

@@ -42,16 +42,15 @@ class AuthService:
 
     def login_social(self, provider_name):
         if provider_name == 'azure':
-            redirect_uri = "http://localhost:8000/getAToken"
+            redirect_uri = url_for('azure_callback_compatibility', _external=True)
         else:
             redirect_uri = url_for('auth_callback', provider=provider_name, _external=True)
-            if "127.0.0.1" in redirect_uri:
-                redirect_uri = redirect_uri.replace("127.0.0.1", "localhost")
-
+    
         client = self.oauth.create_client(provider_name)
         if not client:
             return f"Proveedor de autenticación '{provider_name}' no configurado."
         return client.authorize_redirect(redirect_uri)
+
 
     def handle_social_callback(self, provider_name):
         try:
