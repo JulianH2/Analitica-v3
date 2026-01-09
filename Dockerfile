@@ -6,11 +6,16 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    unixodbc-dev \
-    g++ \
     curl \
     gnupg2 \
+    unixodbc \
+    unixodbc-dev \
+    gcc \
+    g++ \
+    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
+    && curl https://packages.microsoft.com/config/debian/12/prod.list > /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -20,4 +25,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--workers=4", "--threads=2", "--bind", "0.0.0.0:8000", "app:server"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:server"]
