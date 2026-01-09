@@ -1,5 +1,6 @@
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
+from settings.theme import DesignSystem
 
 class TableWidget:
     def __init__(self, strategy):
@@ -13,7 +14,7 @@ class TableWidget:
             children=[
                 dmc.Group(justify="space-between", mb="md", children=[
                     dmc.Group([
-                        DashIconify(icon="tabler:list-details", width=24, color="#228be6"),
+                        DashIconify(icon="tabler:list-details", width=24, color=DesignSystem.BRAND[5]),
                         dmc.Text(title, fw="bold", size="lg") 
                     ]),
                     dmc.Badge("Vista Completa", variant="light", color="gray")

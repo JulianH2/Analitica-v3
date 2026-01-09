@@ -5,7 +5,7 @@ def create_breadcrumbs(items):
     crumbs = []
     for label, href in items:
         crumbs.append(
-            dmc.Anchor(label, href=href, size="sm", c="dimmed", underline="never") # type: ignore
+            dmc.Anchor(label, href=href, size="sm", c="gray", underline="never")
         )
     
     return dmc.Breadcrumbs(

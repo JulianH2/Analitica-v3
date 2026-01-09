@@ -17,7 +17,7 @@ data_manager = DataManager()
 kpi_bank_initial_balance = SmartWidget("kb_initial", AdminRichKPIStrategy("bancos", "saldo_inicial", "Saldo Inicial Consolidado", "tabler:wallet", "gray"))
 kpi_bank_total_incomes = SmartWidget("kb_incomes", AdminRichKPIStrategy("bancos", "ingresos", "Ingresos Consolidado", "tabler:trending-up", "green"))
 kpi_bank_total_expenses = SmartWidget("kb_expenses", AdminRichKPIStrategy("bancos", "egresos", "Egresos Consolidado", "tabler:trending-down", "red"))
-kpi_bank_final_balance = SmartWidget("kb_final", AdminRichKPIStrategy("bancos", "saldo_final", "Saldo Final Consolidado", "tabler:cash", "blue"))
+kpi_bank_final_balance = SmartWidget("kb_final", AdminRichKPIStrategy("bancos", "saldo_final", "Saldo Final Consolidado", "tabler:cash", "indigo"))
 
 chart_bank_daily_evolution = ChartWidget("cb_daily", BankDailyEvolutionStrategy())
 chart_bank_institutions_donut = ChartWidget("cb_donut", BankDonutStrategy())
@@ -41,7 +41,7 @@ def layout():
         
         dmc.Title("Administración - Bancos", order=3, mb="lg"),
         
-        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "md": 4}, spacing="lg", mb="xl", children=[
+        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "md": 4}, spacing="lg", mb="xl", children=[# type: ignore
             kpi_bank_initial_balance.render(ctx), 
             kpi_bank_total_incomes.render(ctx), 
             kpi_bank_total_expenses.render(ctx), 
@@ -51,8 +51,8 @@ def layout():
         dmc.Paper(p="md", withBorder=True, mb="lg", children=[chart_bank_daily_evolution.render(ctx)]),
         
         dmc.Grid(gutter="lg", children=[
-            dmc.GridCol(span={"base": 12, "md": 4}, children=[chart_bank_institutions_donut.render(ctx)]),
-            dmc.GridCol(span={"base": 12, "md": 8}, children=[
+            dmc.GridCol(span={"base": 12, "md": 4}, children=[chart_bank_institutions_donut.render(ctx)]),# type: ignore
+            dmc.GridCol(span={"base": 12, "md": 8}, children=[# type: ignore
                 table_bank_concepts_detail.render(ctx, title="Ingresos y Egresos por Concepto")
             ])
         ]),
@@ -68,7 +68,7 @@ def layout():
 )
 def handle_bank_modal_click(n_clicks):
     if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
-    w_id = dash.ctx.triggered_id["index"]
+    w_id = dash.ctx.triggered_id["index"]# type: ignore
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()

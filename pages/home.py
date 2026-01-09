@@ -3,129 +3,88 @@ import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-
 from services.data_manager import DataManager
 from components.smart_widget import SmartWidget
 from components.visual_widget import ChartWidget
-
-from strategies.financial import (
-    IncomeStrategy, CostStrategy, MarginStrategy, 
-    PortfolioStrategy, SuppliersStrategy, SimpleTextStrategy
-)
-from strategies.operational import FleetEfficiencyStrategy
+from strategies.executive import ExecutiveKPIStrategy, ExecutiveMiniKPIStrategy, ExecutiveDonutStrategy
 from strategies.charts import MainTrendChartStrategy
+from strategies.operational import FleetEfficiencyStrategy
+from settings.theme import DesignSystem
 
 dash.register_page(__name__, path='/', title='Dashboard Principal')
-
 data_manager = DataManager()
 
-w_income = SmartWidget("w_income", IncomeStrategy())
-w_costs = SmartWidget("w_costs", CostStrategy())
-w_margin = SmartWidget("w_margin", MarginStrategy())
+w_income = SmartWidget("h_inc", ExecutiveKPIStrategy("operaciones", "dashboard", "ingreso_viaje", "Ingresos Totales", "tabler:coin", "indigo"))
+w_costs = SmartWidget("h_cost", ExecutiveKPIStrategy("operaciones", "costos", "costo_total", "Costos Operativos", "tabler:wallet", "red"))
+w_margin = SmartWidget("h_marg", ExecutiveKPIStrategy("operaciones", "costos", "utilidad_viaje", "Margen Bruto", "tabler:chart-pie", "green", is_pct=True))
 
-w_main_chart = ChartWidget("w_main_chart", MainTrendChartStrategy())
+w_viajes = SmartWidget("h_via", ExecutiveMiniKPIStrategy("operaciones", "dashboard", "viajes", "Viajes", "indigo", "tabler:steering-wheel"))
+w_units = SmartWidget("h_uni", ExecutiveMiniKPIStrategy("operaciones", "dashboard", "unidades_utilizadas", "Unidades Util.", "indigo", "tabler:bus"))
+w_clients = SmartWidget("h_cli", ExecutiveMiniKPIStrategy("operaciones", "dashboard", "clientes_servidos", "Clientes Serv.", "indigo", "tabler:users"))
+w_costkm = SmartWidget("h_ckm", ExecutiveMiniKPIStrategy("mantenimiento", "dashboard", "costo_km", "Costo Mtto Km", "yellow", "tabler:ruler-2", prefix="$"))
 
-w_ops_viajes = SmartWidget("w_viajes", SimpleTextStrategy("viajes", "Viajes", "", "", "blue", "tabler:steering-wheel"))
-w_ops_units = SmartWidget("w_units", SimpleTextStrategy("unidades", "Unidades Util.", "", "", "cyan", "tabler:bus"))
-w_ops_clients = SmartWidget("w_clients", SimpleTextStrategy("clientes", "Clientes Serv.", "", "", "indigo", "tabler:users"))
-w_ops_costkm = SmartWidget("w_costkm", SimpleTextStrategy("costkm", "Costo Km", "$", "", "orange", "tabler:ruler-2"))
+w_m_total = SmartWidget("h_mt", ExecutiveMiniKPIStrategy("mantenimiento", "dashboard", "total_mantenimiento", "Total Mtto", "green", "tabler:tool", prefix="$"))
+w_m_int = SmartWidget("h_mi", ExecutiveMiniKPIStrategy("mantenimiento", "dashboard", "costo_interno", "Taller Interno", "green", "tabler:building-factory", prefix="$"))
+w_m_ext = SmartWidget("h_me", ExecutiveMiniKPIStrategy("mantenimiento", "dashboard", "costo_externo", "Taller Externo", "green", "tabler:building-store", prefix="$"))
+w_m_llantas = SmartWidget("h_ml", ExecutiveMiniKPIStrategy("mantenimiento", "dashboard", "costo_llantas", "Costo Llantas", "gray", "tabler:circle", prefix="$"))
 
-w_mtto_total = SmartWidget("w_m_total", SimpleTextStrategy("mtotal", "Total Mtto", "$", "", "green", "tabler:tool"))
-w_mtto_int = SmartWidget("w_m_int", SimpleTextStrategy("mint", "Taller Interno", "$", "", "teal", "tabler:building-factory"))
-w_mtto_ext = SmartWidget("w_m_ext", SimpleTextStrategy("mext", "Taller Externo", "$", "", "lime", "tabler:building-store"))
-w_mtto_llantas = SmartWidget("w_m_llantas", SimpleTextStrategy("mllantas", "Costo Llantas", "$", "", "gray", "tabler:circle"))
-w_yield = SmartWidget("w_yield", FleetEfficiencyStrategy())
-w_portfolio = ChartWidget("w_portfolio", PortfolioStrategy())
-w_suppliers = ChartWidget("w_suppliers", SuppliersStrategy())
+w_main_chart = ChartWidget("h_chart", MainTrendChartStrategy())
+w_yield = SmartWidget("h_yield", FleetEfficiencyStrategy())
+w_portfolio = ChartWidget("h_port", ExecutiveDonutStrategy("Cartera Clientes", "administracion", "facturacion_cobranza", {"SIN CARTA COBRO": "indigo", "POR VENCER": "yellow", "VENCIDO": "red"}))
+w_suppliers = ChartWidget("h_supp", ExecutiveDonutStrategy("Saldo Proveedores", "administracion", "cuentas_por_pagar", {"POR VENCER": "indigo", "VENCIDO": "red"}))
 
 WIDGET_REGISTRY = {
-    "w_income": w_income, "w_costs": w_costs, "w_margin": w_margin,
-    "w_main_chart": w_main_chart,
-    "w_viajes": w_ops_viajes, "w_units": w_ops_units, "w_clients": w_ops_clients, "w_costkm": w_ops_costkm,
-    "w_m_total": w_mtto_total, "w_m_int": w_mtto_int, "w_m_ext": w_mtto_ext, "w_m_llantas": w_mtto_llantas,
-    "w_yield": w_yield, "w_portfolio": w_portfolio, "w_suppliers": w_suppliers
+    "h_inc": w_income, "h_cost": w_costs, "h_marg": w_margin, "h_yield": w_yield
 }
 
 def layout():
-    if not session.get("user"):
-        return dmc.Text("No autorizado. Redirigiendo...", id="redirect-login")
-
-    data_context = data_manager.get_data()
+    if not session.get("user"): return dmc.Text("No autorizado...")
+    ctx = data_manager.get_data()
 
     def truck_visual():
-        return dmc.Paper(
-            p="md", withBorder=True, shadow="sm", radius="md", h="100%",
-            children=[
-                dmc.Text("Estado Flota", size="xs", c="dimmed", fw="bold"), # type: ignore
-                dmc.Center(h=100, children=DashIconify(icon="tabler:truck", width=60, color="green")),
-                dmc.Progress(value=92, color="green", size="lg")
-            ]
-        )
+        val = ctx["operaciones"]["dashboard"]["utilizacion"]["valor"]
+        return dmc.Paper(p="md", withBorder=True, shadow="sm", radius="md", h="100%", children=[
+            dmc.Text("Estado Carga Flota", size="xs", c="gray", fw="bold"),
+            dmc.Center(h=100, children=DashIconify(icon="tabler:truck", width=60, color=DesignSystem.SUCCESS[5])),
+            dmc.Progress(value=val, color="green", size="lg"),
+            dmc.Text(f"{val}% Cargado", size="xs", ta="center", mt=5, fw="bold")
+        ])
 
     return dmc.Container(fluid=True, children=[
-        dmc.Modal(id="home-smart-modal", size="xl", centered=True, zIndex=10000, children=[html.Div(id="home-modal-content")]),
-
-        dmc.Group(justify="space-between", mb="md", children=[
-            dmc.Title("Resumen Ejecutivo", order=3, c="dark"),
-            dmc.Button("Actualizar", leftSection=DashIconify(icon="tabler:refresh"), variant="light", size="xs")
-        ]),
+        dmc.Modal(id="home-smart-modal", size="xl", centered=True, children=[html.Div(id="home-modal-content")]),
+        dmc.Title("Resumen Ejecutivo", order=3, mb="lg"),
 
         dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="lg", mb="lg", children=[ # type: ignore
-            w_income.render(data_context),
-            w_costs.render(data_context),
-            w_margin.render(data_context)
+            w_income.render(ctx), w_costs.render(ctx), w_margin.render(ctx)
         ]),
 
         dmc.Grid(gutter="lg", mb="lg", children=[
-            dmc.GridCol(span={"base": 12, "lg": 8}, children=[ # type: ignore
-                w_main_chart.render(data_context)
-            ]),
-            
+            dmc.GridCol(span={"base": 12, "lg": 8}, children=[w_main_chart.render(ctx)]), # type: ignore
             dmc.GridCol(span={"base": 12, "lg": 4}, children=[ # type: ignore
                 dmc.SimpleGrid(cols=2, spacing="sm", mb="sm", children=[
-                    w_ops_viajes.render(data_context),
-                    w_ops_units.render(data_context),
-                    w_ops_clients.render(data_context),
-                    w_ops_costkm.render(data_context)
+                    w_viajes.render(ctx), w_units.render(ctx), w_clients.render(ctx), w_costkm.render(ctx)
                 ]),
                 dmc.SimpleGrid(cols=2, spacing="sm", children=[
-                    w_mtto_total.render(data_context),
-                    w_mtto_int.render(data_context),
-                    w_mtto_ext.render(data_context),
-                    w_mtto_llantas.render(data_context)
+                    w_m_total.render(ctx), w_m_int.render(ctx), w_m_ext.render(ctx), w_m_llantas.render(ctx)
                 ])
             ])
         ]),
 
         dmc.SimpleGrid(cols={"base": 1, "sm": 2, "lg": 4}, spacing="lg", children=[ # type: ignore
-            truck_visual(),                 
-            w_yield.render(data_context),   
-            w_portfolio.render(data_context), 
-            w_suppliers.render(data_context)  
-        ]),
-        
-        dmc.Space(h=50)
+            truck_visual(), w_yield.render(ctx), w_portfolio.render(ctx), w_suppliers.render(ctx)
+        ])
     ])
 
 @callback(
-    Output("home-smart-modal", "opened"),
-    Output("home-smart-modal", "title"),
-    Output("home-modal-content", "children"),
-    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"),
-    prevent_initial_call=True
+    Output("home-smart-modal", "opened"), Output("home-smart-modal", "title"), Output("home-modal-content", "children"),
+    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"), prevent_initial_call=True
 )
 def handle_home_click(n_clicks):
-    if not dash.ctx.triggered or not isinstance(dash.ctx.triggered_id, dict):
-        return no_update, no_update, no_update
-    btn_id = dash.ctx.triggered_id
-    if not btn_id or "index" not in btn_id: return no_update, no_update, no_update
-    
-    w_id = btn_id["index"]
+    if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
+    w_id = dash.ctx.triggered_id["index"] # type: ignore
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
         ctx = data_manager.get_data()
-        content = widget.get_detail(ctx) if hasattr(widget, 'get_detail') else widget.strategy.render_detail(ctx)
         cfg = widget.strategy.get_card_config(ctx)
-        title = dmc.Text(cfg.get("title"), fw="bold")
-        return True, title, content
+        return True, cfg.get("title"), widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update

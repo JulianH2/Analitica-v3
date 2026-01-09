@@ -1,7 +1,6 @@
-import logging
 import dash
-from dash import Input, Output, State
-from flask import Flask, redirect, request, session, url_for
+from dash import Input, Output, State, dcc, html, callback_context
+from flask import Flask, redirect, request, session
 from flask_session import Session
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
@@ -15,10 +14,6 @@ from settings.theme import DesignSystem
 server = Flask(__name__)
 server.config.from_object(Config)
 Session(server)
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 auth_service.init_app(server)
 
 app = dash.Dash(
@@ -79,93 +74,75 @@ def logout():
     session.clear()
     return redirect("/")
 
-@server.before_request
-def check_authentication():
-    if request.path.startswith("/assets") or request.path.startswith("/_dash-component"):
-        return None
-    if not Config.ENABLE_LOGIN:
-        return None
-    pass
-
 def get_app_shell():
     return dmc.MantineProvider(
-        forceColorScheme="dark",
+        id="mantine-provider",
+        forceColorScheme="dark", 
         theme=DesignSystem.get_mantine_theme(),
-        children=dmc.AppShell(
-            id="app-shell",
-            header={"height": 60},
-            navbar={
-                "width": 260,
-                "breakpoint": "sm",
-                "collapsed": {"mobile": True}
-            },
-            padding="md",
-            style={"backgroundColor": "var(--mantine-color-gray-0)"}, 
-            children=[
-                dmc.AppShellHeader(
-                    px="md",
-                    children=dmc.Group(
-                        justify="space-between", 
-                        h="100%",
-                        children=[
-                            dmc.Group([
-                                dmc.Burger(id="btn-mobile-menu", hiddenFrom="sm", size="sm"),
-                                DashIconify(icon="tabler:hexagon-letter-a", width=35, color="#4c6ef5"),
-                                dmc.Text("Analitica ", size="xl", fw="bold", style={"letterSpacing": "-0.5px"})
-                            ]),
-                            dmc.Group([
-                                dmc.ActionIcon(DashIconify(icon="tabler:bell"), variant="subtle", color="gray"),
-                                dmc.ActionIcon(DashIconify(icon="tabler:settings"), variant="subtle", color="gray"),
-                            ])
-                        ]
-                    )
-                ),
-                dmc.AppShellNavbar(id="navbar", children=render_sidebar(collapsed=False)),
-                dmc.AppShellMain(children=dash.page_container)
-            ]
-        )
+        children=[
+            dcc.Store(id="theme-store", storage_type="local", data="dark"),
+            dcc.Store(id="sidebar-store", storage_type="local", data=False),
+            
+            dmc.AppShell(
+                id="app-shell",
+                header={"height": 60},
+                navbar={"width": 260, "breakpoint": "sm", "collapsed": {"mobile": True}},
+                padding="md",
+                children=[
+                    dmc.AppShellHeader(px="md", children=dmc.Group([
+                        DashIconify(icon="tabler:hexagon-letter-a", width=35, color=DesignSystem.BRAND[5]),
+                        dmc.Text("Analítica ", size="xl", fw="bold", style={"letterSpacing": "-0.5px"})
+                    ], h="100%")),
+                    
+                    dmc.AppShellNavbar(id="navbar", children=[], style={"zIndex": 100}),
+                    dmc.AppShellMain(children=dash.page_container)
+                ]
+            )
+        ]
     )
 
-def serve_layout():
-    if session.get("auth_error"):
-        error_msg = session.pop("auth_error")
-        return get_error_layout(error_msg)
-    
-    if Config.ENABLE_LOGIN and not session.get("user"):
-        return get_login_layout()
-    
-    return get_app_shell()
-
-app.layout = serve_layout
-
+app.layout = lambda: get_login_layout() if Config.ENABLE_LOGIN and not session.get("user") else get_app_shell()
 @app.callback(
-    Output("app-shell", "navbar"),    
-    Output("navbar", "children"),     
+    Output("theme-store", "data"),
+    Output("sidebar-store", "data"),
+    Input("theme-toggle", "n_clicks"),
     Input("btn-sidebar-toggle", "n_clicks"),
-    State("app-shell", "navbar"),     
+    State("theme-store", "data"),
+    State("sidebar-store", "data"),
     prevent_initial_call=True
 )
-def toggle_sidebar(n, navbar_config):
-    current_width = navbar_config.get("width", 260)
+def update_stores(btn_theme, btn_sidebar, current_theme, is_collapsed):
+    ctx = callback_context
+    if not ctx.triggered: return dash.no_update, dash.no_update
     
-    is_currently_collapsed = current_width == 80
-    
-    new_width = 260 if is_currently_collapsed else 80
-    new_collapsed_state = not is_currently_collapsed 
-    
-    navbar_config["width"] = new_width
-    
-    return navbar_config, render_sidebar(collapsed=new_collapsed_state)
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    current_theme = current_theme or "dark"
+    is_collapsed = is_collapsed if is_collapsed is not None else False
 
+    if trigger_id == "theme-toggle":
+        current_theme = "light" if current_theme == "dark" else "dark"
+    elif trigger_id == "btn-sidebar-toggle":
+        is_collapsed = not is_collapsed
+        
+    return current_theme, is_collapsed
 @app.callback(
-    Output("app-shell", "navbar", allow_duplicate=True), 
-    Input("btn-mobile-menu", "opened"),
-    State("app-shell", "navbar"),
-    prevent_initial_call=True
+    Output("mantine-provider", "forceColorScheme"),
+    Output("app-shell", "navbar"),
+    Output("navbar", "children"),
+    Input("theme-store", "data"),
+    Input("sidebar-store", "data")
 )
-def toggle_mobile(opened, navbar_prop):
-    navbar_prop["collapsed"] = {"mobile": not opened}
-    return navbar_prop
+def render_interface(theme, collapsed):
+    theme = theme or "dark"
+    collapsed = collapsed if collapsed is not None else False
+    navbar_config = {
+        "width": 80 if collapsed else 260, 
+        "breakpoint": "sm", 
+        "collapsed": {"mobile": True}
+    }
+    sidebar_ui = render_sidebar(collapsed=collapsed, current_theme=theme)
+    
+    return theme, navbar_config, sidebar_ui
 
 if __name__ == "__main__":
     app.run(debug=True, port=8000)

@@ -23,7 +23,7 @@ def get_login_layout():
                                             children=DashIconify(icon="tabler:hexagon-letter-a", width=35)
                                         ),
                                         dmc.Text("Bienvenido", size="lg", fw="bold", mt="sm"),
-                                        dmc.Text("Selecciona tu método de acceso", size="sm", c="dimmed"), # type: ignore
+                                        dmc.Text("Selecciona tu método de acceso", size="sm", c="gray"), 
                                     ]),
 
                                     dmc.Divider(label="Acceso Corporativo", labelPosition="center"),
@@ -62,7 +62,7 @@ def get_login_layout():
                                                 "Iniciar Sesión", 
                                                 type="submit",
                                                 style={
-                                                    "backgroundColor": "#4c6ef5",
+                                                    "backgroundColor": DesignSystem.BRAND[5],
                                                     "color": "white",
                                                     "border": "none",
                                                     "padding": "10px",
@@ -93,8 +93,8 @@ def get_login_layout():
                                     ]),
                                     
                                     dmc.Group(gap="xs", justify="center", mt="lg", children=[
-                                        DashIconify(icon="tabler:shield-check", color="green", width=14),
-                                        dmc.Text("Sistema seguro y monitoreado", size="xs", c="dimmed") # type: ignore
+                                        DashIconify(icon="tabler:shield-check", color=DesignSystem.SUCCESS[5], width=14),
+                                        dmc.Text("Sistema seguro y monitoreado", size="xs", c="gray")
                                     ])
                                 ]
                             )
@@ -106,7 +106,6 @@ def get_login_layout():
     )
 
 def get_error_layout(error_message="Ocurrió un error inesperado."):
-    """Renderiza una pantalla de error amigable."""
     return dmc.MantineProvider(
         forceColorScheme="light",
         theme=DesignSystem.get_mantine_theme(),
@@ -117,9 +116,9 @@ def get_error_layout(error_message="Ocurrió un error inesperado."):
                 children=dmc.Stack(
                     align="center",
                     children=[
-                        DashIconify(icon="tabler:alert-triangle", width=60, color="red"),
+                        DashIconify(icon="tabler:alert-triangle", width=60, color=DesignSystem.DANGER[5]),
                         dmc.Text("Error de Autenticación", size="lg", fw="bold", c="red"),
-                        dmc.Text(error_message, ta="center", c="dimmed"), # type: ignore
+                        dmc.Text(error_message, ta="center", c="gray"),
                         dmc.Anchor(
                             dmc.Button("Intentar de nuevo", variant="light", color="gray"),
                             href="/logout", refresh=True
