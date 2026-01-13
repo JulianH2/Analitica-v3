@@ -32,7 +32,7 @@ class UserService:
         query = """
         SELECT id_licencia, password 
         FROM PowerZam.licencia 
-        WHERE correo_acceso = :email AND id_estatus = 'A'
+        WHERE correo_acceso = :email AND id_estatus = 1
         """
         df = db_service.run_query(query, {"email": email})
         
@@ -104,7 +104,7 @@ class UserService:
         session["role_id"] = id_tipo_usuario
         
         if databases:
-            session["current_db"] = databases[0]["base_de_datos"]
+            session["current_db"] = "PowerZAM_tinsadb" #databases[0]["base_de_datos"]
             session["current_client_logo"] = databases[0].get("url_logo") 
         
         session.modified = True 

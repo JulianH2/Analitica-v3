@@ -164,7 +164,7 @@ def render_sidebar(collapsed=False, current_theme="dark"):
                     dmc.Avatar(initials, radius="xl", color="indigo"),
                     html.Div([
                         dmc.Text(full_name, size="sm", fw="bold"),
-                        dmc.Anchor("Cerrar Sesión", href="/logout", size="xs", c="red")
+                        dmc.Anchor("Cerrar Sesión", href="/logout", size="xs", c="red", refresh=True)
                     ], style={"display": "none" if collapsed else "block"})
                 ])
             ])
