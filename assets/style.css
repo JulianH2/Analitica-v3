@@ -1,0 +1,28 @@
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.theme-transitioning {
+    filter: blur(8px);
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+#app-shell-main {
+    transition: filter 0.4s ease, opacity 0.4s ease;
+}
+
+/* Asegura que el color de fondo cambie suavemente */
+[data-mantine-color-scheme] {
+    transition: background-color 0.2s ease;
+}
+
+/* Evita que los dcc.Graph tengan bordes blancos residuales */
+.js-plotly-plot .plotly .main-svg {
+    background-color: transparent !important;
+}
+
+/* Ocultar el flash de carga del AppShell antes de que Dash inicialice */
+#app-shell {
+    transition: opacity 0.2s ease-in-out;
+}

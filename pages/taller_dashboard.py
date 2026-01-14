@@ -5,52 +5,53 @@ import dash_mantine_components as dmc
 from services.data_manager import DataManager
 from components.visual_widget import ChartWidget
 from strategies.taller import (
-    TallerGaugeStrategy, TallerTrendStrategy, TallerHorizontalBarStrategy, 
-    TallerDonutStrategy, TallerMaintenanceTypeStrategy
+    TallerMiniGaugeStrategy, TallerGaugeStrategy, TallerTrendStrategy, 
+    TallerHorizontalBarStrategy, TallerDonutStrategy, TallerMaintenanceTypeStrategy
 )
 
 dash.register_page(__name__, path='/taller-dashboard', title='Mantenimiento')
 data_manager = DataManager()
 
 def kpi_block(title, key, color, widget_id, data_context, prefix="$", suffix=""):
-    node = data_context["mantenimiento"]["dashboard"]["indicadores"][key]
-    
-    strategy = TallerGaugeStrategy(title, key, color, prefix, suffix)
+    node = data_context.get("mantenimiento", {}).get("dashboard", {}).get("indicadores", {}).get(key, {"valor": 0, "meta": 1, "vs_2024": 0, "ytd": 0})
+    strategy = TallerMiniGaugeStrategy(title, key, color, prefix, suffix)
     fig = strategy.get_figure(data_context)
     
-    def mini_stat(label, val, color_val="dimmed"):
+    def mini_stat(label, val):
         return dmc.Stack(gap=0, align="flex-end", children=[
-            dmc.Text(label, size="xs", c="gray"),
-            dmc.Text(val, size="xs",fw="bold", c="gray")
+            dmc.Text(label, size="10px", c="dimmed"), # type: ignore
+            dmc.Text(val, size="10px", fw="bold", c="gray") # type: ignore
         ])
 
     return dmc.Paper(
-        p="sm", 
+        p="xs",
         withBorder=True, 
-        shadow="sm", 
+        shadow="xs", 
         radius="md",
+        style={"height": "125px"}, 
         children=[
-            dmc.Group(justify="space-between", align="start", mb=0, children=[
-                dmc.Text(title, size="xs", fw="bold", c="gray", tt="uppercase", style={"maxWidth": "50%"}), 
-                dmc.Group(gap="md", children=[
+            dmc.Group(justify="space-between", align="start", mb="xs", children=[
+                dmc.Text(title, size="xs", fw="bold", c="gray", tt="uppercase"), 
+                dmc.Group(gap="xs", children=[
                     mini_stat("Meta", f"{prefix}{node['meta']:,.0f}{suffix}"),
-                    mini_stat("vs '24", f"{prefix}{node['vs_2024']:,.0f}", "red" if node['vs_2024'] < 0 else "teal"),
-                    mini_stat("YTD", f"{prefix}{node['ytd']:,.0f}", "blue")
+                    mini_stat("vs '24", f"{prefix}{node['vs_2024']:,.0f}"),
+                    mini_stat("YTD", f"{prefix}{node['ytd']:,.0f}")
                 ])
             ]),
             
-            dmc.Grid(gutter="sm", align="flex-end", children=[
-                dmc.GridCol(span=5, children=[
-                    dmc.Text(f"{prefix}{node['valor']:,.2f}{suffix}", size="lg", fw="bold", style={"lineHeight": 1}) 
-                ]),
-                dmc.GridCol(span=7, children=[
-                    dcc.Graph(
-                        id=f"g_{widget_id}",
-                        figure=fig,
-                        config={'displayModeBar': False, 'responsive': True},
-                        style={"height": "65px", "width": "100%", "margin": "0"}
-                    )
-                ])
+            dmc.Stack(gap=0, align="center", children=[
+                dmc.Text(
+                    f"{prefix}{node['valor']:,.0f}{suffix}" if node['valor'] > 1000 else f"{prefix}{node['valor']:,.2f}{suffix}", 
+                    size="md", 
+                    fw="bold", 
+                    style={"lineHeight": 1}
+                ),
+                dcc.Graph(
+                    id={"type": "interactive-graph", "index": f"mini_{widget_id}"},
+                    figure=fig,
+                    config={'displayModeBar': False, 'responsive': True},
+                    style={"height": "75px", "width": "100%"}
+                )
             ])
         ]
     )

@@ -11,9 +11,12 @@ class DesignSystem:
 
     CHART_COLORS = [BRAND[5], SUCCESS[5], WARNING[5], DANGER[5], "#8b5cf6", "#ec4899", "#06b6d4"]
 
+    GAUGE_HEIGHT = 250  
+    STANDARD_CHART_HEIGHT = 420
+
     COLOR_MAP: Dict[str, str] = {
         "indigo": BRAND[5], "blue": BRAND[5], "green": SUCCESS[5], "teal": SUCCESS[5],
-        "red": DANGER[5], "yellow": WARNING[5], "orange": WARNING[5], "gray": SLATE[5], "slate": SLATE[4]
+        "red": DANGER[5], "yellow": WARNING[5], "orange": WARNING[5], "gray": SLATE[5]
     }
 
     @staticmethod
@@ -30,18 +33,29 @@ class DesignSystem:
 
     @staticmethod
     def setup_plotly_templates():
-        common_layout = dict(
-            font=dict(family="Inter, sans-serif", size=12),
+        base_layout = dict(
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             margin=dict(t=40, b=20, l=10, r=10),
             colorway=DesignSystem.CHART_COLORS,
-            xaxis=dict(gridcolor="rgba(148, 163, 184, 0.1)", zeroline=False, showgrid=True),
-            yaxis=dict(gridcolor="rgba(148, 163, 184, 0.1)", zeroline=False, showgrid=True),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0, font=dict(size=10))
         )
-        pio.templates["custom_transparent"] = go.layout.Template(layout=common_layout)
-        pio.templates.default = "custom_transparent"
+        dark_layout = dict(
+            **base_layout,
+            font=dict(family="Inter, sans-serif", size=12, color="#ffffff"),
+            xaxis=dict(gridcolor="#334155", tickfont=dict(color="#cbd5e1"), showgrid=True, zeroline=False),
+            yaxis=dict(gridcolor="#334155", tickfont=dict(color="#cbd5e1"), showgrid=True, zeroline=False),
+            legend=dict(font=dict(color="#ffffff"), orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0)
+        )
+        light_layout = dict(
+            **base_layout,
+            font=dict(family="Inter, sans-serif", size=12, color="#1e293b"),
+            xaxis=dict(gridcolor="#e2e8f0", tickfont=dict(color="#475569"), showgrid=True, zeroline=False),
+            yaxis=dict(gridcolor="#e2e8f0", tickfont=dict(color="#475569"), showgrid=True, zeroline=False),
+            legend=dict(font=dict(color="#1e293b"), orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0)
+        )
+        pio.templates["zam_dark"] = go.layout.Template(layout=dark_layout)
+        pio.templates["zam_light"] = go.layout.Template(layout=light_layout)
+        pio.templates.default = "zam_dark"
 
 class SemanticColors:
     INGRESO = DesignSystem.SUCCESS[5]

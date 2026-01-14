@@ -1,39 +1,40 @@
-// assets/scripts.js
+window.dash_clientside = Object.assign({}, window.dash_clientside, {
+    clientside: {
+        switch_graph_theme: function(theme, figures) {
+            if (!theme) return figures;
 
-if (!window.dash_clientside) {
-    window.dash_clientside = {};
-}
+            // 1. Aplicar el tema al HTML para que Mantine lo reconozca
+            document.documentElement.setAttribute('data-mantine-color-scheme', theme);
+            
+            if (!figures || !Array.isArray(figures)) return figures;
 
-window.dash_clientside.clientside = {
-    
-    switch_graph_theme: function(theme_mode, current_figures) {
-        // Mapeo de nombres de template
-        const template_name = theme_mode === 'dark' ? 'zam_dark' : 'zam_light';
-        
-        // Validación defensiva: Si no hay figuras o no es un array, no hacer nada
-        if (!current_figures || !Array.isArray(current_figures)) {
-            return window.dash_clientside.no_update;
+            // 2. Sincronizar Plotly
+            const template = theme === 'dark' ? 'zam_dark' : 'zam_light';
+            
+            return figures.map(fig => {
+                if (!fig || !fig.layout) return fig;
+                const newFig = JSON.parse(JSON.stringify(fig));
+                newFig.layout.template = template;
+                newFig.layout.paper_bgcolor = "rgba(0,0,0,0)";
+                newFig.layout.plot_bgcolor = "rgba(0,0,0,0)";
+                return newFig;
+            });
         }
-
-        // Iterar y clonar
-        const new_figures = current_figures.map(fig => {
-            if (!fig) return null;
-            
-            // Clonación profunda segura para Plotly
-            const new_fig = JSON.parse(JSON.stringify(fig));
-            
-            if (!new_fig.layout) new_fig.layout = {};
-            
-            // Inyectar el template correspondiente
-            new_fig.layout.template = template_name;
-            
-            // Forzar repintado de fondo transparente por seguridad
-            new_fig.layout.paper_bgcolor = "rgba(0,0,0,0)";
-            new_fig.layout.plot_bgcolor = "rgba(0,0,0,0)";
-            
-            return new_fig;
-        });
-
-        return new_figures;
     }
-};
+});
+
+/** * Lógica de persistencia pura: 
+ * Lee el dcc.Store de Dash (que vive en localStorage) 
+ * y aplica el tema al HTML antes de que se vea la página.
+ */
+(function() {
+    try {
+        const dashStore = localStorage.getItem('theme-store');
+        if (dashStore) {
+            const theme = JSON.parse(dashStore).data;
+            document.documentElement.setAttribute('data-mantine-color-scheme', theme || 'dark');
+        }
+    } catch (e) {
+        console.error("Error cargando el tema persistente", e);
+    }
+})();

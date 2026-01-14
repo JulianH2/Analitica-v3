@@ -1,5 +1,5 @@
 import dash
-from dash import Input, Output, State, dcc, html, callback_context
+from dash import Input, Output, State, dcc, html, callback_context, ALL, ClientsideFunction
 from flask import Flask, redirect, request, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 import dash_mantine_components as dmc
@@ -10,6 +10,8 @@ from components.layout.sidebar import render_sidebar
 from pages.auth import get_error_layout, get_login_layout
 from services.auth_service import auth_service
 from settings.theme import DesignSystem
+
+DesignSystem.setup_plotly_templates()
 
 server = Flask(__name__)
 server.wsgi_app = ProxyFix(server.wsgi_app, x_proto=1, x_host=1)
@@ -65,11 +67,12 @@ def logout():
 def get_app_shell():
     return dmc.MantineProvider(
         id="mantine-provider",
-        forceColorScheme="dark",
-        theme=DesignSystem.get_mantine_theme(),
+        theme=DesignSystem.get_mantine_theme(), # type: ignore
         children=[
-            dcc.Store(id="theme-store", storage_type="local", data="dark"),
+            dcc.Location(id="url", refresh=False),
+            dcc.Store(id="theme-store", storage_type="local"),
             dcc.Store(id="sidebar-store", storage_type="local", data=False),
+            dcc.Store(id="selected-db-store", storage_type="local", data="db_1"),
             dmc.AppShell(
                 id="app-shell",
                 header={"height": 60},
@@ -80,17 +83,8 @@ def get_app_shell():
                         px="md",
                         children=dmc.Group(
                             [
-                                DashIconify(
-                                    icon="tabler:hexagon-letter-a",
-                                    width=35,
-                                    color=DesignSystem.BRAND[5],
-                                ),
-                                dmc.Text(
-                                    "Analítica ",
-                                    size="xl",
-                                    fw="bold",
-                                    style={"letterSpacing": "-0.5px"},
-                                ),
+                                DashIconify(icon="tabler:hexagon-letter-a", width=35, color=DesignSystem.BRAND[5]),
+                                dmc.Text("Analítica", size="xl", fw="bold", style={"letterSpacing": "-0.5px"}),
                             ],
                             h="100%",
                         ),
@@ -111,24 +105,28 @@ app.layout = lambda: (
 @app.callback(
     Output("theme-store", "data"),
     Output("sidebar-store", "data"),
+    Output("selected-db-store", "data"),
     Input("theme-toggle", "n_clicks"),
     Input("btn-sidebar-toggle", "n_clicks"),
+    Input("db-selector", "value"),
     State("theme-store", "data"),
     State("sidebar-store", "data"),
+    State("selected-db-store", "data"),
     prevent_initial_call=True,
 )
-def update_stores(btn_theme, btn_sidebar, current_theme, is_collapsed):
+def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, current_db):
     ctx = callback_context
     if not ctx.triggered:
-        return dash.no_update, dash.no_update
+        return dash.no_update, dash.no_update, dash.no_update
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
     current_theme = current_theme or "dark"
-    is_collapsed = is_collapsed if is_collapsed is not None else False
     if trigger_id == "theme-toggle":
-        current_theme = "light" if current_theme == "dark" else "dark"
-    elif trigger_id == "btn-sidebar-toggle":
-        is_collapsed = not is_collapsed
-    return current_theme, is_collapsed
+        return ("light" if current_theme == "dark" else "dark"), dash.no_update, dash.no_update
+    if trigger_id == "btn-sidebar-toggle":
+        return dash.no_update, not is_collapsed, dash.no_update
+    if trigger_id == "db-selector":
+        return dash.no_update, dash.no_update, db_value
+    return dash.no_update, dash.no_update, dash.no_update
 
 @app.callback(
     Output("mantine-provider", "forceColorScheme"),
@@ -136,17 +134,24 @@ def update_stores(btn_theme, btn_sidebar, current_theme, is_collapsed):
     Output("navbar", "children"),
     Input("theme-store", "data"),
     Input("sidebar-store", "data"),
+    Input("selected-db-store", "data"),
+    Input("url", "pathname"),
 )
-def render_interface(theme, collapsed):
+def render_interface(theme, collapsed, selected_db, pathname):
     theme = theme or "dark"
     collapsed = collapsed if collapsed is not None else False
-    navbar_config = {
-        "width": 80 if collapsed else 260,
-        "breakpoint": "sm",
-        "collapsed": {"mobile": True},
-    }
-    sidebar_ui = render_sidebar(collapsed=collapsed, current_theme=theme)
+    selected_db = selected_db or "db_1"
+    navbar_config = {"width": 80 if collapsed else 260, "breakpoint": "sm", "collapsed": {"mobile": True}}
+    sidebar_ui = render_sidebar(collapsed=collapsed, current_theme=theme, current_db=selected_db, active_path=pathname)
     return theme, navbar_config, sidebar_ui
+
+app.clientside_callback(
+    ClientsideFunction(namespace='clientside', function_name='switch_graph_theme'),
+    Output({"type": "interactive-graph", "index": ALL}, "figure"),
+    Input("theme-store", "data"),
+    State({"type": "interactive-graph", "index": ALL}, "figure"),
+    prevent_initial_call=False 
+)
 
 if __name__ == "__main__":
     app.run(port=8000)

@@ -1,25 +1,49 @@
 from flask import session
 import dash_mantine_components as dmc
-from dash import html, dcc
+from dash import html
 from dash_iconify import DashIconify
-from settings.theme import DesignSystem
+from typing import Any, List
 
-def render_sidebar(collapsed=False, current_theme="dark"):
+def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", active_path="/"):
     user_data = session.get("user", {})
+    user_role = user_data.get("role", "user")
     full_name = user_data.get("name", "Usuario")
     initials = "".join([n[0] for n in full_name.split()[:2]]).upper() if full_name else "U"
     
     theme_icon = "tabler:sun" if current_theme == "dark" else "tabler:moon"
     theme_color = "yellow" if current_theme == "dark" else "indigo"
 
+    def get_section_styles(href, is_active):
+        colors = {
+            "/": {"main": "#94a3b8", "light": "rgba(148, 163, 184, 0.1)"},
+            "ops": {"main": "#228be6", "light": "rgba(34, 139, 230, 0.15)"},
+            "taller": {"main": "#40c057", "light": "rgba(64, 192, 87, 0.15)"},
+            "admin": {"main": "#fd7e14", "light": "rgba(253, 126, 20, 0.15)"}
+        }
+        section = "main"
+        if href.startswith("/ops"): section = "ops"
+        elif href.startswith("/taller"): section = "taller"
+        elif href.startswith("/admin"): section = "admin"
+        elif href == "/": section = "/"
+        config = colors.get(section, colors["/"])
+        if not is_active:
+            return {"color": "gray", "style": {"borderRadius": "8px", "marginBottom": "4px"}}
+        return {
+            "color": config["main"],
+            "style": {
+                "borderRadius": "0 8px 8px 0",
+                "marginBottom": "4px",
+                "borderLeft": f"4px solid {config['main']}",
+                "background": f"linear-gradient(90deg, {config['light']} 0%, rgba(0,0,0,0) 100%)",
+                "fontWeight": 700
+            }
+        }
+
     menu_structure = [
         {"type": "link", "label": "Dashboard Principal", "href": "/", "icon": "tabler:layout-dashboard"},
         {"type": "divider", "label": "Módulos"},
-        
         {
-            "type": "group", 
-            "label": "OPERACIONES", 
-            "icon": "tabler:steering-wheel",
+            "type": "group", "label": "OPERACIONES", "icon": "tabler:steering-wheel",
             "children": [
                 {"label": "Control Operativo", "href": "/ops-dashboard", "icon": "tabler:dashboard"},
                 {"label": "Rendimiento", "href": "/ops-performance", "icon": "tabler:gauge"},
@@ -27,11 +51,8 @@ def render_sidebar(collapsed=False, current_theme="dark"):
                 {"label": "Rutas", "href": "/ops-routes", "icon": "tabler:map-pin"},
             ]
         },
-        
         {
-            "type": "group", 
-            "label": "MANTENIMIENTO", 
-            "icon": "tabler:tool",
+            "type": "group", "label": "MANTENIMIENTO", "icon": "tabler:tool",
             "children": [
                 {"label": "Dashboard Taller", "href": "/taller-dashboard", "icon": "tabler:activity"},
                 {"label": "Disponibilidad", "href": "/taller-availability", "icon": "tabler:clock-play"},
@@ -39,11 +60,8 @@ def render_sidebar(collapsed=False, current_theme="dark"):
                 {"label": "Almacén", "href": "/taller-inventory", "icon": "tabler:packages"},
             ]
         },
-        
         {
-            "type": "group", 
-            "label": "ADMINISTRACIÓN", 
-            "icon": "tabler:building-bank",
+            "type": "group", "label": "ADMINISTRACIÓN", "icon": "tabler:building-bank",
             "children": [
                 {"label": "Facturación", "href": "/admin-collection", "icon": "tabler:file-invoice"},
                 {"label": "Cuentas x Pagar", "href": "/admin-payables", "icon": "tabler:file-dollar"},
@@ -51,80 +69,54 @@ def render_sidebar(collapsed=False, current_theme="dark"):
             ]
         }
     ]
-    def get_icon(icon):
-        return DashIconify(icon=icon, width=20)
 
     def render_link(item):
+        is_active = active_path == item["href"]
+        cfg = get_section_styles(item["href"], is_active)
+        # Corrección Pylance: Usar Literal 'exact' en lugar de bool para active
         link = dmc.NavLink(
             label=item["label"] if not collapsed else None,
-            leftSection=get_icon(item["icon"]),
+            leftSection=DashIconify(icon=item["icon"], width=20),
             href=item["href"],
-            active="exact",
-            variant="subtle",
-            color="indigo",
-            style={"borderRadius": "8px", "marginBottom": "4px"}
+            active="exact" if is_active else None,
+            variant="filled" if is_active else "subtle",
+            color=cfg["color"],
+            style=cfg["style"]
         )
-        if collapsed:
-            return dmc.Tooltip(
-                label=item["label"], 
-                position="right", 
-                withArrow=True,
-                children=link
-            )
-        return link
+        return dmc.Tooltip(label=item["label"], position="right", children=link) if collapsed else link
 
-    def render_group_expanded(group):
+    def render_group(group):
+        group_hrefs = [c["href"] for c in group["children"]]
+        is_active = any(active_path == h for h in group_hrefs)
+        cfg = get_section_styles(group_hrefs[0], is_active)
         children = [
             dmc.NavLink(
                 label=child["label"],
-                leftSection=get_icon(child["icon"]),
+                leftSection=DashIconify(icon=child["icon"], width=18),
                 href=child["href"],
-                active="exact",
+                active="exact" if active_path == child["href"] else None,
                 variant="subtle",
-                color="indigo",
-                style={"borderRadius": "8px"}
+                color=cfg["color"] if active_path == child["href"] else "gray",
+                style={"borderRadius": "8px", "height": "32px"}
             ) for child in group["children"]
         ]
-        return dmc.NavLink(
-            label=group["label"],
-            leftSection=get_icon(group["icon"]),
-            children=children,
-            childrenOffset=28,
-            variant="subtle",
-            opened=True,
-            color="indigo",
-            style={"borderRadius": "8px", "fontWeight": 500}
+        nav_group = dmc.NavLink(
+            label=group["label"] if not collapsed else None,
+            leftSection=DashIconify(icon=group["icon"], width=20),
+            children=children if not collapsed else None,
+            opened=is_active and not collapsed,
+            active="exact" if is_active else None,
+            variant="light" if is_active else "subtle",
+            color=cfg["color"],
+            style=cfg["style"] if not collapsed else {"borderRadius": "8px", "marginBottom": "4px"}
         )
-        
-    def render_group_collapsed(group):
-        menu_items = [
-            dmc.MenuItem(
-                child["label"],
-                href=child["href"],
-                leftSection=get_icon(child["icon"])
-            ) for child in group["children"]
-        ]
-        
-        return dmc.Menu(
-            trigger="hover",
-            position="right-start",
-            offset=15,
-            withArrow=True,
-            children=[
-                dmc.MenuTarget(
-                    dmc.NavLink(
-                        label=None,
-                        leftSection=get_icon(group["icon"]),
-                        variant="subtle",
-                        style={"borderRadius": "8px", "marginBottom": "4px"}
-                    )
-                ),
-                dmc.MenuDropdown([
-                    dmc.MenuLabel(group["label"]), 
-                    *menu_items
-                ])
-            ]
-        )
+        if collapsed:
+            menu_items = [dmc.MenuItem(c["label"], href=c["href"], leftSection=DashIconify(icon=c["icon"])) for c in group["children"]]
+            return dmc.Menu(
+                trigger="hover", position="right-start", offset=15,
+                children=[dmc.MenuTarget(nav_group), dmc.MenuDropdown([dmc.MenuLabel(group["label"]), *menu_items])]
+            )
+        return nav_group
 
     content = []
     for item in menu_structure:
@@ -133,27 +125,30 @@ def render_sidebar(collapsed=False, current_theme="dark"):
         elif item["type"] == "link":
             content.append(render_link(item))
         elif item["type"] == "group":
-            if collapsed:
-                content.append(render_group_collapsed(item))
-            else:
-                content.append(render_group_expanded(item))
+            content.append(render_group(item))
+
+    # Corrección Pylance: Castear lista de opciones a Any o usar strings simples
+    db_options: Any = [{"label": "Base 1", "value": "db_1"}, {"label": "Base 2", "value": "db_2"}]
+    
+    db_selector = dmc.Select(
+        id="db-selector",
+        data=db_options,
+        value=current_db,
+        leftSection=DashIconify(icon="tabler:database", width=16),
+        size="xs", radius="md", variant="filled",
+        style={"display": "block" if not collapsed else "none", "marginBottom": "10px"}
+    ) if user_role == "admin" else None
 
     return dmc.Stack(
         justify="space-between", h="100%", p="xs",
         children=[
-            dmc.ScrollArea(
-                style={"flex": 1, "overflow": "visible"}, 
-                children=dmc.Stack(gap=0, children=content)
-            ),
-            
+            dmc.ScrollArea(style={"flex": 1}, children=dmc.Stack(gap=0, children=content)),
             dmc.Stack(gap="xs", children=[
                 dmc.Divider(),
+                db_selector,
                 dmc.Group(justify="center" if collapsed else "space-between", px=10, children=[
                     dmc.Text("Tema", size="sm") if not collapsed else None,
-                    dmc.ActionIcon(
-                        id="theme-toggle", variant="light", color=theme_color, size="lg",
-                        children=DashIconify(icon=theme_icon, width=20)
-                    )
+                    dmc.ActionIcon(id="theme-toggle", variant="light", color=theme_color, size="lg", children=DashIconify(icon=theme_icon, width=20))
                 ]),
                 dmc.ActionIcon(
                     id="btn-sidebar-toggle", variant="subtle", color="gray", size="lg",
@@ -162,10 +157,7 @@ def render_sidebar(collapsed=False, current_theme="dark"):
                 ),
                 dmc.Group(gap="xs", justify="center" if collapsed else "flex-start", children=[
                     dmc.Avatar(initials, radius="xl", color="indigo"),
-                    html.Div([
-                        dmc.Text(full_name, size="sm", fw="bold"),
-                        dmc.Anchor("Cerrar Sesión", href="/logout", size="xs", c="red", refresh=True)
-                    ], style={"display": "none" if collapsed else "block"})
+                    html.Div([dmc.Text(full_name, size="sm", fw="bold"), dmc.Anchor("Salir", href="/logout", size="xs", c="red", refresh=True)], style={"display": "none" if collapsed else "block"})
                 ])
             ])
         ]
