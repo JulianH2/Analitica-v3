@@ -3,12 +3,10 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
         switch_graph_theme: function(theme, figures) {
             if (!theme) return figures;
 
-            // 1. Aplicar el tema al HTML para que Mantine lo reconozca
             document.documentElement.setAttribute('data-mantine-color-scheme', theme);
             
             if (!figures || !Array.isArray(figures)) return figures;
 
-            // 2. Sincronizar Plotly
             const template = theme === 'dark' ? 'zam_dark' : 'zam_light';
             
             return figures.map(fig => {
@@ -23,10 +21,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
     }
 });
 
-/** * Lógica de persistencia pura: 
- * Lee el dcc.Store de Dash (que vive en localStorage) 
- * y aplica el tema al HTML antes de que se vea la página.
- */
+
 (function() {
     try {
         const dashStore = localStorage.getItem('theme-store');
