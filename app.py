@@ -4,10 +4,11 @@ from flask import Flask, redirect, request, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
+from typing import Any
 
 from config import Config
 from components.layout.sidebar import render_sidebar
-from pages.auth import get_error_layout, get_login_layout
+from pages.auth import get_login_layout
 from services.auth_service import auth_service
 from settings.theme import DesignSystem
 
@@ -118,14 +119,19 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
     ctx = callback_context
     if not ctx.triggered:
         return dash.no_update, dash.no_update, dash.no_update
+    
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    current_theme = current_theme or "dark"
+    
     if trigger_id == "theme-toggle":
-        return ("light" if current_theme == "dark" else "dark"), dash.no_update, dash.no_update
+        new_theme = "light" if (current_theme or "dark") == "dark" else "dark"
+        return new_theme, dash.no_update, dash.no_update
+    
     if trigger_id == "btn-sidebar-toggle":
         return dash.no_update, not is_collapsed, dash.no_update
+
     if trigger_id == "db-selector":
         return dash.no_update, dash.no_update, db_value
+        
     return dash.no_update, dash.no_update, dash.no_update
 
 @app.callback(
@@ -141,8 +147,19 @@ def render_interface(theme, collapsed, selected_db, pathname):
     theme = theme or "dark"
     collapsed = collapsed if collapsed is not None else False
     selected_db = selected_db or "db_1"
-    navbar_config = {"width": 80 if collapsed else 260, "breakpoint": "sm", "collapsed": {"mobile": True}}
-    sidebar_ui = render_sidebar(collapsed=collapsed, current_theme=theme, current_db=selected_db, active_path=pathname)
+    
+    navbar_config = {
+        "width": 80 if collapsed else 260,
+        "breakpoint": "sm",
+        "collapsed": {"mobile": True},
+    }
+    
+    sidebar_ui = render_sidebar(
+        collapsed=collapsed, 
+        current_theme=theme, 
+        current_db=selected_db,
+        active_path=pathname
+    )
     return theme, navbar_config, sidebar_ui
 
 app.clientside_callback(

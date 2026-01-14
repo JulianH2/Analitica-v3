@@ -2,7 +2,7 @@ from flask import session
 import dash_mantine_components as dmc
 from dash import html
 from dash_iconify import DashIconify
-from typing import Any, List
+from typing import Any
 
 def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", active_path="/"):
     user_data = session.get("user", {})
@@ -15,25 +15,29 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
 
     def get_section_styles(href, is_active):
         colors = {
-            "/": {"main": "#94a3b8", "light": "rgba(148, 163, 184, 0.1)"},
-            "ops": {"main": "#228be6", "light": "rgba(34, 139, 230, 0.15)"},
-            "taller": {"main": "#40c057", "light": "rgba(64, 192, 87, 0.15)"},
-            "admin": {"main": "#fd7e14", "light": "rgba(253, 126, 20, 0.15)"}
+            "/": {"main": "#94a3b8", "light": "rgba(148, 163, 184, 0.15)"},
+            "ops": {"main": "#228be6", "light": "rgba(34, 139, 230, 0.2)"},
+            "taller": {"main": "#40c057", "light": "rgba(64, 192, 87, 0.2)"},
+            "admin": {"main": "#fd7e14", "light": "rgba(253, 126, 20, 0.2)"}
         }
+        
         section = "main"
         if href.startswith("/ops"): section = "ops"
         elif href.startswith("/taller"): section = "taller"
         elif href.startswith("/admin"): section = "admin"
         elif href == "/": section = "/"
+        
         config = colors.get(section, colors["/"])
+        
         if not is_active:
             return {"color": "gray", "style": {"borderRadius": "8px", "marginBottom": "4px"}}
+            
         return {
             "color": config["main"],
             "style": {
                 "borderRadius": "0 8px 8px 0",
                 "marginBottom": "4px",
-                "borderLeft": f"4px solid {config['main']}",
+                "borderLeft": f"5px solid {config['main']}",
                 "background": f"linear-gradient(90deg, {config['light']} 0%, rgba(0,0,0,0) 100%)",
                 "fontWeight": 700
             }
@@ -73,7 +77,6 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
     def render_link(item):
         is_active = active_path == item["href"]
         cfg = get_section_styles(item["href"], is_active)
-        # Corrección Pylance: Usar Literal 'exact' en lugar de bool para active
         link = dmc.NavLink(
             label=item["label"] if not collapsed else None,
             leftSection=DashIconify(icon=item["icon"], width=20),
@@ -87,8 +90,9 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
 
     def render_group(group):
         group_hrefs = [c["href"] for c in group["children"]]
-        is_active = any(active_path == h for h in group_hrefs)
-        cfg = get_section_styles(group_hrefs[0], is_active)
+        is_group_active = any(active_path == h for h in group_hrefs)
+        cfg = get_section_styles(group_hrefs[0], is_group_active)
+        
         children = [
             dmc.NavLink(
                 label=child["label"],
@@ -97,19 +101,21 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
                 active="exact" if active_path == child["href"] else None,
                 variant="subtle",
                 color=cfg["color"] if active_path == child["href"] else "gray",
-                style={"borderRadius": "8px", "height": "32px"}
+                style={"borderRadius": "8px"}
             ) for child in group["children"]
         ]
+        
         nav_group = dmc.NavLink(
             label=group["label"] if not collapsed else None,
             leftSection=DashIconify(icon=group["icon"], width=20),
             children=children if not collapsed else None,
-            opened=is_active and not collapsed,
-            active="exact" if is_active else None,
-            variant="light" if is_active else "subtle",
+            opened=is_group_active and not collapsed,
+            active="exact" if is_group_active else None,
+            variant="light" if is_group_active else "subtle",
             color=cfg["color"],
             style=cfg["style"] if not collapsed else {"borderRadius": "8px", "marginBottom": "4px"}
         )
+
         if collapsed:
             menu_items = [dmc.MenuItem(c["label"], href=c["href"], leftSection=DashIconify(icon=c["icon"])) for c in group["children"]]
             return dmc.Menu(
@@ -127,17 +133,17 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
         elif item["type"] == "group":
             content.append(render_group(item))
 
-    # Corrección Pylance: Castear lista de opciones a Any o usar strings simples
-    db_options: Any = [{"label": "Base 1", "value": "db_1"}, {"label": "Base 2", "value": "db_2"}]
-    
+    db_options: Any = [{"label": "Base Principal", "value": "db_1"}, {"label": "Base Auditoría", "value": "db_2"}]
     db_selector = dmc.Select(
         id="db-selector",
         data=db_options,
         value=current_db,
         leftSection=DashIconify(icon="tabler:database", width=16),
         size="xs", radius="md", variant="filled",
-        style={"display": "block" if not collapsed else "none", "marginBottom": "10px"}
-    ) if user_role == "admin" else None
+        style={"display": "block"
+               #if (user_role == "admin" and not collapsed) else "none"
+                , "marginBottom": "10px"}
+    )
 
     return dmc.Stack(
         justify="space-between", h="100%", p="xs",
@@ -157,7 +163,10 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
                 ),
                 dmc.Group(gap="xs", justify="center" if collapsed else "flex-start", children=[
                     dmc.Avatar(initials, radius="xl", color="indigo"),
-                    html.Div([dmc.Text(full_name, size="sm", fw="bold"), dmc.Anchor("Salir", href="/logout", size="xs", c="red", refresh=True)], style={"display": "none" if collapsed else "block"})
+                    html.Div([
+                        dmc.Text(full_name, size="sm", fw="bold"), 
+                        dmc.Anchor("Salir", href="/logout", size="xs", c="red", refresh=True)
+                    ], style={"display": "none" if collapsed else "block"})
                 ])
             ])
         ]
