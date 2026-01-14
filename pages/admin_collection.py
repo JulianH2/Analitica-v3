@@ -46,7 +46,7 @@ WIDGET_REGISTRY = {
 
 def layout():
     if not session.get("user"): return dmc.Text("No autorizado...")
-    ctx = data_manager.get_data()
+    ctx = data_manager.get_data("administracion")
     
     return dmc.Container(fluid=True, children=[
         dmc.Modal(id="col-smart-modal", size="lg", centered=True, children=[html.Div(id="col-modal-content")]),
@@ -98,10 +98,11 @@ def layout():
 )
 def handle_collection_modal_click(n_clicks):
     if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
-    w_id = dash.ctx.triggered_id["index"]# type: ignore
+    if dash.ctx.triggered_id is None: return no_update, no_update, no_update
+    w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
-        ctx = data_manager.get_data()
+        ctx = data_manager.get_data("administracion")
         cfg = widget.strategy.get_card_config(ctx)
         return True, cfg["title"], widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update

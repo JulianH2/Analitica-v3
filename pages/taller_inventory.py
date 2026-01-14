@@ -37,7 +37,7 @@ WIDGET_REGISTRY = {
 
 def layout():
     if not session.get("user"): return dmc.Text("No autorizado...")
-    ctx = data_manager.get_data()
+    ctx = data_manager.get_data("mantenimiento")
     
     return dmc.Container(fluid=True, children=[
         dmc.Modal(id="inv-smart-modal", size="lg", centered=True, children=[html.Div(id="inv-modal-content")]),
@@ -65,11 +65,11 @@ def layout():
                 },
                 children=[
                     w_ini.render(ctx),
-                    dmc.Text("+", fw=900, size="xl", ta="center", c="dimmed"), # type: ignore
+                    dmc.Text("+", fw="bold", size="xl", ta="center", c="gray"),
                     w_ent.render(ctx),
-                    dmc.Text("-", fw=900, size="xl", ta="center", c="dimmed"), # type: ignore
+                    dmc.Text("-", fw="bold", size="xl", ta="center", c="gray"),
                     w_sal.render(ctx),
-                    dmc.Text("=", fw=900, size="xl", ta="center", c="dimmed"), # type: ignore
+                    dmc.Text("=", fw="bold", size="xl", ta="center", c="gray"),
                     w_his.render(ctx),
                     gauge_actual.render(ctx)
                 ]
@@ -112,10 +112,11 @@ def layout():
 )
 def handle_inv_modal_click(n_clicks):
     if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
-    w_id = dash.ctx.triggered_id["index"] # type: ignore
+    if dash.ctx.triggered_id is None: return no_update, no_update, no_update
+    w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
-        ctx = data_manager.get_data()
+        ctx = data_manager.get_data("mantenimiento")
         cfg = widget.strategy.get_card_config(ctx)
         return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update

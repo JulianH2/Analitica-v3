@@ -23,7 +23,7 @@ WIDGET_REGISTRY = {"ga_disp": ga_pct_disp, "ga_ent": ga_entries, "ca_trend": ca_
 
 def layout():
     if not session.get("user"): return dmc.Text("No autorizado...")
-    ctx = data_manager.get_data()
+    ctx = data_manager.get_data("mantenimiento")
     return dmc.Container(fluid=True, children=[
         dmc.Modal(id="avail-smart-modal", size="lg", centered=True, children=[html.Div(id="avail-modal-content")]),
         
@@ -40,7 +40,6 @@ def layout():
             ])
         ]),
 
-        # CAMBIO: dimmed -> gray
         dmc.Text("INDICADORES DE DISPONIBILIDAD", fw="bold", mb="md", size="sm", c="gray"),
         dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="xl", children=[# type: ignore
             ga_pct_disp.render(ctx), ga_entries.render(ctx)
@@ -64,10 +63,11 @@ def layout():
 )
 def handle_click(n_clicks):
     if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
-    w_id = dash.ctx.triggered_id["index"]# type: ignore
+    if dash.ctx.triggered_id is None: return no_update, no_update, no_update
+    w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
-        ctx = data_manager.get_data()
+        ctx = data_manager.get_data("mantenimiento")
         cfg = widget.strategy.get_card_config(ctx)
         return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update

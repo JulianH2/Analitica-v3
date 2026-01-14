@@ -44,7 +44,7 @@ class SmartWidget:
                     dmc.Text(config.get("value"), fw="bolder", size="xl", style={"fontSize": "1.8rem"}),             
                     dmc.Badge(
                         f"{trend:+.1f}%", 
-                        color=color, 
+                        color=color,  # type: ignore
                         variant="light", 
                         leftSection=DashIconify(icon=icon)
                     )

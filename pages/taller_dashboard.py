@@ -20,8 +20,8 @@ def kpi_block(title, key, color, widget_id, data_context, prefix="$", suffix="")
     
     def mini_stat(label, val, color_val="dimmed"):
         return dmc.Stack(gap=0, align="flex-end", children=[
-            dmc.Text(label, size="xs", c="dimmed"), # type: ignore
-            dmc.Text(val, size="xs", fw=700, c=color_val) # type: ignore
+            dmc.Text(label, size="xs", c="gray"),
+            dmc.Text(val, size="xs",fw="bold", c="gray")
         ])
 
     return dmc.Paper(
@@ -31,8 +31,7 @@ def kpi_block(title, key, color, widget_id, data_context, prefix="$", suffix="")
         radius="md",
         children=[
             dmc.Group(justify="space-between", align="start", mb=0, children=[
-                dmc.Text(title, size="xs", fw="bold", c="dimmed", tt="uppercase", style={"maxWidth": "50%"}), # type: ignore
-                
+                dmc.Text(title, size="xs", fw="bold", c="gray", tt="uppercase", style={"maxWidth": "50%"}), 
                 dmc.Group(gap="md", children=[
                     mini_stat("Meta", f"{prefix}{node['meta']:,.0f}{suffix}"),
                     mini_stat("vs '24", f"{prefix}{node['vs_2024']:,.0f}", "red" if node['vs_2024'] < 0 else "teal"),
@@ -41,9 +40,8 @@ def kpi_block(title, key, color, widget_id, data_context, prefix="$", suffix="")
             ]),
             
             dmc.Grid(gutter="sm", align="flex-end", children=[
-                # Valor Grande
                 dmc.GridCol(span=5, children=[
-                    dmc.Text(f"{prefix}{node['valor']:,.2f}{suffix}", size="lg", fw=900, style={"lineHeight": 1}) # type: ignore
+                    dmc.Text(f"{prefix}{node['valor']:,.2f}{suffix}", size="lg", fw="bold", style={"lineHeight": 1}) 
                 ]),
                 dmc.GridCol(span=7, children=[
                     dcc.Graph(
@@ -74,7 +72,7 @@ WIDGET_REGISTRY = {
 
 def layout():
     if not session.get("user"): return dmc.Text("No autorizado...")
-    ctx = data_manager.get_data()
+    ctx = data_manager.get_data("mantenimiento")
     
     return dmc.Container(fluid=True, children=[
         dmc.Modal(id="taller-smart-modal", size="lg", centered=True, children=[html.Div(id="taller-modal-content")]),
@@ -125,10 +123,11 @@ def layout():
 )
 def handle_modal_click(n_clicks):
     if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
-    w_id = dash.ctx.triggered_id["index"] # type: ignore
+    if dash.ctx.triggered_id is None: return no_update, no_update, no_update
+    w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(w_id)
     if widget:
-        ctx = data_manager.get_data()
+        ctx = data_manager.get_data("mantenimiento")
         cfg = widget.strategy.get_card_config(ctx)
         return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)
     return no_update, no_update, no_update
