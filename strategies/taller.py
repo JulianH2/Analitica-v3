@@ -4,8 +4,8 @@ from .base_strategy import KPIStrategy
 from settings.theme import DesignSystem
 
 class TallerMiniGaugeStrategy(KPIStrategy):
-    def __init__(self, title, key, color, prefix="$", suffix="", section="dashboard"):
-        super().__init__(title=title, color=color)
+    def __init__(self, title, key, color, prefix="$", suffix="", section="dashboard", layout_config=None):
+        super().__init__(title=title, color=color, layout_config=layout_config) # <--- Agregar esto
         self.key, self.prefix, self.suffix, self.section = key, prefix, suffix, section
 
     def get_card_config(self, data_context):
@@ -42,8 +42,11 @@ class TallerMiniGaugeStrategy(KPIStrategy):
     def render_detail(self, data_context): return None
 
 class TallerGaugeStrategy(KPIStrategy):
-    def __init__(self, title, key, color, prefix="$", suffix="", section="dashboard", has_detail=True):
-        super().__init__(title=title, color=color, icon="tabler:gauge", has_detail=has_detail)
+    def __init__(self, title, key, color, prefix="$", suffix="", section="dashboard", has_detail=True, layout_config=None):
+        super().__init__(
+            title=title, color=color, icon="tabler:gauge", 
+            has_detail=has_detail, layout_config=layout_config # <--- Agregar esto
+        )
         self.key, self.prefix, self.suffix, self.section = key, prefix, suffix, section
     def get_card_config(self, data_context):
         try: node = data_context.get("mantenimiento", {}).get(self.section, {}).get("indicadores", {}).get(self.key, {})

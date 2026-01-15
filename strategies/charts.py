@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
-from .base_strategy import KPIStrategy
 import dash_mantine_components as dmc
-from settings.theme import DesignSystem 
+from .base_strategy import KPIStrategy
+from settings.theme import DesignSystem
 
 class MainTrendChartStrategy(KPIStrategy):
     """Gráfica de tendencia principal que consume datos del contexto unificado"""
@@ -9,7 +9,7 @@ class MainTrendChartStrategy(KPIStrategy):
         return {"title": "Tendencia Financiera Anual", "icon": "tabler:chart-area-line"}
 
     def render_detail(self, data_context):
-        return dmc.Text("Análisis detallado de la evolución de ingresos mensuales.", c="gray")
+        return dmc.Text("Análisis detallado de la evolución de ingresos mensuales.", c="dimmed") # type: ignore
 
     def get_figure(self, data_context):
         ds = data_context["operaciones"]["dashboard"]["graficas"]["ingresos_anual"]
@@ -34,13 +34,24 @@ class MainTrendChartStrategy(KPIStrategy):
 
         fig.update_layout(
             height=320,  
-            margin=dict(t=40, b=30, l=0, r=0), 
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)', 
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            margin=dict(t=40, b=50, l=10, r=10), 
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT, 
+            legend=dict(
+                orientation="h", 
+                yanchor="bottom", 
+                y=1.02, 
+                xanchor="right", 
+                x=1,
+                font=dict(size=10)
+            ),
             barmode='group',
             yaxis=dict(showgrid=True, gridcolor=DesignSystem.SLATE[2], zeroline=False),
-            xaxis=dict(showgrid=False)
+            xaxis=dict(
+                showgrid=False, 
+                automargin=True,
+                tickfont=dict(size=10)
+            ),
         )
         return fig
     
@@ -65,8 +76,8 @@ class OpsFleetStatusStrategy(KPIStrategy):
 
         fig.update_layout(
             showlegend=True,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT,
             legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
             margin=dict(t=20, b=20, l=20, r=20),
             height=300,
@@ -92,8 +103,8 @@ class OpsRoutesChartStrategy(KPIStrategy):
         ))
 
         fig.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT,
             margin=dict(t=10, b=20, l=10, r=20),
             height=300,
             yaxis=dict(autorange="reversed")

@@ -140,7 +140,8 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
         value=current_db,
         leftSection=DashIconify(icon="tabler:database", width=16),
         size="xs", radius="md", variant="filled",
-        style={"display": "block"
+        style={
+            "display": "block"
                #if (user_role == "admin" and not collapsed) else "none"
                 , "marginBottom": "10px"}
     )

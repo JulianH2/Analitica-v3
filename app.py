@@ -162,12 +162,14 @@ def render_interface(theme, collapsed, selected_db, pathname):
     )
     return theme, navbar_config, sidebar_ui
 
+# En app.py
+
 app.clientside_callback(
     ClientsideFunction(namespace='clientside', function_name='switch_graph_theme'),
     Output({"type": "interactive-graph", "index": ALL}, "figure"),
-    Input("theme-store", "data"),
+    Input("theme-store", "data"), 
+    Input({"type": "interactive-graph", "index": ALL}, "id"), 
     State({"type": "interactive-graph", "index": ALL}, "figure"),
-    prevent_initial_call=False 
 )
 
 if __name__ == "__main__":

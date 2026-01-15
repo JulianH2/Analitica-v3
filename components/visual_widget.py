@@ -12,32 +12,36 @@ class ChartWidget:
     def render(self, data_context: Any, h=None):
         fig = self.strategy.get_figure(data_context)
         config_data = self.strategy.get_card_config(data_context)
-        
-        fig_height = fig.layout.height if fig and fig.layout.height else DesignSystem.STANDARD_CHART_HEIGHT
-        container_height = h if h is not None else fig_height
+        layout = getattr(self.strategy, 'layout', {})
+        fig_height = h if h else layout.get("height", 280)
 
-        fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            autosize=True
-        )
+        if fig:
+            fig.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                autosize=True,
+                margin=dict(t=30, b=10, l=10, r=10)
+            )
 
         return dmc.Paper(
-            p="md", radius="md", withBorder=True, shadow="sm",
+            p="xs",
+            radius=layout.get("radius", "md"), 
+            withBorder=True, 
+            shadow="xs",
             style={
-                "height": container_height, 
+                "height": fig_height, 
                 "display": "flex", 
                 "flexDirection": "column", 
                 "backgroundColor": "transparent", 
                 "overflow": "hidden"
             },
             children=[
-                dmc.Group(justify="space-between", mb="xs", children=[
-                    dmc.Group(gap="sm", children=[
+                dmc.Group(justify="space-between", mb=5, children=[
+                    dmc.Group(gap=6, children=[
                         DashIconify(
                             icon=config_data.get("icon", self.strategy.icon), 
                             color=getattr(self.strategy, 'hex_color', '#94a3b8'), 
-                            width=18
+                            width=16
                         ),
                         dmc.Text(
                             config_data.get("title", self.strategy.title), 
@@ -54,17 +58,7 @@ class ChartWidget:
                     children=dcc.Graph(
                         id={"type": "interactive-graph", "index": self.widget_id},
                         figure=fig, 
-                        config={
-                            'displayModeBar': 'hover',
-                            'responsive': True,
-                            'toImageButtonOptions': {
-                                'format': 'png',
-                                'filename': f'export_{self.widget_id}',
-                                'scale': 2 
-                            },
-                            'displaylogo': False,
-                            'modeBarButtonsToRemove': ['lasso2d', 'select2d'], 
-                        },
+                        config={'displayModeBar': 'hover', 'responsive': True, 'displaylogo': False},
                         style={"height": "100%", "width": "100%"},
                     )
                 )
