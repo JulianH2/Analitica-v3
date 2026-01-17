@@ -1,3 +1,14 @@
+import os
+import django
+from django.conf import settings
+
+# 1. Configurar la variable de entorno apuntando a tu settings.py
+# Asegúrate que la carpeta 'Analitica' contenga 'settings.py'
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Analitica.settings")
+
+# 2. Inicializar Django
+django.setup()
+
 import dash
 from dash import Input, Output, State, dcc, html, callback_context, ALL, ClientsideFunction
 from flask import Flask, redirect, request, session
