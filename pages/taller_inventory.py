@@ -2,17 +2,20 @@ from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
-from services.data_manager import DataManager
+
+from services.data_manager import data_manager  # singleton
 from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
 from strategies.taller import (
-    InventoryGaugeStrategy, InventoryHistoricalTrendStrategy, 
+    InventoryGaugeStrategy, InventoryHistoricalTrendStrategy,
     InventoryAreaDistributionStrategy, InventoryDetailedTableStrategy
 )
 from strategies.admin import AdminRichKPIStrategy
 
-dash.register_page(__name__, path='/taller-inventory', title='Inventarios Almacén')
-data_manager = DataManager()
+dash.register_page(__name__, path="/taller-inventory", title="Inventarios Almacén")
+
+SCREEN_ID = "taller-inventory"
+
 table_inv_mgr = InventoryDetailedTableStrategy()
 
 w_ini = SmartWidget("wi_ini", AdminRichKPIStrategy("almacen", "inventario_inicial", "Inventario Inicial", "tabler:database-import", "gray", sub_section="indicadores"))
@@ -35,15 +38,11 @@ WIDGET_REGISTRY = {
     "gi_actual": gauge_actual, "ci_trend": chart_trend, "ci_area": chart_area
 }
 
-def layout():
-    if not session.get("user"): return dmc.Text("No autorizado...")
-    ctx = data_manager.get_data("mantenimiento")
-    
-    return dmc.Container(fluid=True, children=[
-        dmc.Modal(id="inv-smart-modal", size="lg", centered=True, children=[html.Div(id="inv-modal-content")]),
-        
+
+def _render_taller_inventory_body(ctx):
+    return html.Div([
         dmc.Paper(p="md", withBorder=True, mb="lg", children=[
-            dmc.SimpleGrid(cols={"base": 2, "md": 4, "lg": 8}, spacing="xs", children=[ # type: ignore
+            dmc.SimpleGrid(cols={"base": 2, "md": 4, "lg": 8}, spacing="xs", children=[  # type: ignore
                 dmc.Select(label="Año", data=["2025"], value="2025", size="xs"),
                 dmc.Select(label="Mes", data=["07-Jul"], value="07-Jul", size="xs"),
                 dmc.Select(label="Empresa/Área", data=["Todas"], value="Todas", size="xs"),
@@ -59,9 +58,9 @@ def layout():
             dmc.Box(
                 style={
                     "display": "grid",
-                    "gridTemplateColumns": "1fr auto 1fr auto 1fr auto 1fr 1.3fr", 
+                    "gridTemplateColumns": "1fr auto 1fr auto 1fr auto 1fr 1.3fr",
                     "gap": "10px",
-                    "alignItems": "center"
+                    "alignItems": "center",
                 },
                 children=[
                     w_ini.render(ctx),
@@ -71,31 +70,31 @@ def layout():
                     w_sal.render(ctx),
                     dmc.Text("=", fw="bold", size="xl", ta="center", c="gray"),
                     w_his.render(ctx),
-                    gauge_actual.render(ctx)
-                ]
+                    gauge_actual.render(ctx),
+                ],
             )
         ]),
 
-        dmc.Paper(p="md", withBorder=True, mb="lg", children=[ # type: ignore
-            dmc.Text("TENDENCIA HISTÓRICA DE VALORIZACIÓN", fw="bold", size="xs", c="dimmed", mb="md"), # type: ignore
+        dmc.Paper(p="md", withBorder=True, mb="lg", children=[  # type: ignore
+            dmc.Text("TENDENCIA HISTÓRICA DE VALORIZACIÓN", fw="bold", size="xs", c="dimmed", mb="md"),  # type: ignore
             chart_trend.render(ctx)
         ]),
 
-        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "lg": 4}, spacing="lg", mb="xl", children=[ # type: ignore
-            w_cumpl.render(ctx), 
-            w_reg.render(ctx), 
-            w_con.render(ctx), 
-            w_sin.render(ctx)
+        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "lg": 4}, spacing="lg", mb="xl", children=[  # type: ignore
+            w_cumpl.render(ctx),
+            w_reg.render(ctx),
+            w_con.render(ctx),
+            w_sin.render(ctx),
         ]),
-        
+
         dmc.Grid(gutter="lg", grow=True, children=[
-            dmc.GridCol(span={"base": 12, "md": 5}, children=[chart_area.render(ctx)]), # type: ignore
-            dmc.GridCol(span={"base": 12, "md": 7}, children=[ # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 5}, children=[chart_area.render(ctx)]),  # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 7}, children=[  # type: ignore
                 dmc.Paper(p="md", withBorder=True, children=[
                     dmc.Tabs(value="fam", children=[
                         dmc.TabsList([
                             dmc.TabsTab("Valorización por Familia", value="fam"),
-                            dmc.TabsTab("Detalle Histórico", value="hist")
+                            dmc.TabsTab("Detalle Histórico", value="hist"),
                         ]),
                         dmc.TabsPanel(dmc.ScrollArea(h=400, mt="md", children=[table_inv_mgr.render_family(ctx)]), value="fam"),
                         dmc.TabsPanel(dmc.ScrollArea(h=400, mt="md", children=[table_inv_mgr.render_history(ctx)]), value="hist"),
@@ -103,20 +102,59 @@ def layout():
                 ])
             ])
         ]),
+
         dmc.Space(h=50)
     ])
 
+
+def layout():
+    if not session.get("user"):
+        return dmc.Text("No autorizado...")
+
+    # primer paint rápido (base/cache slice)
+    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
+
+    # auto-refresh 1 vez al entrar
+    refresh_components, _ids = data_manager.dash_refresh_components(
+        SCREEN_ID,
+        interval_ms=800,
+        max_intervals=1,
+    )
+
+    return dmc.Container(fluid=True, children=[
+        dmc.Modal(id="inv-smart-modal", size="lg", centered=True, children=[html.Div(id="inv-modal-content")]),
+
+        *refresh_components,
+
+        html.Div(id="taller-inventory-body", children=_render_taller_inventory_body(ctx)),
+    ])
+
+
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID,
+    body_output_id="taller-inventory-body",
+    render_body=_render_taller_inventory_body,
+)
+
+
 @callback(
-    Output("inv-smart-modal", "opened"), Output("inv-smart-modal", "title"), Output("inv-modal-content", "children"),
-    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"), prevent_initial_call=True
+    Output("inv-smart-modal", "opened"),
+    Output("inv-smart-modal", "title"),
+    Output("inv-modal-content", "children"),
+    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"),
+    prevent_initial_call=True
 )
 def handle_inv_modal_click(n_clicks):
-    if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
-    if dash.ctx.triggered_id is None: return no_update, no_update, no_update
+    if not dash.ctx.triggered or not any(n_clicks):
+        return no_update, no_update, no_update
+    if dash.ctx.triggered_id is None:
+        return no_update, no_update, no_update
+
     w_id = dash.ctx.triggered_id["index"]
-    widget = WIDGET_REGISTRY.get(w_id)
-    if widget:
-        ctx = data_manager.get_data("mantenimiento")
-        cfg = widget.strategy.get_card_config(ctx)
-        return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)
-    return no_update, no_update, no_update
+    widget = WIDGET_REGISTRY.get(str(w_id))
+    if not widget:
+        return no_update, no_update, no_update
+
+    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
+    cfg = widget.strategy.get_card_config(ctx)
+    return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)
