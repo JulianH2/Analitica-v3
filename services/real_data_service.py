@@ -106,19 +106,19 @@ class RealDataService:
                 "dashboard": {
                     "indicadores": {
                         "ingreso_viaje": {
-                            "valor": 20900885, 
+                            "valor": 0, 
                             "meta": 23889249, 
                             "label_mes": "$21.8M (-4.4%)", 
                             "label_ytd": "$195.9M (-20%)"
                         },
                         "viajes": {
-                            "valor": 716, 
+                            "valor": 0, 
                             "meta": 914, 
                             "label_mes": "835 (-14.2%)", 
                             "label_ytd": "7,194 (-34.6%)"
                         },
                         "kilometros": {
-                            "valor": 439098, 
+                            "valor": 0, 
                             "meta": 592357, 
                             "label_mes": "544k (-11.5%)", 
                             "label_ytd": "4.2M (-21.9%)"
