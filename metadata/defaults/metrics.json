@@ -1,0 +1,54 @@
+{
+  "ingresos_totales": {
+    "name": "Ingresos Totales (Admin)",
+    "recipe": {
+      "table": "h_facturado",
+      "column": "subtotal",
+      "aggregation": "SUM",
+      "default_filters": ["anio_actual"],
+      "date_column": "fecha_consulta"
+    }
+  },
+  "egresos_totales": {
+    "name": "Egresos Totales (Admin)",
+    "recipe": {
+      "table": "h_factura_cobrado",
+      "column": "monto_pagado",
+      "aggregation": "SUM",
+      "default_filters": ["anio_actual"],
+      "date_column": "fecha_pago"
+    }
+  },
+  "kpi_ingresos_brutos": {
+    "name": "Ingresos Operativos",
+    "description": "Ingresos brutos usados en Dashboard Operativo",
+    "format": "currency",
+    "recipe": {
+      "table": "h_facturado",
+      "column": "subtotal",
+      "aggregation": "SUM",
+      "default_filters": ["anio_actual"],
+      "date_column": "fecha_consulta"
+    }
+  },
+  "kpi_viajes_totales": {
+    "name": "Viajes Totales",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "no_viaje",
+      "aggregation": "COUNT",
+      "default_filters": ["anio_actual"],
+      "date_column": "fecha_real_viaje"
+    }
+  },
+  "kpi_kms_recorridos": {
+    "name": "Kilómetros Recorridos",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "kms_real",
+      "aggregation": "SUM",
+      "default_filters": ["anio_actual"],
+      "date_column": "fecha_real_viaje"
+    }
+  }
+}

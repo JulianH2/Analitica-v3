@@ -1,0 +1,13 @@
+{
+  "anio_actual": {
+    "sql_fragment": "YEAR(h_facturado.fecha_consulta) = YEAR(GETDATE())",
+    "tables_required": [] 
+  },
+  "cliente_vip": {
+    "sql_fragment": "d_cliente.clasificacion = 'VIP'",
+    "tables_required": ["d_cliente"]
+  },
+  "solo_activos": {
+    "sql_fragment": "h_facturado.estatus != 'CANCELADA'"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "h_facturado": {
+    "table_name": "h_facturado",
+    "pk": "id_factura",
+    "date_column": "fecha_consulta",
+    "joins": {
+        "cliente": {
+            "target_table": "d_cliente",
+            "type": "INNER",
+            "on": "h_facturado.id_cliente = d_cliente.id_cliente"
+        }
+    }
+  },
+  "d_cliente": {
+    "table_name": "d_cliente",
+    "pk": "id_cliente"
+  },
+  "d_viaje": {
+    "table_name": "d_viaje",
+    "pk": "no_viaje",
+    "date_column": "fecha_real_viaje",
+    "fields": {
+      "no_viaje": "integer",
+      "kms_real": "decimal"
+    }
+  },
+  "h_factura_cobrado": {
+    "table_name": "h_factura_cobrado",
+    "pk": "id_pago"
+  }
+}
