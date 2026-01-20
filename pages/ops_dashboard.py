@@ -1,6 +1,6 @@
 from flask import session
 import dash
-from dash import html, callback, Input, Output, ALL, no_update
+from dash import html, callback, Input, Output, ALL, no_update,dcc
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 
@@ -12,7 +12,7 @@ from strategies.operational import (
     BalanceUnitStrategy, OpsTableStrategy
 )
 from strategies.admin import AdminRichKPIStrategy
-from settings.theme import DesignSystem
+from settings.theme import DesignSystem, SemanticColors
 from utils.helpers import safe_get
 
 dash.register_page(__name__, path="/ops-dashboard", title="Control Operativo")
@@ -28,9 +28,10 @@ w_inc = SmartWidget("go_inc", OpsGaugeStrategy("Ingreso Viaje", "ingreso_viaje",
 w_tri = SmartWidget("go_tri", OpsGaugeStrategy("Viajes", "viajes", "green", prefix="", layout_config=top_layout))
 w_kms = SmartWidget("go_kms", OpsGaugeStrategy("Kilómetros", "kilometros", "yellow", prefix="", layout_config=top_layout))
 
-w_avg_trip = SmartWidget("ko_avg_trip", AdminRichKPIStrategy("operaciones", "ingreso_viaje", "Prom. x Viaje", "tabler:truck-delivery", "indigo", sub_section="promedios", layout_config=top_layout))
-w_avg_unit = SmartWidget("ko_avg_unit", AdminRichKPIStrategy("operaciones", "ingreso_unit", "Prom. x Unidad", "tabler:engine", "green", sub_section="promedios", layout_config=top_layout))
-w_units_qty = SmartWidget("ko_units", AdminRichKPIStrategy("operaciones", "unidades_utilizadas", "Unidades Uso", "tabler:truck", "cyan", sub_section="promedios", layout_config=top_layout))
+w_avg_trip = SmartWidget("avg_trip", OpsGaugeStrategy("Prom. x Viaje", "ingreso_viaje", "blue"))
+w_avg_unit = SmartWidget("avg_unit", OpsGaugeStrategy("Prom. x Unidad", "ingreso_unit", "indigo"))
+w_units_qty = SmartWidget("units_qty", OpsGaugeStrategy("Unidades Uso", "unidades_utilizadas", "violet"))
+w_customers = SmartWidget("customers", OpsGaugeStrategy("Clientes", "clientes_servidos", "teal"))
 
 w_gauge_inc = ChartWidget("v_go_inc", OpsGaugeStrategy("Visual Ingreso", "ingreso_viaje", "indigo", layout_config={"height": 200}))
 w_gauge_tri = ChartWidget("v_go_tri", OpsGaugeStrategy("Visual Viajes", "viajes", "green", prefix="", layout_config={"height": 200}))
@@ -46,7 +47,6 @@ WIDGET_REGISTRY = {
     "ko_avg_trip": w_avg_trip, "ko_avg_unit": w_avg_unit, "ko_units": w_units_qty
 }
 
-
 def _render_body(ctx):
     def fleet_status():
         val = safe_get(ctx, "operaciones.dashboard.utilizacion.valor", 92)
@@ -60,14 +60,25 @@ def _render_body(ctx):
         ])
 
     return html.Div([
-        dmc.SimpleGrid(cols={"base": 2, "sm": 3, "lg": 6}, spacing="xs", mb="md", mt="xs", children=[  # type: ignore
-            w_inc.render(ctx), w_tri.render(ctx), w_kms.render(ctx),
-            w_avg_trip.render(ctx), w_avg_unit.render(ctx), w_units_qty.render(ctx)
-        ]),
-
-        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="xs", mb="md", children=[  # type: ignore
-            w_gauge_inc.render(ctx), w_gauge_tri.render(ctx), w_gauge_kms.render(ctx)
-        ]),
+        dmc.SimpleGrid(
+            cols={"base": 1, "lg": 3},  # type: ignore
+            spacing="md", mb="md", mt="xs", 
+            children=[
+                w_inc.render(ctx, mode="combined"),
+                w_tri.render(ctx, mode="combined"),
+                w_kms.render(ctx, mode="combined"),
+            ]
+        ),
+        dmc.SimpleGrid(
+            cols={"base": 2, "sm": 4, "lg": 4},  # type: ignore
+            spacing="xs", mb="md", 
+            children=[
+                w_avg_trip.render(ctx), 
+                w_avg_unit.render(ctx), 
+                w_units_qty.render(ctx), 
+                w_customers.render(ctx)
+            ]
+        ),
 
         dmc.Grid(gutter="xs", mb="md", children=[
             dmc.GridCol(span={"base": 12, "md": 6}, children=[w_inc_comp.render(ctx)]),  # type: ignore

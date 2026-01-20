@@ -55,43 +55,85 @@ class OpsGaugeStrategy(KPIStrategy):
     def __init__(self, title, key, color, prefix="$", section="dashboard", has_detail=True, layout_config=None):
         super().__init__(title=title, color=color, icon="tabler:gauge", has_detail=has_detail, layout_config=layout_config)
         self.key, self.prefix, self.section = key, prefix, section
+        self.gauge_params = {
+            "range_max_mult": 1.15,
+            "threshold_width": 5,
+            "threshold_color": DesignSystem.WARNING[5],
+            "exceed_color": DesignSystem.INFO[5], # type: ignore
+            "bg_color": DesignSystem.SLATE[1],
+            "font_size": 18
+        }
 
     def get_card_config(self, data_context):
-        node = safe_get(data_context, f"operaciones.{self.section}.indicadores.{self.key}", {})
+        node = safe_get(data_context, f"operaciones.{self.section}.indicadores.{self.key}")
+        if not node:
+             node = safe_get(data_context, f"operaciones.{self.section}.promedios.{self.key}", {})
+
         val = node.get("valor", 0)
         fmt = self.layout.get("value_format", "abbreviated")
+        
         return {
             "title": self.title,
             "value": f"{val:,.2f}%" if self.prefix == "%" else format_value(val, self.prefix, format_type=fmt),
+            "monthly_display": node.get("monthly_display"),
+            "monthly_delta": node.get("monthly_delta"),
+            "ytd_display": node.get("ytd_display"),
+            "ytd_delta": node.get("ytd_delta"),
             "label_mes": node.get("label_mes"),
             "label_ytd": node.get("label_ytd"),
+            "vs_2024": node.get("vs_2024"),
             "meta_text": f"Meta: {format_value(node.get('meta', 0), self.prefix)}" if node.get("meta") else ""
         }
 
     def get_figure(self, data_context):
-        node = safe_get(data_context, f"operaciones.{self.section}.indicadores.{self.key}", {})
-        val, meta = node.get("valor", 0), node.get("meta", 100)
+        node = safe_get(data_context, f"operaciones.{self.section}.indicadores.{self.key}")
+        if not node:
+             node = safe_get(data_context, f"operaciones.{self.section}.promedios.{self.key}", {})
+        
+        val_pct = node.get("valor_porcentaje", 0)
+        meta_pct = node.get("meta_porcentaje", 100)
+        exceeds = val_pct > meta_pct
+        
+        bar_color = self.gauge_params["exceed_color"] if exceeds else self.hex_color
         
         fig = go.Figure(go.Indicator(
-            mode="gauge+number", value=val,
-            number={'suffix': self.prefix if self.prefix == "%" else "", 'font': {'size': 18, 'weight': 'bold', 'color': SemanticColors.TEXT_MAIN}},
+            mode="gauge+number", value=val_pct,
+            number={
+                'suffix': "%", 
+                'font': {'size': self.gauge_params["font_size"], 'weight': 'bold'},
+                'valueformat': '.1f'
+            },
             gauge={
-                'axis': {'range': [None, meta * 1.5 if meta > 0 else 100], 'visible': False}, 
-                'bar': {'color': self.hex_color}, 
-                'bgcolor': DesignSystem.SLATE[1]
+                'axis': {'range': [0, max(val_pct, meta_pct) * self.gauge_params["range_max_mult"]], 'visible': False},
+                'bar': {'color': bar_color, 'thickness': 0.8},
+                'bgcolor': self.gauge_params["bg_color"],
+                'threshold': {
+                    'line': {'color': self.gauge_params["threshold_color"], 'width': self.gauge_params["threshold_width"]}, 
+                    'thickness': 0.75, 
+                    'value': meta_pct
+                }
             },
             domain={'x': [0, 1], 'y': [0, 1]}
         ))
+        
+        if exceeds:
+            fig.add_annotation(
+                x=0.5, y=1.05, 
+                text="★ META SUPERADA", 
+                showarrow=False, 
+                font=dict(color=bar_color, size=9, weight="bold")
+            )
+
         fig.update_layout(
-            height=140, 
-            margin=dict(l=10, r=10, t=10, b=10), 
+            height=150, 
+            margin=dict(l=5, r=5, t=25, b=5),
             paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
+            font={'family': "Inter, sans-serif"}
         )
         return fig
 
     def render_detail(self, data_context):
-        return dmc.Text("Detalle de indicador...", c=SemanticColors.TEXT_MUTED, size="sm")  # type: ignore
+        return dmc.Text("Detalle de indicador...", c=SemanticColors.TEXT_MUTED, size="sm") # type: ignore
 
 
 class OpsComparisonStrategy(KPIStrategy):
@@ -154,11 +196,13 @@ class PerformanceGaugeStrategy(KPIStrategy):
     def get_card_config(self, data_context):
         node = safe_get(data_context, f"operaciones.{self.section}.indicadores.{self.key}", {})
         val = node.get("valor", 0)
-        fmt = self.layout.get("value_format", "abbreviated")
-
         return {
             "title": self.title,
-            "value": format_value(val, self.prefix, format_type=fmt),
+            "value": format_value(val, self.prefix),
+            "monthly_display": node.get("monthly_display"),
+            "monthly_delta": node.get("monthly_delta"),
+            "ytd_display": node.get("ytd_display"),
+            "ytd_delta": node.get("ytd_delta"),
             "label_mes": node.get("label_mes"),
             "label_ytd": node.get("label_ytd"),
             "meta_text": f"Meta: {node.get('meta', 0):,.2f}" if node.get('meta') else ""
@@ -167,24 +211,18 @@ class PerformanceGaugeStrategy(KPIStrategy):
     def get_figure(self, data_context):
         node = safe_get(data_context, f"operaciones.{self.section}.indicadores.{self.key}", {})
         val, meta = node.get("valor", 0), node.get("meta", 1.0)
-        hex_color = DesignSystem.COLOR_MAP.get(self.color, DesignSystem.BRAND[5])
-
         fig = go.Figure(go.Indicator(
             mode="gauge+number", value=val,
-            number={'font': {'size': 20, 'weight': 'bold', 'color': SemanticColors.TEXT_MAIN}, 'valueformat': '.2f'},
+            number={'font': {'size': 20, 'weight': 'bold'}, 'valueformat': '.2f'},
             gauge={
-                'axis': {'range': [None, meta * 1.5], 'visible': False},
-                'bar': {'color': hex_color, 'thickness': 0.8},
-                'bgcolor': DesignSystem.SLATE[2]
+                'axis': {'range': [0, max(val, meta) * 1.2], 'visible': False},
+                'bar': {'color': self.hex_color},
+                'bgcolor': "rgba(0,0,0,0.1)",
+                'threshold': {'line': {'color': "#f59e0b", 'width': 4}, 'thickness': 0.75, 'value': meta}
             },
             domain={'x': [0, 1], 'y': [0, 1]}
         ))
-        fig.update_layout(
-            height=150, 
-            margin=dict(l=10, r=10, t=10, b=10), 
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
+        fig.update_layout(height=150, margin=dict(l=10, r=10, t=10, b=10), paper_bgcolor='rgba(0,0,0,0)')
         return fig
 
     def render_detail(self, data_context):

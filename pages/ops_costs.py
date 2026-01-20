@@ -3,7 +3,7 @@ import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
 
-from services.data_manager import data_manager  # singleton
+from services.data_manager import data_manager
 from components.smart_widget import SmartWidget
 from components.visual_widget import ChartWidget
 from strategies.operational import (
@@ -14,18 +14,13 @@ from strategies.operational import (
 dash.register_page(__name__, path="/ops-costs", title="Costos Operaciones")
 
 SCREEN_ID = "ops-costs"
-
 table_ops_mgr = OpsTableStrategy()
 
-gauge_cost_utility = ChartWidget("gc_utility", OpsGaugeStrategy("Utilidad Viaje", "utilidad_viaje", "green", prefix="%", section="costos"))
-kpi_cost_utility = SmartWidget("kc_utility", OpsGaugeStrategy("Utilidad Viaje", "utilidad_viaje", "green", prefix="%", section="costos"))
-
-gauge_cost_total = ChartWidget("gc_total", OpsGaugeStrategy("Costo Viaje Total", "costo_total", "red", section="costos"))
-kpi_cost_total = SmartWidget("kc_total", OpsGaugeStrategy("Costo Viaje Total", "costo_total", "red", section="costos"))
+w_utilidad = SmartWidget("kc_utility", OpsGaugeStrategy("Utilidad Viaje", "utilidad_viaje", "teal", prefix="%", section="costos"))
+w_costo_total = SmartWidget("kc_total", OpsGaugeStrategy("Costo Viaje Total", "costo_total", "red", section="costos"))
 
 chart_cost_stack = ChartWidget("cc_stack", CostUtilityStackedStrategy(layout_config={"height": 380}))
 chart_cost_breakdown = ChartWidget("cc_break", CostBreakdownStrategy(layout_config={"height": 380}))
-
 chart_cost_yearly_comp = ChartWidget(
     "cc_comp",
     OpsComparisonStrategy(
@@ -39,37 +34,33 @@ chart_cost_yearly_comp = ChartWidget(
 )
 
 WIDGET_REGISTRY = {
-    "kc_utility": kpi_cost_utility,
-    "kc_total": kpi_cost_total,
+    "kc_utility": w_utilidad,
+    "kc_total": w_costo_total,
 }
-
 
 def _render_ops_costs_body(ctx):
     return html.Div([
         dmc.Grid(gutter="md", mt="md", children=[
-            dmc.GridCol(span={"base": 12, "lg": 5}, children=[  # type: ignore
-                dmc.Paper(p="md", withBorder=True, radius="md", children=[
-                    dmc.Stack(gap="xs", children=[
-                        dmc.Group([gauge_cost_utility.render(ctx), kpi_cost_utility.render(ctx)], grow=True, align="center"),
-                        dmc.Divider(my="sm", variant="dashed"),
-                        dmc.Group([gauge_cost_total.render(ctx), kpi_cost_total.render(ctx)], grow=True, align="center"),
-                    ])
+            dmc.GridCol(span={"base": 12, "lg": 4}, children=[ # type: ignore
+                dmc.Stack(gap="md", children=[
+                    w_utilidad.render(ctx, mode="combined"),
+                    w_costo_total.render(ctx, mode="combined"),
                 ])
             ]),
 
-            dmc.GridCol(span={"base": 12, "lg": 7}, children=[  # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 8}, children=[ # type: ignore
                 dmc.Paper(p="md", withBorder=True, radius="md", children=[
                     chart_cost_stack.render(ctx)
-                ])
+                ], style={"height": "100%"})
             ]),
 
-            dmc.GridCol(span={"base": 12, "lg": 5}, children=[  # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 4}, children=[ # type: ignore
                 dmc.Paper(p="md", withBorder=True, radius="md", children=[
                     chart_cost_breakdown.render(ctx)
                 ])
             ]),
 
-            dmc.GridCol(span={"base": 12, "lg": 7}, children=[  # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 8}, children=[ # type: ignore
                 dmc.Paper(p="md", withBorder=True, radius="md", children=[
                     chart_cost_yearly_comp.render(ctx)
                 ])
@@ -92,36 +83,24 @@ def _render_ops_costs_body(ctx):
         dmc.Space(h=50)
     ])
 
-
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
 
-    # primer paint rápido (base/cache slice)
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
-
-    # auto-refresh 1 vez al entrar
-    refresh_components, _ids = data_manager.dash_refresh_components(
-        SCREEN_ID,
-        interval_ms=800,
-        max_intervals=1,
-    )
+    refresh_components, _ = data_manager.dash_refresh_components(SCREEN_ID, interval_ms=800, max_intervals=1)
 
     return dmc.Container(fluid=True, px="xs", children=[
         dmc.Modal(id="costs-smart-modal", size="xl", centered=True, children=[html.Div(id="costs-modal-content")]),
-
         *refresh_components,
-
         html.Div(id="ops-costs-body", children=_render_ops_costs_body(ctx)),
     ])
-
 
 data_manager.register_dash_refresh_callbacks(
     screen_id=SCREEN_ID,
     body_output_id="ops-costs-body",
     render_body=_render_ops_costs_body,
 )
-
 
 @callback(
     Output("costs-smart-modal", "opened"),

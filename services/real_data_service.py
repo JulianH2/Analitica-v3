@@ -106,30 +106,80 @@ class RealDataService:
                 "dashboard": {
                     "indicadores": {
                         "ingreso_viaje": {
-                            "valor": 0, 
+                            "valor": 21800000, 
                             "meta": 23889249, 
+                            "valor_porcentaje": 91.25,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "$21.8M", 
+                            "monthly_delta": -0.044, 
+                            "ytd_display": "$195.9M", 
+                            "ytd_delta": -0.20,
                             "label_mes": "$21.8M (-4.4%)", 
                             "label_ytd": "$195.9M (-20%)"
                         },
                         "viajes": {
-                            "valor": 0, 
+                            "valor": 835, 
                             "meta": 914, 
+                            "valor_porcentaje": 91.35,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "835", 
+                            "monthly_delta": -0.142, 
+                            "ytd_display": "7,194", 
+                            "ytd_delta": -0.346,
                             "label_mes": "835 (-14.2%)", 
                             "label_ytd": "7,194 (-34.6%)"
                         },
                         "kilometros": {
-                            "valor": 0, 
+                            "valor": 544000, 
                             "meta": 592357, 
+                            "valor_porcentaje": 91.84,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "544k", 
+                            "monthly_delta": -0.115, 
+                            "ytd_display": "4.2M", 
+                            "ytd_delta": -0.219,
                             "label_mes": "544k (-11.5%)", 
                             "label_ytd": "4.2M (-21.9%)"
                         }
                     },
                     "utilizacion": {"valor": 92},
                     "promedios": {
-                        "ingreso_viaje": {"valor": 29191, "meta": 0, "vs_2024": 0.11},
-                        "ingreso_unit": {"valor": 254889, "meta": 0, "vs_2024": 0.25},
-                        "unidades_utilizadas": {"valor": 82, "meta": 0, "vs_2024": -0.24},
-                        "clientes_servidos": {"valor": 15, "meta": 0, "vs_2024": 0.36}
+                        "ingreso_viaje": {
+                            "valor": 29191, 
+                            "meta": 30000, 
+                            "valor_porcentaje": 97.3,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "$29,191",
+                            "monthly_delta": 0.11,
+                            "vs_2024": 0.11
+                        },
+                        "ingreso_unit": {
+                            "valor": 254889, 
+                            "meta": 260000, 
+                            "valor_porcentaje": 98.0,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "$254,889",
+                            "monthly_delta": 0.25,
+                            "vs_2024": 0.25
+                        },
+                        "unidades_utilizadas": {
+                            "valor": 82, 
+                            "meta": 100, 
+                            "valor_porcentaje": 82.0,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "82",
+                            "monthly_delta": -0.24,
+                            "vs_2024": -0.24
+                        },
+                        "clientes_servidos": {
+                            "valor": 15, 
+                            "meta": 20, 
+                            "valor_porcentaje": 75.0,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "15",
+                            "monthly_delta": 0.36,
+                            "vs_2024": 0.36
+                        }
                     },
                     "graficas": {
                         "ingresos_anual": {
@@ -167,12 +217,24 @@ class RealDataService:
                         "kms_lt": {
                             "valor": 1.86, 
                             "meta": 3.0, 
+                            "valor_porcentaje": 62.0,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "1.79", 
+                            "monthly_delta": 0.0427, 
+                            "ytd_display": "1.85", 
+                            "ytd_delta": -0.94,
                             "label_mes": "1.79 (4.27%)", 
                             "label_ytd": "1.85 (-94%)"
                         },
                         "kms_reales": {
                             "valor": 513165, 
                             "meta": 592357, 
+                            "valor_porcentaje": 86.63,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "579k", 
+                            "monthly_delta": -0.11, 
+                            "ytd_display": "4.5M", 
+                            "ytd_delta": -0.21,
                             "label_mes": "579k (-11%)", 
                             "label_ytd": "4.5M (-21%)",
                             "extra_info": ["Kms/Viaje", "716.71"]
@@ -180,6 +242,12 @@ class RealDataService:
                         "litros": {
                             "valor": 275490, 
                             "meta": 300000, 
+                            "valor_porcentaje": 91.83,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "324k", 
+                            "monthly_delta": -0.15, 
+                            "ytd_display": "2.4M", 
+                            "ytd_delta": 0.20,
                             "label_mes": "324k (-15%)", 
                             "label_ytd": "2.4M (20%)",
                             "extra_info": ["Lts/Viaje", "384.76"]
@@ -209,7 +277,8 @@ class RealDataService:
                                 ["ALANIS ALANIS AMBROCIO", "1.76", "9", "3,726", "2,112"]
                             ]
                         }
-                }},
+                    }
+                },
                 "rutas": {
                     "mapa": {
                         "puntos": [
@@ -227,18 +296,30 @@ class RealDataService:
                             ]
                         }
                     }
-        },
+                },
                 "costos": {
                     "indicadores": {
                         "utilidad_viaje": {
                             "valor": 18.19, 
                             "meta": 25.0, 
+                            "valor_porcentaje": 72.76,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "17.4%", 
+                            "monthly_delta": -0.68, 
+                            "ytd_display": "14.2%", 
+                            "ytd_delta": -0.43,
                             "label_mes": "17.4% (-68%)", 
                             "label_ytd": "14.2% (-43%)"
                         },
                         "costo_total": {
                             "valor": 17098160, 
                             "meta": 9796576, 
+                            "valor_porcentaje": 174.5,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "$9.9M", 
+                            "monthly_delta": 0.71, 
+                            "ytd_display": "$111.6M", 
+                            "ytd_delta": 0.18,
                             "label_mes": "$9.9M (71%)", 
                             "label_ytd": "$111.6M (18%)"
                         }
