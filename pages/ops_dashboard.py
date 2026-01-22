@@ -1,6 +1,6 @@
 from flask import session
 import dash
-from dash import html, callback, Input, Output, ALL, no_update,dcc
+from dash import html, callback, Input, Output, ALL, no_update, dcc
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 
@@ -33,13 +33,9 @@ w_avg_unit = SmartWidget("avg_unit", OpsGaugeStrategy("Prom. x Unidad", "ingreso
 w_units_qty = SmartWidget("units_qty", OpsGaugeStrategy("Unidades Uso", "unidades_utilizadas", "violet"))
 w_customers = SmartWidget("customers", OpsGaugeStrategy("Clientes", "clientes_servidos", "teal"))
 
-w_gauge_inc = ChartWidget("v_go_inc", OpsGaugeStrategy("Visual Ingreso", "ingreso_viaje", "indigo", layout_config={"height": 200}))
-w_gauge_tri = ChartWidget("v_go_tri", OpsGaugeStrategy("Visual Viajes", "viajes", "green", prefix="", layout_config={"height": 200}))
-w_gauge_kms = ChartWidget("v_go_kms", OpsGaugeStrategy("Visual Kms", "kilometros", "yellow", prefix="", layout_config={"height": 200}))
-
 w_inc_comp = ChartWidget("co_inc_comp", OpsComparisonStrategy("Ingresos 2025 vs 2024", "ingresos_anual", "indigo", layout_config={"height": VISUAL_H}))
 w_trips_comp = ChartWidget("co_trips_comp", OpsComparisonStrategy("Viajes 2025 vs 2024", "viajes_anual", "green", layout_config={"height": VISUAL_H}))
-w_mix = ChartWidget("co_mix", OpsPieStrategy(layout_config={"height": 380}))
+w_mix = ChartWidget("co_mix", OpsPieStrategy(layout_config={"height": 445}))
 w_unit_bal = ChartWidget("co_unit_bal", BalanceUnitStrategy(layout_config={"height": 380}))
 
 WIDGET_REGISTRY = {
@@ -59,25 +55,54 @@ def _render_body(ctx):
             ])
         ])
 
+    filter_content = html.Div([
+        dmc.Grid(align="center", gutter="sm", mb="xs", children=[
+            dmc.GridCol(span="content", children=[
+                dmc.Select(id="ops-year", data=["2025", "2024"], value="2025", variant="filled", style={"width": "100px"}, allowDeselect=False, size="sm")
+            ]),
+            dmc.GridCol(span="auto", children=[
+                dmc.ScrollArea(w="100%", type="scroll", scrollbarSize=6, offsetScrollbars=True, children=[ # type: ignore
+                    dmc.SegmentedControl(
+                        id="ops-month", value="septiembre", color="blue", radius="md", size="sm", fullWidth=True, style={"minWidth": "800px"},
+                        data=[{"label": m, "value": m.lower()} for m in ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]] # type: ignore
+                    )
+                ])
+            ])
+        ]),
+        dmc.SimpleGrid(cols={"base": 2, "md": 4, "lg": 5}, spacing="xs", children=[ # type: ignore
+            dmc.Select(label="Empresa Área", data=["Todas"], value="Todas", size="xs"),
+            dmc.Select(label="Clasificación", data=["Todas"], value="Todas", size="xs"),
+            dmc.Select(label="Cliente", data=["Todos"], value="Todos", size="xs"),
+            dmc.Select(label="Unidad", data=["Todas"], value="Todas", size="xs"),
+            dmc.Select(label="Operador", data=["Todas"], value="Todas", size="xs"),
+        ])
+    ])
+
+    collapsible_filters = dmc.Accordion(
+        value="filtros",
+        variant="contained",
+        radius="md",
+        mb="lg",
+        children=[
+            dmc.AccordionItem(value="filtros", children=[
+                dmc.AccordionControl(dmc.Group([DashIconify(icon="tabler:filter"), dmc.Text("Filtros y Controles")]), h=40),
+                dmc.AccordionPanel(filter_content)
+            ])
+        ]
+    )
+
     return html.Div([
+        collapsible_filters,
+
         dmc.SimpleGrid(
             cols={"base": 1, "lg": 3},  # type: ignore
             spacing="md", mb="md", mt="xs", 
-            children=[
-                w_inc.render(ctx, mode="combined"),
-                w_tri.render(ctx, mode="combined"),
-                w_kms.render(ctx, mode="combined"),
-            ]
+            children=[w_inc.render(ctx, mode="combined"), w_tri.render(ctx, mode="combined"), w_kms.render(ctx, mode="combined")]
         ),
         dmc.SimpleGrid(
             cols={"base": 2, "sm": 4, "lg": 4},  # type: ignore
             spacing="xs", mb="md", 
-            children=[
-                w_avg_trip.render(ctx), 
-                w_avg_unit.render(ctx), 
-                w_units_qty.render(ctx), 
-                w_customers.render(ctx)
-            ]
+            children=[w_avg_trip.render(ctx), w_avg_unit.render(ctx), w_units_qty.render(ctx), w_customers.render(ctx)]
         ),
 
         dmc.Grid(gutter="xs", mb="md", children=[
@@ -103,7 +128,24 @@ def _render_body(ctx):
 
         dmc.Grid(gutter="xs", mb="md", children=[
             dmc.GridCol(span={"base": 12, "md": 5}, children=[w_mix.render(ctx)]),  # type: ignore
-            dmc.GridCol(span={"base": 12, "md": 7}, children=[w_unit_bal.render(ctx)]),  # type: ignore
+
+            dmc.GridCol(span={"base": 12, "md": 7}, children=[ # type: ignore
+                 dmc.Paper(p="md", withBorder=True, radius="md", children=[
+                    dmc.Text("Balanceo de Ingresos por Unidad", fw=600, size="sm", mb="sm", c="dimmed"), # type: ignore
+                    dmc.ScrollArea(
+                        h=380,
+                        type="auto",
+                        offsetScrollbars=True, # type: ignore
+                        children=[
+                            dcc.Graph(
+                                figure=w_unit_bal.strategy.get_figure(ctx),
+                                config={"displayModeBar": False},
+                                style={"height": "100%", "width": "100%"}
+                            )
+                        ]
+                    )
+                ])
+            ]),
         ]),
 
         dmc.Paper(p="md", withBorder=True, children=[
@@ -121,53 +163,28 @@ def _render_body(ctx):
         dmc.Space(h=50)
     ])
 
-
 def layout():
-    if not session.get("user"):
-        return dmc.Text("No autorizado...")
-
+    if not session.get("user"): return dmc.Text("No autorizado...")
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
-
-    refresh_components, ids = data_manager.dash_refresh_components(
-        SCREEN_ID,
-        interval_ms=800,
-        max_intervals=1,
-    )
-
+    refresh_components, ids = data_manager.dash_refresh_components(SCREEN_ID, interval_ms=800, max_intervals=1)
     return dmc.Container(fluid=True, px="xs", children=[
         dmc.Modal(id="ops-smart-modal", size="xl", centered=True, children=[html.Div(id="ops-modal-content")]),
-
         *refresh_components,
-
         html.Div(id="ops-body", children=_render_body(ctx)),
     ])
 
-data_manager.register_dash_refresh_callbacks(
-    screen_id=SCREEN_ID,
-    body_output_id="ops-body",
-    render_body=_render_body,
-)
-
+data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="ops-body", render_body=_render_body)
 
 @callback(
-    Output("ops-smart-modal", "opened"),
-    Output("ops-smart-modal", "title"),
-    Output("ops-modal-content", "children"),
-    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"),
-    prevent_initial_call=True
+    Output("ops-smart-modal", "opened"), Output("ops-smart-modal", "title"), Output("ops-modal-content", "children"),
+    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"), prevent_initial_call=True
 )
 def handle_ops_dashboard_modal(n_clicks):
-    if not dash.ctx.triggered or not any(n_clicks):
-        return no_update, no_update, no_update
-
-    if dash.ctx.triggered_id is None:
-        return no_update, no_update, no_update
-
+    if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
+    if dash.ctx.triggered_id is None: return no_update, no_update, no_update
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(str(w_id))
-    if not widget:
-        return no_update, no_update, no_update
-
+    if not widget: return no_update, no_update, no_update
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     cfg = widget.strategy.get_card_config(ctx)
     return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)

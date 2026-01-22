@@ -77,20 +77,6 @@ def get_login_layout():
                                             )
                                         ])
                                     ]),
-
-                                    dmc.Divider(label="Otras opciones", labelPosition="center", mt="xs"),
-                                    dmc.Group(grow=True, children=[
-                                        dmc.Anchor(
-                                            dmc.Button(
-                                                "Google",
-                                                leftSection=DashIconify(icon="logos:google-icon"),
-                                                variant="default", fullWidth=True, size="xs"
-                                            ),
-                                            href="/login/google",
-                                            refresh=True, underline="never"
-                                        ),
-                                        
-                                    ]),
                                     
                                     dmc.Group(gap="xs", justify="center", mt="lg", children=[
                                         DashIconify(icon="tabler:shield-check", color=DesignSystem.SUCCESS[5], width=14),

@@ -6,8 +6,24 @@ class RealDataService:
             "administracion": {
                 "facturacion_cobranza": {
                     "indicadores": {
-                        "facturado_vs_cobrado": {"valor": 22127664, "meta": 30000000},
-                        "prom_dias_cartera": {"valor": 105, "meta": 150}
+                        "facturado_vs_cobrado": {
+                            "valor": 22127664,
+                            "meta": 30000000,
+                            "valor_porcentaje": 73.7,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "$22.1M",
+                            "monthly_delta": -0.05,
+                            "label_mes": "$22.1M (-5%)"
+                        },
+                        "promedio_pago": {
+                            "valor": 45,
+                            "meta": 30,
+                            "valor_porcentaje": 150.0,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "45 días",
+                            "monthly_delta": 0.12,
+                            "label_mes": "45 d (+12%)"
+                        }
                     },
                     "acumulado": {
                         "facturado_acumulado": {"valor": 194047842},
@@ -47,8 +63,17 @@ class RealDataService:
                 },
                 "cuentas_por_pagar": {
                     "indicadores": {
-                        "cxp_vs_pagado": {"valor": 14000000, "meta": 17000000},
-                        "promedio_pago": {"valor": 22, "meta": 30}
+                        "cxp_vs_pagado": {
+                            "valor": 14000000, 
+                            "meta": 17000000,
+                            "valor_porcentaje": 82.4,
+                            "tickvals": [0, 14000000, 17000000],
+                            "ticktext": ["$0", "$14M", "$17M"]
+                        },
+                        "promedio_pago": {
+                            "valor": 22, 
+                            "meta": 30
+                        }
                     },
                     "acumulado": {
                         "saldo_inicial": {"valor": 1000000},
@@ -81,10 +106,12 @@ class RealDataService:
                 },
                 "bancos": {
                     "indicadores": {
-                        "saldo_inicial": {"valor": 20582298},
-                        "ingresos": {"valor": 426484509},
-                        "egresos": {"valor": 426092482},
-                        "saldo_final": {"valor": 20974325}
+                        "disponibilidad_total": {"valor": 15400000, "meta": 20000000, "label_mes": "$15.4M"},
+                        "uso_lineas": {
+                            "valor": 8500000, "meta": 10000000,
+                            "valor_porcentaje": 85.0, "meta_porcentaje": 100,
+                            "monthly_display": "$8.5M", "label_mes": "$8.5M (85%)"
+                        },
                     },
                     "graficas": {
                         "diaria": {
@@ -106,100 +133,100 @@ class RealDataService:
                 "dashboard": {
                     "indicadores": {
                         "ingreso_viaje": {
-                            "valor": 21800000, 
-                            "meta": 23889249, 
-                            "valor_porcentaje": 91.25,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "$21.8M", 
-                            "monthly_delta": -0.044, 
-                            "ytd_display": "$195.9M", 
-                            "ytd_delta": -0.20,
-                            "label_mes": "$21.8M (-4.4%)", 
-                            "label_ytd": "$195.9M (-20%)"
+                            "valor": 0, 
+                            "meta": 0, 
+                            "valor_porcentaje": 0.0,
+                            "meta_porcentaje": 0,
+                            "monthly_display": "$0", 
+                            "monthly_delta": 0.0, 
+                            "ytd_display": "$0", 
+                            "ytd_delta": 0.0,
+                            "label_mes": "$0 (0.0%)", 
+                            "label_ytd": "$0 (0.0%)"
                         },
                         "viajes": {
-                            "valor": 835, 
-                            "meta": 914, 
-                            "valor_porcentaje": 91.35,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "835", 
-                            "monthly_delta": -0.142, 
-                            "ytd_display": "7,194", 
-                            "ytd_delta": -0.346,
-                            "label_mes": "835 (-14.2%)", 
-                            "label_ytd": "7,194 (-34.6%)"
+                            "valor": 0, 
+                            "meta": 0, 
+                            "valor_porcentaje": 0.0,
+                            "meta_porcentaje": 0,
+                            "monthly_display": "0", 
+                            "monthly_delta": 0.0, 
+                            "ytd_display": "0", 
+                            "ytd_delta": 0.0,
+                            "label_mes": "0 (0.0%)", 
+                            "label_ytd": "0 (0.0%)"
                         },
                         "kilometros": {
-                            "valor": 544000, 
-                            "meta": 592357, 
-                            "valor_porcentaje": 91.84,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "544k", 
-                            "monthly_delta": -0.115, 
-                            "ytd_display": "4.2M", 
-                            "ytd_delta": -0.219,
-                            "label_mes": "544k (-11.5%)", 
-                            "label_ytd": "4.2M (-21.9%)"
+                            "valor": 0, 
+                            "meta": 0, 
+                            "valor_porcentaje": 0.0,
+                            "meta_porcentaje": 0,
+                            "monthly_display": "0", 
+                            "monthly_delta": 0.0, 
+                            "ytd_display": "0", 
+                            "ytd_delta": 0.0,
+                            "label_mes": "0 (0.0%)", 
+                            "label_ytd": "0 (0.0%)"
                         }
                     },
-                    "utilizacion": {"valor": 92},
+                    "utilizacion": {"valor": 0},
                     "promedios": {
                         "ingreso_viaje": {
-                            "valor": 29191, 
-                            "meta": 30000, 
-                            "valor_porcentaje": 97.3,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "$29,191",
-                            "monthly_delta": 0.11,
-                            "vs_2024": 0.11
+                            "valor": 0, 
+                            "meta": 0, 
+                            "valor_porcentaje": 0.0,
+                            "meta_porcentaje": 0,
+                            "monthly_display": "$0",
+                            "monthly_delta": 0.0,
+                            "vs_2024": 0.0
                         },
                         "ingreso_unit": {
-                            "valor": 254889, 
-                            "meta": 260000, 
-                            "valor_porcentaje": 98.0,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "$254,889",
-                            "monthly_delta": 0.25,
-                            "vs_2024": 0.25
+                            "valor": 0, 
+                            "meta": 0, 
+                            "valor_porcentaje": 0.0,
+                            "meta_porcentaje": 0,
+                            "monthly_display": "$0",
+                            "monthly_delta": 0.0,
+                            "vs_2024": 0.0
                         },
                         "unidades_utilizadas": {
-                            "valor": 82, 
-                            "meta": 100, 
-                            "valor_porcentaje": 82.0,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "82",
-                            "monthly_delta": -0.24,
-                            "vs_2024": -0.24
+                            "valor": 0, 
+                            "meta": 0, 
+                            "valor_porcentaje": 0.0,
+                            "meta_porcentaje": 0,
+                            "monthly_display": "0",
+                            "monthly_delta": 0.0,
+                            "vs_2024": 0.0
                         },
                         "clientes_servidos": {
-                            "valor": 15, 
-                            "meta": 20, 
-                            "valor_porcentaje": 75.0,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "15",
-                            "monthly_delta": 0.36,
-                            "vs_2024": 0.36
+                            "valor": 0, 
+                            "meta": 0, 
+                            "valor_porcentaje": 0.0,
+                            "meta_porcentaje": 0,
+                            "monthly_display": "0",
+                            "monthly_delta": 0.0,
+                            "vs_2024": 0.0
                         }
                     },
                     "graficas": {
                         "ingresos_anual": {
                             "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [25, 22, 24, 25, 22, 24, 22, 18, 20, 14, 19, 22],
-                            "anterior": [29, 27, 28, 25, 27, 32, 29, 27, 25, 24, 22, 24],
-                            "meta": [27, 24, 25, 24, 24, 28, 27, 24, 22, 22, 20, 22]
+                            "actual": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            "anterior": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            "meta": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                         },
                         "viajes_anual": {
                             "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [700, 650, 720, 716, 680, 710, 690, 640, 716, 600, 620, 650],
-                            "anterior": [850, 800, 820, 835, 810, 840, 830, 800, 835, 780, 790, 810]
+                            "actual": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                            "anterior": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                         },
                         "mix_operacion": {
-                            "labels": ["REFINADOS", "ARENERA LOCAL", "CONTENEDOR FORÁNEO", "OTROS"],
-                            "values": [36.8, 28.5, 7.71, 26.99]
+                            "labels": ["", "", "", ""],
+                            "values": [0, 0, 0, 0]
                         },
                         "balanceo_unidades": {
-                            "unidades": ["Unidad 144", "Unidad 99", "Unidad 107", "Unidad 143", "Unidad 154"],
-                            "montos": [0.65, 0.61, 0.59, 0.58, 0.56]
+                            "labels": ["", "", "", "", ""],
+                            "values": [0, 0, 0, 0, 0]
                         }
                     },
                     "tablas": {
@@ -355,12 +382,36 @@ class RealDataService:
             "mantenimiento": {
                 "dashboard": {
                     "indicadores": {
-                        "costo_interno": {"valor": 603880, "meta": 371948, "vs_2024": 338135, "ytd": 2929400},
-                        "costo_externo": {"valor": 197773, "meta": 581033, "vs_2024": 528212, "ytd": 5394052},
-                        "costo_llantas": {"valor": 18510, "meta": 1, "vs_2024": 58217, "ytd": 941316},
-                        "total_mantenimiento": {"valor": 820164, "meta": 952982, "vs_2024": 924564, "ytd": 9264784},
-                        "costo_km": {"valor": 1.32, "meta": 11.0, "vs_2024": 1.31, "ytd": 0.59},
-                        "disponibilidad": {"valor": 58, "meta": 100, "vs_2024": 0, "ytd": 0}
+                        "costo_interno": {
+                            "valor": 603880, "meta": 371948, "valor_porcentaje": 162.3, "meta_porcentaje": 100,
+                            "monthly_display": "$603k", "monthly_delta": 0.08, "ytd_display": "$2.9M", "ytd_delta": 0.15,
+                            "label_mes": "$603k (+8%)", "label_ytd": "$2.9M (+15%)"
+                        },
+                        "costo_externo": {
+                            "valor": 197773, "meta": 581033, "valor_porcentaje": 34.0, "meta_porcentaje": 100,
+                            "monthly_display": "$197k", "monthly_delta": -0.15, "ytd_display": "$5.3M", "ytd_delta": -0.05,
+                            "label_mes": "$197k (-15%)", "label_ytd": "$5.3M (-5%)"
+                        },
+                        "costo_llantas": {
+                            "valor": 18510, "meta": 15000, "valor_porcentaje": 123.4, "meta_porcentaje": 100,
+                            "monthly_display": "$18k", "monthly_delta": 0.05, "ytd_display": "$941k", "ytd_delta": 0.10,
+                            "label_mes": "$18k (+5%)", "label_ytd": "$941k (+10%)"
+                        },
+                        "total_mantenimiento": {
+                            "valor": 820164, "meta": 952982, "valor_porcentaje": 86.1, "meta_porcentaje": 100,
+                            "monthly_display": "$820k", "monthly_delta": -0.11, "ytd_display": "$9.2M", "ytd_delta": -0.02,
+                            "label_mes": "$820k (-11%)", "label_ytd": "$9.2M (-2%)"
+                        },
+                        "costo_km": {
+                            "valor": 1.32, "meta": 1.10, "valor_porcentaje": 120.0, "meta_porcentaje": 100,
+                            "monthly_display": "$1.32", "monthly_delta": 0.01, "ytd_display": "$0.59", "ytd_delta": -0.40,
+                            "label_mes": "$1.32 (+1%)", "label_ytd": "$0.59 (-40%)"
+                        },
+                        "disponibilidad": {
+                            "valor": 58, "meta": 100, "valor_porcentaje": 58.0, "meta_porcentaje": 100,
+                            "monthly_display": "58%", "monthly_delta": -0.10, "ytd_display": "65%", "ytd_delta": -0.05,
+                            "label_mes": "58% (-10%)", "label_ytd": "65% (-5%)"
+                        }
                     },
                     "graficas": {
                         "tendencia_anual": {
@@ -405,7 +456,15 @@ class RealDataService:
                         "entradas": {"valor": 6128092, "meta": 0, "vs_2024": 0},
                         "salidas": {"valor": 4535675, "meta": 0, "vs_2024": 0},
                         "valorizacion_historica": {"valor": 14561121, "meta": 30384198, "vs_2024": 0},
-                        "valorizacion_actual": {"valor": 21111205, "meta": 30384198, "label_mes": "$21.1M (-30%)"},
+                        "valorizacion_actual": {
+                            "valor": 21111205, 
+                            "meta": 30384198, 
+                            "valor_porcentaje": 69.4,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "$21.1M",
+                            "monthly_delta": -0.30,
+                            "label_mes": "$21.1M (-30%)"
+                        },
                         "cumplimiento": {"valor": 47.32, "meta": 100, "vs_2024": 0},
                         "con_existencia": {"valor": 4000, "meta": 0, "vs_2024": 0},
                         "sin_existencia": {"valor": 4000, "meta": 0, "vs_2024": 0},
@@ -443,19 +502,20 @@ class RealDataService:
                         "pct_disponibilidad": {
                             "valor": 58, 
                             "meta": 100, 
-                            "vs_2024": 0, 
-                            "ytd": 0, 
-                            "label_mes": "58%", 
-                            "label_ytd": "N/A"
+                            "valor_porcentaje": 58.0,
+                            "meta_porcentaje": 100,
+                            "monthly_display": "58%", 
+                            "monthly_delta": -0.10, 
+                            "label_mes": "58% (-10%)" 
                         },
                         "entradas_taller": {
                             "valor": 335, 
-                            "meta": 300, 
-                            "vs_2024": 0, 
-                            "ytd": 2450, 
-                            "label_mes": "2,450", 
-                            "label_ytd": "N/A"
-                        }
+                            "meta": 300,
+                            "valor_porcentaje": 111.6,
+                            "monthly_display": "335", 
+                            "monthly_delta": 0.05,
+                            "label_mes": "335 (+5%)"
+                        },
                     },
                     "graficas": {
                         "disponibilidad_mensual": {
@@ -483,12 +543,19 @@ class RealDataService:
                             ]
                         }
                     }
-        },
+                },
                 "compras": {
                     "indicadores": {
-                        "total": {"valor": 5648478, "vs_2024": 6885581, "ytd": 37665913},
-                        "diesel": {"valor": 3923274},
-                        "stock": {"valor": 1725204}
+                        "total": {
+                            "valor": 5648478, 
+                            "vs_2024": 6885581, 
+                            "ytd": 37665913,
+                            "meta": 6000000,    
+                            "valor_porcentaje": 94.1,  
+                            "meta_porcentaje": 100
+                        },
+                        "diesel": {"valor": 3923274}, 
+                        "stock": {"valor": 1725204} 
                     },
                     "graficas": {
                         "tendencia": {

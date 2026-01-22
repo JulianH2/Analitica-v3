@@ -1,31 +1,149 @@
 {
-  "h_facturado": {
-    "table_name": "h_facturado",
-    "pk": "id_factura",
-    "date_column": "fecha_consulta",
+  "h_viaje": {
+    "table_name": "h_viaje",
+    "type": "fact",
+    "pk": "no_viaje",
+    "date_column": "fecha_real_viaje",
     "joins": {
-        "cliente": {
-            "target_table": "d_cliente",
-            "type": "INNER",
-            "on": "h_facturado.id_cliente = d_cliente.id_cliente"
-        }
+      "viaje_operativo": {
+        "target_table": "d_viaje",
+        "type": "INNER",
+        "on": "h_viaje.id_area = d_viaje.id_area AND h_viaje.no_viaje = d_viaje.no_viaje"
+      },
+      "tipo_operacion": {
+        "target_table": "d_tipo_operacion",
+        "type": "INNER",
+        "on": "h_viaje.id_tipo_operacion = d_tipo_operacion.id_tipo_operacion"
+      },
+      "area": { 
+        "target_table": "d_area",
+        "type": "INNER",
+        "on": "h_viaje.id_area = d_area.id_area"
+      },
+      "cliente": {
+        "target_table": "d_trafico_cliente",
+        "type": "INNER",
+        "on": "h_viaje.id_cliente = d_trafico_cliente.id_cliente"
+      },
+      "estatus": {
+        "target_table": "d_estatus_guia",
+        "type": "LEFT",
+        "on": "h_viaje.id_estatus = d_estatus_guia.id_estatus"
+      }
     }
-  },
-  "d_cliente": {
-    "table_name": "d_cliente",
-    "pk": "id_cliente"
   },
   "d_viaje": {
     "table_name": "d_viaje",
+    "type": "dim",
     "pk": "no_viaje",
-    "date_column": "fecha_real_viaje",
-    "fields": {
-      "no_viaje": "integer",
-      "kms_real": "decimal"
+    "description": "Tabla operativa de viajes con detalles de ruta y kilometraje",
+    "joins": {
+      "ruta": {
+        "target_table": "d_ruta",
+        "type": "INNER",
+        "on": "d_viaje.id_ruta = d_ruta.id_ruta"
+      },
+      "unidad": {
+        "target_table": "d_unidad",
+        "type": "INNER",
+        "on": "d_viaje.id_unidad = d_unidad.id_unidad"
+      },
+      "operador": {
+        "target_table": "d_personal",
+        "type": "INNER",
+        "on": "d_viaje.id_operador = d_personal.id_personal"
+      }
     }
   },
-  "h_factura_cobrado": {
-    "table_name": "h_factura_cobrado",
-    "pk": "id_pago"
+  "d_ruta": {
+    "table_name": "d_ruta",
+    "type": "dim",
+    "pk": "id_ruta",
+    "label_column": "ruta",
+    "fields": {
+      "kms_ruta": "decimal",
+      "origen": "varchar",
+      "destino": "varchar"
+    }
+  },
+  "h_viajes_gastos_liquidacion": {
+    "table_name": "h_viajes_gastos_liquidacion",
+    "type": "fact",
+    "pk": "id_gasto",
+    "date_column": "fecha_gasto",
+    "joins": {
+      "viaje": {
+        "target_table": "h_viaje",
+        "type": "INNER",
+        "on": "h_viajes_gastos_liquidacion.no_viaje = h_viaje.no_viaje"
+      },
+      "concepto": {
+        "target_table": "d_trafico_concepto",
+        "type": "INNER",
+        "on": "h_viajes_gastos_liquidacion.id_concepto = d_trafico_concepto.id_concepto"
+      },
+      "clasificacion": {
+        "target_table": "d_trafico_concepto_clasificacion",
+        "type": "LEFT",
+        "on": "h_viajes_gastos_liquidacion.id_clasificacion = d_trafico_concepto_clasificacion.id_clasificacion"
+      }
+    }
+  },
+  "d_unidad": {
+    "table_name": "d_unidad",
+    "type": "dim",
+    "pk": "id_unidad",
+    "label_column": "id_unidad",
+    "joins": {
+      "tipo_unidad": {
+        "target_table": "d_tipo_unidad",
+        "type": "INNER",
+        "on": "d_unidad.id_tipo_unidad = d_tipo_unidad.id_tipo_unidad"
+      },
+      "flota": {
+        "target_table": "d_area",
+        "type": "LEFT",
+        "on": "d_unidad.id_area = d_area.id_area"
+      }
+    }
+  },
+  "d_personal": {
+    "table_name": "d_personal",
+    "type": "dim",
+    "pk": "id_personal",
+    "label_column": "nombre_completo"
+  },
+  "d_trafico_cliente": {
+    "table_name": "d_trafico_cliente",
+    "type": "dim",
+    "pk": "id_cliente",
+    "label_column": "nombre_cliente"
+  },
+  "d_trafico_concepto": {
+    "table_name": "d_trafico_concepto",
+    "type": "dim",
+    "pk": "id_concepto",
+    "label_column": "descripcion_concepto"
+  },
+  "d_meta_tiempo": {
+    "table_name": "d_meta_tiempo",
+    "type": "fact",
+    "pk": "fecha",
+    "date_column": "fecha",
+    "description": "Tabla de presupuestos y metas diarias/mensuales"
+  },
+  "d_area": {
+    "table_name": "d_area",
+    "description": "Sucursales o bases operativas (ej. Base Veracruz, Base México)",
+    "type": "dim",
+    "pk": "id_area",
+    "label_column": "no_area"
+  },
+  "d_tipo_operacion": {
+    "table_name": "d_tipo_operacion",
+    "description": "Giro del servicio (ej. Refinados, Contenedor, Carga General)",
+    "type": "dim",
+    "pk": "id_tipo_operacion",
+    "label_column": "tipo_operacion"
   }
 }

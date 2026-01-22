@@ -13,6 +13,7 @@ def _execute_dynamic_query_sync(session_db_config: str, sql_query: str):
 
     try:
         with connections["client_db"].cursor() as cursor:
+            #print(f"Executing SQL Query on {session_db_config}:\n{sql_query}\n")
             cursor.execute(sql_query)
             if cursor.description:
                 columns = [col[0] for col in cursor.description]

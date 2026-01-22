@@ -1,54 +1,257 @@
 {
-  "ingresos_totales": {
-    "name": "Ingresos Totales (Admin)",
+
+  "ingreso_viaje": {
+    "name": "Ingreso Viaje",
     "recipe": {
-      "table": "h_facturado",
+      "table": "h_viaje",
       "column": "subtotal",
       "aggregation": "SUM",
-      "default_filters": ["anio_actual"],
-      "date_column": "fecha_consulta"
+      "format": "currency"
     }
   },
-  "egresos_totales": {
-    "name": "Egresos Totales (Admin)",
+  
+  "ingreso_viaje_anterior": {
+    "name": "Ingreso Viaje Año Anterior",
     "recipe": {
-      "table": "h_factura_cobrado",
-      "column": "monto_pagado",
-      "aggregation": "SUM",
-      "default_filters": ["anio_actual"],
-      "date_column": "fecha_pago"
-    }
-  },
-  "kpi_ingresos_brutos": {
-    "name": "Ingresos Operativos",
-    "description": "Ingresos brutos usados en Dashboard Operativo",
-    "format": "currency",
-    "recipe": {
-      "table": "h_facturado",
+      "table": "h_viaje",
       "column": "subtotal",
       "aggregation": "SUM",
-      "default_filters": ["anio_actual"],
-      "date_column": "fecha_consulta"
+      "time_modifier": "previous_year",
+      "format": "currency"
     }
   },
-  "kpi_viajes_totales": {
-    "name": "Viajes Totales",
+
+  "ingreso_viaje_acumulado": {
+    "name": "Ingreso Viaje Acumulado (YTD)",
     "recipe": {
-      "table": "d_viaje",
+      "table": "h_viaje",
+      "column": "subtotal",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    }
+  },
+
+  "meta_ingreso_viaje": {
+    "name": "Meta Ingreso Viaje",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_ingreso_viaje",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+
+  "ingreso_esperado": {
+    "name": "Ingreso Esperado",
+    "description": "Alias de Meta para contextos de proyección",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_ingreso_viaje",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+
+  "pct_desviacion_ingreso_vs_anterior": {
+    "name": "% Desviación Ingreso vs Anterior",
+    "type": "derived",
+    "formula": "(ingreso_viaje - ingreso_viaje_anterior) / ingreso_viaje_anterior",
+    "format": "percent"
+  },
+
+  "pct_desviacion_ingreso_acumulado": {
+    "name": "% Desviación Ingreso Acumulado",
+    "type": "derived",
+    "formula": "(ingreso_viaje_acumulado - meta_ingreso_viaje_acumulado) / meta_ingreso_viaje_acumulado",
+    "format": "percent"
+  },
+
+  "viajes": {
+    "name": "Viajes",
+    "recipe": {
+      "table": "h_viaje",
       "column": "no_viaje",
       "aggregation": "COUNT",
-      "default_filters": ["anio_actual"],
-      "date_column": "fecha_real_viaje"
+      "format": "integer"
     }
   },
-  "kpi_kms_recorridos": {
-    "name": "Kilómetros Recorridos",
+
+  "viajes_anterior": {
+    "name": "Viajes Año Anterior",
     "recipe": {
-      "table": "d_viaje",
-      "column": "kms_real",
-      "aggregation": "SUM",
-      "default_filters": ["anio_actual"],
-      "date_column": "fecha_real_viaje"
+      "table": "h_viaje",
+      "column": "no_viaje",
+      "aggregation": "COUNT",
+      "time_modifier": "previous_year",
+      "format": "integer"
     }
+  },
+
+  "viajes_acumulado": {
+    "name": "Viajes Acumulado (YTD)",
+    "recipe": {
+      "table": "h_viaje",
+      "column": "no_viaje",
+      "aggregation": "COUNT",
+      "time_modifier": "ytd",
+      "format": "integer"
+    }
+  },
+
+  "meta_viajes": {
+    "name": "Meta Viaje",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_viajes",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+
+  "viajes_esperado": {
+    "name": "Viajes Esperado",
+    "description": "Proyección de viajes basada en meta",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_viajes",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+
+  "meta_viajes_acumulado": {
+    "name": "Meta Viajes Acumulado (YTD)",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_viajes",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    }
+  },
+
+  "diff_viajes_vs_anterior": {
+    "name": "Viajes vs Anterior",
+    "type": "derived",
+    "formula": "viajes - viajes_anterior",
+    "format": "integer"
+  },
+
+  "pct_desviacion_viajes_vs_anterior": {
+    "name": "% Desviación Viajes vs Anterior",
+    "type": "derived",
+    "formula": "(viajes - viajes_anterior) / viajes_anterior if viajes_anterior else 0",
+    "format": "percent"
+  },
+
+  "pct_desviacion_viajes_acumulado": {
+    "name": "% Desviación Viajes Acumulado",
+    "type": "derived",
+    "formula": "(viajes_acumulado - meta_viajes_acumulado) / meta_viajes_acumulado if meta_viajes_acumulado else 0",
+    "format": "percent"
+  },
+
+  "kilometros": {
+    "name": "Kms Recorridos",
+    "recipe": {
+      "table": "h_viaje",
+      "column": "kms_viaje",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+
+  "kilometros_anterior": {
+    "name": "Kms Recorridos Año Anterior",
+    "recipe": {
+      "table": "h_viaje",
+      "column": "kms_viaje",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    }
+  },
+
+  "kilometros_acumulado": {
+    "name": "Kms Recorridos Acumulado (YTD)",
+    "recipe": {
+      "table": "h_viaje",
+      "column": "kms_viaje",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    }
+  },
+
+  "meta_kilometros": {
+    "name": "Meta Kms Real",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_kms_recorridos",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+
+  "kilometros_esperado": {
+    "name": "Kilómetros Esperado",
+    "description": "Alias de Meta Kms para proyecciones",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_kms_real",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+
+  "meta_ingreso_viaje_acumulado": {
+    "name": "Meta Ingreso Viaje Acumulado (YTD)",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_ingreso_viaje",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    }
+  },
+
+  "meta_kilometros_acumulado": {
+    "name": "Meta Kms Real Acumulado (YTD)",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_kms_recorridos",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    }
+  },
+
+  "pct_desviacion_kilometros_vs_anterior": {
+    "name": "% Desviación Kms Real vs Anterior",
+    "type": "derived",
+    "formula": "(kilometros - kilometros_anterior) / kilometros_anterior if kilometros_anterior else 0",
+    "format": "percent"
+  },
+
+  "color_desviacion_kilometros_vs_anterior": {
+    "name": "Color Desviación Kms Real vs Anterior",
+    "type": "derived",
+    "formula": "'green' if pct_desviacion_kilometros_vs_anterior >= 0 else 'red'",
+    "format": "string"
+  },
+
+  "pct_desviacion_kilometros_acumulado": {
+    "name": "% Desviación Kms Real Acumulado",
+    "type": "derived",
+    "formula": "(kilometros_acumulado - meta_kilometros_acumulado) / meta_kilometros_acumulado if meta_kilometros_acumulado else 0",
+    "format": "percent"
+  },
+
+  "color_desviacion_kilometros_acumulado": {
+    "name": "Color Desviación Kms Real Acumulado",
+    "type": "derived",
+    "formula": "'green' if pct_desviacion_kilometros_acumulado >= 0 else 'red'",
+    "format": "string"
   }
 }

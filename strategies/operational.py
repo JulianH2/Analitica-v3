@@ -40,7 +40,7 @@ class FleetEfficiencyStrategy(KPIStrategy):
             domain={'x': [0, 1], 'y': [0, 1]}
         ))
         fig.update_layout(
-            height=DesignSystem.GAUGE_HEIGHT,
+            height=DesignSystem.GAUGE_HEIGHT, # type: ignore
             margin=dict(l=15, r=15, t=35, b=10),
             paper_bgcolor=DesignSystem.TRANSPARENT,
             plot_bgcolor=DesignSystem.TRANSPARENT
@@ -261,34 +261,40 @@ class BalanceUnitStrategy(KPIStrategy):
     def get_card_config(self, data_context): return {"title": self.title}
 
     def get_figure(self, data_context):
-        ds = safe_get(data_context, "operaciones.dashboard.graficas.balanceo_unidades", {"unidades": [], "montos": []})
+        ds = safe_get(data_context, "operaciones.dashboard.graficas.balanceo_unidades", {"labels": [], "values": []})
         target_val = safe_get(data_context, "operaciones.dashboard.promedios.ingreso_unit.valor", 254889)
+
+        num_bars = len(ds["labels"])
+        dynamic_height = max(450, num_bars * 60)
 
         fig = go.Figure()
         fig.add_trace(go.Bar(
-            y=ds["unidades"], x=ds["montos"], orientation='h',
+            y=ds["labels"], x=ds["values"], orientation='h',
             marker_color=self.hex_color,
-            text=[f"${v:,.2f}M" for v in ds["montos"]], textposition="auto"
+            text=[f"${v:,.0f}" for v in ds["values"]], 
+            textposition="auto",
+            width=0.9
         ))
 
-        fig.add_vline(x=target_val/1e6 if target_val > 1000 else target_val,
-                      line_width=4, line_dash="solid", line_color=DesignSystem.WARNING[5])
-
-        fig.add_annotation(x=target_val/1e6 if target_val > 1000 else target_val, y=-0.5,
-                           text=f"${target_val:,.0f}", showarrow=False,
-                           font=dict(color=DesignSystem.WARNING[5], size=10, weight="bold"), yref="paper")
+        val_line = target_val/1e6 if target_val > 1000 else target_val
+        fig.add_vline(x=val_line, line_width=3, line_dash="solid", line_color=DesignSystem.WARNING[5])
 
         fig.update_layout(
-            yaxis=dict(autorange="reversed", automargin=True), 
-            margin=dict(t=30, b=40, l=10, r=30), 
-            height=340,
+            yaxis=dict(
+                autorange="reversed", 
+                automargin=True,
+                tickfont=dict(size=12, weight="bold")
+            ), 
+            margin=dict(t=10, b=10, l=10, r=20),
+            height=dynamic_height, 
+            bargap=0.05,
             paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
+            plot_bgcolor=DesignSystem.TRANSPARENT,
+            showlegend=False
         )
         return fig
     def render_detail(self, data_context): return None
-
-
+      
 class CostUtilityStackedStrategy(KPIStrategy):
     def __init__(self, layout_config=None):
         super().__init__(title="Costo Viaje Total y Monto Utilidad", color="red", layout_config=layout_config)

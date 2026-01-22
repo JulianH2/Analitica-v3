@@ -2,6 +2,7 @@ from flask import session
 import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
+from dash_iconify import DashIconify
 
 from services.data_manager import data_manager
 from components.smart_widget import SmartWidget
@@ -23,23 +24,44 @@ w_litros = SmartWidget("rp_litros", OpsGaugeStrategy("Litros", "litros", "orange
 w_trend = ChartWidget("cp_trend", PerformanceTrendStrategy(layout_config={"height": 350}))
 w_mix = ChartWidget("cp_mix", PerformanceMixStrategy(layout_config={"height": 350}))
 
-WIDGET_REGISTRY = {
-    "rp_kms_lt": w_kms_lt,
-    "rp_kms_tot": w_kms_re,
-    "rp_litros": w_litros
-}
+WIDGET_REGISTRY = {"rp_kms_lt": w_kms_lt, "rp_kms_tot": w_kms_re, "rp_litros": w_litros}
 
 def _render_ops_performance_body(ctx):
-    return html.Div([
-        dmc.Paper(p="xs", withBorder=True, mb="md", mt="xs", children=[
-            dmc.SimpleGrid(cols={"base": 2, "md": 5}, spacing="xs", children=[ # type: ignore
-                dmc.Select(label="Año", data=["2025"], value="2025", size="xs"),
-                dmc.Select(label="Mes", data=["septiembre"], value="septiembre", size="xs"),
-                dmc.Select(label="Área", data=["Todas"], value="Todas", size="xs"),
-                dmc.Select(label="Unidad", data=["Todas"], value="Todas", size="xs"),
-                dmc.Select(label="Operador", data=["Todas"], value="Todas", size="xs"),
+    filter_content = html.Div([
+        dmc.Grid(align="center", gutter="sm", mb="xs", children=[
+            dmc.GridCol(span="content", children=[
+                dmc.Select(id="perf-year", data=["2025"], value="2025", variant="filled", style={"width": "100px"}, allowDeselect=False, size="sm")
+            ]),
+            dmc.GridCol(span="auto", children=[
+                dmc.ScrollArea(w="100%", type="scroll", scrollbarSize=6, offsetScrollbars=True, children=[ # type: ignore
+                    dmc.SegmentedControl(
+                        id="perf-month", value="septiembre", color="blue", radius="md", size="sm", fullWidth=True, style={"minWidth": "800px"},
+                        data=[{"label": m, "value": m.lower()} for m in ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]] # type: ignore
+                    )
+                ])
             ])
         ]),
+        dmc.SimpleGrid(cols={"base": 2, "md": 5}, spacing="xs", children=[ # type: ignore
+            dmc.Select(label="Área", data=["Todas"], value="Todas", size="xs"),
+            dmc.Select(label="Unidad", data=["Todas"], value="Todas", size="xs"),
+            dmc.Select(label="Operador", data=["Todas"], value="Todas", size="xs"),
+            dmc.Select(label="Ruta", data=["Todas"], value="Todas", size="xs"),
+            dmc.Select(label="Cliente", data=["Todas"], value="Todas", size="xs"),
+        ])
+    ])
+
+    collapsible_filters = dmc.Accordion(
+        value="filtros", variant="contained", radius="md", mb="lg",
+        children=[
+            dmc.AccordionItem(value="filtros", children=[
+                dmc.AccordionControl(dmc.Group([DashIconify(icon="tabler:filter"), dmc.Text("Filtros y Controles")]), h=40),
+                dmc.AccordionPanel(filter_content)
+            ])
+        ]
+    )
+
+    return html.Div([
+        collapsible_filters,
 
         dmc.SimpleGrid(cols={"base": 1, "sm": 3}, spacing="md", mb="md", children=[ # type: ignore
             w_kms_lt.render(ctx, mode="combined"),
@@ -66,28 +88,20 @@ def _render_ops_performance_body(ctx):
                 ])
             ]),
         ]),
-
         dmc.Space(h=50)
     ])
 
 def layout():
-    if not session.get("user"):
-        return dmc.Text("No autorizado...")
-
+    if not session.get("user"): return dmc.Text("No autorizado...")
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     refresh_components, _ = data_manager.dash_refresh_components(SCREEN_ID, interval_ms=800, max_intervals=1)
-
     return dmc.Container(fluid=True, px="xs", children=[
         dmc.Modal(id="perf-smart-modal", size="xl", centered=True, children=[html.Div(id="perf-modal-content")]),
         *refresh_components,
         html.Div(id="ops-performance-body", children=_render_ops_performance_body(ctx)),
     ])
 
-data_manager.register_dash_refresh_callbacks(
-    screen_id=SCREEN_ID,
-    body_output_id="ops-performance-body",
-    render_body=_render_ops_performance_body,
-)
+data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="ops-performance-body", render_body=_render_ops_performance_body)
 
 @callback(
     Output("perf-smart-modal", "opened"),
@@ -97,17 +111,11 @@ data_manager.register_dash_refresh_callbacks(
     prevent_initial_call=True
 )
 def handle_perf_modal_click(n_clicks):
-    if not dash.ctx.triggered or not any(n_clicks):
-        return no_update, no_update, no_update
-
-    if dash.ctx.triggered_id is None:
-        return no_update, no_update, no_update
-
+    if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
+    if dash.ctx.triggered_id is None: return no_update, no_update, no_update
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(str(w_id))
-    if not widget:
-        return no_update, no_update, no_update
-
+    if not widget: return no_update, no_update, no_update
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     cfg = widget.strategy.get_card_config(ctx)
     return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)

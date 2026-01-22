@@ -12,7 +12,7 @@ class SmartWidget:
     def _get_delta_info(self, config, is_ytd=False):
         prefix = "ytd_" if is_ytd else "monthly_"
         delta = config.get(f"{prefix}delta") or (config.get("vs_2024") if not is_ytd else None)
-        label_text = "vs 2024" if not is_ytd else "vs Meta"
+        label_text = ""
         
         if delta is not None:
             val = float(delta)
@@ -37,7 +37,7 @@ class SmartWidget:
 
         extra_details = dmc.Stack(gap=2, mt=8, children=[
             dmc.Group(justify="space-between", children=[
-                dmc.Text("Este Mes:", size="10px", c="dimmed"), # type: ignore
+                dmc.Text("Vs 2025:", size="10px", c="dimmed"), # type: ignore
                 dmc.Group(gap=4, children=[
                     dmc.Text(str(config.get("monthly_display") or config.get("label_mes", "")).split(" (")[0], size="10px", fw=700, c=SemanticColors.TEXT_MUTED), # type: ignore
                     dmc.Group(gap=2, children=[
@@ -47,7 +47,7 @@ class SmartWidget:
                 ])
             ]) if config.get("label_mes") or config.get("monthly_display") else None,
             dmc.Group(justify="space-between", children=[
-                dmc.Text("Acumulado:", size="10px", c="dimmed"), # type: ignore
+                dmc.Text("YTD:", size="10px", c="dimmed"), # type: ignore
                 dmc.Group(gap=4, children=[
                     dmc.Text(str(config.get("ytd_display") or config.get("label_ytd", "")).split(" (")[0], size="10px", fw=700, c=SemanticColors.TEXT_MUTED), # type: ignore
                     dmc.Group(gap=2, children=[

@@ -3,9 +3,10 @@ import dash
 from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
 
-from services.data_manager import data_manager  # singleton
+from services.data_manager import data_manager 
 from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
+from components.table_widget import TableWidget
 from strategies.taller import (
     InventoryGaugeStrategy, InventoryHistoricalTrendStrategy,
     InventoryAreaDistributionStrategy, InventoryDetailedTableStrategy
@@ -28,7 +29,7 @@ w_reg = SmartWidget("wi_reg", AdminRichKPIStrategy("almacen", "registrados", "In
 w_con = SmartWidget("wi_con", AdminRichKPIStrategy("almacen", "con_existencia", "Con Existencia", "tabler:package", "blue", sub_section="indicadores"))
 w_sin = SmartWidget("wi_sin", AdminRichKPIStrategy("almacen", "sin_existencia", "Sin Existencia", "tabler:package-off", "red", sub_section="indicadores"))
 
-gauge_actual = ChartWidget("gi_actual", InventoryGaugeStrategy("Valorización Actual", "valorizacion_actual", "#228be6"))
+gauge_actual = SmartWidget("gi_actual", InventoryGaugeStrategy("Valorización Actual", "valorizacion_actual", "blue"))
 chart_trend = ChartWidget("ci_trend", InventoryHistoricalTrendStrategy())
 chart_area = ChartWidget("ci_area", InventoryAreaDistributionStrategy())
 
@@ -58,7 +59,7 @@ def _render_taller_inventory_body(ctx):
             dmc.Box(
                 style={
                     "display": "grid",
-                    "gridTemplateColumns": "1fr auto 1fr auto 1fr auto 1fr 1.3fr",
+                    "gridTemplateColumns": "1fr auto 1fr auto 1fr auto 1fr 1.5fr",
                     "gap": "10px",
                     "alignItems": "center",
                 },
@@ -70,14 +71,14 @@ def _render_taller_inventory_body(ctx):
                     w_sal.render(ctx),
                     dmc.Text("=", fw="bold", size="xl", ta="center", c="gray"),
                     w_his.render(ctx),
-                    gauge_actual.render(ctx),
+                    gauge_actual.render(ctx, mode="combined"),
                 ],
             )
         ]),
 
         dmc.Paper(p="md", withBorder=True, mb="lg", children=[  # type: ignore
             dmc.Text("TENDENCIA HISTÓRICA DE VALORIZACIÓN", fw="bold", size="xs", c="dimmed", mb="md"),  # type: ignore
-            chart_trend.render(ctx)
+            chart_trend.render(ctx, h=450)
         ]),
 
         dmc.SimpleGrid(cols={"base": 1, "sm": 2, "lg": 4}, spacing="lg", mb="xl", children=[  # type: ignore
@@ -88,7 +89,7 @@ def _render_taller_inventory_body(ctx):
         ]),
 
         dmc.Grid(gutter="lg", grow=True, children=[
-            dmc.GridCol(span={"base": 12, "md": 5}, children=[chart_area.render(ctx)]),  # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 5}, children=[chart_area.render(ctx, h=480)]),  # type: ignore
             dmc.GridCol(span={"base": 12, "md": 7}, children=[  # type: ignore
                 dmc.Paper(p="md", withBorder=True, children=[
                     dmc.Tabs(value="fam", children=[
@@ -111,10 +112,8 @@ def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
 
-    # primer paint rápido (base/cache slice)
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
 
-    # auto-refresh 1 vez al entrar
     refresh_components, _ids = data_manager.dash_refresh_components(
         SCREEN_ID,
         interval_ms=800,
@@ -122,7 +121,7 @@ def layout():
     )
 
     return dmc.Container(fluid=True, children=[
-        dmc.Modal(id="inv-smart-modal", size="lg", centered=True, children=[html.Div(id="inv-modal-content")]),
+        dmc.Modal(id="inv-smart-modal", size="xl", centered=True, children=[html.Div(id="inv-modal-content")]),
 
         *refresh_components,
 
