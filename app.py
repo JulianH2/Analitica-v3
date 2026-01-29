@@ -2,11 +2,8 @@ import os
 import django
 from django.conf import settings
 
-# 1. Configurar la variable de entorno apuntando a tu settings.py
-# Asegúrate que la carpeta 'Analitica' contenga 'settings.py'
+# 1. Configurar Django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Analitica.settings")
-
-# 2. Inicializar Django
 django.setup()
 
 import dash
@@ -15,7 +12,6 @@ from flask import Flask, redirect, request, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-from typing import Any
 
 from config import Config
 from components.layout.sidebar import render_sidebar
@@ -41,34 +37,27 @@ app = dash.Dash(
     ]
 )
 
+# --- Rutas de Autenticación ---
 @server.route("/login/local", methods=["POST"])
 def login_local_route():
     email = request.form.get("email")
     password = request.form.get("password")
     result = auth_service.login_local(email, password)
-    if result is True:
-        return redirect("/")
+    if result is True: return redirect("/")
     session["auth_error"] = result
     return redirect("/")
 
 @server.route("/login/<provider>")
-def login_social_route(provider):
-    return auth_service.login_social(provider)
+def login_social_route(provider): return auth_service.login_social(provider)
 
 @server.route("/getAToken")
 def azure_callback_compatibility():
-    result = auth_service.handle_social_callback("azure")
-    if result is True:
-        return redirect("/")
-    session["auth_error"] = result
+    auth_service.handle_social_callback("azure")
     return redirect("/")
 
 @server.route("/auth/<provider>/callback")
 def auth_callback(provider):
-    result = auth_service.handle_social_callback(provider)
-    if result is True:
-        return redirect("/")
-    session["auth_error"] = result
+    auth_service.handle_social_callback(provider)
     return redirect("/")
 
 @server.route("/logout")
@@ -76,15 +65,21 @@ def logout():
     session.clear()
     return redirect("/")
 
+# --- LAYOUT PRINCIPAL ---
 def get_app_shell():
     return dmc.MantineProvider(
         id="mantine-provider",
-        theme=DesignSystem.get_mantine_theme(), # type: ignore
+        # El theme base es estático. El color scheme lo controla el callback maestro.
+        theme=DesignSystem.get_mantine_theme(),
         children=[
             dcc.Location(id="url", refresh=False),
+            
+            # --- STORES (LA MEMORIA) ---
+            # storage_type="local" asegura persistencia al recargar.
             dcc.Store(id="theme-store", storage_type="local"),
-            dcc.Store(id="sidebar-store", storage_type="local", data=False),
+            dcc.Store(id="sidebar-store", storage_type="local"),
             dcc.Store(id="selected-db-store", storage_type="local", data="db_1"),
+            
             dmc.AppShell(
                 id="app-shell",
                 header={"height": 60},
@@ -109,11 +104,11 @@ def get_app_shell():
     )
 
 app.layout = lambda: (
-    get_login_layout()
-    if Config.ENABLE_LOGIN and not session.get("user")
-    else get_app_shell()
+    get_login_layout() if Config.ENABLE_LOGIN and not session.get("user") else get_app_shell()
 )
 
+# --- CALLBACK 1: GESTIÓN DE ESTADO (INPUTS) ---
+# Este callback solo ESCRIBE en los stores. No renderiza nada.
 @app.callback(
     Output("theme-store", "data"),
     Output("sidebar-store", "data"),
@@ -141,12 +136,15 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
         return dash.no_update, not is_collapsed, dash.no_update
 
     if trigger_id == "db-selector":
-        return dash.no_update, dash.no_update, db_value
+        if db_value:
+            session["current_db"] = db_value
+            return dash.no_update, dash.no_update, db_value
         
     return dash.no_update, dash.no_update, dash.no_update
-
+# --- CALLBACK 2: RENDERIZADO MAESTRO (OUTPUTS) ---
+# Este es el "Render Atómico". Calcula tema y UI en el mismo ciclo.
 @app.callback(
-    Output("mantine-provider", "forceColorScheme"),
+    Output("mantine-provider", "forceColorScheme"), # <--- LA FUENTE DE LA VERDAD
     Output("app-shell", "navbar"),
     Output("navbar", "children"),
     Input("theme-store", "data"),
@@ -155,26 +153,31 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
     Input("url", "pathname"),
 )
 def render_interface(theme, collapsed, selected_db, pathname):
-    theme = theme or "dark"
+    # 1. Normalización de datos
+    theme = theme or "dark" # Fallback por defecto si el store está vacío
     collapsed = collapsed if collapsed is not None else False
     selected_db = selected_db or "db_1"
     
+    # 2. Configuración del Navbar (Responsive)
     navbar_config = {
         "width": 80 if collapsed else 260,
         "breakpoint": "sm",
         "collapsed": {"mobile": True},
     }
     
+    # 3. Generación del Sidebar
+    # Pasamos los datos limpios. Sidebar.py solo pinta, no piensa.
     sidebar_ui = render_sidebar(
         collapsed=collapsed, 
         current_theme=theme, 
         current_db=selected_db,
         active_path=pathname
     )
+    
+    # 4. Retorno Atómico: Tema + Configuración + UI
     return theme, navbar_config, sidebar_ui
 
-# En app.py
-
+# --- Clientside: Gráficas (Solo cosmético) ---
 app.clientside_callback(
     ClientsideFunction(namespace='clientside', function_name='switch_graph_theme'),
     Output({"type": "interactive-graph", "index": ALL}, "figure"),

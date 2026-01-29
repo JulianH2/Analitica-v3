@@ -2,23 +2,22 @@ import hashlib
 import json
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union, Callable, Tuple
+from typing import Any, Dict, List, Optional, Union
 
 from flask import session
 
 from dashboard_core.query_builder import SmartQueryBuilder
 from dashboard_core.db_helper import execute_dynamic_query
 from services.real_data_service import RealDataService
+from services.pbi_mapper import PBI_MAPPING
 
 Json = Union[Dict[str, Any], List[Any]]
 Path = List[Union[str, int]]
 
-
 @dataclass
 class CacheEntry:
     data: Json
-    ts: float  # epoch seconds
-
+    ts: float
 
 class DataManager:
     _instance: Optional["DataManager"] = None
@@ -27,6 +26,7 @@ class DataManager:
     cache: Dict[str, CacheEntry]
     DEFAULT_TTL_SECONDS: int
     SCREEN_MAP: Dict[str, Dict[str, Any]]
+    USE_MOCK_DATA = False
 
     def __new__(cls) -> "DataManager":
         if cls._instance is None:
@@ -36,68 +36,64 @@ class DataManager:
             cls._instance.cache = {}
             cls._instance.DEFAULT_TTL_SECONDS = 30
 
-            # --- CONFIGURACIÓN DE PANTALLAS ---
             cls._instance.SCREEN_MAP = {
                 "admin-banks": {
-                    "section_key": "administracion",
+                    "section_key": "financial",
                     "ttl_seconds": 30,
                     "kpi_roadmap": {},
                     "inject_paths": {},
                 },
                 "admin-collection": {
-                    "section_key": "administracion",
-                    "ttl_seconds": 30,
-                    "kpi_roadmap": {},     # luego lo llenas
-                    "inject_paths": {},    # luego lo llenas
-                },
-                "admin-payables": {
-                    "section_key": "administracion",
-                    "ttl_seconds": 30,
-                    "kpi_roadmap": {},     # luego lo llenas
-                    "inject_paths": {},    # luego lo llenas
-                },
-                "home": {
-                    "section_keys": ["operaciones", "mantenimiento", "administracion"],
+                    "section_key": "financial",
                     "ttl_seconds": 30,
                     "kpi_roadmap": {},
                     "inject_paths": {},
                 },
+                "admin-payables": {
+                    "section_key": "financial",
+                    "ttl_seconds": 30,
+                    "kpi_roadmap": {},
+                    "inject_paths": {},
+                },
+                "home": {
+                    "section_keys": ["operational", "maintenance", "financial"],
+                    "ttl_seconds": 30,
+                    "kpi_roadmap": {
+                        "viajes_val": "viajes"
+                    },
+                    "inject_paths": {
+                        "viajes_val": [
+                            "operational", "dashboard", "kpis", "total_trips", "value"
+                        ]
+                    }
+                },
                 "ops-costs": {
-                    "section_key": "operaciones",
+                    "section_key": "operational",
                     "ttl_seconds": 60,
                     "kpi_roadmap": {},
                     "inject_paths": {},
                 },
                 "ops-dashboard": {
-                    "section_keys": ["operaciones", "mantenimiento", "administracion"],
+                    "section_keys": ["operational", "maintenance", "financial"],
                     "ttl_seconds": 60,
-                    
-                    # 1. KPIs Escalares (Tarjetas Superiores)
                     "kpi_roadmap": {
-                        # Ingreso
                         "ingreso_valor": "ingreso_viaje",
                         "ingreso_meta": "meta_ingreso_viaje",
                         "ingreso_delta": "pct_desviacion_ingreso_vs_anterior",
                         "ingreso_ytd": "ingreso_viaje_acumulado",
                         "ingreso_ytd_delta": "pct_desviacion_ingreso_acumulado",
-
-                        # Viajes
+                        "viajes_val": "viajes",
                         "viajes_valor": "viajes",
                         "viajes_meta": "meta_viajes",
                         "viajes_delta": "pct_desviacion_viajes_vs_anterior",
                         "viajes_ytd": "viajes_acumulado",
                         "viajes_ytd_delta": "pct_desviacion_viajes_acumulado",
-
-                        # Kilómetros
                         "kms_valor": "kilometros",
                         "kms_meta": "meta_kilometros",
                         "kms_delta": "pct_desviacion_kilometros_vs_anterior",
                         "kms_ytd": "kilometros_acumulado",
                         "kms_ytd_delta": "pct_desviacion_kilometros_acumulado"
                     },
-                    
-                    # 2. Gráficas (Series de Tiempo) -> ¡GENÉRICO!
-                    # Define aquí tus gráficas sin tocar código Python
                     "chart_roadmap": {
                         "ingresos_anual": {
                             "actual": "ingreso_viaje",
@@ -110,7 +106,6 @@ class DataManager:
                             "meta": "meta_viajes"
                         }
                     },
-
                     "categorical_roadmap": {
                         "mix_operacion": {
                             "kpi": "ingreso_viaje",
@@ -129,71 +124,63 @@ class DataManager:
                             "dimension": "unidad"
                         }
                     },
-
-                    # 3. Rutas de Inyección (Dónde poner los datos)
                     "inject_paths": {
-                        # Apuntamos al nodo del indicador para llenar valor, meta, delta, display, etc.
-                        "ingreso_valor": ["operaciones", "dashboard", "indicadores", "ingreso_viaje", "valor"],
-                        "ingreso_meta": ["operaciones", "dashboard", "indicadores", "ingreso_viaje", "meta"],
-                        "ingreso_delta": ["operaciones", "dashboard", "indicadores", "ingreso_viaje", "monthly_delta"],
-                        "ingreso_ytd": ["operaciones", "dashboard", "indicadores", "ingreso_viaje", "ytd_display"],
-                        "ingreso_ytd_delta": ["operaciones", "dashboard", "indicadores", "ingreso_viaje", "ytd_delta"],
-
-                        "viajes_valor": ["operaciones", "dashboard", "indicadores", "viajes", "valor"],
-                        "viajes_meta": ["operaciones", "dashboard", "indicadores", "viajes", "meta"],
-                        "viajes_delta": ["operaciones", "dashboard", "indicadores", "viajes", "monthly_delta"],
-                        "viajes_ytd": ["operaciones", "dashboard", "indicadores", "viajes", "ytd_display"],
-                        "viajes_ytd_delta": ["operaciones", "dashboard", "indicadores", "viajes", "ytd_delta"],
-
-                        "kms_valor": ["operaciones", "dashboard", "indicadores", "kilometros", "valor"],
-                        "kms_meta": ["operaciones", "dashboard", "indicadores", "kilometros", "meta"],
-                        "kms_delta": ["operaciones", "dashboard", "indicadores", "kilometros", "monthly_delta"],
-                        "kms_ytd": ["operaciones", "dashboard", "indicadores", "kilometros", "ytd_display"],
-                        "kms_ytd_delta": ["operaciones", "dashboard", "indicadores", "kilometros", "ytd_delta"],
-                        
-                        # Gráficas de Línea/Barras
-                        "ingresos_anual": ["operaciones", "dashboard", "graficas", "ingresos_anual"],
-                        "viajes_anual": ["operaciones", "dashboard", "graficas", "viajes_anual"],
-
-                        # Gráficas Categóricas
-                        "mix_operacion": ["operaciones", "dashboard", "graficas", "mix_operacion"],
-                        "top_rutas": ["operaciones", "dashboard", "tablas", "rutas_cargado"],
-                        "top_areas": ["operaciones", "dashboard", "graficas", "por_area"],
-                        "balanceo_unidades": ["operaciones", "dashboard", "graficas", "balanceo_unidades"]
+                        "ingreso_valor": ["operational", "dashboard", "kpis", "trip_revenue", "value"],
+                        "ingreso_meta": ["operational", "dashboard", "kpis", "trip_revenue", "target"],
+                        "ingreso_delta": ["operational", "dashboard", "kpis", "trip_revenue", "delta"],
+                        "ingreso_ytd": ["operational", "dashboard", "kpis", "trip_revenue", "ytd"],
+                        "ingreso_ytd_delta": ["operational", "dashboard", "kpis", "trip_revenue", "ytd_delta"],
+                        "viajes_val": ["operational", "dashboard", "kpis", "total_trips", "value"],
+                        "viajes_valor": ["operational", "dashboard", "kpis", "total_trips", "value"],
+                        "viajes_meta": ["operational", "dashboard", "kpis", "total_trips", "target"],
+                        "viajes_delta": ["operational", "dashboard", "kpis", "total_trips", "delta"],
+                        "viajes_ytd": ["operational", "dashboard", "kpis", "total_trips", "ytd"],
+                        "viajes_ytd_delta": ["operational", "dashboard", "kpis", "total_trips", "ytd_delta"],
+                        "kms_valor": ["operational", "dashboard", "kpis", "kilometers", "value"],
+                        "kms_meta": ["operational", "dashboard", "kpis", "kilometers", "target"],
+                        "kms_delta": ["operational", "dashboard", "kpis", "kilometers", "delta"],
+                        "kms_ytd": ["operational", "dashboard", "kpis", "kilometers", "ytd"],
+                        "kms_ytd_delta": ["operational", "dashboard", "kpis", "kilometers", "ytd_delta"],
+                        "ingresos_anual": ["operational", "dashboard", "charts", "ingresos_anual"],
+                        "viajes_anual": ["operational", "dashboard", "charts", "viajes_anual"],
+                        "mix_operacion": ["operational", "dashboard", "charts", "mix_operacion"],
+                        "top_rutas": ["operational", "dashboard", "tables", "rutas_cargado"],
+                        "top_areas": ["operational", "dashboard", "charts", "por_area"],
+                        "balanceo_unidades": ["operational", "dashboard", "charts", "balanceo_unidades"]
                     },
                 },
                 "ops-performance": {
-                    "section_key": "operaciones",
+                    "section_key": "operational",
                     "ttl_seconds": 30,
                     "kpi_roadmap": {},
                     "inject_paths": {},
                 },
                 "ops-routes": {
-                    "section_key": "operaciones",
+                    "section_key": "operational",
                     "ttl_seconds": 30,
                     "kpi_roadmap": {},
                     "inject_paths": {},
                 },
                 "taller-availability": {
-                    "section_key": "mantenimiento",
+                    "section_key": "maintenance",
                     "ttl_seconds": 30,
                     "kpi_roadmap": {},
                     "inject_paths": {},
                 },
                 "taller-dashboard": {
-                    "section_key": "mantenimiento",
+                    "section_key": "maintenance",
                     "ttl_seconds": 30,
                     "kpi_roadmap": {},
                     "inject_paths": {},
                 },
                 "taller-inventory": {
-                "section_key": "mantenimiento",
-                "ttl_seconds": 30,
+                    "section_key": "maintenance",
+                    "ttl_seconds": 30,
                     "kpi_roadmap": {},
                     "inject_paths": {},
                 },
                 "taller-purchases": {
-                    "section_key": "mantenimiento",
+                    "section_key": "maintenance",
                     "ttl_seconds": 30,
                     "kpi_roadmap": {},
                     "inject_paths": {},
@@ -201,7 +188,6 @@ class DataManager:
             }
         return cls._instance
 
-    # --- Métodos de Cache (Sin cambios) ---
     def _db_fingerprint(self) -> str:
         db_config = session.get("current_db")
         if not db_config: return "no-db"
@@ -229,7 +215,6 @@ class DataManager:
             if self._is_fresh(entry, ttl) or allow_stale:
                 return entry.data
 
-        # Fallback a estructura base (con ceros)
         base = self.base_service.get_full_dashboard_data()
         keys = cfg.get("section_keys") or [cfg.get("section_key")]
         sliced = {k: base.get(k, {}) for k in keys if k}
@@ -238,8 +223,13 @@ class DataManager:
             self.cache[key] = CacheEntry(data=sliced, ts=time.time())
         return sliced
 
+    def get_pbi_measure_name(self, section: str, key: str) -> Optional[str]:
+        try:
+            return PBI_MAPPING.get(section, {}).get('kpis', {}).get(key)
+        except Exception:
+            return None
+
     async def _resolve_any_kpi(self, db_config, kpi_id, session_results):
-        """Resuelve KPI con cache local. Soporta SQL y fórmulas derivadas."""
         if kpi_id in session_results:
             return session_results[kpi_id]
 
@@ -259,7 +249,6 @@ class DataManager:
         elif build.get("type") == "derived":
             formula = build.get("formula")
             import re
-            # Resolvemos recursivamente cada variable de la fórmula
             if formula:
                 for token in re.findall(r'[a-z_]+', formula):
                     if token in ["if", "else"]: continue
@@ -271,7 +260,40 @@ class DataManager:
         session_results[kpi_id] = result
         return result
 
-    # --- REFRESH INTELIGENTE (Async) ---
+    def _inject_mock(self, screen_id: str, data: dict) -> dict:
+        if screen_id == "home":
+            data["operational"]["dashboard"]["kpis"]["total_trips"] = {
+                "value": 1280,
+                "target": 1500,
+                "delta": 0.12,
+                "ytd": 8920
+            }
+    
+            data["operational"]["dashboard"]["charts"]["ingresos_anual"] = {
+                "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+                "actual": [120, 130, 125, 140, 150, 160],
+                "anterior": [110, 120, 118, 130, 135, 145],
+                "meta": [140, 140, 140, 140, 140, 140]
+            }
+    
+        if screen_id == "ops-dashboard":
+            data["operational"]["dashboard"]["kpis"]["trip_revenue"] = {
+                "value": 18_500_000,
+                "target": 20_000_000,
+                "delta": -0.08,
+                "ytd": 92_000_000
+            }
+    
+        if screen_id.startswith("taller"):
+            data["maintenance"]["dashboard"]["kpis"]["maintenance_cost"] = {
+                "value": 1_250_000,
+                "target": 1_100_000,
+                "delta": 0.14,
+                "ytd": 6_800_000
+            }
+    
+        return data
+
     async def refresh_screen(self, screen_id: str, *, use_cache=True) -> Json:
         cfg = self.SCREEN_MAP.get(screen_id)
         if not cfg: return {}
@@ -281,34 +303,23 @@ class DataManager:
         data = {k: base.get(k, {}) for k in keys if k}
 
         db_config = session.get("current_db")
-        if not db_config: return data
+        
+        if not db_config:
+            if self.USE_MOCK_DATA:
+                return self._inject_mock(screen_id, data)
+            return data
         
         inject_paths = cfg.get("inject_paths", {})
-
         session_results = {}
-        # 1. Resolver KPIs Escalares (Tarjetas Principales)
+
         kpi_roadmap = cfg.get("kpi_roadmap", {})
         for ui_key, kpi_id in kpi_roadmap.items():
             path = inject_paths.get(ui_key)
             if not path: continue
 
-            # CORRECCIÓN: Resolvemos SOLO el valor solicitado y lo asignamos.
-            # No construimos un diccionario complejo aquí porque el 'path'
-            # ya apunta al nodo hoja específico (ej. 'valor', 'meta', 'ytd_display').
-            
             val = await self._resolve_any_kpi(db_config, kpi_id, session_results)
-            
-            # Formateo básico opcional para campos de texto (_display)
-            # Si el path termina en 'display' y es dinero, podrías formatear aquí,
-            # pero es más seguro enviar el dato crudo y que la Strategy lo formatee.
-            #if isinstance(path[-1], str) and "display" in path[-1] and isinstance(val, (int, float)):
-                 # Si prefieres enviar texto pre-formateado al display:
-                 #is_money = "ingreso" in kpi_id or "costo" in kpi_id
-                 #val = f"${val:,.0f}" if is_money else f"{val:,.0f}"
-
             self._set_path(data, path, val)
 
-        # 2. Resolver Gráficas (Lógica GENÉRICA Nueva)
         chart_roadmap = cfg.get("chart_roadmap", {})
         for chart_key, series_map in chart_roadmap.items():
             path = inject_paths.get(chart_key)
@@ -318,26 +329,23 @@ class DataManager:
                 "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
             }
 
-            # Itera sobre las series definidas en el mapa (actual, anterior, meta, etc.)
             for series_name, kpi_id in series_map.items():
                 build = self.qb.build_series_query(kpi_id)
-                values = [0.0] * 12 # Inicializa array vacío
+                values = [0.0] * 12 
                 
                 if build and "query" in build:
                     rows = await execute_dynamic_query(db_config, build["query"])
                     if rows:
                         for r in rows:
-                            # Asume que el query retorna 'period' (1-12) y 'value'
                             p = r.get('period')
                             v = r.get('value', 0.0)
                             if isinstance(p, int) and 1 <= p <= 12:
-                                values[p-1] = v # Asigna al mes correspondiente
+                                values[p-1] = v
                 
                 chart_data[series_name] = values
             
             self._set_path(data, path, chart_data)
 
-        # 3. --- NUEVO: Resolver Gráficas Categóricas (Drill-Down) ---
         cat_roadmap = cfg.get("categorical_roadmap", {})
         for chart_key, spec in cat_roadmap.items():
             path = inject_paths.get(chart_key)
@@ -346,15 +354,10 @@ class DataManager:
             kpi = spec.get("kpi")
             dim = spec.get("dimension")
             
-            # Llamamos al nuevo método que creamos en QueryBuilder
             build = self.qb.build_categorical_query(kpi, dim)
-            #print(f"DEBUG: Generando query para {chart_key}: {build.get('query')}")
-            # Estructura estándar para Charts: { labels: [], values: [] }
             chart_data = {"labels": [], "values": []}
             
-            # Estructura alternativa si es tabla (h=header, r=rows)
-            # Detectamos si el path apunta a una 'tabla' para formatear diferente si es necesario
-            is_table = "tablas" in path
+            is_table = "tables" in path 
             table_rows = []
 
             if build and "query" in build:
@@ -363,27 +366,20 @@ class DataManager:
                      for r in rows:
                          lbl = r.get("label", "N/A")
                          val = r.get("value")
-                         if val is None:
-                             val = 0.0
+                         if val is None: val = 0.0
                          
                          if is_table:
-                             # Formato simple para tablas: [Label, Valor]
-                             # Puedes mejorar esto si quieres formatear moneda aquí
                              table_rows.append([lbl, f"${val:,.0f}"]) 
                          else:
-                             # Formato para Gráficas (Pie/Barra)
                              chart_data["labels"].append(lbl)
                              chart_data["values"].append(val)
             
             if is_table:
-                # Si es tabla, inyectamos estructura de tabla
-                # Asumimos headers simples. Puedes parametrizarlos si prefieres.
                 self._set_path(data, path, {
                     "h": ["Concepto", "Valor"], 
                     "r": table_rows
                 })
             else:
-                # Si es gráfica, inyectamos labels/values
                 self._set_path(data, path, chart_data)
 
         if use_cache:
@@ -399,13 +395,10 @@ class DataManager:
                     cur[key] = {}
                 cur = cur[key]
             elif isinstance(cur, list) and isinstance(key, int):
-                # This part is for completeness if you ever need to modify lists by index.
-                # For now, the logic assumes dicts.
                 while len(cur) <= key:
-                    cur.append({}) # Or some other default
+                    cur.append({}) 
                 cur = cur[key]
             else:
-                # Path is invalid for the current structure
                 return
 
         if isinstance(cur, dict) and isinstance(path[-1], str):
@@ -416,7 +409,6 @@ class DataManager:
             elif len(cur) > path[-1]:
                 cur[path[-1]] = value
 
-    # --- Dash Helpers (Sin cambios) ---
     def dash_ids(self, screen_id, prefix=None):
         base = f"{prefix}__{screen_id}" if prefix else screen_id
         return {"token_store": f"{base}__tok", "auto_interval": f"{base}__int"}
@@ -427,7 +419,7 @@ class DataManager:
         return [
             dcc.Store(id=ids["token_store"], data=0),
             dcc.Interval(id=ids["auto_interval"], interval=interval_ms, max_intervals=max_intervals)
-        ], ids
+        ]
 
     def register_dash_refresh_callbacks(self, screen_id, body_output_id, render_body, prefix=None):
         from dash import callback, Input, Output

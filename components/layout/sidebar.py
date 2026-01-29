@@ -1,6 +1,6 @@
 from flask import session
 import dash_mantine_components as dmc
-from dash import html
+from dash import html, dcc
 from dash_iconify import DashIconify
 from typing import Any
 
@@ -20,7 +20,6 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
             "taller": {"main": "#40c057", "light": "rgba(64, 192, 87, 0.2)"},
             "admin": {"main": "#fd7e14", "light": "rgba(253, 126, 20, 0.2)"}
         }
-        
         section = "main"
         if href.startswith("/ops"): section = "ops"
         elif href.startswith("/taller"): section = "taller"
@@ -28,10 +27,8 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
         elif href == "/": section = "/"
         
         config = colors.get(section, colors["/"])
-        
         if not is_active:
             return {"color": "gray", "style": {"borderRadius": "8px", "marginBottom": "4px"}}
-            
         return {
             "color": config["main"],
             "style": {
@@ -77,14 +74,20 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
     def render_link(item):
         is_active = active_path == item["href"]
         cfg = get_section_styles(item["href"], is_active)
-        link = dmc.NavLink(
+        
+        nav_visual = dmc.NavLink(
             label=item["label"] if not collapsed else None,
             leftSection=DashIconify(icon=item["icon"], width=20),
-            href=item["href"],
             active="exact" if is_active else None,
             variant="filled" if is_active else "subtle",
             color=cfg["color"],
             style=cfg["style"]
+        )
+        
+        link = dcc.Link(
+            nav_visual,
+            href=item["href"],
+            style={"textDecoration": "none"}
         )
         return dmc.Tooltip(label=item["label"], position="right", children=link) if collapsed else link
 
@@ -93,17 +96,19 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
         is_group_active = any(active_path == h for h in group_hrefs)
         cfg = get_section_styles(group_hrefs[0], is_group_active)
         
-        children = [
-            dmc.NavLink(
+        children = []
+        for child in group["children"]:
+            child_nav = dmc.NavLink(
                 label=child["label"],
                 leftSection=DashIconify(icon=child["icon"], width=18),
-                href=child["href"],
                 active="exact" if active_path == child["href"] else None,
                 variant="subtle",
                 color=cfg["color"] if active_path == child["href"] else "gray",
                 style={"borderRadius": "8px"}
-            ) for child in group["children"]
-        ]
+            )
+            children.append(
+                dcc.Link(child_nav, href=child["href"], style={"textDecoration": "none"})
+            )
         
         nav_group = dmc.NavLink(
             label=group["label"] if not collapsed else None,
@@ -133,17 +138,31 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
         elif item["type"] == "group":
             content.append(render_group(item))
 
-    db_options: Any = [{"label": "Base Principal", "value": "db_1"}, {"label": "Base Auditoría", "value": "db_2"}]
+    raw_databases = session.get("databases", [])
+    
+    db_options = []
+    if raw_databases:
+        for db in raw_databases:
+            nombre = db.get("nombre_cliente") or db.get("nombre") or "Desconocido"
+            bd_id = db.get("base_de_datos") or db.get("id_bd")
+            if bd_id: 
+                db_options.append({"label": nombre, "value": bd_id})
+    
+    if not db_options:
+        db_options = [{"label": "Sin bases asignadas", "value": "error", "disabled": True}]
+
+    valid_values = [opt['value'] for opt in db_options]
+    final_value = current_db if current_db in valid_values else (valid_values[0] if valid_values else None)
+
+    show_selector = not collapsed
+
     db_selector = dmc.Select(
         id="db-selector",
-        data=db_options,
-        value=current_db,
+        data=[opt["label"] for opt in db_options],
+        value=final_value,
         leftSection=DashIconify(icon="tabler:database", width=16),
         size="xs", radius="md", variant="filled",
-        style={
-            "display": "block"
-               #if (user_role == "admin" and not collapsed) else "none"
-                , "marginBottom": "10px"}
+        style={"display": "block" if show_selector else "none", "marginBottom": "10px"}
     )
 
     return dmc.Stack(

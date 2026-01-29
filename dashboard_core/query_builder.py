@@ -35,47 +35,6 @@ class SmartQueryBuilder:
         
         return None
 
-    def build_kpi_query(self, kpi_key, dynamic_filters=None):
-        """Construye consulta escalar (un solo valor)."""
-        kpi = self.metrics.get(kpi_key)
-        if not kpi: return {"error": f"KPI '{kpi_key}' no encontrado"}
-
-        if kpi.get('type') == 'derived':
-            return {"type": "derived", "formula": kpi.get('formula'), "format": kpi.get('format')}
-
-        recipe = kpi.get('recipe', {})
-        table_alias = recipe.get('table')
-        column = recipe.get('column')
-        aggregation = recipe.get('aggregation', 'SUM')
-        time_modifier = recipe.get('time_modifier')
-
-        table_def = self.tables.get(table_alias)
-        if not table_def: return {"error": f"Tabla '{table_alias}' no definida"}
-        
-        table_name = table_def.get('table_name', table_alias)
-        date_col = table_def.get('date_column')
-
-        query = f"SELECT {aggregation}({table_alias}.{column}) as valor FROM {table_name} as {table_alias}"
-        wheres = []
-
-        if date_col:
-            if time_modifier == 'previous_year':
-                wheres.append(f"YEAR({table_alias}.{date_col}) = YEAR(GETDATE()) - 1")
-            elif time_modifier == 'ytd':
-                wheres.append(f"YEAR({table_alias}.{date_col}) = YEAR(GETDATE())")
-                wheres.append(f"{table_alias}.{date_col} <= GETDATE()")
-            elif not dynamic_filters:
-                wheres.append(f"YEAR({table_alias}.{date_col}) = YEAR(GETDATE())")
-
-        if dynamic_filters:
-            for k, v in dynamic_filters.items():
-                val = f"'{v}'" if isinstance(v, str) else v
-                wheres.append(f"{table_alias}.{k} = {val}")
-
-        if wheres: query += " WHERE " + " AND ".join(wheres)
-
-        return {"type": "sql", "query": query, "format": kpi.get('format')}
-
     def build_series_query(self, kpi_key):
         """Construye consulta agrupada por MES (Series de Tiempo)."""
         kpi = self.metrics.get(kpi_key)

@@ -1,602 +1,1046 @@
-import pandas as pd
-
 class RealDataService:
     def get_full_dashboard_data(self):
+        data = self.get_base_structure()
+
+        # MOCK TEMPORAL (solo para demo / desarrollo)
+        self._inject_operational_data(data)
+        self._inject_financial_data(data)
+        self._inject_maintenance_data(data)
+
+        return data
+
+
+    
+    def get_base_structure(self):
         return {
-            "administracion": {
-                "facturacion_cobranza": {
-                    "indicadores": {
-                        "facturado_vs_cobrado": {
-                            "valor": 22127664,
-                            "meta": 30000000,
-                            "valor_porcentaje": 73.7,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "$22.1M",
-                            "monthly_delta": -0.05,
-                            "label_mes": "$22.1M (-5%)"
-                        },
-                        "promedio_pago": {
-                            "valor": 45,
-                            "meta": 30,
-                            "valor_porcentaje": 150.0,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "45 días",
-                            "monthly_delta": 0.12,
-                            "label_mes": "45 d (+12%)"
-                        }
-                    },
-                    "acumulado": {
-                        "facturado_acumulado": {"valor": 194047842},
-                        "notas_credito_acumulado": {"valor": 209371},
-                        "notas_cargo": {"valor": 0},
-                        "cobrado_acumulado": {"valor": 22127664},
-                        "cartera_clientes": {"valor": 171710807}
-                    },
-                    "mensual": {
-                        "facturado_mes": {"valor": 32437705},
-                        "credito": {"valor": 52579},
-                        "cargo": {"valor": 0},
-                        "cobrado": {"valor": 18193148}
-                    },
-                    "graficas": {
-                        "comparativa": {
-                            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [46.6, 37.3, 103.2, 41.4, 222.9, 117.0, 39.5, 36.3, 40.1, 32.1, 27.2, 25.7],
-                            "anterior": [29.4, 0, 62.9, 31.6, 23.0, 33.0, 0, 0, 0, 0, 0, 0]
-                        },
-                        "mix": {"labels": ['SIN CARTA COBRO', 'POR VENCER', 'VENCIDO'], "values": [56.6, 26.03, 17.37]},
-                        "stack": {
-                            "clientes": ["MATERIAS PRIMA", "OWENS AMERICA", "VIDRIO PLANO", "PETROLEOS MEX", "VITRO VIDRIO"],
-                            "por_vencer": [73, 13, 11, 15, 12],
-                            "sin_carta": [0, 11, 0, 0, 0],
-                            "vencido": [77, 34, 23, 0, 0]
-                        }
-                    },
-                    "antiguedad": {
-                        "h": ["Área", "SIN CARTA", "POR VENCER", "VENCIDO", "Total"],
-                        "r": [
-                            ["01-TINSA", "$11,598,200", "$28,293,474", "$17,265,373", "$57,157,047"],
-                            ["02-TINSA CAD", "$9,063,486", "$5,467,133", "$3,711,020", "$18,241,639"],
-                            ["TOTAL", "$97,185,032", "$44,168,641", "$30,357,134", "$171,710,807"]
-                        ]
-                    }
-                },
-                "cuentas_por_pagar": {
-                    "indicadores": {
-                        "cxp_vs_pagado": {
-                            "valor": 14000000, 
-                            "meta": 17000000,
-                            "valor_porcentaje": 82.4,
-                            "tickvals": [0, 14000000, 17000000],
-                            "ticktext": ["$0", "$14M", "$17M"]
-                        },
-                        "promedio_pago": {
-                            "valor": 22, 
-                            "meta": 30
-                        }
-                    },
-                    "acumulado": {
-                        "saldo_inicial": {"valor": 1000000},
-                        "cxp": {"valor": 15000000},
-                        "notas_cargo": {"valor": 0},
-                        "notas_credito": {"valor": 137000},
-                        "anticipo": {"valor": 4000},
-                        "cxp_total": {"valor": 17000000},
-                        "pago_proveedores": {"valor": 14000000},
-                        "saldo": {"valor": 3000000}
-                    },
-                    "graficas": {
-                        "comparativa": {
-                            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [26, 25, 19, 19, 21, 21, 20, 20, 16, 17, 13, 28],
-                            "anterior": [17, 15, 14, 17, 18, 15, 13, 14, 15, 13, 14, 13]
-                        },
-                        "mix": {"labels": ['POR VENCER', 'VENCIDO'], "values": [89.61, 10.39]},
-                        "saldo_proveedor": {
-                            "prov": ["NEWYO GAS", "INFORMATICA UG", "LLANTAS Y REFAC", "TRACTO REFACCI", "TRACTO IMPORTA"],
-                            "por_vencer": [0.70, 0.69, 0.41, 0.11, 0.15],
-                            "vencido": [0.30, 0.31, 0.0, 0.0, 0.0]
-                        }
-                    },
-                    "antiguedad": {
-                        "h": ["Área", "POR VENCER", "00", "01-08", "09-15", "16-30", "31-45", "46-60", "Total"],
-                        "r": [["01-TINSA", "$2,403,183", "$0", "$28,243", "$58,899", "$9,427", "$55,661", "$4,442", "$2,670,638"],
-                              ["TOTAL", "$2,585,972", "$0", "$28,243", "$58,899", "$11,377", "$55,661", "$6,182", "$2,885,966"]]
-                    }
-                },
-                "bancos": {
-                    "indicadores": {
-                        "disponibilidad_total": {"valor": 15400000, "meta": 20000000, "label_mes": "$15.4M"},
-                        "uso_lineas": {
-                            "valor": 8500000, "meta": 10000000,
-                            "valor_porcentaje": 85.0, "meta_porcentaje": 100,
-                            "monthly_display": "$8.5M", "label_mes": "$8.5M (85%)"
-                        },
-                    },
-                    "graficas": {
-                        "diaria": {
-                            "dias": list(range(1, 31)),
-                            "ingresos": [10, 11, 12, 11, 10, 8, 9, 11, 12, 13, 14, 28, 15, 14, 13, 12, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 24, 26, 28, 30],
-                            "egresos": [9, 10, 11, 10, 9, 2, 5, 8, 9, 10, 11, 25, 12, 11, 10, 9, 8, 9, 10, 11, 23, 12, 11, 10, 9, 10, 11, 12, 13, 14]
-                        },
-                        "donut": {"labels": ["BANREGIO"], "values": [20.97]}
-                    },
-                    "conceptos": {
-                        "h": ["Concepto", "Ingresos Cons.", "Egresos Cons."],
-                        "r": [["APERTURA INVERSIONES", "$17,267,707", "$349,976,631"],
-                              ["DEPOSITOS CLIENTES", "$18,193,148", "$0"],
-                              ["PAGO A PROVEEDORES", "$0", "$3,506,638"]]
-                    }
+            "operational": {
+                "dashboard": {
+                    "kpis": {},
+                    "charts": {}
                 }
             },
-            "operaciones": {
+            "financial": {
                 "dashboard": {
-                    "indicadores": {
-                        "ingreso_viaje": {
-                            "valor": 0, 
-                            "meta": 0, 
-                            "valor_porcentaje": 0.0,
-                            "meta_porcentaje": 0,
-                            "monthly_display": "$0", 
-                            "monthly_delta": 0.0, 
-                            "ytd_display": "$0", 
-                            "ytd_delta": 0.0,
-                            "label_mes": "$0 (0.0%)", 
-                            "label_ytd": "$0 (0.0%)"
-                        },
-                        "viajes": {
-                            "valor": 0, 
-                            "meta": 0, 
-                            "valor_porcentaje": 0.0,
-                            "meta_porcentaje": 0,
-                            "monthly_display": "0", 
-                            "monthly_delta": 0.0, 
-                            "ytd_display": "0", 
-                            "ytd_delta": 0.0,
-                            "label_mes": "0 (0.0%)", 
-                            "label_ytd": "0 (0.0%)"
-                        },
-                        "kilometros": {
-                            "valor": 0, 
-                            "meta": 0, 
-                            "valor_porcentaje": 0.0,
-                            "meta_porcentaje": 0,
-                            "monthly_display": "0", 
-                            "monthly_delta": 0.0, 
-                            "ytd_display": "0", 
-                            "ytd_delta": 0.0,
-                            "label_mes": "0 (0.0%)", 
-                            "label_ytd": "0 (0.0%)"
-                        }
-                    },
-                    "utilizacion": {"valor": 0},
-                    "promedios": {
-                        "ingreso_viaje": {
-                            "valor": 0, 
-                            "meta": 0, 
-                            "valor_porcentaje": 0.0,
-                            "meta_porcentaje": 0,
-                            "monthly_display": "$0",
-                            "monthly_delta": 0.0,
-                            "vs_2024": 0.0
-                        },
-                        "ingreso_unit": {
-                            "valor": 0, 
-                            "meta": 0, 
-                            "valor_porcentaje": 0.0,
-                            "meta_porcentaje": 0,
-                            "monthly_display": "$0",
-                            "monthly_delta": 0.0,
-                            "vs_2024": 0.0
-                        },
-                        "unidades_utilizadas": {
-                            "valor": 0, 
-                            "meta": 0, 
-                            "valor_porcentaje": 0.0,
-                            "meta_porcentaje": 0,
-                            "monthly_display": "0",
-                            "monthly_delta": 0.0,
-                            "vs_2024": 0.0
-                        },
-                        "clientes_servidos": {
-                            "valor": 0, 
-                            "meta": 0, 
-                            "valor_porcentaje": 0.0,
-                            "meta_porcentaje": 0,
-                            "monthly_display": "0",
-                            "monthly_delta": 0.0,
-                            "vs_2024": 0.0
-                        }
-                    },
-                    "graficas": {
-                        "ingresos_anual": {
-                            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                            "anterior": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                            "meta": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-                        },
-                        "viajes_anual": {
-                            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                            "anterior": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-                        },
-                        "mix_operacion": {
-                            "labels": ["", "", "", ""],
-                            "values": [0, 0, 0, 0]
-                        },
-                        "balanceo_unidades": {
-                            "labels": ["", "", "", "", ""],
-                            "values": [0, 0, 0, 0, 0]
-                        }
-                    },
-                    "tablas": {
-                        "rutas_cargado": {
-                            "h": ["No.", "Ruta", "Viajes", "Kms", "Costo x Km", "Costo Viaje Total"],
-                            "r": [
-                                ["261", "3T-LYCRA", "1", "29", "$193.01", "$5,597"],
-                                ["234", "PATIEROS Y GRANEL", "51", "1,785", "$214.10", "$382,173"]
-                            ]
-                        }
-                    }
-                },
-                "rendimientos": {
-                    "indicadores": {
-                        "kms_lt": {
-                            "valor": 1.86, 
-                            "meta": 3.0, 
-                            "valor_porcentaje": 62.0,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "1.79", 
-                            "monthly_delta": 0.0427, 
-                            "ytd_display": "1.85", 
-                            "ytd_delta": -0.94,
-                            "label_mes": "1.79 (4.27%)", 
-                            "label_ytd": "1.85 (-94%)"
-                        },
-                        "kms_reales": {
-                            "valor": 513165, 
-                            "meta": 592357, 
-                            "valor_porcentaje": 86.63,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "579k", 
-                            "monthly_delta": -0.11, 
-                            "ytd_display": "4.5M", 
-                            "ytd_delta": -0.21,
-                            "label_mes": "579k (-11%)", 
-                            "label_ytd": "4.5M (-21%)",
-                            "extra_info": ["Kms/Viaje", "716.71"]
-                        },
-                        "litros": {
-                            "valor": 275490, 
-                            "meta": 300000, 
-                            "valor_porcentaje": 91.83,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "324k", 
-                            "monthly_delta": -0.15, 
-                            "ytd_display": "2.4M", 
-                            "ytd_delta": 0.20,
-                            "label_mes": "324k (-15%)", 
-                            "label_ytd": "2.4M (20%)",
-                            "extra_info": ["Lts/Viaje", "384.76"]
-                        }
-                    },
-                    "graficas": {
-                        "tendencia": {
-                            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [1.85, 1.82, 1.82, 1.81, 1.74, 1.70, 1.79, 1.78, 1.86, 1.82, 1.83, 1.86],
-                            "anterior": [4.46, 1.99, 1.82, 1.87, 1.84, 1.79, 1.90, 1.94, 1.79, 1.88, 1.91, 1.93]
-                        },
-                        "mix_operacion": {
-                            "labels": ["ARENERA LOCAL", "CONTENEDOR FORÁNEO", "PLANA LOCAL", "CONTENEDOR LOCAL", "OTROS"],
-                            "values": [15.12, 14.45, 13.29, 12.6, 44.54]
-                        }
-                    },
-                    "tablas": {
-                        "unidad": {
-                            "h": ["Unidad", "Rend. Real", "Viajes"],
-                            "r": [["03", "3.35", "8"], ["148", "2.61", "11"], ["94", "2.61", "12"], ["96", "2.55", "9"]]
-                        },
-                        "operador": {
-                            "h": ["Operador", "Rend. Real", "Viajes", "Kms Real", "Litros Total"],
-                            "r": [
-                                ["AGUILAR CAZARES GERARDO", "1.95", "7", "8,530", "4,364"],
-                                ["AGUILAR YAÑEZ JORGE LUIS", "2.00", "7", "6,967", "3,479"],
-                                ["ALANIS ALANIS AMBROCIO", "1.76", "9", "3,726", "2,112"]
-                            ]
-                        }
-                    }
-                },
-                "rutas": {
-                    "mapa": {
-                        "puntos": [
-                            {"lat": 25.68, "lon": -100.31, "nombre": "Monterrey"},
-                            {"lat": 19.43, "lon": -99.13, "nombre": "México DF"}
-                        ]
-                    },
-                    "tablas": {
-                        "detalle_rutas": {
-                            "h": ["No.", "Ruta", "Cliente", "Cargados", "Vacíos", "Kms Total", "Utilización %"],
-                            "r": [
-                                ["1", "MTY-MEX", "COCA COLA", "84", "12", "85,400", "87.5%"],
-                                ["2", "MEX-GUA", "PEPSI", "76", "15", "54,200", "83.5%"],
-                                ["3", "GUA-MTY", "LOGISTICA X", "92", "5", "98,206", "94.8%"]
-                            ]
-                        }
-                    }
-                },
-                "costos": {
-                    "indicadores": {
-                        "utilidad_viaje": {
-                            "valor": 18.19, 
-                            "meta": 25.0, 
-                            "valor_porcentaje": 72.76,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "17.4%", 
-                            "monthly_delta": -0.68, 
-                            "ytd_display": "14.2%", 
-                            "ytd_delta": -0.43,
-                            "label_mes": "17.4% (-68%)", 
-                            "label_ytd": "14.2% (-43%)"
-                        },
-                        "costo_total": {
-                            "valor": 17098160, 
-                            "meta": 9796576, 
-                            "valor_porcentaje": 174.5,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "$9.9M", 
-                            "monthly_delta": 0.71, 
-                            "ytd_display": "$111.6M", 
-                            "ytd_delta": 0.18,
-                            "label_mes": "$9.9M (71%)", 
-                            "label_ytd": "$111.6M (18%)"
-                        }
-                    },
-                    "graficas": {
-                        "mensual_utilidad": {
-                            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "costo": [11, 11, 13, 10, 11, 28, 22, 17, 11, 10, 11, 9],
-                            "utilidad_pct": [51.33, 53.36, 53.65, 0, 52.80, 69.52, 0, 0, 0, 50.25, 53.61, 57.92]
-                        },
-                        "desglose_conceptos": {
-                            "conceptos": ["Combustible", "Percepción Operador", "Sueldo", "Otros", "Estancias"],
-                            "montos": [13940407, 3055793, 2269771, 2139090, 648771]
-                        },
-                        "comparativa_costos": {
-                            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [11, 10, 12, 12, 11, 28, 12, 12, 17, 11, 11, 9],
-                            "anterior": [8, 8, 10, 11, 11, 11, 10, 7, 8, 7, 8, 8]
-                        }
-                    },
-                    "tablas": {
-                        "margen_ruta": {
-                            "h": ["No.", "Ruta", "Ingreso", "Cant. Viajes", "Combustible", "Sueldo", "Costo Total", "Utilidad"],
-                            "r": [
-                                ["355", "APAXCO-VITRO", "$1,686,423", "29", "$526,937", "$84,000", "$802,703", "$883,720"],
-                                ["1", "CANOITAS-OWENS", "$3,660,979", "170", "$1,025,036", "$154,960", "$1,680,976", "$1,980,003"],
-                                ["3", "CANOITAS-VITRO", "$2,250,330", "89", "$571,029", "$84,550", "$889,165", "$1,361,165"]
-                            ]
-                        }
-                    }
+                    "kpis": {}
                 }
             },
-            "mantenimiento": {
+            "maintenance": {
                 "dashboard": {
-                    "indicadores": {
-                        "costo_interno": {
-                            "valor": 603880, "meta": 371948, "valor_porcentaje": 162.3, "meta_porcentaje": 100,
-                            "monthly_display": "$603k", "monthly_delta": 0.08, "ytd_display": "$2.9M", "ytd_delta": 0.15,
-                            "label_mes": "$603k (+8%)", "label_ytd": "$2.9M (+15%)"
-                        },
-                        "costo_externo": {
-                            "valor": 197773, "meta": 581033, "valor_porcentaje": 34.0, "meta_porcentaje": 100,
-                            "monthly_display": "$197k", "monthly_delta": -0.15, "ytd_display": "$5.3M", "ytd_delta": -0.05,
-                            "label_mes": "$197k (-15%)", "label_ytd": "$5.3M (-5%)"
-                        },
-                        "costo_llantas": {
-                            "valor": 18510, "meta": 15000, "valor_porcentaje": 123.4, "meta_porcentaje": 100,
-                            "monthly_display": "$18k", "monthly_delta": 0.05, "ytd_display": "$941k", "ytd_delta": 0.10,
-                            "label_mes": "$18k (+5%)", "label_ytd": "$941k (+10%)"
-                        },
-                        "total_mantenimiento": {
-                            "valor": 820164, "meta": 952982, "valor_porcentaje": 86.1, "meta_porcentaje": 100,
-                            "monthly_display": "$820k", "monthly_delta": -0.11, "ytd_display": "$9.2M", "ytd_delta": -0.02,
-                            "label_mes": "$820k (-11%)", "label_ytd": "$9.2M (-2%)"
-                        },
-                        "costo_km": {
-                            "valor": 1.32, "meta": 1.10, "valor_porcentaje": 120.0, "meta_porcentaje": 100,
-                            "monthly_display": "$1.32", "monthly_delta": 0.01, "ytd_display": "$0.59", "ytd_delta": -0.40,
-                            "label_mes": "$1.32 (+1%)", "label_ytd": "$0.59 (-40%)"
-                        },
-                        "disponibilidad": {
-                            "valor": 58, "meta": 100, "valor_porcentaje": 58.0, "meta_porcentaje": 100,
-                            "monthly_display": "58%", "monthly_delta": -0.10, "ytd_display": "65%", "ytd_delta": -0.05,
-                            "label_mes": "58% (-10%)", "label_ytd": "65% (-5%)"
-                        }
-                    },
-                    "graficas": {
-                        "tendencia_anual": {
-                            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-                            "anterior": [1.0, 2.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0],
-                            "meta": [1.5, 1.2, 0.8, 1.8, 2.0, 1.5, 0.8, 1.1, 0.9, 1.6, 1.3, 1.4]
-                        },
-                        "corrective_preventive": {
-                            "labels": ["CORRECTIVO", "PREVENTIVO"],
-                            "values": [778167, 41997]
-                        },
-                        "por_familia": {
-                            "labels": ["MOTOR", "SISTEMA DE FRENOS", "REMOLQUES", "GENERAL"],
-                            "values": [129253, 111333, 99437, 80982]
-                        },
-                        "por_flota": {
-                            "labels": ["GENERAL", "DEDICADO", "SIN ASIGNAR"],
-                            "values": [776817, 35996, 7351]
-                        },
-                        "por_operacion": {
-                            "labels": ["SIN ASIGNAR"],
-                            "values": [820164]
-                        },
-                        "costo_km_unidad": {
-                            "labels": ["118", "TV265", "106", "TV224"],
-                            "values": [243.19, 33.75, 21.90, 17.62]
-                        },
-                        "costo_km_marca": {
-                            "labels": ["VISUSA", "TYTANK", "CARMEX", "KENWORTH"],
-                            "values": [5.23, 2.99, 2.64, 1.79]
-                        },
-                        "entradas_unidad": {
-                            "labels": ["87", "10", "82", "21"],
-                            "values": [9, 7, 7, 6]
-                        }
-                    }
-            },
-                "almacen": {
-                    "indicadores": {
-                        "inventario_inicial": {"valor": 12926174, "meta": 0, "vs_2024": 0},
-                        "entradas": {"valor": 6128092, "meta": 0, "vs_2024": 0},
-                        "salidas": {"valor": 4535675, "meta": 0, "vs_2024": 0},
-                        "valorizacion_historica": {"valor": 14561121, "meta": 30384198, "vs_2024": 0},
-                        "valorizacion_actual": {
-                            "valor": 21111205, 
-                            "meta": 30384198, 
-                            "valor_porcentaje": 69.4,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "$21.1M",
-                            "monthly_delta": -0.30,
-                            "label_mes": "$21.1M (-30%)"
-                        },
-                        "cumplimiento": {"valor": 47.32, "meta": 100, "vs_2024": 0},
-                        "con_existencia": {"valor": 4000, "meta": 0, "vs_2024": 0},
-                        "sin_existencia": {"valor": 4000, "meta": 0, "vs_2024": 0},
-                        "registrados": {"valor": 8000, "meta": 0, "vs_2024": 0}
-                    },
-                    "graficas": {
-                        "historico_anual": {
-                            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [18.0, 19.0, 19.3, 24.4, 20.5, 12.9, 14.5, 16.8, 21.9, 19.8, 19.4, 16.5],
-                            "anterior": [21.3, 22.6, 25.8, 27.0, 27.1, 27.6, 27.6, 32.2, 0, 45.0, 28.6, 20.3]
-                        },
-                        "por_area": {
-                            "labels": ["01-TINSA", "02-TINSA CAD", "03-MTY MULTIF", "04-MUL CAD", "05-GRANEL"],
-                            "values": [9770561, 7458535, 1965866, 1057716, 858527]
-                        }
-                    },
-                    "tablas": {
-                        "familia": {
-                            "h": ["Familia", "Cantidad", "Valorización Actual", "%TG Valorización", "Estado MinMax"],
-                            "r": [
-                                ["LLANTAS Y RINES", "5651.00", "$5,356,301", "25.37%", "Dentro del rango"],
-                                ["DIESEL", "31794594.58", "$3,227,786", "15.29%", "Dentro del rango"],
-                                ["GENERAL", "149851.10", "$3,065,593", "14.52%", "Dentro del rango"]
-                            ]
-                        },
-                        "historico": {
-                            "h": ["Período", "Área", "Almacén", "Insumo", "U.M.", "Estado", "C. Inicial", "C. Entradas"],
-                            "r": [
-                                ["31/07/2025", "01-TINSA", "REFACCIONES TINSA MTY", "0000000056", "PIEZA", "NUEVO", "0.00", "10.00"]
-                            ]
-                        }
-                    }},
-                "disponibilidad": {
-                    "indicadores": {
-                        "pct_disponibilidad": {
-                            "valor": 58, 
-                            "meta": 100, 
-                            "valor_porcentaje": 58.0,
-                            "meta_porcentaje": 100,
-                            "monthly_display": "58%", 
-                            "monthly_delta": -0.10, 
-                            "label_mes": "58% (-10%)" 
-                        },
-                        "entradas_taller": {
-                            "valor": 335, 
-                            "meta": 300,
-                            "valor_porcentaje": 111.6,
-                            "monthly_display": "335", 
-                            "monthly_delta": 0.05,
-                            "label_mes": "335 (+5%)"
-                        },
-                    },
-                    "graficas": {
-                        "disponibilidad_mensual": {
-                            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [70, 71, 62, 63, 59, 58, 50, 49, 37, 37, 29, 27],
-                            "anterior": [78, 69, 73, 64, 59, 52, 48, 50, 46, 43, 55, 0],
-                            "meta": [100] * 12
-                        },
-                        "entradas_vs_kms": {
-                            "unidades": ["U-118", "U-106", "U-21", "U-60", "U-46", "U-09"],
-                            "entradas": [9, 7, 7, 6, 8, 5],
-                            "kms": [14640, 8561, 7195, 7698, 5400, 3200]
-                        }
-                    },
-                    "tablas": {
-                        "detalle": {
-                            "h": ["Tipo Operación / Unidad", "Días Mes", "Días Taller", "Días Disp.", "Disponibilidad"],
-                            "r": [
-                                ["SIN ASIGNAR", "4991", "2083", "2908", "58%"],
-                                ["CADEREYTA MULTIFLET", "93", "37", "56", "60%"],
-                                ["M07", "31", "14", "17", "55%"],
-                                ["VMR25", "31", "1", "30", "97%"],
-                                ["CADEREYTA TINSA", "1922", "837", "1085", "56%"],
-                                ["Total", "4991", "2083", "2908", "58%"]
-                            ]
-                        }
-                    }
-                },
-                "compras": {
-                    "indicadores": {
-                        "total": {
-                            "valor": 5648478, 
-                            "vs_2024": 6885581, 
-                            "ytd": 37665913,
-                            "meta": 6000000,    
-                            "valor_porcentaje": 94.1,  
-                            "meta_porcentaje": 100
-                        },
-                        "diesel": {"valor": 3923274}, 
-                        "stock": {"valor": 1725204} 
-                    },
-                    "graficas": {
-                        "tendencia": {
-                            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                            "actual": [3.37, 5.67, 4.21, 4.71, 4.37, 5.85, 5.64, 6.29, 5.20, 7.40, 4.30, 5.71],
-                            "anterior": [5.51, 0, 6.88, 8.53, 7.27, 0, 6.88, 0, 6.61, 0, 7.01, 0]
-                        },
-                        "por_area": {
-                            "areas": ["MTY TINSA", "CADEREYTA TINSA", "EL CARMEN G.", "CADEREYTA M.", "MTY MULTIFLET"],
-                            "valores": [3.8, 0.6, 0.6, 0.6, 0.1]
-                        },
-                        "tipo": {
-                            "labels": ["DIESEL", "REFACCIONES", "LLANTAS"],
-                            "values": [3.92, 1.24, 0.32]
-                        }
-                    },
-                    "tablas": {
-                        "proveedores": {
-                            "h": ["Proveedor", "Monto", "% Monto"],
-                            "r": [
-                                ["NEWYO GAS, S.A. DE C.V.", "$3,923,274", "69.46%"],
-                                ["TECNOCAM", "$259,200", "4.59%"],
-                                ["KENWORTH DE MONTERREY", "$204,437", "3.62%"]
-                            ]
-                        },
-                        "ordenes": {
-                            "h": ["Orden", "Fecha", "Proveedor", "Tipo", "Insumo", "Total Compra"],
-                            "r": [
-                                ["202500556", "01/07/2025", "ACCESORIOS ALLENDE", "REFACCIONES", "STOCK", "$2,987"],
-                                ["202500560", "01/07/2025", "GA DIESEL PARTS", "REFACCIONES", "STOCK", "$3,805"]
-                            ]
-                        },
-                        "insumos": {
-                            "h": ["Área", "Insumo", "Nombre Insumo", "Almacén", "Precio", "Cantidad", "Subtotal"],
-                            "r": [
-                                ["05-EL CARMEN", "0116002003", "SOLDADURA 7018", "REFACCIONES GRANEL", "$81", "20", "$1,624"],
-                                ["05-EL CARMEN", "0117001001", "DIESEL", "AUTOCONSUMO", "$19", "15,000", "$288,362"]
-                            ]
-                        }
-                    }
+                    "kpis": {}
                 }
             }
-        
         }
+
+    def _inject_operational_data(self, data):
+        operational = data["operational"]["dashboard"]
+        operational["kpis"]["trip_revenue"] = {
+            "value": 1,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        operational["kpis"]["trips"] = {
+            "value": 1,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        operational["kpis"]["kilometers"] = {
+            "value": 1,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        operational["kpis"]["utilization"] = {
+            "value": 0
+        }
+        operational["kpis"]["average_trip_revenue"] = {
+            "value": 1,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        operational["kpis"]["average_unit_revenue"] = {
+            "value": 1,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        operational["kpis"]["units_used"] = {
+            "value": 1,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        operational["kpis"]["customers_served"] = {
+            "value": 1,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        operational["kpis"]["km_per_liter"] = {
+            "value": 1.86,
+            "target": 3.0,
+            "delta": 0.0427,
+            "ytd": -0.94
+        }
+        operational["kpis"]["real_kilometers"] = {
+            "value": 513165,
+            "target": 592357,
+            "delta": -0.11,
+            "ytd": -0.21
+        }
+        operational["kpis"]["liters"] = {
+            "value": 275490,
+            "target": 300000,
+            "delta": -0.15,
+            "ytd": 0.20
+        }
+        operational["kpis"]["trip_profit"] = {
+            "value": 18.19,
+            "target": 25.0,
+            "delta": -0.68,
+            "ytd": -0.43
+        }
+        operational["kpis"]["total_cost"] = {
+            "value": 17098160,
+            "target": 9796576,
+            "delta": 0.71,
+            "ytd": 0.18
+        }
+        operational["charts"]["annual_revenue"] = {
+            "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            "actual": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            "previous": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            "target": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        }
+        operational["charts"]["annual_trips"] = {
+            "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            "actual": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            "previous": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        }
+        operational["charts"]["operation_mix"] = {
+            "labels": ["", "", "", ""],
+            "values": [0, 0, 0, 0]
+        }
+        operational["charts"]["unit_balancing"] = {
+            "labels": ["", "", "", "", ""],
+            "values": [0, 0, 0, 0, 0]
+        }
+        operational["charts"]["trend"] = {
+            "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            "actual": [1.85, 1.82, 1.82, 1.81, 1.74, 1.70, 1.79, 1.78, 1.86, 1.82, 1.83, 1.86],
+            "previous": [4.46, 1.99, 1.82, 1.87, 1.84, 1.79, 1.90, 1.94, 1.79, 1.88, 1.91, 1.93]
+        }
+        operational["charts"]["operation_mix_rend"] = {
+            "labels": ["ARENERA LOCAL", "CONTENEDOR FORÁNEO", "PLANA LOCAL", "CONTENEDOR LOCAL", "OTROS"],
+            "values": [15.12, 14.45, 13.29, 12.6, 44.54]
+        }
+        operational["charts"]["monthly_profit"] = {
+            "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            "cost": [11, 11, 13, 10, 11, 28, 22, 17, 11, 10, 11, 9],
+            "profit_pct": [51.33, 53.36, 53.65, 0, 52.80, 69.52, 0, 0, 0, 50.25, 53.61, 57.92]
+        }
+        operational["charts"]["cost_breakdown"] = {
+            "concepts": ["Combustible", "Percepción Operador", "Sueldo", "Otros", "Estancias"],
+            "amounts": [13940407, 3055793, 2269771, 2139090, 648771]
+        }
+        operational["charts"]["cost_comparison"] = {
+            "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            "actual": [11, 10, 12, 12, 11, 28, 12, 12, 17, 11, 11, 9],
+            "previous": [8, 8, 10, 11, 11, 11, 10, 7, 8, 7, 8, 8]
+        }
+        operational["charts"]["map_points"] = [
+            {"lat": 25.68, "lon": -100.31, "name": "Monterrey"},
+            {"lat": 19.43, "lon": -99.13, "name": "México DF"}
+        ]
+        operational["charts"]["loaded_routes_table"] = {
+            "headers": ["No.", "Ruta", "Viajes", "Kms", "Costo x Km", "Costo Viaje Total"],
+            "rows": [
+                ["261", "3T-LYCRA", "1", "29", "$193.01", "$5,597"],
+                ["234", "PATIEROS Y GRANEL", "51", "1,785", "$214.10", "$382,173"]
+            ]
+        }
+        operational["charts"]["unit_table"] = {
+            "headers": ["Unidad", "Rend. Real", "Viajes"],
+            "rows": [["03", "3.35", "8"], ["148", "2.61", "11"], ["94", "2.61", "12"], ["96", "2.55", "9"]]
+        }
+        operational["charts"]["operator_table"] = {
+            "headers": ["Operador", "Rend. Real", "Viajes", "Kms Real", "Litros Total"],
+            "rows": [
+                ["AGUILAR CAZARES GERARDO", "1.95", "7", "8,530", "4,364"],
+                ["AGUILAR YAÑEZ JORGE LUIS", "2.00", "7", "6,967", "3,479"],
+                ["ALANIS ALANIS AMBROCIO", "1.76", "9", "3,726", "2,112"]
+            ]
+        }
+        operational["charts"]["route_detail_table"] = {
+            "headers": ["No.", "Ruta", "Cliente", "Cargados", "Vacíos", "Kms Total", "Utilización %"],
+            "rows": [
+                ["1", "MTY-MEX", "COCA COLA", "84", "12", "85,400", "87.5%"],
+                ["2", "MEX-GUA", "PEPSI", "76", "15", "54,200", "83.5%"],
+                ["3", "GUA-MTY", "LOGISTICA X", "92", "5", "98,206", "94.8%"]
+            ]
+        }
+        operational["charts"]["route_margin_table"] = {
+            "headers": ["No.", "Ruta", "Ingreso", "Cant. Viajes", "Combustible", "Sueldo", "Costo Total", "Utilidad"],
+            "rows": [
+                ["355", "APAXCO-VITRO", "$1,686,423", "29", "$526,937", "$84,000", "$802,703", "$883,720"],
+                ["1", "CANOITAS-OWENS", "$3,660,979", "170", "$1,025,036", "$154,960", "$1,680,976", "$1,980,003"],
+                ["3", "CANOITAS-VITRO", "$2,250,330", "89", "$571,029", "$84,550", "$889,165", "$1,361,165"]
+            ]
+        }
+        
+    def _inject_financial_data(self, data):
+        financial = data["financial"]["dashboard"]
+        financial.setdefault("charts", {})
+        financial["kpis"]["billed_vs_collected"] = {
+            "value": 22127664,
+            "target": 30000000,
+            "delta": -0.05,
+            "ytd": 73.7
+        }
+        financial["kpis"]["average_payment_days"] = {
+            "value": 45,
+            "target": 30,
+            "delta": 0.12,
+            "ytd": 150.0
+        }
+        financial["kpis"]["accounts_payable_vs_paid"] = {
+            "value": 14000000,
+            "target": 17000000,
+            "delta": 0.0,
+            "ytd": 82.4
+        }
+        financial["kpis"]["average_payment_days_payable"] = {
+            "value": 22,
+            "target": 30,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["total_availability"] = {
+            "value": 15400000,
+            "target": 20000000,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["credit_line_usage"] = {
+            "value": 8500000,
+            "target": 10000000,
+            "delta": 0.0,
+            "ytd": 85.0
+        }
+        financial["kpis"]["accumulated_billed"] = {
+            "value": 194047842,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["accumulated_credit_notes"] = {
+            "value": 209371,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["accumulated_debit_notes"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["accumulated_collected"] = {
+            "value": 22127664,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["customer_portfolio"] = {
+            "value": 171710807,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["monthly_billed"] = {
+            "value": 32437705,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["monthly_credit"] = {
+            "value": 52579,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["monthly_debit"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["monthly_collected"] = {
+            "value": 18193148,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["initial_balance"] = {
+            "value": 1000000,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["accounts_payable"] = {
+            "value": 15000000,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["debit_notes_payable"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["credit_notes_payable"] = {
+            "value": 137000,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["advance_payment"] = {
+            "value": 4000,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["total_accounts_payable"] = {
+            "value": 17000000,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["supplier_payments"] = {
+            "value": 14000000,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["kpis"]["final_balance"] = {
+            "value": 3000000,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        financial["charts"]["comparison"] = {
+            "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            "actual": [46.6, 37.3, 103.2, 41.4, 222.9, 117.0, 39.5, 36.3, 40.1, 32.1, 27.2, 25.7],
+            "previous": [29.4, 0, 62.9, 31.6, 23.0, 33.0, 0, 0, 0, 0, 0, 0]
+        }
+        financial["charts"]["mix"] = {
+            "labels": ['SIN CARTA COBRO', 'POR VENCER', 'VENCIDO'],
+            "values": [56.6, 26.03, 17.37]
+        }
+        financial["charts"]["stack"] = {
+            "clients": ["MATERIAS PRIMA", "OWENS AMERICA", "VIDRIO PLANO", "PETROLEOS MEX", "VITRO VIDRIO"],
+            "to_expire": [73, 13, 11, 15, 12],
+            "without_letter": [0, 11, 0, 0, 0],
+            "expired": [77, 34, 23, 0, 0]
+        }
+        financial["charts"]["aging_table"] = {
+            "headers": ["Área", "SIN CARTA", "POR VENCER", "VENCIDO"],
+            "rows": [
+                ["MATERIAS PRIMA", "0", "73", "77"],
+                ["OWENS AMERICA", "11", "13", "34"],
+                ["VIDRIO PLANO", "0", "11", "23"],
+                ["PETROLEOS MEX", "0", "15", "0"],
+                ["VITRO VIDRIO", "0", "12", "0"]
+            ]
+        }
+        financial["charts"]["billing_table"] = {
+            "headers": ["Cliente", "Facturado", "Notas Crédito", "Notas Débito", "Cobrado", "Saldo"],
+            "rows": [
+                ["MATERIAS PRIMA", "73,000,000", "0", "0", "50,000,000", "23,000,000"],
+                ["OWENS AMERICA", "45,000,000", "200,000", "0", "30,000,000", "15,000,000"],
+                ["VIDRIO PLANO", "38,000,000", "0", "0", "25,000,000", "13,000,000"]
+            ]
+        }
+        financial["charts"]["cash_flow"] = {
+            "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            "inflow": [46.6, 37.3, 103.2, 41.4, 222.9, 117.0, 39.5, 36.3, 40.1, 32.1, 27.2, 25.7],
+            "outflow": [29.4, 0, 62.9, 31.6, 23.0, 33.0, 0, 0, 0, 0, 0, 0]
+        }
+        # 1. Gráfica de Dona: Saldo por Institución
+        financial["charts"]["bank_balances"] = {
+            "labels": ["BBVA Operativo", "Banamex Nómina", "Santander USD", "Caja Chica"],
+            "values": [1500000, 850000, 450000, 50000]
+        }
+
+        # 2. Tabla: Desglose por Conceptos
+        financial.setdefault("tables", {})
+        financial["tables"]["bank_concepts"] = {
+            "h": ["Concepto", "Ingresos", "Egresos", "Balance"],
+            "r": [
+                ["Cobranza Clientes", "$18,500,000", "$0", "$18,500,000"],
+                ["Pago Proveedores", "$0", "$12,400,000", "-$12,400,000"],
+                ["Nómina", "$0", "$2,100,000", "-$2,100,000"],
+                ["Impuestos", "$0", "$850,000", "-$850,000"],
+                ["Préstamos", "$1,000,000", "$200,000", "$800,000"]
+            ]
+        }
+
+        # =========================================================
+        # NUEVOS DATOS SIMULADOS PARA CUENTAS POR PAGAR (Admin-Payables)
+        # =========================================================
+
+        # 1. Gráfica Comparativa Anual (2025 vs 2024)
+        financial["charts"]["payables_comparison"] = {
+            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+            "actual": [12.5, 11.8, 13.2, 12.0, 14.5, 13.8, 12.2, 0, 0, 0, 0, 0], # Millones
+            "anterior": [10.5, 11.0, 11.5, 11.2, 11.8, 12.0, 12.5, 11.8, 12.2, 12.5, 13.0, 12.8]
+        }
+
+        # 2. Dona: Saldo por Clasificación
+        financial["charts"]["payables_mix"] = {
+            "labels": ["Proveedores MP", "Fletes", "Servicios", "Mantenimiento"],
+            "values": [45, 25, 20, 10]
+        }
+
+        # 3. Stacked Bar: Saldo por Proveedor (Vigente vs Vencido)
+        financial["charts"]["supplier_balance"] = {
+            "prov": ["COMBUSTIBLES S.A.", "LLANTAS Y REF.", "SEGUROS MONTERREY", "MANTENIMIENTO EXPRESS", "REFACCIONES DEL NORTE"],
+            "por_vencer": [2500000, 1200000, 800000, 450000, 300000], # Vigente
+            "vencido": [0, 150000, 0, 50000, 120000] # Vencido
+        }
+
+        # 4. Tabla: Antigüedad de Saldos
+        financial["tables"]["payables_aging"] = {
+            "h": ["Proveedor", "Corriente", "1-30 Días", "31-60 Días", "+60 Días", "Total"],
+            "r": [
+                ["COMBUSTIBLES S.A.", "$2.5M", "$0", "$0", "$0", "$2.5M"],
+                ["LLANTAS Y REF.", "$1.2M", "$150k", "$0", "$0", "$1.35M"],
+                ["SEGUROS MONTERREY", "$800k", "$0", "$0", "$0", "$800k"],
+                ["MANTENIMIENTO EXPRESS", "$450k", "$50k", "$0", "$0", "$500k"],
+                ["REFACCIONES DEL NORTE", "$300k", "$20k", "$100k", "$0", "$420k"]
+            ]
+        }
+    
+    def _inject_maintenance_data(self, data):
+        # 1. Asegurar que la ruta base existe
+        if "maintenance" not in data:
+            data["maintenance"] = {}
+        
+        if "dashboard" not in data["maintenance"]:
+            data["maintenance"]["dashboard"] = {}
+
+        # 2. Obtener referencia al nodo dashboard
+        # NOTA: En tu código, esta variable se llama 'maintenance' según el traceback
+        maintenance = data["maintenance"]["dashboard"]
+
+        # 3. INICIALIZAR LOS CONTENEDORES (Esto es lo que te falta) 
+        if "kpis" not in maintenance: maintenance["kpis"] = {}
+        if "charts" not in maintenance: maintenance["charts"] = {}  # <--- Esto arregla tu error
+        if "tables" not in maintenance: maintenance["tables"] = {}
+        maintenance["kpis"]["total_units"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["units_in_service"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["units_in_maintenance"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["units_in_repair"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["units_in_standby"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["maintenance_cost"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["repair_cost"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["preventive_maintenance_compliance"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["corrective_maintenance_incidents"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["mean_time_between_failures"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["mean_time_to_repair"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["fuel_efficiency"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["tire_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["brake_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["engine_oil_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["transmission_oil_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["coolant_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["battery_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["air_filter_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["cabin_filter_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["wiper_blade_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["light_bulb_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["belt_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["hose_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["clutch_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["brake_pad_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["brake_rotor_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["shock_absorber_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["strut_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["wheel_bearing_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["cv_joint_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["exhaust_system_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["catalytic_converter_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["oxygen_sensor_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["mass_airflow_sensor_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["throttle_body_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["fuel_injector_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["fuel_pump_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["ignition_coil_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["spark_plug_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["alternator_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["starter_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["battery_cable_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["fuse_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["relay_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["switch_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["sensor_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["actuator_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["control_module_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["wiring_harness_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["connector_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["ground_strap_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["fuse_box_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["relay_box_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["junction_box_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["terminal_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["crimp_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["solder_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["heat_shrink_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["electrical_tape_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["wire_loom_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["cable_tie_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["grommet_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["bushing_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["mount_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["bracket_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["clip_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["fastener_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["adhesive_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["sealant_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["gasket_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["o_ring_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["seal_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["bearing_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["coupling_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["universal_joint_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["drive_shaft_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["axle_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["differential_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["transfer_case_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        }
+        maintenance["kpis"]["transmission_life"] = {
+            "value": 0,
+            "target": 0,
+            "delta": 0.0,
+            "ytd": 0.0
+        },
+
+        maintenance["kpis"]["internal_labour_cost"] = {"value": 450000, "target": 400000, "delta": 12.5}
+        maintenance["kpis"]["external_labour_cost"] = {"value": 320000, "target": 300000, "delta": 6.6}
+        maintenance["kpis"]["tire_cost"] = {"value": 180000, "target": 200000, "delta": -10.0}
+        maintenance["kpis"]["total_maintenance_cost"] = {"value": 950000, "target": 900000, "delta": 5.5}
+        maintenance["kpis"]["availability_pct"] = {"value": 92.5, "target": 95.0, "delta": -2.5}
+        maintenance["kpis"]["cost_per_km"] = {"value": 2.45, "target": 2.20, "delta": 11.3}
+
+        maintenance["charts"]["cost_trend_annual"] = {
+            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+            "anterior": [850, 870, 860, 890, 880, 900],
+            "actual": [880, 890, 920, 910, 940, 950]
+        }
+        maintenance["charts"]["corrective_preventive"] = {"values": [35, 65]} # %
+        maintenance["charts"]["cost_by_family"] = {
+            "labels": ["Tractos", "Remolques", "Dollys", "Utilitarios"], 
+            "values": [550000, 250000, 100000, 50000]
+        }
+        maintenance["charts"]["cost_by_fleet"] = {
+            "labels": ["Flota A", "Flota B", "Flota C"], 
+            "values": [400000, 350000, 200000]
+        }
+        maintenance["charts"]["cost_by_operation"] = {
+            "labels": ["Local", "Foráneo", "Patio"], 
+            "values": [30, 60, 10]
+        }
+        maintenance["charts"]["cost_per_km_unit"] = {
+            "labels": ["U-101", "U-102", "U-103", "U-104", "U-105"], 
+            "values": [3.2, 2.8, 2.5, 2.1, 1.9]
+        }
+        maintenance["charts"]["cost_per_km_brand"] = {
+            "labels": ["Kenworth", "Freightliner", "International"], 
+            "values": [2.6, 2.4, 2.3]
+        }
+        maintenance["charts"]["entries_per_unit"] = {
+            "labels": ["U-101", "U-205", "U-304"], 
+            "values": [5, 4, 3]
+        }
+
+        # --- INVENTARIOS ---
+        maintenance["kpis"]["initial_inventory"] = {"value": 2500000}
+        maintenance["kpis"]["inventory_entries"] = {"value": 450000}
+        maintenance["kpis"]["inventory_exits"] = {"value": 380000}
+        maintenance["kpis"]["historical_valuation_kpi"] = {"value": 2570000}
+        maintenance["kpis"]["current_inventory_value"] = {"value": 2570000, "target": 2500000}
+        
+        maintenance["kpis"]["min_max_compliance"] = {"value": 94} # %
+        maintenance["kpis"]["registered_skus"] = {"value": 1250}
+        maintenance["kpis"]["skus_in_stock"] = {"value": 1100}
+        maintenance["kpis"]["skus_out_of_stock"] = {"value": 150}
+
+        maintenance["charts"]["inventory_history"] = {
+            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+            "anterior": [2.4, 2.45, 2.5, 2.4, 2.35, 2.4],
+            "actual": [2.42, 2.48, 2.55, 2.52, 2.58, 2.57] # Millones
+        }
+        maintenance["charts"]["inventory_by_area"] = {
+            "labels": ["Refacciones", "Llantas", "Lubricantes", "Filtros"],
+            "values": [1200000, 800000, 400000, 170000]
+        }
+        maintenance["tables"]["family"] = {
+            "h": ["Familia", "Valor", "% Total"],
+            "r": [["Motor", "$800k", "31%"], ["Suspensión", "$500k", "19%"], ["Frenos", "$300k", "11%"]]
+        }
+        maintenance["tables"]["history"] = {
+            "h": ["Mes", "Valor Inicial", "Entradas", "Salidas", "Final"],
+            "r": [["Junio", "$2.55M", "$400k", "$380k", "$2.57M"]]
+        }
+
+        # --- COMPRAS ---
+        maintenance["kpis"]["total_purchase"] = {"value": 1200000, "target": 1100000}
+        maintenance["kpis"]["diesel_purchase"] = {"value": 800000, "target": 750000}
+        maintenance["kpis"]["stock_purchase"] = {"value": 400000, "target": 350000}
+
+        maintenance["charts"]["purchases_trend"] = {
+            "meses": ["Ene", "Feb", "Mar", "Abr"],
+            "anterior": [1.0, 1.1, 1.05, 1.15],
+            "actual": [1.1, 1.15, 1.2, 1.18]
+        }
+        maintenance["charts"]["purchases_by_area"] = {
+            "areas": ["Taller Central", "Patio Norte", "Ruta"],
+            "valores": [700000, 300000, 200000]
+        }
+        maintenance["charts"]["purchases_by_type"] = {
+            "labels": ["Crédito", "Contado"], "values": [80, 20]
+        }
+        maintenance["tables"]["suppliers"] = {
+            "h": ["Proveedor", "Monto", "Part."],
+            "r": [["Mobil Oil", "$300k", "25%"], ["Llantas Michelin", "$200k", "16%"]]
+        }
+        maintenance["tables"]["orders"] = {
+            "h": ["OC", "Proveedor", "Fecha", "Monto", "Estatus"],
+            "r": [["OC-1001", "Mobil", "15-Jul", "$50,000", "Recibido"]]
+        }
+        maintenance["tables"]["supplies"] = {
+            "h": ["Código", "Descripción", "Cant", "Costo Unit"],
+            "r": [["ACE-15W40", "Aceite Motor Tambo", "10", "$15,000"]]
+        }
+
+        # --- DISPONIBILIDAD ---
+        maintenance["kpis"]["workshop_entries_count"] = {"value": 45}
+        
+        maintenance["charts"]["availability_monthly"] = {
+            "meses": ["Ene", "Feb", "Mar", "Abr", "May", "Jun"],
+            "anterior": [94, 93, 95, 94, 93, 94],
+            "actual": [95, 94, 93, 92, 92, 93],
+            "target": [95, 95, 95, 95, 95, 95]
+        }
+        maintenance["charts"]["entries_vs_kms"] = {
+            "unidades": ["U-001", "U-002", "U-003", "U-004", "U-005"],
+            "entradas": [2, 1, 3, 0, 1],
+            "kms": [12000, 15000, 8000, 18000, 14000]
+        }
+        maintenance["tables"]["availability_detail"] = {
+            "h": ["Unidad", "Estatus", "Días Taller", "Falla"],
+            "r": [["U-003", "En Reparación", "3", "Motor"], ["U-001", "Mantenimiento", "1", "Preventivo"]]
+        }
+    

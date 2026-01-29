@@ -17,9 +17,9 @@ dash.register_page(__name__, path="/ops-performance", title="Rendimientos")
 SCREEN_ID = "ops-performance"
 table_perf_mgr = PerformanceTableStrategy()
 
-w_kms_lt = SmartWidget("rp_kms_lt", OpsGaugeStrategy("Rendimiento", "kms_lt", "green", section="rendimientos", prefix=""))
-w_kms_re = SmartWidget("rp_kms_tot", OpsGaugeStrategy("Kms Reales", "kms_reales", "blue", section="rendimientos", prefix=""))
-w_litros = SmartWidget("rp_litros", OpsGaugeStrategy("Litros", "litros", "orange", section="rendimientos", prefix=""))
+w_kms_lt = SmartWidget("rp_kms_lt", OpsGaugeStrategy("Rendimiento", "km_per_liter", "green", section="dashboard", prefix=""))
+w_kms_re = SmartWidget("rp_kms_tot", OpsGaugeStrategy("Kms Reales", "real_kilometers", "blue", section="dashboard", prefix=""))
+w_litros = SmartWidget("rp_litros", OpsGaugeStrategy("Litros", "liters", "orange", section="dashboard", prefix=""))
 
 w_trend = ChartWidget("cp_trend", PerformanceTrendStrategy(layout_config={"height": 350}))
 w_mix = ChartWidget("cp_mix", PerformanceMixStrategy(layout_config={"height": 350}))
@@ -33,10 +33,10 @@ def _render_ops_performance_body(ctx):
                 dmc.Select(id="perf-year", data=["2025"], value="2025", variant="filled", style={"width": "100px"}, allowDeselect=False, size="sm")
             ]),
             dmc.GridCol(span="auto", children=[
-                dmc.ScrollArea(w="100%", type="scroll", scrollbarSize=6, offsetScrollbars=True, children=[ # type: ignore
+                dmc.ScrollArea(w="100%", type="scroll", scrollbarSize=6, offsetScrollbars="present", children=[
                     dmc.SegmentedControl(
                         id="perf-month", value="septiembre", color="blue", radius="md", size="sm", fullWidth=True, style={"minWidth": "800px"},
-                        data=[{"label": m, "value": m.lower()} for m in ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]] # type: ignore
+                        data=["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
                     )
                 ])
             ])

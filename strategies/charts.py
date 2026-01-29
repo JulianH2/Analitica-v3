@@ -2,9 +2,9 @@ import plotly.graph_objects as go
 import dash_mantine_components as dmc
 from .base_strategy import KPIStrategy
 from settings.theme import DesignSystem
+from utils.helpers import safe_get
 
 class MainTrendChartStrategy(KPIStrategy):
-    """Gráfica de tendencia principal que consume datos del contexto unificado"""
     def get_card_config(self, data_context):
         return {"title": "Tendencia Financiera Anual", "icon": "tabler:chart-area-line"}
 
@@ -12,23 +12,23 @@ class MainTrendChartStrategy(KPIStrategy):
         return dmc.Text("Análisis detallado de la evolución de ingresos mensuales.", c="dimmed") # type: ignore
 
     def get_figure(self, data_context):
-        ds = data_context["operaciones"]["dashboard"]["graficas"]["ingresos_anual"]
-        meses = ds["meses"]
+        ds = safe_get(data_context, "operational.dashboard.charts.annual_revenue", {"months": [], "previous": [], "actual": [], "target": []})
+        months = ds.get("months", [])
         
         fig = go.Figure()
         
         fig.add_trace(go.Scatter(
-            x=meses, y=ds["meta"], name="Meta", 
+            x=months, y=ds.get("target", []), name="Meta", 
             mode='lines', line=dict(color=DesignSystem.WARNING[5], width=3, dash='dot')
         ))
 
         fig.add_trace(go.Bar(
-            x=meses, y=ds["anterior"], name="2024", 
+            x=months, y=ds.get("previous", []), name="2024", 
             marker_color=DesignSystem.SLATE[3] 
         ))
         
         fig.add_trace(go.Bar(
-            x=meses, y=ds["actual"], name="2025", 
+            x=months, y=ds.get("actual", []), name="2025", 
             marker_color=DesignSystem.BRAND[5]
         ))
 
@@ -56,14 +56,13 @@ class MainTrendChartStrategy(KPIStrategy):
         return fig
     
 class OpsFleetStatusStrategy(KPIStrategy):
-    """Estado de flota consumiendo indicadores de disponibilidad"""
     def get_card_config(self, data_context):
         return {"title": "Estado de Flota", "icon": "tabler:chart-pie"}
 
     def render_detail(self, data_context): return None
 
     def get_figure(self, data_context):
-        disp = data_context["mantenimiento"]["disponibilidad"]["indicadores"]["pct_disponibilidad"]["valor"]
+        disp = safe_get(data_context, "maintenance.dashboard.kpis.availability_pct.value", 0)
         mtto = 100 - disp
         
         fig = go.Figure(data=[go.Pie(
@@ -86,14 +85,18 @@ class OpsFleetStatusStrategy(KPIStrategy):
         return fig
 
 class OpsRoutesChartStrategy(KPIStrategy):
-    """Rutas principales basadas en la tabla de rutas del Dashboard"""
     def get_card_config(self, data_context):
         return {"title": "Top Rutas por Volumen", "icon": "tabler:route"}
 
     def get_figure(self, data_context):
-        ds = data_context["operaciones"]["dashboard"]["tablas"]["rutas_cargado"]
-        labels = [r[1] for r in ds["r"]]
-        values = [int(r[2]) for r in ds["r"]]
+        ds = safe_get(data_context, "operational.dashboard.charts.loaded_routes_table", {"rows": []})
+        rows = ds.get("rows", [])
+        
+        try:
+            labels = [r[1] for r in rows[:5]]
+            values = [int(r[2]) for r in rows[:5]]
+        except:
+            labels, values = [], []
         
         fig = go.Figure()
         fig.add_trace(go.Bar(

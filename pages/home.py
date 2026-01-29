@@ -19,21 +19,30 @@ SCREEN_ID = "home"
 MAIN_KPI_H = 205
 top_layout = {"height": MAIN_KPI_H, "span": 2}
 
-w_income = SmartWidget("h_inc", ExecutiveKPIStrategy("operaciones", "dashboard", "ingreso_viaje", "Ingresos", "tabler:coin", "blue", layout_config=top_layout))
-w_costs = SmartWidget("h_cost", ExecutiveKPIStrategy("operaciones", "costos", "costo_total", "Costos", "tabler:wallet", "red", layout_config=top_layout))
-w_margin = SmartWidget("h_marg", ExecutiveKPIStrategy("operaciones", "costos", "utilidad_viaje", "% Margen", "tabler:chart-pie", "green", is_pct=True, layout_config=top_layout))
+w_income = SmartWidget("h_inc", ExecutiveKPIStrategy("operational", "dashboard", "trip_revenue", "Ingresos", "tabler:coin", "blue", layout_config=top_layout))
+w_costs = SmartWidget("h_cost", ExecutiveKPIStrategy("operational", "dashboard", "total_cost", "Costos", "tabler:wallet", "red", layout_config=top_layout))
+w_margin = SmartWidget("h_marg", ExecutiveKPIStrategy("operational", "dashboard", "trip_profit", "% Margen", "tabler:chart-pie", "green", is_pct=True, layout_config=top_layout))
 
-w_viajes = SmartWidget("h_via", ExecutiveMiniKPIStrategy("operaciones", "dashboard", "viajes", "Viajes", "blue", "tabler:steering-wheel", layout_config=top_layout))
-w_units = SmartWidget("h_uni", ExecutiveMiniKPIStrategy("operaciones", "dashboard", "unidades_utilizadas", "Unidades", "cyan", "tabler:bus", layout_config=top_layout))
-w_clients = SmartWidget("h_cli", ExecutiveMiniKPIStrategy("operaciones", "dashboard", "clientes_servidos", "Clientes", "indigo", "tabler:users", layout_config=top_layout))
+w_viajes = SmartWidget("h_via", ExecutiveMiniKPIStrategy("operational", "dashboard", "trips", "Viajes", "blue", "tabler:steering-wheel", layout_config=top_layout))
+w_units = SmartWidget("h_uni", ExecutiveMiniKPIStrategy("operational", "dashboard", "units_used", "Unidades", "cyan", "tabler:bus", layout_config=top_layout))
+w_clients = SmartWidget("h_cli", ExecutiveMiniKPIStrategy("operational", "dashboard", "customers_served", "Clientes", "indigo", "tabler:users", layout_config=top_layout))
 
-w_cost_viaje_km = SmartWidget("h_cvkm", ExecutiveMiniKPIStrategy("operaciones", "dashboard", "ingreso_viaje", "Ingreso x Km", "orange", "tabler:ruler-2", layout_config={"height": 140}))
-w_cost_mtto_km = SmartWidget("h_cmkm", ExecutiveMiniKPIStrategy("mantenimiento", "dashboard", "costo_km", "Mtto x Km", "red", "tabler:tool", layout_config={"height": 140}))
+w_cost_viaje_km = SmartWidget("h_cvkm", ExecutiveMiniKPIStrategy("operational", "dashboard", "average_trip_revenue", "Ingreso Prom.", "orange", "tabler:ruler-2", layout_config={"height": 140}))
+w_cost_mtto_km = SmartWidget("h_cmkm", ExecutiveMiniKPIStrategy("maintenance", "dashboard", "cost_per_km", "Mtto x Km", "red", "tabler:tool", prefix="$", layout_config={"height": 140}))
 
 w_main_chart = ChartWidget("h_chart", MainTrendChartStrategy(layout_config={"height": 380}))
 w_yield = SmartWidget("h_yield", FleetEfficiencyStrategy(layout_config={"height": 220}))
-w_portfolio = ChartWidget("h_port", ExecutiveDonutStrategy("Cartera Clientes M.N.", "administracion", "facturacion_cobranza", {"SIN CARTA COBRO": "blue", "POR VENCER": "yellow", "VENCIDO": "red"}, layout_config={"height": 220}))
-w_suppliers = ChartWidget("h_supp", ExecutiveDonutStrategy("Saldo Proveedores M.N.", "administracion", "cuentas_por_pagar", {"POR VENCER": "blue", "VENCIDO": "red"}, layout_config={"height": 220}))
+
+w_portfolio = ChartWidget("h_port", ExecutiveDonutStrategy(
+    "Cartera Clientes M.N.", "financial", "dashboard", "mix", 
+    {"SIN CARTA COBRO": "blue", "POR VENCER": "yellow", "VENCIDO": "red"}, 
+    layout_config={"height": 220}
+))
+w_suppliers = ChartWidget("h_supp", ExecutiveDonutStrategy(
+    "Saldo Proveedores M.N.", "financial", "dashboard", "payables_mix", 
+    {"POR VENCER": "blue", "VENCIDO": "red"}, 
+    layout_config={"height": 220}
+))
 
 WIDGET_REGISTRY = {
     "h_inc": w_income, "h_cost": w_costs, "h_marg": w_margin, "h_yield": w_yield,
@@ -43,7 +52,7 @@ WIDGET_REGISTRY = {
 
 def _render_home_body(ctx):
     def truck_visual():
-        val = safe_get(ctx, "operaciones.dashboard.utilizacion.valor", 0)
+        val = safe_get(ctx, "operational.dashboard.kpis.utilization.value", 0)
         return dmc.Paper(p="md", withBorder=True, shadow="xs", radius="md", h=220, children=[
             dmc.Stack(justify="center", align="center", h="100%", gap="sm", children=[
                 dmc.Text("Estado Carga Flota", size="xs", c="gray", fw="bold", tt="uppercase", ta="center"),
@@ -100,10 +109,10 @@ def _render_home_body(ctx):
 
         dmc.Divider(label="Mantenimiento", labelPosition="left", mb="xs"),
         dmc.SimpleGrid(cols={"base": 2, "md": 4}, spacing="xs", mb="md", children=[ # type: ignore
-            SmartWidget("h_mt", ExecutiveMiniKPIStrategy("mantenimiento", "dashboard", "total_mantenimiento", "Total", "green", "tabler:tool", layout_config={"height": 130})).render(ctx),
-            SmartWidget("h_mi", ExecutiveMiniKPIStrategy("mantenimiento", "dashboard", "costo_interno", "Interno", "teal", "tabler:building", layout_config={"height": 130})).render(ctx),
-            SmartWidget("h_me", ExecutiveMiniKPIStrategy("mantenimiento", "dashboard", "costo_externo", "Externo", "lime", "tabler:building-store", layout_config={"height": 130})).render(ctx),
-            SmartWidget("h_ml", ExecutiveMiniKPIStrategy("mantenimiento", "dashboard", "costo_llantas", "Llantas", "gray", "tabler:circle", layout_config={"height": 130})).render(ctx),
+            SmartWidget("h_mt", ExecutiveMiniKPIStrategy("maintenance", "dashboard", "total_maintenance_cost", "Total", "green", "tabler:tool", layout_config={"height": 130})).render(ctx),
+            SmartWidget("h_mi", ExecutiveMiniKPIStrategy("maintenance", "dashboard", "internal_labour_cost", "Interno", "teal", "tabler:building", layout_config={"height": 130})).render(ctx),
+            SmartWidget("h_me", ExecutiveMiniKPIStrategy("maintenance", "dashboard", "external_labour_cost", "Externo", "lime", "tabler:building-store", layout_config={"height": 130})).render(ctx),
+            SmartWidget("h_ml", ExecutiveMiniKPIStrategy("maintenance", "dashboard", "tire_cost", "Llantas", "gray", "tabler:circle", layout_config={"height": 130})).render(ctx),
         ]),
 
         dmc.Divider(label="Análisis de Cartera y Activos", labelPosition="left", mb="xs"),

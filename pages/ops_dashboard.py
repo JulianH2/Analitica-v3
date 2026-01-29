@@ -24,17 +24,17 @@ MAIN_KPI_H = 205
 VISUAL_H = 360
 top_layout = {"height": MAIN_KPI_H, "span": 2}
 
-w_inc = SmartWidget("go_inc", OpsGaugeStrategy("Ingreso Viaje", "ingreso_viaje", "indigo", layout_config=top_layout))
-w_tri = SmartWidget("go_tri", OpsGaugeStrategy("Viajes", "viajes", "green", prefix="", layout_config=top_layout))
-w_kms = SmartWidget("go_kms", OpsGaugeStrategy("Kilómetros", "kilometros", "yellow", prefix="", layout_config=top_layout))
+w_inc = SmartWidget("go_inc", OpsGaugeStrategy("Ingreso Viaje", "trip_revenue", "indigo", layout_config=top_layout))
+w_tri = SmartWidget("go_tri", OpsGaugeStrategy("Viajes", "trips", "green", prefix="", layout_config=top_layout))
+w_kms = SmartWidget("go_kms", OpsGaugeStrategy("Kilómetros", "kilometers", "yellow", prefix="", layout_config=top_layout))
 
-w_avg_trip = SmartWidget("avg_trip", OpsGaugeStrategy("Prom. x Viaje", "ingreso_viaje", "blue"))
-w_avg_unit = SmartWidget("avg_unit", OpsGaugeStrategy("Prom. x Unidad", "ingreso_unit", "indigo"))
-w_units_qty = SmartWidget("units_qty", OpsGaugeStrategy("Unidades Uso", "unidades_utilizadas", "violet"))
-w_customers = SmartWidget("customers", OpsGaugeStrategy("Clientes", "clientes_servidos", "teal"))
+w_avg_trip = SmartWidget("avg_trip", OpsGaugeStrategy("Prom. x Viaje", "average_trip_revenue", "blue"))
+w_avg_unit = SmartWidget("avg_unit", OpsGaugeStrategy("Prom. x Unidad", "average_unit_revenue", "indigo"))
+w_units_qty = SmartWidget("units_qty", OpsGaugeStrategy("Unidades Uso", "units_used", "violet"))
+w_customers = SmartWidget("customers", OpsGaugeStrategy("Clientes", "customers_served", "teal"))
 
-w_inc_comp = ChartWidget("co_inc_comp", OpsComparisonStrategy("Ingresos 2025 vs 2024", "ingresos_anual", "indigo", layout_config={"height": VISUAL_H}))
-w_trips_comp = ChartWidget("co_trips_comp", OpsComparisonStrategy("Viajes 2025 vs 2024", "viajes_anual", "green", layout_config={"height": VISUAL_H}))
+w_inc_comp = ChartWidget("co_inc_comp", OpsComparisonStrategy("Ingresos 2025 vs 2024", "annual_revenue", "indigo", layout_config={"height": VISUAL_H}))
+w_trips_comp = ChartWidget("co_trips_comp", OpsComparisonStrategy("Viajes 2025 vs 2024", "annual_trips", "green", layout_config={"height": VISUAL_H}))
 w_mix = ChartWidget("co_mix", OpsPieStrategy(layout_config={"height": 445}))
 w_unit_bal = ChartWidget("co_unit_bal", BalanceUnitStrategy(layout_config={"height": 380}))
 
@@ -48,7 +48,7 @@ def _render_body(ctx):
         val = safe_get(ctx, "operaciones.dashboard.utilizacion.valor", 92)
         return dmc.Paper(p="md", withBorder=True, radius="md", h=420, children=[
             dmc.Stack(justify="center", align="center", h="100%", children=[
-                dmc.Text("Estado de Carga de Flota", fw="bold", size="xs", c="dimmed", tt="uppercase"),  # type: ignore
+                dmc.Text("Estado de Carga de Flota", fw="bold", size="xs", c="dimmed", tt="uppercase"), # type: ignore
                 DashIconify(icon="tabler:truck-loading", width=60, color=DesignSystem.SUCCESS[5]),
                 dmc.Text(f"{val}% Cargado", fw="bold", size="xl", c="green"),
                 dmc.Progress(value=val, color="green", h=22, radius="xl", style={"width": "100%"}),
@@ -61,10 +61,10 @@ def _render_body(ctx):
                 dmc.Select(id="ops-year", data=["2025", "2024"], value="2025", variant="filled", style={"width": "100px"}, allowDeselect=False, size="sm")
             ]),
             dmc.GridCol(span="auto", children=[
-                dmc.ScrollArea(w="100%", type="scroll", scrollbarSize=6, offsetScrollbars=True, children=[ # type: ignore
+                dmc.ScrollArea(w="100%", type="scroll", scrollbarSize=6, offsetScrollbars="present", children=[
                     dmc.SegmentedControl(
                         id="ops-month", value="septiembre", color="blue", radius="md", size="sm", fullWidth=True, style={"minWidth": "800px"},
-                        data=[{"label": m, "value": m.lower()} for m in ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]] # type: ignore
+                        data=[m for m in ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]]
                     )
                 ])
             ])
@@ -95,24 +95,24 @@ def _render_body(ctx):
         collapsible_filters,
 
         dmc.SimpleGrid(
-            cols={"base": 1, "lg": 3},  # type: ignore
+            cols={"base": 1, "lg": 3}, # type: ignore
             spacing="md", mb="md", mt="xs", 
             children=[w_inc.render(ctx, mode="combined"), w_tri.render(ctx, mode="combined"), w_kms.render(ctx, mode="combined")]
         ),
         dmc.SimpleGrid(
-            cols={"base": 2, "sm": 4, "lg": 4},  # type: ignore
+            cols={"base": 2, "sm": 4, "lg": 4}, # type: ignore
             spacing="xs", mb="md", 
             children=[w_avg_trip.render(ctx), w_avg_unit.render(ctx), w_units_qty.render(ctx), w_customers.render(ctx)]
         ),
 
         dmc.Grid(gutter="xs", mb="md", children=[
-            dmc.GridCol(span={"base": 12, "md": 6}, children=[w_inc_comp.render(ctx)]),  # type: ignore
-            dmc.GridCol(span={"base": 12, "md": 6}, children=[w_trips_comp.render(ctx)]),  # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 6}, children=[w_inc_comp.render(ctx)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 6}, children=[w_trips_comp.render(ctx)]), # type: ignore
         ]),
 
         dmc.Grid(gutter="xs", mb="md", children=[
-            dmc.GridCol(span={"base": 12, "lg": 4}, children=[fleet_status()]),  # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 8}, children=[  # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 4}, children=[fleet_status()]), # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 8}, children=[ # type: ignore
                 dmc.Paper(p="md", withBorder=True, radius="md", h=420, children=[
                     dmc.Tabs(value="rutas", children=[
                         dmc.TabsList([
@@ -120,14 +120,14 @@ def _render_body(ctx):
                             dmc.TabsTab("Zonas de Vacío", value="vacio", leftSection=DashIconify(icon="tabler:map-pin-off"))
                         ]),
                         dmc.TabsPanel(dmc.ScrollArea(h=350, pt="xs", children=[table_ops_mgr.render_rutas(ctx)]), value="rutas"),
-                        dmc.TabsPanel(dmc.Center(h=350, children=dmc.Text("Sin datos", c="dimmed")), value="vacio")  # type: ignore
+                        dmc.TabsPanel(dmc.Center(h=350, children=dmc.Text("Sin datos", c="dimmed")), value="vacio") # type: ignore
                     ])
                 ])
             ])
         ]),
 
         dmc.Grid(gutter="xs", mb="md", children=[
-            dmc.GridCol(span={"base": 12, "md": 5}, children=[w_mix.render(ctx)]),  # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 5}, children=[w_mix.render(ctx)]), # type: ignore
 
             dmc.GridCol(span={"base": 12, "md": 7}, children=[ # type: ignore
                  dmc.Paper(p="md", withBorder=True, radius="md", children=[
@@ -135,7 +135,7 @@ def _render_body(ctx):
                     dmc.ScrollArea(
                         h=380,
                         type="auto",
-                        offsetScrollbars=True, # type: ignore
+                        offsetScrollbars='present',
                         children=[
                             dcc.Graph(
                                 figure=w_unit_bal.strategy.get_figure(ctx),

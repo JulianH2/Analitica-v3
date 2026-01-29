@@ -19,20 +19,20 @@ WIDGET_REGISTRY = {"wr_map": chart_route_map}
 
 def _render_ops_routes_body(ctx):
     filter_content = html.Div([
-        dmc.Grid(align="center", gutter="sm", mb="xs", children=[
+         dmc.Grid(align="center", gutter="sm", mb="xs", children=[
             dmc.GridCol(span="content", children=[
-                dmc.Select(id="route-year", data=["2025"], value="2025", variant="filled", style={"width": "100px"}, allowDeselect=False, size="sm")
+                dmc.Select(id="perf-year", data=["2025"], value="2025", variant="filled", style={"width": "100px"}, allowDeselect=False, size="sm")
             ]),
             dmc.GridCol(span="auto", children=[
-                dmc.ScrollArea(w="100%", type="scroll", scrollbarSize=6, offsetScrollbars=True, children=[ # type: ignore
+                dmc.ScrollArea(w="100%", type="scroll", scrollbarSize=6, offsetScrollbars="present", children=[
                     dmc.SegmentedControl(
-                        id="route-month", value="septiembre", color="blue", radius="md", size="sm", fullWidth=True, style={"minWidth": "800px"},
-                        data=[{"label": m, "value": m.lower()} for m in ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]] # type: ignore
+                        id="perf-month", value="septiembre", color="blue", radius="md", size="sm", fullWidth=True, style={"minWidth": "800px"},
+                        data=["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
                     )
                 ])
             ])
         ]),
-        dmc.SimpleGrid(cols={"base": 2, "md": 4, "lg": 6}, spacing="xs", children=[  # type: ignore
+        dmc.SimpleGrid(cols={"base": 2, "md": 4, "lg": 6}, spacing="xs", children=[ # type: ignore
             dmc.Select(label="Empresa Área", data=["Todas"], value="Todas", size="xs"),
             dmc.Select(label="Clasificación", data=["Todas"], value="Todas", size="xs"),
             dmc.Select(label="Unidad", data=["Todas"], value="Todas", size="xs"),

@@ -24,16 +24,7 @@ class AuthService:
             client_kwargs={'scope': 'openid email profile User.Read'}
         )
 
-        self.oauth.register(
-            name='google',
-            client_id=Config.GOOGLE_CLIENT_ID,
-            client_secret=Config.GOOGLE_CLIENT_SECRET,
-            server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-            client_kwargs={'scope': 'openid email profile'}
-        )
-
     def login_local(self, email, password):
-        """Valida usuario y contraseña contra base de datos local"""
         user_service = UserService()
         user = user_service.validate_local_login(email, password)
         if user:
@@ -50,7 +41,6 @@ class AuthService:
         if not client:
             return f"Proveedor de autenticación '{provider_name}' no configurado."
         return client.authorize_redirect(redirect_uri)
-
 
     def handle_social_callback(self, provider_name):
         try:

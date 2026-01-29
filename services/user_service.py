@@ -4,17 +4,13 @@ from data.db_service import db_service
 
 class UserService:
     def get_user_by_email(self, email):
-        """
-        Busca si el correo existe en PowerZam.licencia y retorna datos básicos.
-        Se usa para validar si el usuario que viene de Microsoft/Google tiene permiso.
-        """
         query = """
         SELECT 
             L.id_licencia, 
             L.correo_acceso,
             U.nombre, 
             U.apellido_paterno,
-            U.id_tipo_usuario -- Necesitamos esto para saber si es Admin (99)
+            U.id_tipo_usuario
         FROM PowerZam.licencia L
         LEFT JOIN PowerZam.usuario U ON L.id_licencia = U.id_licencia
         WHERE L.correo_acceso = :email AND L.id_estatus = 1
@@ -28,7 +24,6 @@ class UserService:
         return df.to_dict('records')[0]
 
     def validate_local_login(self, email, password_input):
-        """Valida usuario y contraseña local (para el formulario manual)."""
         query = """
         SELECT id_licencia, password 
         FROM PowerZam.licencia 
@@ -83,7 +78,6 @@ class UserService:
         return dwh_df.to_dict('records')
 
     def load_user_session(self, user_data):
-        """Carga toda la información necesaria en la sesión de Flask."""
         email = user_data['correo_acceso']
         id_tipo_usuario = int(user_data.get('id_tipo_usuario') or 0)
         
@@ -104,7 +98,7 @@ class UserService:
         session["role_id"] = id_tipo_usuario
         
         if databases:
-            session["current_db"] = "PowerZAM_tinsadb" #databases[0]["base_de_datos"]
+            session["current_db"] = "PowerZAM_tinsadb"
             session["current_client_logo"] = databases[0].get("url_logo") 
         
         session.modified = True 

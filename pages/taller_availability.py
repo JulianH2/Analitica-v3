@@ -8,9 +8,9 @@ from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
 from strategies.taller import (
     TallerNeedleGaugeStrategy, AvailabilityMonthlyStrategy,
-    AvailabilityKmEntriesStrategy, AvailabilityTableStrategy
+    AvailabilityKmEntriesStrategy, AvailabilityTableStrategy,
+    TallerRichKPIStrategy
 )
-from strategies.admin import AdminRichKPIStrategy
 
 dash.register_page(__name__, path="/taller-availability", title="Disponibilidad")
 
@@ -18,8 +18,9 @@ SCREEN_ID = "taller-availability"
 
 table_avail_mgr = AvailabilityTableStrategy()
 
-ga_pct_disp = SmartWidget("ga_disp", TallerNeedleGaugeStrategy("% Disponibilidad", "pct_disponibilidad"))
-ga_entries = SmartWidget("ga_ent", AdminRichKPIStrategy("mantenimiento.disponibilidad", "entradas_taller", "Entradas a Taller", "tabler:truck-entry", "indigo"))
+ga_pct_disp = SmartWidget("ga_disp", TallerNeedleGaugeStrategy("% Disponibilidad", "availability_pct"))
+
+ga_entries = SmartWidget("ga_ent", TallerRichKPIStrategy("workshop_entries_count", "Entradas a Taller", "tabler:truck-entry", "indigo"))
 
 ca_trend = ChartWidget("ca_trend", AvailabilityMonthlyStrategy())
 ca_km_entry = ChartWidget("ca_km_entry", AvailabilityKmEntriesStrategy())
@@ -31,42 +32,35 @@ WIDGET_REGISTRY = {
 
 def _render_taller_availability_body(ctx):
     return html.Div([
-        dmc.Paper(p="md", withBorder=True, mb="lg", children=[
-            dmc.SimpleGrid(cols={"base": 2, "md": 4, "lg": 8}, spacing="xs", children=[ # type: ignore
-                dmc.Select(label="Año", data=["2025"], value="2025", size="xs"),
-                dmc.Select(label="Mes", data=["07-Jul"], value="07-Jul", size="xs"),
-                dmc.Select(label="Empresa/Área", data=["Todas"], value="Todas", size="xs"),
-                dmc.Select(label="Unidad", data=["Todas"], value="Todas", size="xs"),
-                dmc.Select(label="Tipo Operación", data=["Todas"], value="Todas", size="xs"),
-                dmc.Select(label="Clasificación", data=["Todas"], value="Todas", size="xs"),
-                dmc.Select(label="Razón Reparación", data=["Todas"], value="Todas", size="xs"),
-                dmc.Select(label="Tipo Motor", data=["Todas"], value="Todas", size="xs"),
+        dmc.Paper(p="md", withBorder=True, mb="md", children=[
+            dmc.Grid(gutter="md", align="center", children=[
+                dmc.GridCol(span={"base": 12, "md": 4}, children=[ga_pct_disp.render(ctx)]), # type: ignore
+                dmc.GridCol(span={"base": 12, "md": 4}, children=[ga_entries.render(ctx)]), # type: ignore
+                dmc.GridCol(span={"base": 12, "md": 4}, children=[ # type: ignore
+                    dmc.Alert("La disponibilidad se calcula en base a la flota activa vs unidades en taller.", title="Nota", color="blue")
+                ])
             ])
         ]),
 
-        dmc.Text("INDICADORES DE DISPONIBILIDAD", fw="bold", mb="md", size="sm", c="gray"),
-        dmc.SimpleGrid(cols={"base": 1, "md": 2}, spacing="lg", mb="xl", children=[ # type: ignore
-            ga_pct_disp.render(ctx, mode="combined"),
-            ga_entries.render(ctx)
+        dmc.Grid(gutter="md", mb="md", children=[
+            dmc.GridCol(span={"base": 12, "lg": 6}, children=[ # type: ignore
+                 dmc.Paper(p="md", withBorder=True, radius="md", children=[ca_trend.render(ctx)])
+            ]),
+            dmc.GridCol(span={"base": 12, "lg": 6}, children=[ # type: ignore
+                 dmc.Paper(p="md", withBorder=True, radius="md", children=[ca_km_entry.render(ctx)])
+            ]),
         ]),
 
-        dmc.Grid(gutter="lg", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "md": 6}, children=[ca_trend.render(ctx, h=450)]), # type: ignore
-            dmc.GridCol(span={"base": 12, "md": 6}, children=[ca_km_entry.render(ctx, h=450)]), # type: ignore
-        ]),
-
-        dmc.Paper(p="md", withBorder=True, radius="md", children=[
-            dmc.Text("DETALLE DE DISPONIBILIDAD POR ÁREA / UNIDAD", fw="bold", mb="md", size="xs"),
-            dmc.ScrollArea(h=450, children=[table_avail_mgr.render(ctx)])
+        dmc.Paper(p="md", withBorder=True, children=[
+            dmc.Text("Detalle de Disponibilidad por Unidad", fw="bold", size="lg", mb="md"),
+            table_avail_mgr.render(ctx)
         ]),
 
         dmc.Space(h=50)
     ])
 
 def layout():
-    if not session.get("user"):
-        return dmc.Text("No autorizado...")
-
+    if not session.get("user"): return dmc.Text("No autorizado...")
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
 
     refresh_components, _ids = data_manager.dash_refresh_components(
@@ -101,12 +95,11 @@ def handle_click(n_clicks):
         return no_update, no_update, no_update
     if dash.ctx.triggered_id is None:
         return no_update, no_update, no_update
-
+    
     w_id = dash.ctx.triggered_id["index"]
     widget = WIDGET_REGISTRY.get(str(w_id))
-    if not widget:
-        return no_update, no_update, no_update
-
+    if not widget: return no_update, no_update, no_update
+    
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
-    cfg = widget.strategy.get_card_config(ctx)
-    return True, cfg.get("title", "Detalle"), widget.strategy.render_detail(ctx)
+    cfg = widget.strategy.get_title(ctx) if hasattr(widget.strategy, "get_title") else "Detalle"
+    return True, cfg, widget.strategy.render_detail(ctx)
