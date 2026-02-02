@@ -11,7 +11,7 @@ from strategies.operational import (
     OpsGaugeStrategy, OpsComparisonStrategy, OpsPieStrategy,
     BalanceUnitStrategy, OpsTableStrategy
 )
-from strategies.admin import AdminRichKPIStrategy
+from strategies.administration import AdminRichKPIStrategy
 from settings.theme import DesignSystem, SemanticColors
 from utils.helpers import safe_get
 

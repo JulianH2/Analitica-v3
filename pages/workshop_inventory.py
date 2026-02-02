@@ -7,11 +7,11 @@ from services.data_manager import data_manager
 from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
 from components.table_widget import TableWidget
-from strategies.taller import (
+from strategies.workshop import (
     InventoryGaugeStrategy, InventoryHistoricalTrendStrategy,
     InventoryAreaDistributionStrategy, InventoryDetailedTableStrategy
 )
-from strategies.admin import AdminRichKPIStrategy
+from strategies.administration import AdminRichKPIStrategy
 
 dash.register_page(__name__, path="/taller-inventory", title="Inventarios Almacén")
 

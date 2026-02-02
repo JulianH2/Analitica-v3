@@ -6,7 +6,7 @@ import dash_mantine_components as dmc
 from services.data_manager import data_manager
 from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
-from strategies.taller import (
+from strategies.workshop import (
     TallerGaugeStrategy, TallerNeedleGaugeStrategy, TallerTrendStrategy,
     TallerHorizontalBarStrategy, TallerDonutStrategy, TallerMaintenanceTypeStrategy
 )

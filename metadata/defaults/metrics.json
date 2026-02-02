@@ -339,5 +339,88 @@
       "aggregation": "SUM",
       "format": "currency"
     }
+  },
+  "unidades_utilizadas": {
+    "name": "Unidades Utilizadas",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "id_unidad",
+      "aggregation": "DISTINCTCOUNT"
+    },
+    "format": "integer"
+  },
+  "unidades_utilizadas_anterior": {
+    "name": "Unidades Utilizadas Año Anterior",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "id_unidad",
+      "aggregation": "DISTINCTCOUNT",
+      "time_modifier": "previous_year"
+    },
+    "format": "integer"
+  },
+  "pct_desviacion_unidades_vs_anterior": {
+    "name": "% Desviación Unidades Utilizadas vs Anterior",
+    "type": "derived",
+    "formula": "(unidades_utilizadas - unidades_utilizadas_anterior) / unidades_utilizadas_anterior",
+    "format": "percent"
+  },
+  "ingreso_unit": {
+    "name": "Ingreso por Tractocamión",
+    "type": "derived",
+    "formula": "ingreso_viaje / unidades_utilizadas",
+    "format": "currency"
+  },
+  "ingreso_unit_anterior": {
+    "name": "Ingreso por Unidad Año Anterior",
+    "type": "derived",
+    "formula": "ingreso_viaje_anterior / unidades_utilizadas_anterior",
+    "format": "currency"
+  },
+  "pct_desviacion_ingreso_unit_anterior": {
+    "name": "% Desviación Ingreso x Unidad vs Anterior",
+    "type": "derived",
+    "formula": "(ingreso_unit - ingreso_unit_anterior) / ingreso_unit_anterior",
+    "format": "percent"
+  },
+  "clientes_servidos": {
+    "name": "Clientes Servidos",
+    "recipe": {
+      "table": "d_trafico_guia",
+      "column": "id_cliente",
+      "aggregation": "DISTINCTCOUNT"
+    },
+    "format": "integer"
+  },
+  "clientes_servidos_anterior": {
+    "name": "Clientes Servidos Año Anterior",
+    "recipe": {
+      "table": "d_trafico_guia",
+      "column": "id_cliente",
+      "aggregation": "DISTINCTCOUNT",
+      "time_modifier": "previous_year"
+    },
+    "format": "integer"
+  },
+  "pct_desviacion_clientes_vs_anterior": {
+    "name": "% Desviación Clientes vs Anterior",
+    "type": "derived",
+    "formula": "(clientes_servidos - clientes_servidos_anterior) / clientes_servidos_anterior",
+    "format": "percent"
+  },
+  "viajes_cargados": {
+    "name": "Viajes con Carga",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "ind_cargado",
+      "aggregation": "SUM"
+    },
+    "format": "integer"
+  },
+  "utilizacion_flota": {
+    "name": "Porcentaje de Carga",
+    "type": "derived",
+    "formula": "(viajes_cargados / viajes) * 100",
+    "format": "percent"
   }
 }

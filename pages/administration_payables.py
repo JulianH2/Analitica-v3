@@ -8,7 +8,7 @@ from services.data_manager import data_manager
 from components.smart_widget import SmartWidget
 from components.table_widget import TableWidget
 from components.visual_widget import ChartWidget
-from strategies.admin import (
+from strategies.administration import (
     AdminRichKPIStrategy, PayablesGaugeStrategy, PayablesComparisonStrategy,
     PayablesMixStrategy, SupplierSaldoStrategy, PayablesAgingTableStrategy
 )

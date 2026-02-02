@@ -13,9 +13,9 @@ class RealDataService:
     def get_base_structure(self):
         return {
             "main": { "dashboard": { "kpis": {}, "charts": {}, "tables": {} } },
-            "operaciones": { "dashboard": { "kpis": {}, "charts": {}, "tables": {} } },
-            "administracion": { "dashboard": { "kpis": {}, "charts": {} } },
-            "mantenimiento": { "dashboard": { "kpis": {}, "charts": {} } }
+            "operational": { "dashboard": { "kpis": {}, "charts": {}, "tables": {} } },
+            "administration": { "dashboard": { "kpis": {}, "charts": {} } },
+            "workshop": { "dashboard": { "kpis": {}, "charts": {} } }
         }
     
     def _inject_main_data(self, data):
@@ -223,10 +223,42 @@ class RealDataService:
             ]
         }
         
+        main["charts"]["executive_summary"] = {
+            "type": "table",
+            "title": "Resumen Ejecutivo Detallado",
+            "headers": ["KPI", "Valor Actual", "Mes Anterior", "Meta", "Variación", "YTD", "Estatus"],
+            "rows": [
+                ["Ingresos por Viajes", "$20,946,909", "$21,868,572", "$23,889,249", "-4.21%", "$195,904,545", "⚠️"],
+                ["Costos Totales", "$9,716,281", "$9,976,187", "$9,500,000", "-2.61%", "$131,046,917", "⚠️"],
+                ["Utilidad Neta", "$11,230,628", "$11,892,385", "$14,389,249", "-5.56%", "$64,857,628", "🔴"],
+                ["Margen %", "53.61%", "54.39%", "60.0%", "-1.44%", "33.11%", "🟡"],
+                ["Viajes", "671", "773", "848", "-13.20%", "8,523", "🔴"],
+                ["Unidades Activas", "82", "99", "95", "-17.17%", "85.2", "🔴"],
+                ["Clientes Atendidos", "13", "12", "15", "+8.33%", "125", "🟢"],
+                ["Bancos M.N.", "$18,933,620", "$18,076,634", "$20,000,000", "+4.74%", "-", "🟢"],
+                ["Disponibilidad", "28.88%", "27.00%", "40.0%", "+6.96%", "29.54%", "🔴"],
+                ["Costo Mtto/Km", "$0.93", "$0.84", "$0.85", "+10.71%", "$0.90", "🔴"]
+            ]
+        }
+
+        main["kpis"]["load_status"] = {
+            "title": "Estado de Carga",
+            "value": 0.93,
+            "value_formatted": "93%",
+            "details": {
+                "cargado": 93,
+                "vacio": 7
+            },
+            "metadata": {
+                "type": "percent",
+                "category": "operational"
+            }
+        }
+
         return data
     
     def _inject_operational_data(self, data):
-        operational = data["operaciones"]["dashboard"]
+        operational = data["operational"]["dashboard"]
         
         operational["kpis"]["trip_revenue"] = KPICalculator.calculate_kpi(
             title="Ingreso por Viaje",
@@ -495,10 +527,253 @@ class RealDataService:
             }
         }
         
+        operational["kpis"]["profit_per_trip"] = KPICalculator.calculate_kpi(
+            title="Utilidad por Viaje",
+            current_value=0.1819,
+            previous_value=0.1700,
+            target_value=0.2500,
+            kpi_type="percent",
+            inverse=False
+        )
+
+        operational["kpis"]["total_trip_cost"] = KPICalculator.calculate_kpi(
+            title="Costo Total Viaje",
+            current_value=17098160,
+            previous_value=9971878,
+            target_value=9796576,
+            current_ytd_value=150000000,
+            kpi_type="currency",
+            unit="MXN",
+            inverse=True
+        )
+
+        operational["kpis"]["real_yield"] = KPICalculator.calculate_kpi(
+            title="Rendimiento Real (Km/Lt)",
+            current_value=1.86,
+            previous_value=1.79,
+            target_value=3.0,
+            kpi_type="number",
+            unit="km/lt",
+            inverse=False
+        )
+
+        operational["kpis"]["real_kilometers"] = KPICalculator.calculate_kpi(
+            title="Kilómetros Reales",
+            current_value=513165,
+            previous_value=579799,
+            target_value=592357,
+            current_ytd_value=4561615,
+            kpi_type="number",
+            unit="km",
+            inverse=False
+        )
+
+        operational["kpis"]["liters_consumed"] = KPICalculator.calculate_kpi(
+            title="Litros Consumidos",
+            current_value=275490,
+            previous_value=324556,
+            target_value=300000,
+            kpi_type="number",
+            unit="litros",
+            inverse=True
+        )
+        
+        operational["kpis"]["km_per_trip"] = {
+            "title": "Kms por Viaje",
+            "value": 716.71,
+            "value_formatted": "716.71 km",
+            "type": "number",
+            "unit": "km/viaje"
+        }
+
+        operational["kpis"]["liters_per_trip"] = {
+            "title": "Litros por Viaje",
+            "value": 384.76,
+            "value_formatted": "384.76 lt",
+            "type": "number",
+            "unit": "lt/viaje"
+        }
+
+        operational["charts"]["cost_and_profit_trends"] = {
+            "type": "bar_chart",
+            "chart_type": "stacked",
+            "title": "Costo Viaje Total y Monto Utilidad",
+            "description": "Desglose mensual del costo total vs utilidad",
+            "data": {
+                "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+                "series": [
+                    {
+                        "name": "Costo Total",
+                        "data": [15.5, 16.2, 15.8, 16.5, 17.0, 17.5, 17.1, 17.0, 17.1, 16.8, 16.5, 16.0],
+                        "color": "#EF476F"
+                    },
+                    {
+                        "name": "Utilidad",
+                        "data": [3.8, 4.1, 4.0, 4.2, 4.3, 4.5, 4.2, 4.0, 3.8, 3.7, 3.6, 3.5],
+                        "color": "#06D6A0"
+                    }
+                ],
+                "y_axis_label": "Millones MXN",
+                "x_axis_label": "Meses"
+            }
+        }
+
+        operational["charts"]["cost_by_concept"] = {
+            "type": "horizontal_bar_chart",
+            "title": "Costo Viaje Total por Concepto",
+            "description": "Distribución del costo total por concepto operativo",
+            "data": {
+                "categories": ["Combustible", "Sueldo Operador", "Estancias", "Percepción Operador", "Otros"],
+                "series": [
+                    {
+                        "name": "Costo Mensual",
+                        "data": [13.94, 2.27, 0.65, 3.06, 2.14],
+                        "color": "#118AB2"
+                    }
+                ],
+                "x_axis_label": "Millones MXN",
+                "y_axis_label": "Conceptos"
+            }
+        }
+
+        operational["charts"]["yield_trends"] = {
+            "type": "line_chart",
+            "title": "Rendimiento Real 2025 vs 2024",
+            "description": "Comparativa del rendimiento Km/Lt por mes",
+            "data": {
+                "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+                "series": [
+                    {
+                        "name": "2025 (Actual)",
+                        "data": [1.85, 1.83, 1.87, 1.89, 1.88, 1.86, 1.84, 1.82, 1.86, 1.87, 1.85, 1.83],
+                        "color": "#06D6A0"
+                    },
+                    {
+                        "name": "2024 (Anterior)",
+                        "data": [1.80, 1.82, 1.85, 1.83, 1.87, 1.89, 1.86, 1.84, 1.81, 1.82, 1.83, 1.81],
+                        "color": "#A3BAC3"
+                    }
+                ],
+                "y_axis_label": "Km/Lt",
+                "x_axis_label": "Meses"
+            }
+        }
+
+        operational["charts"]["yield_by_operation"] = {
+            "type": "donut_chart",
+            "title": "Rendimiento Real por Tipo Operación",
+            "description": "Rendimiento promedio por categoría operativa",
+            "data": {
+                "labels": ["REFINADOS", "ARENERA LOCAL", "CONTENEDOR FORÁNEO", "CONTENEDOR LOCAL", "VOLTEO FORÁNEO"],
+                "values": [2.10, 1.95, 1.88, 1.92, 1.85],
+                "colors": ["#EF476F", "#FFD166", "#06D6A0", "#118AB2", "#7209B7"],
+                "percentages": [25.3, 23.5, 18.7, 16.2, 16.3]
+            }
+        }
+
+        operational["charts"]["trip_details"] = {
+            "type": "table",
+            "title": "Detalle de Viajes y Guías",
+            "headers": ["No. Viaje", "Fecha", "Unidad", "Operador", "Ruta", "Cliente", "Kms", "Flete", "Estatus"],
+            "rows": [
+                ["9590", "16/09/2025", "UTI-T", "SALAZAR GONZALEZ LUIS", "CANOITAS-OWENS MTY", "OWENS AMERICA", "680", "$28,750", "COMPLETADO"],
+                ["9591", "16/09/2025", "U-118", "JUAN PEREZ", "MTY-MEX", "COCA COLA", "845", "$32,500", "COMPLETADO"],
+                ["9592", "17/09/2025", "U-106", "MARIO LOPEZ", "MEX-GUA", "PEPSI", "720", "$28,150", "COMPLETADO"],
+                ["9593", "17/09/2025", "U-21", "CARLOS GARCIA", "GUA-MTY", "LOGISTICA X", "890", "$34,200", "EN CURSO"],
+                ["9594", "18/09/2025", "U-60", "LUIS RAMIREZ", "MTY-GDL", "FEMSA", "650", "$25,800", "COMPLETADO"]
+            ],
+            "summary": {
+                "total_trips": 716,
+                "total_km": 439098,
+                "total_revenue": "$20,900,885",
+                "avg_revenue_per_trip": "$29,191"
+            }
+        }
+
+        operational["charts"]["guide_details"] = {
+            "type": "table",
+            "title": "Listado de Guías",
+            "headers": ["No. Guía", "Área", "Fecha", "Factura", "Cliente", "Flete", "Estatus"],
+            "rows": [
+                ["CPMC-004362", "CADEREYTA MULTIFLET", "12/08/2025", "FMC-4459", "MATERIAS PRIMAS MONTERREY", "$13,226", "CONFIRMADA"],
+                ["CPMC-004363", "MTY TINSA", "13/08/2025", "FMC-4460", "OWENS AMERICA", "$28,750", "FACTURADA"],
+                ["CPMC-004364", "MTY MULTIFLET", "14/08/2025", "FMC-4461", "VITRO VIDRIO", "$15,420", "PENDIENTE"],
+                ["CPMC-004365", "CADEREYTA TINSA", "15/08/2025", "FMC-4462", "PETROLEOS MEX", "$22,180", "CONFIRMADA"],
+                ["CPMC-004366", "EL CARMEN GRANEL", "16/08/2025", "FMC-4463", "CEMEX", "$18,350", "FACTURADA"]
+            ],
+            "summary": {
+                "total_guides": 850,
+                "total_flete": "$19,832,222",
+                "pending": 45,
+                "confirmed": 620,
+                "invoiced": 185
+            }
+        }
+
+        operational["charts"]["liquidation_summary"] = {
+            "type": "table",
+            "title": "Resumen de Liquidaciones",
+            "headers": ["No. Liquidación", "Fecha", "Operador", "Anticipo", "Costos", "Total", "Estatus"],
+            "rows": [
+                ["512", "09/09/2025", "SALAZAR GONZALEZ LUIS", "$9,400", "$4,600", "$14,000", "PAGADA"],
+                ["513", "10/09/2025", "JUAN PEREZ", "$8,200", "$5,100", "$13,300", "PAGADA"],
+                ["514", "11/09/2025", "MARIO LOPEZ", "$7,500", "$6,200", "$13,700", "PENDIENTE"],
+                ["515", "12/09/2025", "CARLOS GARCIA", "$6,800", "$4,900", "$11,700", "PAGADA"],
+                ["516", "13/09/2025", "LUIS RAMIREZ", "$5,900", "$5,500", "$11,400", "PENDIENTE"]
+            ],
+            "summary": {
+                "total_liquidations": 250,
+                "total_advance": "$450,000",
+                "total_costs": "$3,148,982",
+                "total_amount": "$3,598,982",
+                "paid": 220,
+                "pending": 30
+            }
+        }
+
+        operational["charts"]["income_by_unit_report"] = {
+            "type": "table",
+            "title": "Reporte Ingresos y Viajes x Unidad",
+            "headers": ["Unidad", "Viajes", "Kms Total", "Ingresos", "Costo Total", "Utilidad", "Utilidad/Km"],
+            "rows": [
+                ["U-118", "45", "36,540", "$1,147,500", "$892,650", "$254,850", "$6.97"],
+                ["U-106", "42", "32,880", "$1,029,600", "$803,088", "$226,512", "$6.89"],
+                ["U-21", "38", "30,020", "$941,600", "$734,448", "$207,152", "$6.90"],
+                ["U-60", "35", "26,950", "$845,250", "$659,295", "$185,955", "$6.90"],
+                ["U-46", "32", "24,640", "$772,800", "$602,784", "$170,016", "$6.90"]
+            ]
+        }
+
+        operational["charts"]["income_by_operator_report"] = {
+            "type": "table",
+            "title": "Reporte Ingresos y Viajes x Operador",
+            "headers": ["Operador", "Viajes", "Kms Total", "Ingresos", "Rendimiento (Km/Lt)", "Calificación"],
+            "rows": [
+                ["AGUILAR CAZARES GERARDO", "7", "8,530", "$267,050", "1.95", "4.8"],
+                ["AGUILAR YAÑEZ JORGE LUIS", "7", "6,967", "$218,050", "2.00", "4.9"],
+                ["ALANIS ALANIS AMBROCIO", "9", "3,726", "$116,650", "1.76", "4.2"],
+                ["ALMANZA CASTELLANOS MARTIN", "12", "15,430", "$483,050", "1.82", "4.5"],
+                ["AREVALO CASTILLO JULIO", "8", "9,850", "$308,400", "1.81", "4.4"]
+            ]
+        }
+
+        operational["charts"]["margin_by_route"] = {
+            "type": "table",
+            "title": "Margen por Ruta",
+            "headers": ["Ruta", "Viajes", "Ingreso Total", "Costo Total", "Utilidad", "Margen %", "Rendimiento (Km/Lt)"],
+            "rows": [
+                ["MTY-MEX", "84", "$2,730,000", "$2,129,400", "$600,600", "22.0%", "1.88"],
+                ["MEX-GUA", "76", "$2,470,000", "$1,926,600", "$543,400", "22.0%", "1.85"],
+                ["GUA-MTY", "92", "$2,990,000", "$2,332,200", "$657,800", "22.0%", "1.90"],
+                ["MTY-GDL", "68", "$2,210,000", "$1,723,800", "$486,200", "22.0%", "1.87"],
+                ["MTY-NL", "55", "$1,787,500", "$1,394,250", "$393,250", "22.0%", "1.84"]
+            ]
+        }
+
         return data
     
     def _inject_administration_data(self, data):
-        administration = data["administracion"]["dashboard"]
+        administration = data["administration"]["dashboard"]
         
         administration["kpis"]["billed_vs_collected"] = KPICalculator.calculate_kpi(
             title="Facturado vs Cobrado",
@@ -794,10 +1069,100 @@ class RealDataService:
             }
         }
         
+        administration["charts"]["aging_portfolio"] = {
+            "type": "table",
+            "title": "Antigüedad de Saldos - Cartera de Clientes",
+            "headers": ["Cliente", "SIN CARTA COBRO", "POR VENCER", "1-30 Días", "31-60 Días", "61-90 Días", "+90 Días", "Total"],
+            "rows": [
+                ["MATERIAS PRIMA", "$0", "$73M", "$530,764", "$1,023,308", "$1,513,372", "$15,430,407", "$91M"],
+                ["OWENS AMERICA", "$11M", "$13M", "$0", "$0", "$0", "$0", "$24M"],
+                ["VIDRIO PLANO", "$0", "$11M", "$0", "$0", "$0", "$23M", "$34M"],
+                ["PETROLEOS MEX", "$0", "$15M", "$0", "$0", "$0", "$0", "$15M"],
+                ["VITRO VIDRIO", "$0", "$12M", "$0", "$0", "$0", "$0", "$12M"]
+            ],
+            "total_row": ["TOTAL", "$11M", "$124M", "$531K", "$1,023K", "$1,513K", "$39M", "$176M"],
+            "color_coding": {
+                "1-30 Días": "yellow",
+                "31-60 Días": "orange", 
+                "61-90 Días": "red",
+                "+90 Días": "dark_red"
+            }
+        }
+
+        administration["charts"]["aging_payables"] = {
+            "type": "table",
+            "title": "Antigüedad de Saldos - Cuentas por Pagar",
+            "headers": ["Proveedor", "POR VENCER", "1-30 Días", "31-60 Días", "61-90 Días", "+90 Días", "Total"],
+            "rows": [
+                ["NEWYO GAS", "$700K", "$28,243", "$58,899", "$9,427", "$263,631", "$1,060K"],
+                ["INFORMATICA UG", "$690K", "$0", "$0", "$0", "$214,224", "$904K"],
+                ["LLANTAS Y REFAC", "$410K", "$0", "$0", "$1,950", "$0", "$412K"],
+                ["TRACTO REFACCI", "$110K", "$0", "$0", "$0", "$0", "$110K"],
+                ["TRACTO IMPORTA", "$150K", "$0", "$0", "$0", "$0", "$150K"]
+            ],
+            "total_row": ["TOTAL", "$2,060K", "$28K", "$59K", "$11K", "$478K", "$2,636K"]
+        }
+
+        administration["charts"]["invoice_month_detail"] = {
+            "type": "table",
+            "title": "Detalle Facturas del Mes",
+            "headers": ["Factura", "Fecha", "Cliente", "RFC", "Subtotal", "IVA", "Total", "Estatus"],
+            "rows": [
+                ["FMC-4459", "12/08/2025", "MATERIAS PRIMAS MONTERREY", "MPM250605123", "$11,224", "$1,796", "$13,020", "COBRADA"],
+                ["FMC-4460", "13/08/2025", "OWENS AMERICA", "OAI800101A34", "$24,364", "$3,898", "$28,262", "PENDIENTE"],
+                ["FMC-4461", "14/08/2025", "VITRO VIDRIO", "VVI750210A56", "$13,068", "$2,091", "$15,159", "COBRADA"],
+                ["FMC-4462", "15/08/2025", "PETROLEOS MEX", "PEM681022B78", "$18,796", "$3,007", "$21,803", "PENDIENTE"],
+                ["FMC-4463", "16/08/2025", "CEMEX", "CEM850304C90", "$15,551", "$2,488", "$18,039", "COBRADA"]
+            ],
+            "summary": {
+                "total_invoices": 120,
+                "total_subtotal": "$27,448,278",
+                "total_iva": "$4,391,724",
+                "total_amount": "$31,840,002",
+                "collected": "$18,193,148",
+                "pending": "$13,646,854"
+            }
+        }
+
+        administration["charts"]["bank_movements_by_concept"] = {
+            "type": "table",
+            "title": "Ingresos y Egresos Por Concepto",
+            "headers": ["Concepto", "Ingresos", "Egresos", "Neto"],
+            "rows": [
+                ["DEPÓSITOS CLIENTES", "$18,193,148", "$0", "+$18,193,148"],
+                ["PAGO A PROVEEDORES", "$0", "$2,973,856", "-$2,973,856"],
+                ["NÓMINA EMPLEADOS", "$0", "$1,039,662", "-$1,039,662"],
+                ["GASTOS OPERADORES", "$0", "$1,046,528", "-$1,046,528"],
+                ["IMPUESTOS FEDERALES", "$0", "$1,015,117", "-$1,015,117"],
+                ["COMISIONES BANCARIAS", "$0", "$1,804", "-$1,804"],
+                ["OTROS INGRESOS", "$39,707", "$0", "+$39,707"]
+            ],
+            "total_row": ["TOTAL", "$18,232,855", "$6,076,967", "+$12,155,888"]
+        }
+
+        administration["charts"]["payments_detail"] = {
+            "type": "table",
+            "title": "Detalle de Pagos del Mes",
+            "headers": ["Fecha", "Proveedor", "Concepto", "Referencia", "Monto", "Método Pago"],
+            "rows": [
+                ["01/09/2025", "NEWYO GAS", "COMBUSTIBLE SEPTIEMBRE", "PAGO-789012", "$1,250,000", "TRANSFERENCIA"],
+                ["05/09/2025", "INFORMATICA UG", "LICENCIAMIENTO SOFTWARE", "PAGO-789013", "$85,000", "TRANSFERENCIA"],
+                ["10/09/2025", "LLANTAS Y REFAC", "LLANTAS UNIDAD 118", "PAGO-789014", "$127,992", "CHEQUE"],
+                ["15/09/2025", "TRACTOCAMIONES KENWORTH", "REFACCIONES MOTOR", "PAGO-789015", "$204,437", "TRANSFERENCIA"],
+                ["20/09/2025", "TRACTO REFACCIONES ALLENDE", "REFACCIONES FRENOS", "PAGO-789016", "$167,192", "TRANSFERENCIA"]
+            ],
+            "summary": {
+                "total_payments": 45,
+                "total_amount": "$14,000,000",
+                "transfers": 32,
+                "checks": 13
+            }
+        }
+
         return data
    
     def _inject_workshop_data(self, data):
-        workshop = data["mantenimiento"]["dashboard"]
+        workshop = data["workshop"]["dashboard"]
         
         workshop["kpis"]["internal_cost"] = KPICalculator.calculate_kpi(
             title="Costo Taller Interno",
@@ -833,7 +1198,7 @@ class RealDataService:
         )
         
         workshop["kpis"]["total_maintenance_cost"] = KPICalculator.calculate_kpi(
-            title="Costo Total Mantenimiento",
+            title="Costo Total workshop",
             current_value=820164,
             previous_value=920000,
             target_value=952982,
@@ -916,7 +1281,7 @@ class RealDataService:
         
         workshop["charts"]["maintenance_cost_trend"] = {
             "type": "line_chart",
-            "title": "Costo Total Mantenimiento 2025 vs 2024",
+            "title": "Costo Total workshop 2025 vs 2024",
             "description": "Comparativa mensual en millones de pesos",
             "data": {
                 "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
@@ -945,7 +1310,7 @@ class RealDataService:
         
         workshop["charts"]["maintenance_cost_distribution"] = {
             "type": "donut_chart",
-            "title": "Distribución de Costos de Mantenimiento",
+            "title": "Distribución de Costos de workshop",
             "description": "Total: $820,164 MXN",
             "data": {
                 "labels": ["Taller Interno", "Taller Externo", "Llantas"],
@@ -958,8 +1323,8 @@ class RealDataService:
         
         workshop["charts"]["corrective_preventive"] = {
             "type": "bar_chart",
-            "title": "Mantenimiento Correctivo vs Preventivo",
-            "description": "Distribución por tipo de mantenimiento",
+            "title": "workshop Correctivo vs Preventivo",
+            "description": "Distribución por tipo de workshop",
             "data": {
                 "categories": ["CORRECTIVO", "PREVENTIVO"],
                 "series": [
@@ -970,7 +1335,7 @@ class RealDataService:
                     }
                 ],
                 "y_axis_label": "Miles MXN",
-                "x_axis_label": "Tipo de Mantenimiento"
+                "x_axis_label": "Tipo de workshop"
             }
         }
         
@@ -1024,7 +1389,7 @@ class RealDataService:
         workshop["charts"]["entries_vs_kilometers"] = {
             "type": "scatter_chart",
             "title": "Entradas a Taller vs Kilómetros Recorridos",
-            "description": "Relación entre uso y mantenimiento por unidad",
+            "description": "Relación entre uso y workshop por unidad",
             "data": {
                 "points": [
                     {"x": 14640, "y": 9, "label": "U-118", "color": "#EF476F", "size": 12},
@@ -1108,4 +1473,182 @@ class RealDataService:
             ]
         }
         
+        workshop["kpis"]["total_purchases"] = KPICalculator.calculate_kpi(
+            title="Compras Total",
+            current_value=5648478,
+            previous_value=6885581,
+            target_value=6000000,
+            current_ytd_value=37665913,
+            kpi_type="currency",
+            unit="MXN"
+        )
+
+        workshop["kpis"]["fuel_purchases"] = {
+            "title": "Combustible",
+            "value": 3923274,
+            "value_formatted": "$3,923,274",
+            "percentage_of_total": 69.46
+        }
+
+        workshop["kpis"]["parts_purchases"] = {
+            "title": "Refacciones",
+            "value": 1242447,
+            "value_formatted": "$1,242,447",
+            "percentage_of_total": 22.0
+        }
+
+        workshop["kpis"]["tire_purchases"] = {
+            "title": "Llantas",
+            "value": 329592,
+            "value_formatted": "$329,592",
+            "percentage_of_total": 5.84
+        }
+
+        workshop["kpis"]["initial_inventory"] = {
+            "title": "Inventario Inicial",
+            "value": 12926174,
+            "value_formatted": "$12,926,174",
+            "type": "currency",
+            "unit": "MXN"
+        }
+
+        workshop["kpis"]["current_valuation"] = KPICalculator.calculate_kpi(
+            title="Valorización Actual",
+            current_value=21111205,
+            previous_value=30384198,
+            target_value=30384198,
+            kpi_type="currency",
+            unit="MXN"
+        )
+
+        workshop["kpis"]["compliance_level"] = {
+            "title": "Nivel Cumplimiento",
+            "value": 47.32,
+            "value_formatted": "47.32%",
+            "type": "percent",
+            "status": "warning"
+        }
+
+        workshop["charts"]["purchases_by_area"] = {
+            "type": "horizontal_bar_chart",
+            "title": "Total Compra por Área",
+            "description": "Distribución de compras por ubicación",
+            "data": {
+                "categories": ["MTY TINSA", "CADEREYTA TINSA", "EL CARMEN GRANEL", "CADEREYTA MULTIFLET", "MTY MULTIFLET"],
+                "series": [
+                    {
+                        "name": "Compras",
+                        "data": [3.8, 0.6, 0.6, 0.6, 0.1],
+                        "color": "#06D6A0"
+                    }
+                ],
+                "x_axis_label": "Millones MXN",
+                "y_axis_label": "Área"
+            }
+        }
+
+        workshop["charts"]["top_suppliers_chart"] = {
+            "type": "bar_chart",
+            "title": "Top 10 Proveedores",
+            "description": "Principales proveedores por monto de compras",
+            "data": {
+                "categories": ["NEWYO GAS", "TECNOCAM", "TRACTOCAMIONES KENWORTH", "TRACTO REFACCI", "IM MOTRIZ", "LLANTAS Y REFAC", "ACCESORIOS ALLENDE", "PROVEEDORA DE LONAS", "CR3 SUPPLY", "TRACTO IMPORTACIONES"],
+                "series": [
+                    {
+                        "name": "Monto",
+                        "data": [3.92, 0.26, 0.20, 0.17, 0.15, 0.13, 0.07, 0.06, 0.06, 0.05],
+                        "color": "#118AB2"
+                    }
+                ],
+                "y_axis_label": "Millones MXN",
+                "x_axis_label": "Proveedores"
+            }
+        }
+
+        workshop["charts"]["valuation_by_area"] = {
+            "type": "bar_chart",
+            "title": "Valorización Actual por Área",
+            "description": "Distribución del inventario por ubicación",
+            "data": {
+                "categories": ["01-TINSA", "02-TINSA CAD", "03-MTY MULTIF", "04-MUL CAD", "05-GRANEL"],
+                "series": [
+                    {
+                        "name": "Valor Actual",
+                        "data": [9.77, 7.46, 1.97, 1.06, 0.86],
+                        "color": "#118AB2"
+                    }
+                ],
+                "y_axis_label": "Millones MXN",
+                "x_axis_label": "Área"
+            }
+        }
+
+        workshop["charts"]["maintenance_costs_by_unit"] = {
+            "type": "table",
+            "title": "Detalle Gastos x Unidad",
+            "headers": ["Unidad", "Costo Interno", "Costo Externo", "Costo Llantas", "Costo Total", "Entradas Taller"],
+            "rows": [
+                ["02", "$6,971", "$0", "$225", "$7,196", "3"],
+                ["03", "$3,850", "$0", "$9,270", "$13,120", "2"],
+                ["106", "$17,132", "$16,391", "$0", "$33,523", "7"],
+                ["118", "$45,280", "$28,450", "$3,150", "$76,880", "9"],
+                ["21", "$12,850", "$8,920", "$1,980", "$23,750", "5"]
+            ],
+            "total_row": ["TOTAL", "$603,880", "$197,773", "$18,510", "$820,164", "335"]
+        }
+
+        workshop["charts"]["service_orders_detail"] = {
+            "type": "table",
+            "title": "Detalle Órdenes de Servicio",
+            "headers": ["Orden", "Unidad", "Tipo Reparación", "Razón", "Costo Total", "Fecha Cierre", "Status"],
+            "rows": [
+                ["2307", "03", "CORRECTIVO", "CORRECTIVO TRACTOCAMION", "$9,266", "22/07/2025", "CERRADA"],
+                ["2300", "07", "CORRECTIVO", "CORRECTIVO TRACTOCAMION", "$10,351", "21/07/2025", "CERRADA"],
+                ["2299", "21", "PREVENTIVO", "workshop PREVENTIVO", "$3,850", "20/07/2025", "CERRADA"],
+                ["2298", "118", "CORRECTIVO", "REPARACIÓN MOTOR", "$15,280", "19/07/2025", "CERRADA"],
+                ["2297", "106", "CORRECTIVO", "REPARACIÓN FRENOS", "$8,920", "18/07/2025", "CERRADA"]
+            ],
+            "summary": {
+                "total_orders": 339,
+                "total_corrective": 278,
+                "total_preventive": 61,
+                "total_amount": "$820,164",
+                "closed": 327,
+                "open": 12
+            }
+        }
+        
+        workshop["charts"]["valuation_by_family"] = {
+            "type": "table",
+            "title": "Valorización por Familia",
+            "headers": ["Familia", "Valorización", "% Total", "Cantidad Items", "Estado"],
+            "rows": [
+                ["LLANTAS Y RINES", "$5,368,019", "25.43%", "5,651", "OK"],
+                ["DIESEL", "$3,171,020", "15.02%", "31,791,503", "OK"],
+                ["GENERAL", "$3,069,709", "14.54%", "149,811", "OK"],
+                ["MOTOR", "$2,567,111", "12.16%", "11,762", "OK"],
+                ["SUSPENSION", "$1,277,804", "6.05%", "2,383", "OK"]
+            ],
+            "total_row": ["TOTAL", "$21,111,205", "100.00%", "31,979,669", ""]
+        }
+
+        workshop["charts"]["open_orders"] = {
+            "type": "table",
+            "title": "Órdenes No Cerradas",
+            "headers": ["Orden", "Unidad", "Tipo Reparación", "Fecha Inicio", "Días Abierta", "Responsable"],
+            "rows": [
+                ["104", "118", "CORRECTIVO", "29/05/2024", "250", "TÉCNICO 1"],
+                ["406", "M-32", "PREVENTIVO", "26/12/2025", "10", "TÉCNICO 2"],
+                ["407", "U-21", "CORRECTIVO", "15/01/2025", "8", "TÉCNICO 3"],
+                ["408", "U-60", "CORRECTIVO", "20/01/2025", "3", "TÉCNICO 1"],
+                ["409", "U-46", "PREVENTIVO", "22/01/2025", "1", "TÉCNICO 2"]
+            ],
+            "summary": {
+                "total_open": 12,
+                "avg_days_open": 45,
+                "corrective": 9,
+                "preventive": 3
+            }
+        }
+
         return data
