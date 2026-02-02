@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 import calendar
+import datetime
 from typing import Optional
 from core.models.filters import DateFilter
 
@@ -8,6 +9,20 @@ class TimeService:
     @staticmethod
     def get_current_date() -> date:
         return date.today()
+    
+    @property
+    def current_year(self):
+        return datetime.date.today().year
+
+    @property
+    def previous_year(self):
+        return datetime.date.today().year - 1
+
+    @property
+    def current_month_name(self):
+        meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
+                 "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+        return meses[datetime.date.today().month - 1]
 
     @classmethod
     def resolve_filter(cls, date_filter: DateFilter) -> DateFilter:

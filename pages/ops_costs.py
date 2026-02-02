@@ -17,25 +17,20 @@ dash.register_page(__name__, path="/ops-costs", title="Costos Operaciones")
 SCREEN_ID = "ops-costs"
 table_ops_mgr = OpsTableStrategy()
 
-w_utilidad = SmartWidget("kc_utility", OpsGaugeStrategy("Utilidad Viaje", "trip_profit", "teal", prefix="%", section="dashboard"))
-w_total_cost = SmartWidget("kc_total", OpsGaugeStrategy("Costo Viaje Total", "total_cost", "red", section="dashboard"))
+w_utilidad = SmartWidget("kc_utility", OpsGaugeStrategy("Utilidad Viaje", "utilidad_viaje", "teal", prefix="%", section="costos"))
+w_costo_total = SmartWidget("kc_total", OpsGaugeStrategy("Costo Viaje Total", "costo_total", "red", section="costos"))
 
 chart_cost_stack = ChartWidget("cc_stack", CostUtilityStackedStrategy(layout_config={"height": 380}))
 chart_cost_breakdown = ChartWidget("cc_break", CostBreakdownStrategy(layout_config={"height": 380}))
-
 chart_cost_yearly_comp = ChartWidget(
     "cc_comp",
     OpsComparisonStrategy(
-        title="Costo Viaje Total 2025 vs 2024", 
-        data_key="cost_comparison", 
-        color="red", 
-        section="dashboard",
-        layout_config={"height": 380}, 
-        indicator_key_for_meta="total_cost"
+        "Costo Viaje Total 2025 vs 2024", "comparativa_costos", "red", section="costos",
+        layout_config={"height": 380}, indicator_key_for_meta="costo_total",
     )
 )
 
-WIDGET_REGISTRY = {"kc_utility": w_utilidad, "kc_total": w_total_cost}
+WIDGET_REGISTRY = {"kc_utility": w_utilidad, "kc_total": w_costo_total}
 
 def _render_ops_costs_body(ctx):
     filter_content = html.Div([
@@ -44,10 +39,10 @@ def _render_ops_costs_body(ctx):
                 dmc.Select(id="cost-year", data=["2025", "2024"], value="2025", variant="filled", style={"width": "100px"}, allowDeselect=False, size="sm")
             ]),
             dmc.GridCol(span="auto", children=[
-                dmc.ScrollArea(w="100%", type="scroll", scrollbarSize=6, offsetScrollbars="present", children=[
+                dmc.ScrollArea(w="100%", type="scroll", scrollbarSize=6, offsetScrollbars=True, children=[ # type: ignore
                     dmc.SegmentedControl(
                         id="cost-month", value="septiembre", color="blue", radius="md", size="sm", fullWidth=True, style={"minWidth": "800px"},
-                        data=[m.lower() for m in ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]]
+                        data=[{"label": m, "value": m.lower()} for m in ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]] # type: ignore
                     )
                 ])
             ])
@@ -78,7 +73,7 @@ def _render_ops_costs_body(ctx):
             dmc.GridCol(span={"base": 12, "lg": 4}, children=[ # type: ignore
                 dmc.Stack(gap="md", children=[
                     w_utilidad.render(ctx, mode="combined"),
-                    w_total_cost.render(ctx, mode="combined"),
+                    w_costo_total.render(ctx, mode="combined"),
                 ])
             ]),
             dmc.GridCol(span={"base": 12, "lg": 8}, children=[ # type: ignore

@@ -9,104 +9,149 @@ class SmartWidget:
         self.widget_id = widget_id
         self.strategy = strategy
 
-    def _get_delta_info(self, config, is_ytd=False):
-        prefix = "ytd_" if is_ytd else "monthly_"
-        delta = config.get(f"{prefix}delta") or (config.get("vs_2024") if not is_ytd else None)
-        label_text = ""
-        
-        if delta is not None:
-            val = float(delta)
-            return f"{val:+.1%}", SemanticColors.INGRESO if val >= 0 else SemanticColors.EGRESO, label_text
-        
-        label_key = "label_ytd" if is_ytd else "label_mes"
-        text = str(config.get(label_key, ""))
-        if "(" in text:
-            try:
-                pct = text.split("(")[1].replace(")", "")
-                return pct, SemanticColors.EGRESO if "-" in pct else SemanticColors.INGRESO, label_text
-            except: pass
-        return None, DesignSystem.SLATE[4], label_text
+    def render(self, data_context: Any, mode: str = "auto"):
+        try:
+            config = self.strategy.get_card_config(data_context)
+        except Exception as e:
+            print(f"Error rendering widget {self.widget_id}: {e}")
+            config = {"title": "Error", "value": "Err"}
 
-    def render(self, data_context: Any, mode: str = "simple"):
-        config = self.strategy.get_card_config(data_context)
         layout = getattr(self.strategy, 'layout', {})
         card_height = layout.get("height", 195)
         
-        m_pct, m_col, m_lab = self._get_delta_info(config)
-        y_pct, y_col, y_lab = self._get_delta_info(config, is_ytd=True)
+        figure = None
+        if hasattr(self.strategy, 'get_figure'):
+            try: figure = self.strategy.get_figure(data_context)
+            except: pass
 
-        extra_details = dmc.Stack(gap=2, mt=8, children=[
-            dmc.Group(justify="space-between", children=[
-                dmc.Text("Vs 2025:", size="10px", c="dimmed"), # type: ignore
-                dmc.Group(gap=4, children=[
-                    dmc.Text(str(config.get("monthly_display") or config.get("label_mes", "")).split(" (")[0], size="10px", fw=700, c=SemanticColors.TEXT_MUTED), # type: ignore
-                    dmc.Group(gap=2, children=[
-                        dmc.Text(m_lab, size="9px", c="dimmed", fs="italic"), # type: ignore
-                        dmc.Text(m_pct, size="10px", fw=700, c=m_col) # type: ignore
-                    ]) if m_pct else None
-                ])
-            ]) if config.get("label_mes") or config.get("monthly_display") else None,
-            dmc.Group(justify="space-between", children=[
-                dmc.Text("YTD:", size="10px", c="dimmed"), # type: ignore
-                dmc.Group(gap=4, children=[
-                    dmc.Text(str(config.get("ytd_display") or config.get("label_ytd", "")).split(" (")[0], size="10px", fw=700, c=SemanticColors.TEXT_MUTED), # type: ignore
-                    dmc.Group(gap=2, children=[
-                        dmc.Text(y_lab, size="9px", c="dimmed", fs="italic"), # type: ignore
-                        dmc.Text(y_pct, size="10px", fw=700, c=y_col) # type: ignore
-                    ]) if y_pct else None
-                ])
-            ]) if config.get("label_ytd") or config.get("ytd_display") else None,
+        val = config.get("main_value") or config.get("value")
+
+        if figure and val and not config.get("is_chart", False):
+            return self._render_combined(config, figure, card_height)
+        
+        if config.get("is_chart") or (figure and not val):
+            return self._render_chart_only(config, figure, card_height)
+
+        return self._render_scalar(config, card_height)
+
+    def _render_scalar(self, config, height):
+        header = self._build_header(config)
+        footer = self._build_footer(config)
+        
+        display_val = config.get("main_value") or config.get("value", "---")
+
+        main_value = dmc.Center(style={"flex": 1, "flexDirection": "column"}, children=[
+            dmc.Text(display_val, fw=800, fz="2rem", lh="1", ta="center", c=SemanticColors.TEXT_MAIN), # type: ignore
         ])
 
-        if mode == "combined":
-            return self._render_combined(config, extra_details, card_height, data_context)
-        
         return dmc.Paper(
-            p="sm", radius="md", withBorder=True, shadow="xs",
-            style={"height": card_height, "backgroundColor": DesignSystem.TRANSPARENT},
+            p="md", radius="md", withBorder=True, shadow="sm",
+            style={"height": height, "backgroundColor": DesignSystem.TRANSPARENT},
             children=dmc.Stack(justify="space-between", h="100%", gap=0, children=[
-                self._header(config),
-                dmc.Center(style={"flex": 1, "flexDirection": "column"}, children=[
-                    dmc.Text(config.get("value", "0"), fw=800, fz="1.6rem", lh="1", ta="center"), # type: ignore
-                    extra_details
-                ]),
-                self._footer(config)
+                header,
+                main_value,
+                footer
             ])
         )
 
-    def _render_combined(self, config, extra_details, height, ctx):
-        figure = self.strategy.get_figure(ctx)
+    def _render_combined(self, config, figure, height):
+        header = self._build_header(config)
+        footer = self._build_footer(config)
+        display_val = config.get("main_value") or config.get("value", "---")
+
+        if figure:
+            figure.update_layout(margin=dict(l=0, r=0, t=10, b=0), height=height - 90, showlegend=False, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+
         return dmc.Paper(
-            p="sm", radius="md", withBorder=True, shadow="xs",
+            p="sm", radius="md", withBorder=True, shadow="sm",
             style={"height": height, "backgroundColor": DesignSystem.TRANSPARENT},
-            children=dmc.Grid(align="stretch", style={"height": "100%"}, gutter=0, children=[
-                dmc.GridCol(span=7, children=dmc.Stack(justify="space-between", h="100%", p=4, children=[
-                    self._header(config),
-                    dmc.Box([
-                        dmc.Text(config.get("value", "0"), fw=800, fz="1.5rem", lh="1"), # type: ignore
-                    ]),
-                    extra_details
+            children=dmc.Grid(gutter="xs", align="stretch", style={"height": "100%"}, children=[
+                dmc.GridCol(span=5, children=dmc.Stack(justify="space-between", h="100%", gap=0, children=[
+                    header, dmc.Text(display_val, fw=800, fz="1.5rem", lh=1, mt=5), footer # type: ignore
                 ])),
-                dmc.GridCol(span=5, children=dmc.Stack(justify="center", align="center", gap=0, style={"height": "100%"}, children=[
-                    dcc.Graph(figure=figure, config={'displayModeBar': False}, style={"height": "140px", "width": "100%"}),
-                    dmc.Text(config.get("meta_text", ""), size="10px", c="dimmed", ta="center", mt=-10) # type: ignore
+                dmc.GridCol(span=7, children=html.Div(style={"height": "100%", "width": "100%"}, children=[
+                    dcc.Graph(figure=figure, config={'displayModeBar': False}, style={"height": "100%", "width": "100%"})
                 ]))
             ])
         )
 
-    def _header(self, config):
-        return dmc.Group(justify="space-between", align="flex-start", w="100%", children=[
-            dmc.Text(config.get("title", self.strategy.title), size="xs", c="dimmed", fw="bold", tt="uppercase"), # type: ignore
-            dmc.ThemeIcon(
-                DashIconify(icon=config.get("icon", self.strategy.icon), width=18),
-                variant="light", color=self.strategy.color, size="md", radius="md"
-            )
+    def _render_chart_only(self, config, figure, height):
+        header = self._build_header(config)
+        if figure:
+            figure.update_layout(margin=dict(l=5, r=5, t=5, b=5), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+
+        return dmc.Paper(
+            p="sm", radius="md", withBorder=True, shadow="sm",
+            style={"height": height, "backgroundColor": DesignSystem.TRANSPARENT},
+            children=dmc.Stack(h="100%", gap=0, children=[
+                header,
+                html.Div(style={"flex": 1, "marginTop": "-10px", "minHeight": 0}, children=dcc.Graph(figure=figure, config={'displayModeBar': False, 'responsive': True}, style={"height": "100%", "width": "100%"}))
+            ])
+        )
+
+    def _build_header(self, config):
+        title = config.get("title") or getattr(self.strategy, 'title', "")
+        icon = config.get("icon") or getattr(self.strategy, 'icon', "tabler:chart-bar")
+        color = config.get("color") or config.get("main_color") or getattr(self.strategy, 'color', "gray")
+        hex_color = DesignSystem.COLOR_MAP.get(color, color) if not color.startswith("#") else color
+
+        return dmc.Group(justify="space-between", align="flex-start", w="100%", mb=0, children=[
+            dmc.Text(title, size="xs", c="dimmed", fw="bold", tt="uppercase"), # type: ignore
+            dmc.ThemeIcon(DashIconify(icon=icon, width=18), variant="light", color=hex_color, size="md", radius="md") # type: ignore
         ])
 
-    def _footer(self, config):
-        return dmc.Group(justify="space-between", align="flex-end", w="100%", children=[
-            dmc.Stack(gap=0, children=[
-                dmc.Text(config.get("meta_text", ""), size="10px", c="dimmed") if config.get("is_simple") else None # type: ignore
-            ]),
-            dmc.Button("Detalles", variant="subtle", color="gray", size="compact-xs", w="90px", rightSection=DashIconify(icon="tabler:maximize", width=12)) if getattr(self.strategy, 'has_detail', False) else None
-        ])
+    def _build_footer(self, config):
+        if config.get("extra_rows"):
+            rows = []
+            for item in config.get("extra_rows"):
+                color = item.get("color", "dimmed")
+                if color == "green": color = "green"
+                elif color == "red": color = "red"
+                elif color == "blue": color = "blue"
+                rows.append(dmc.Group(justify="space-between", w="100%", children=[
+                    dmc.Text(item.get("label"), size="10px", c="dimmed", fw=500), # type: ignore
+                    dmc.Text(item.get("value"), size="10px", fw=700, c=color) # type: ignore
+                ]))
+            return dmc.Card(p=5, radius="sm", bg="gray.0", children=dmc.Stack(gap=2, w="100%", children=rows)) # type: ignore
+    
+        footer_items = []
+        is_inverse = config.get("inverse", False)
+        
+        def make_row(label, value, delta=None, delta_fmt=None):
+            if not value or value == "---": return None
+            badge = None
+            if delta is not None:
+                if delta > 0: color = "red" if is_inverse else "green"; prefix = "+"
+                elif delta < 0: color = "green" if is_inverse else "red"; prefix = ""
+                else: color = "gray"; prefix = ""
+                txt = delta_fmt if delta_fmt else f"{prefix}{delta:.1f}%"
+                badge = dmc.Badge(txt, color=color, variant="light", size="xs", style={"padding": "0 4px", "height": "16px", "fontSize": "9px"})
+            return dmc.Group(justify="space-between", w="100%", children=[
+                dmc.Group(gap=4, children=[
+                    dmc.Text(label, size="10px", c="dimmed"), # type: ignore
+                    dmc.Text(str(value), size="11px", fw=600, c="dark"), # type: ignore
+                ]),
+                badge
+            ])
+
+        prev_row = make_row(config.get("label_prev_year", "Año Ant:"), config.get("vs_last_year_formatted"), config.get("vs_last_year_delta"), config.get("vs_last_year_delta_formatted"))
+        if prev_row: footer_items.append(prev_row)
+
+        if config.get("target_formatted"):
+             meta_row = make_row("Meta:", config.get("target_formatted"), config.get("trend"), config.get("target_delta_formatted"))
+             if meta_row: footer_items.append(meta_row)
+
+        ytd_row = make_row("YTD:", config.get("ytd_formatted"), config.get("ytd_delta"), config.get("ytd_delta_formatted"))
+        if ytd_row: footer_items.append(ytd_row)
+
+        if not footer_items and config.get("trend") is not None:
+             trend = config.get("trend")
+             trend_txt = config.get("trend_text") or "vs Meta"
+             return dmc.Group(gap=4, mt=10, children=[
+                 dmc.Badge(f"{trend:+.1f}%", color="blue", variant="light", size="xs"),
+                 dmc.Text(trend_txt, size="10px", c="dimmed") # type: ignore
+             ])
+
+        if not footer_items: return html.Div(style={"height": "10px"})
+
+        return dmc.Stack(gap=4, w="100%", mt=8, children=footer_items)

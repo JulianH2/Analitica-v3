@@ -1,0 +1,444 @@
+{
+  "home": {
+    "section_key": "main",
+    "ttl_seconds": 30,
+    "kpi_roadmap": {
+      "trip_revenue": "trip_revenue",
+      "trip_costs": "trip_costs",
+      "net_profit": "net_profit",
+      "profit_margin": "profit_margin",
+      "trips": "trips",
+      "units_used": "units_used",
+      "customers_served": "customers_served",
+      "bank_balance": "bank_balance",
+      "units_availability": "units_availability",
+      "maintenance_cost_per_km": "maintenance_cost_per_km",
+      "total_maintenance": "total_maintenance",
+      
+      "fuel_yield": "fuel_yield",
+      "total_km": "total_km",
+      "total_liters": "total_liters",
+      "revenue_per_km": "revenue_per_km",
+      "mtto_interno": "mtto_interno",
+      "mtto_externo": "mtto_externo",
+      "mtto_llantas": "mtto_llantas"
+    },
+    "chart_roadmap": {
+      "main_indicators": {
+        "type": "line_chart",
+        "title": "Tendencia de Ingresos Mensual"
+      },
+      "client_portfolio": {
+        "type": "donut_chart",
+        "title": "Cartera por Estatus"
+      },
+      "supplier_balance": {
+        "type": "donut_chart",
+        "title": "Saldo por Proveedor"
+      },
+      "kpi_summary": {
+        "type": "table",
+        "title": "Resumen Ejecutivo"
+      }
+    },
+    "inject_paths": {
+      "trip_revenue": ["main", "dashboard", "kpis", "trip_revenue"],
+      "trip_costs": ["main", "dashboard", "kpis", "trip_costs"],
+      "net_profit": ["main", "dashboard", "kpis", "net_profit"],
+      "profit_margin": ["main", "dashboard", "kpis", "profit_margin"],
+      "trips": ["main", "dashboard", "kpis", "trips"],
+      "units_used": ["main", "dashboard", "kpis", "units_used"],
+      "customers_served": ["main", "dashboard", "kpis", "customers_served"],
+      "bank_balance": ["main", "dashboard", "kpis", "bank_balance"],
+      "units_availability": ["main", "dashboard", "kpis", "units_availability"],
+      "maintenance_cost_per_km": ["main", "dashboard", "kpis", "maintenance_cost_per_km"],
+      "total_maintenance": ["main", "dashboard", "kpis", "total_maintenance"],
+      
+      "fuel_yield": ["main", "dashboard", "kpis", "fuel_yield"],
+      "total_km": ["main", "dashboard", "kpis", "total_km"],
+      "total_liters": ["main", "dashboard", "kpis", "total_liters"],
+      "revenue_per_km": ["main", "dashboard", "kpis", "revenue_per_km"],
+      "mtto_interno": ["main", "dashboard", "kpis", "mtto_interno"],
+      "mtto_externo": ["main", "dashboard", "kpis", "mtto_externo"],
+      "mtto_llantas": ["main", "dashboard", "kpis", "mtto_llantas"],
+
+      "main_indicators": ["main", "dashboard", "charts", "main_indicators"],
+      "client_portfolio": ["main", "dashboard", "charts", "client_portfolio"],
+      "supplier_balance": ["main", "dashboard", "charts", "supplier_balance"]
+    }
+  },
+
+  "ops-dashboard": {
+    "section_key": "operational",
+    "ttl_seconds": 60,
+    "kpi_roadmap": {
+      "trip_revenue": "trip_revenue",
+      "trips": "trips",
+      "kilometers": "kilometers",
+      "units_used": "units_used",
+      "customers_served": "customers_served",
+      "fuel_efficiency": "fuel_efficiency",
+      "real_kilometers": "real_kilometers",
+      "fuel_consumption": "fuel_consumption",
+      "total_trip_cost": "total_trip_cost",
+      "profit_margin": "profit_margin",
+      "avg_revenue_per_trip": "avg_revenue_per_trip",
+      "avg_revenue_per_unit": "avg_revenue_per_unit"
+    },
+    "chart_roadmap": {
+      "revenue_trend": {
+        "type": "line_chart",
+        "title": "Tendencia de Ingresos Anual"
+      },
+      "trips_trend": {
+        "type": "line_chart",
+        "title": "Tendencia de Viajes Mensual"
+      },
+      "operation_type_distribution": {
+        "type": "donut_chart",
+        "title": "Distribución por Tipo de Operación"
+      },
+      "cost_breakdown": {
+        "type": "bar_chart",
+        "title": "Desglose de Costos Operativos"
+      },
+      "operator_performance": {
+        "type": "table",
+        "title": "Rendimiento por Operador"
+      },
+      "main_routes": {
+        "type": "table",
+        "title": "Rutas con Mayor Tráfico"
+      },
+      "routes_map": {
+        "type": "map_chart",
+        "title": "Mapa de Rutas Activas"
+      }
+    },
+    "inject_paths": {
+      "trip_revenue": ["operational", "dashboard", "kpis", "trip_revenue"],
+      "trips": ["operational", "dashboard", "kpis", "trips"],
+      "kilometers": ["operational", "dashboard", "kpis", "kilometers"],
+      "units_used": ["operational", "dashboard", "kpis", "units_used"],
+      "customers_served": ["operational", "dashboard", "kpis", "customers_served"],
+      "fuel_efficiency": ["operational", "dashboard", "kpis", "fuel_efficiency"],
+      "real_kilometers": ["operational", "dashboard", "kpis", "real_kilometers"],
+      "fuel_consumption": ["operational", "dashboard", "kpis", "fuel_consumption"],
+      "total_trip_cost": ["operational", "dashboard", "kpis", "total_trip_cost"],
+      "profit_margin": ["operational", "dashboard", "kpis", "profit_margin"],
+      "avg_revenue_per_trip": ["operational", "dashboard", "kpis", "avg_revenue_per_trip"],
+      "avg_revenue_per_unit": ["operational", "dashboard", "kpis", "avg_revenue_per_unit"],
+      
+      "revenue_trend": ["operational", "dashboard", "charts", "revenue_trend"],
+      "trips_trend": ["operational", "dashboard", "charts", "trips_trend"],
+      "operation_type_distribution": ["operational", "dashboard", "charts", "operation_type_distribution"],
+      "cost_breakdown": ["operational", "dashboard", "charts", "cost_breakdown"],
+      "operator_performance": ["operational", "dashboard", "charts", "operator_performance"],
+      "main_routes": ["operational", "dashboard", "charts", "main_routes"],
+      "routes_map": ["operational", "dashboard", "charts", "routes_map"]
+    }
+  },
+
+  "ops-costs": {
+    "section_key": "operational",
+    "ttl_seconds": 60,
+    "kpi_roadmap": {
+      "total_trip_cost": "total_trip_cost",
+      "fuel_consumption": "fuel_consumption",
+      "profit_margin": "profit_margin",
+      "fuel_efficiency": "fuel_efficiency"
+    },
+    "chart_roadmap": {
+      "cost_breakdown": {
+        "type": "bar_chart",
+        "title": "Desglose de Costos Operativos"
+      }
+    },
+    "inject_paths": {
+      "total_trip_cost": ["operational", "dashboard", "kpis", "total_trip_cost"],
+      "fuel_consumption": ["operational", "dashboard", "kpis", "fuel_consumption"],
+      "profit_margin": ["operational", "dashboard", "kpis", "profit_margin"],
+      "fuel_efficiency": ["operational", "dashboard", "kpis", "fuel_efficiency"],
+      "cost_breakdown": ["operational", "dashboard", "charts", "cost_breakdown"]
+    }
+  },
+
+  "ops-performance": {
+    "section_key": "operational",
+    "ttl_seconds": 30,
+    "kpi_roadmap": {
+      "fuel_efficiency": "fuel_efficiency",
+      "real_kilometers": "real_kilometers",
+      "fuel_consumption": "fuel_consumption",
+      "avg_revenue_per_trip": "avg_revenue_per_trip",
+      "avg_revenue_per_unit": "avg_revenue_per_unit"
+    },
+    "chart_roadmap": {
+      "operator_performance": {
+        "type": "table",
+        "title": "Rendimiento por Operador"
+      }
+    },
+    "inject_paths": {
+      "fuel_efficiency": ["operational", "dashboard", "kpis", "fuel_efficiency"],
+      "real_kilometers": ["operational", "dashboard", "kpis", "real_kilometers"],
+      "fuel_consumption": ["operational", "dashboard", "kpis", "fuel_consumption"],
+      "avg_revenue_per_trip": ["operational", "dashboard", "kpis", "avg_revenue_per_trip"],
+      "avg_revenue_per_unit": ["operational", "dashboard", "kpis", "avg_revenue_per_unit"],
+      "operator_performance": ["operational", "dashboard", "charts", "operator_performance"]
+    }
+  },
+
+  "ops-routes": {
+    "section_key": "operational",
+    "ttl_seconds": 30,
+    "kpi_roadmap": {
+      "trips": "trips",
+      "kilometers": "kilometers",
+      "customers_served": "customers_served"
+    },
+    "chart_roadmap": {
+      "main_routes": {
+        "type": "table",
+        "title": "Rutas con Mayor Tráfico"
+      },
+      "routes_map": {
+        "type": "map_chart",
+        "title": "Mapa de Rutas Activas"
+      },
+      "operation_type_distribution": {
+        "type": "donut_chart",
+        "title": "Distribución por Tipo de Operación"
+      }
+    },
+    "inject_paths": {
+      "trips": ["operational", "dashboard", "kpis", "trips"],
+      "kilometers": ["operational", "dashboard", "kpis", "kilometers"],
+      "customers_served": ["operational", "dashboard", "kpis", "customers_served"],
+      "main_routes": ["operational", "dashboard", "charts", "main_routes"],
+      "routes_map": ["operational", "dashboard", "charts", "routes_map"],
+      "operation_type_distribution": ["operational", "dashboard", "charts", "operation_type_distribution"]
+    }
+  },
+
+  "taller-dashboard": {
+    "section_key": "workshop",
+    "ttl_seconds": 30,
+    "kpi_roadmap": {
+      "internal_cost": "internal_cost",
+      "external_cost": "external_cost",
+      "tire_cost": "tire_cost",
+      "total_maintenance_cost": "total_maintenance_cost",
+      "cost_per_km": "cost_per_km",
+      "units_availability": "units_availability"
+    },
+    "chart_roadmap": {
+      "maintenance_cost_trend": {
+        "type": "line_chart",
+        "title": "Costo Total Mantenimiento 2025 vs 2024"
+      },
+      "maintenance_cost_distribution": {
+        "type": "donut_chart",
+        "title": "Distribución de Costos de Mantenimiento"
+      },
+      "corrective_preventive": {
+        "type": "bar_chart",
+        "title": "Mantenimiento Correctivo vs Preventivo"
+      },
+      "costs_by_family": {
+        "type": "horizontal_bar_chart",
+        "title": "Costos por Familia de Reparación"
+      }
+    },
+    "inject_paths": {
+      "internal_cost": ["workshop", "dashboard", "kpis", "internal_cost"],
+      "external_cost": ["workshop", "dashboard", "kpis", "external_cost"],
+      "tire_cost": ["workshop", "dashboard", "kpis", "tire_cost"],
+      "total_maintenance_cost": ["workshop", "dashboard", "kpis", "total_maintenance_cost"],
+      "cost_per_km": ["workshop", "dashboard", "kpis", "cost_per_km"],
+      "units_availability": ["workshop", "dashboard", "kpis", "units_availability"],
+      
+      "maintenance_cost_trend": ["workshop", "dashboard", "charts", "maintenance_cost_trend"],
+      "maintenance_cost_distribution": ["workshop", "dashboard", "charts", "maintenance_cost_distribution"],
+      "corrective_preventive": ["workshop", "dashboard", "charts", "corrective_preventive"],
+      "costs_by_family": ["workshop", "dashboard", "charts", "costs_by_family"]
+    }
+  },
+
+  "taller-availability": {
+    "section_key": "workshop",
+    "ttl_seconds": 30,
+    "kpi_roadmap": {
+      "units_availability": "units_availability",
+      "workshop_entries": "workshop_entries"
+    },
+    "chart_roadmap": {
+      "monthly_availability": {
+        "type": "line_chart",
+        "title": "% Disponibilidad Mensual 2025 vs 2024"
+      },
+      "entries_vs_kilometers": {
+        "type": "scatter_chart",
+        "title": "Entradas a Taller vs Kilómetros Recorridos"
+      },
+      "availability_detail": {
+        "type": "table",
+        "title": "Detalle de Disponibilidad por Área"
+      }
+    },
+    "inject_paths": {
+      "units_availability": ["workshop", "dashboard", "kpis", "units_availability"],
+      "workshop_entries": ["workshop", "dashboard", "kpis", "workshop_entries"],
+      
+      "monthly_availability": ["workshop", "dashboard", "charts", "monthly_availability"],
+      "entries_vs_kilometers": ["workshop", "dashboard", "charts", "entries_vs_kilometers"],
+      "availability_detail": ["workshop", "dashboard", "charts", "availability_detail"]
+    }
+  },
+
+  "taller-inventory": {
+    "section_key": "workshop",
+    "ttl_seconds": 30,
+    "kpi_roadmap": {
+      "inventory_valuation": "inventory_valuation",
+      "inventory_compliance": "inventory_compliance"
+    },
+    "chart_roadmap": {
+      "inventory_by_area": {
+        "type": "horizontal_bar_chart",
+        "title": "Valorización de Inventario por Área"
+      }
+    },
+    "inject_paths": {
+      "inventory_valuation": ["workshop", "dashboard", "kpis", "inventory_valuation"],
+      "inventory_compliance": ["workshop", "dashboard", "kpis", "inventory_compliance"],
+      
+      "inventory_by_area": ["workshop", "dashboard", "charts", "inventory_by_area"]
+    }
+  },
+
+  "taller-purchases": {
+    "section_key": "workshop",
+    "ttl_seconds": 30,
+    "kpi_roadmap": {
+      "total_purchases": "total_purchases"
+    },
+    "chart_roadmap": {
+      "monthly_purchases": {
+        "type": "line_chart",
+        "title": "Compras Mensuales 2025 vs 2024"
+      },
+      "purchases_by_type": {
+        "type": "donut_chart",
+        "title": "Compras por Tipo"
+      }
+    },
+    "inject_paths": {
+      "total_purchases": ["workshop", "dashboard", "kpis", "total_purchases"],
+      
+      "monthly_purchases": ["workshop", "dashboard", "charts", "monthly_purchases"],
+      "purchases_by_type": ["workshop", "dashboard", "charts", "purchases_by_type"]
+    }
+  },
+
+  "admin-banks": {
+    "section_key": "administration",
+    "ttl_seconds": 30,
+    "kpi_roadmap": {
+      "bank_availability": "bank_availability",
+      "credit_line_usage": "credit_line_usage",
+      "banregio_balance": "banregio_balance"
+    },
+    "chart_roadmap": {
+      "daily_bank_flow": {
+        "type": "area_chart",
+        "title": "Flujo Diario Bancario - Septiembre"
+      },
+      "bank_distribution": {
+        "type": "donut_chart",
+        "title": "Distribución por Institución Bancaria"
+      }
+    },
+    "inject_paths": {
+      "bank_availability": ["administration", "dashboard", "kpis", "bank_availability"],
+      "credit_line_usage": ["administration", "dashboard", "kpis", "credit_line_usage"],
+      "banregio_balance": ["administration", "dashboard", "kpis", "banregio_balance"],
+      
+      "daily_bank_flow": ["administration", "dashboard", "charts", "daily_bank_flow"],
+      "bank_distribution": ["administration", "dashboard", "charts", "bank_distribution"]
+    }
+  },
+
+  "admin-collection": {
+    "section_key": "administration",
+    "ttl_seconds": 30,
+    "kpi_roadmap": {
+      "billed_vs_collected": "billed_vs_collected",
+      "avg_collection_days": "avg_collection_days",
+      "client_portfolio": "client_portfolio",
+      "accumulated_billed": "accumulated_billed"
+    },
+    "chart_roadmap": {
+      "monthly_billing_comparison": {
+        "type": "line_chart",
+        "title": "Facturación Mensual 2025 vs 2024"
+      },
+      "portfolio_distribution": {
+        "type": "donut_chart",
+        "title": "Distribución de Cartera"
+      },
+      "portfolio_by_client": {
+        "type": "bar_chart",
+        "title": "Cartera por Cliente"
+      },
+      "billing_summary": {
+        "type": "table",
+        "title": "Resumen Facturación y Cobranza"
+      }
+    },
+    "inject_paths": {
+      "billed_vs_collected": ["administration", "dashboard", "kpis", "billed_vs_collected"],
+      "avg_collection_days": ["administration", "dashboard", "kpis", "avg_collection_days"],
+      "client_portfolio": ["administration", "dashboard", "kpis", "client_portfolio"],
+      "accumulated_billed": ["administration", "dashboard", "kpis", "accumulated_billed"],
+      
+      "monthly_billing_comparison": ["administration", "dashboard", "charts", "monthly_billing_comparison"],
+      "portfolio_distribution": ["administration", "dashboard", "charts", "portfolio_distribution"],
+      "portfolio_by_client": ["administration", "dashboard", "charts", "portfolio_by_client"],
+      "billing_summary": ["administration", "dashboard", "charts", "billing_summary"]
+    }
+  },
+
+  "admin-payables": {
+    "section_key": "administration",
+    "ttl_seconds": 30,
+    "kpi_roadmap": {
+      "ap_vs_paid": "ap_vs_paid",
+      "avg_payment_days": "avg_payment_days",
+      "ap_balance": "ap_balance"
+    },
+    "chart_roadmap": {
+      "monthly_ap_comparison": {
+        "type": "line_chart",
+        "title": "Cuentas por Pagar Mensual 2025 vs 2024"
+      },
+      "balance_by_supplier": {
+        "type": "bar_chart",
+        "title": "Saldo por Proveedor"
+      },
+      "ap_summary": {
+        "type": "table",
+        "title": "Resumen Cuentas por Pagar"
+      }
+    },
+    "inject_paths": {
+      "ap_vs_paid": ["administration", "dashboard", "kpis", "ap_vs_paid"],
+      "avg_payment_days": ["administration", "dashboard", "kpis", "avg_payment_days"],
+      "ap_balance": ["administration", "dashboard", "kpis", "ap_balance"],
+      
+      "monthly_ap_comparison": ["administration", "dashboard", "charts", "monthly_ap_comparison"],
+      "balance_by_supplier": ["administration", "dashboard", "charts", "balance_by_supplier"],
+      "ap_summary": ["administration", "dashboard", "charts", "ap_summary"]
+    }
+  }
+}

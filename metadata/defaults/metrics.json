@@ -1,7 +1,6 @@
 {
-
   "ingreso_viaje": {
-    "name": "Ingreso Viaje",
+    "name": "Ingreso Viaje (Subtotal)",
     "recipe": {
       "table": "h_viaje",
       "column": "subtotal",
@@ -9,7 +8,6 @@
       "format": "currency"
     }
   },
-  
   "ingreso_viaje_anterior": {
     "name": "Ingreso Viaje Año Anterior",
     "recipe": {
@@ -20,7 +18,6 @@
       "format": "currency"
     }
   },
-
   "ingreso_viaje_acumulado": {
     "name": "Ingreso Viaje Acumulado (YTD)",
     "recipe": {
@@ -31,7 +28,6 @@
       "format": "currency"
     }
   },
-
   "meta_ingreso_viaje": {
     "name": "Meta Ingreso Viaje",
     "recipe": {
@@ -41,7 +37,6 @@
       "format": "currency"
     }
   },
-
   "ingreso_esperado": {
     "name": "Ingreso Esperado",
     "description": "Alias de Meta para contextos de proyección",
@@ -52,21 +47,18 @@
       "format": "currency"
     }
   },
-
   "pct_desviacion_ingreso_vs_anterior": {
     "name": "% Desviación Ingreso vs Anterior",
     "type": "derived",
     "formula": "(ingreso_viaje - ingreso_viaje_anterior) / ingreso_viaje_anterior",
     "format": "percent"
   },
-
   "pct_desviacion_ingreso_acumulado": {
     "name": "% Desviación Ingreso Acumulado",
     "type": "derived",
     "formula": "(ingreso_viaje_acumulado - meta_ingreso_viaje_acumulado) / meta_ingreso_viaje_acumulado",
     "format": "percent"
   },
-
   "viajes": {
     "name": "Viajes",
     "recipe": {
@@ -76,7 +68,6 @@
       "format": "integer"
     }
   },
-
   "viajes_anterior": {
     "name": "Viajes Año Anterior",
     "recipe": {
@@ -87,7 +78,6 @@
       "format": "integer"
     }
   },
-
   "viajes_acumulado": {
     "name": "Viajes Acumulado (YTD)",
     "recipe": {
@@ -98,7 +88,6 @@
       "format": "integer"
     }
   },
-
   "meta_viajes": {
     "name": "Meta Viaje",
     "recipe": {
@@ -108,7 +97,6 @@
       "format": "integer"
     }
   },
-
   "viajes_esperado": {
     "name": "Viajes Esperado",
     "description": "Proyección de viajes basada en meta",
@@ -119,7 +107,6 @@
       "format": "integer"
     }
   },
-
   "meta_viajes_acumulado": {
     "name": "Meta Viajes Acumulado (YTD)",
     "recipe": {
@@ -130,28 +117,24 @@
       "format": "integer"
     }
   },
-
   "diff_viajes_vs_anterior": {
     "name": "Viajes vs Anterior",
     "type": "derived",
     "formula": "viajes - viajes_anterior",
     "format": "integer"
   },
-
   "pct_desviacion_viajes_vs_anterior": {
     "name": "% Desviación Viajes vs Anterior",
     "type": "derived",
-    "formula": "(viajes - viajes_anterior) / viajes_anterior if viajes_anterior else 0",
+    "formula": "(viajes - viajes_anterior) / viajes_anterior",
     "format": "percent"
   },
-
   "pct_desviacion_viajes_acumulado": {
     "name": "% Desviación Viajes Acumulado",
     "type": "derived",
-    "formula": "(viajes_acumulado - meta_viajes_acumulado) / meta_viajes_acumulado if meta_viajes_acumulado else 0",
+    "formula": "(viajes_acumulado - meta_viajes_acumulado) / meta_viajes_acumulado",
     "format": "percent"
   },
-
   "kilometros": {
     "name": "Kms Recorridos",
     "recipe": {
@@ -161,7 +144,6 @@
       "format": "integer"
     }
   },
-
   "kilometros_anterior": {
     "name": "Kms Recorridos Año Anterior",
     "recipe": {
@@ -172,7 +154,6 @@
       "format": "integer"
     }
   },
-
   "kilometros_acumulado": {
     "name": "Kms Recorridos Acumulado (YTD)",
     "recipe": {
@@ -183,7 +164,6 @@
       "format": "integer"
     }
   },
-
   "meta_kilometros": {
     "name": "Meta Kms Real",
     "recipe": {
@@ -193,7 +173,6 @@
       "format": "integer"
     }
   },
-
   "kilometros_esperado": {
     "name": "Kilómetros Esperado",
     "description": "Alias de Meta Kms para proyecciones",
@@ -204,7 +183,6 @@
       "format": "integer"
     }
   },
-
   "meta_ingreso_viaje_acumulado": {
     "name": "Meta Ingreso Viaje Acumulado (YTD)",
     "recipe": {
@@ -215,7 +193,6 @@
       "format": "currency"
     }
   },
-
   "meta_kilometros_acumulado": {
     "name": "Meta Kms Real Acumulado (YTD)",
     "recipe": {
@@ -226,32 +203,141 @@
       "format": "integer"
     }
   },
-
   "pct_desviacion_kilometros_vs_anterior": {
     "name": "% Desviación Kms Real vs Anterior",
     "type": "derived",
-    "formula": "(kilometros - kilometros_anterior) / kilometros_anterior if kilometros_anterior else 0",
+    "formula": "(kilometros - kilometros_anterior) / kilometros_anterior",
     "format": "percent"
   },
-
-  "color_desviacion_kilometros_vs_anterior": {
-    "name": "Color Desviación Kms Real vs Anterior",
-    "type": "derived",
-    "formula": "'green' if pct_desviacion_kilometros_vs_anterior >= 0 else 'red'",
-    "format": "string"
-  },
-
   "pct_desviacion_kilometros_acumulado": {
     "name": "% Desviación Kms Real Acumulado",
     "type": "derived",
-    "formula": "(kilometros_acumulado - meta_kilometros_acumulado) / meta_kilometros_acumulado if meta_kilometros_acumulado else 0",
+    "formula": "(kilometros_acumulado - meta_kilometros_acumulado) / meta_kilometros_acumulado",
     "format": "percent"
   },
-
-  "color_desviacion_kilometros_acumulado": {
-    "name": "Color Desviación Kms Real Acumulado",
+  "costo_viaje": {
+    "name": "Costo Viaje Total",
+    "recipe": {
+      "table": "h_viajes_gastos_liquidacion",
+      "column": "monto_concepto",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "flete": {
+    "name": "Flete",
+    "recipe": {
+      "table": "h_viaje",
+      "column": "flete",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "otros_costos": {
+    "name": "Otros Costos",
+    "recipe": {
+      "table": "h_viaje",
+      "column": "otros",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "kms_viaje": {
+    "name": "Kms Viaje",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "kms_viaje",
+      "aggregation": "SUM",
+      "format": "integer"
+    },
+    "description": "Justificación KB: d_viaje[kms_viaje] (cite: 140)"
+  },
+  "otros_ingresos": {
+    "name": "Otros Ingresos",
     "type": "derived",
-    "formula": "'green' if pct_desviacion_kilometros_acumulado >= 0 else 'red'",
-    "format": "string"
+    "formula": "ingreso_viaje - flete",
+    "format": "currency"
+  },
+  "sueldo_operador": {
+    "name": "Sueldo Operador",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "sueldo_operador",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "costo_liquidacion": {
+    "name": "Costo Liquidación",
+    "recipe": {
+      "table": "h_viajes_gastos_liquidacion",
+      "column": "monto_concepto",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "ingreso_x_km": {
+    "name": "Ingreso x Km",
+    "type": "derived",
+    "formula": "ingreso_viaje / kms_viaje if kms_viaje else 0",
+    "format": "currency"
+  },
+  "ingreso_x_viaje": {
+    "name": "Ingreso x Viaje",
+    "type": "derived",
+    "formula": "ingreso_viaje / viajes if viajes else 0",
+    "format": "currency"
+  },
+  "costo_viaje_total": {
+    "name": "Costo Viaje Total",
+    "type": "derived",
+    "formula": "costo_liquidacion",
+    "format": "currency",
+    "description": "Base para cálculo de utilidad"
+  },
+  "utilidad": {
+    "name": "Monto Utilidad",
+    "type": "derived",
+    "formula": "ingreso_viaje - costo_viaje_total",
+    "format": "currency"
+  },
+  "margen_utilidad": {
+    "name": "% Margen Utilidad Viaje",
+    "type": "derived",
+    "formula": "(ingreso_viaje - costo_viaje_total) / ingreso_viaje if ingreso_viaje else 0",
+    "format": "percent"
+  },
+  "costo_x_km": {
+    "name": "Costo Viaje x Km",
+    "type": "derived",
+    "formula": "costo_viaje_total / kms_viaje if kms_viaje else 0",
+    "format": "currency"
+  },
+  "combustible": {
+    "name": "Combustible",
+    "recipe": {
+      "table": "h_viajes_gastos_liquidacion",
+      "column": "monto_combustible",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "caseta_iave": {
+    "name": "Caseta IAVE",
+    "recipe": {
+      "table": "h_viajes_gastos_liquidacion",
+      "column": "monto_caseta_iave",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "caseta_efectivo": {
+    "name": "Caseta Efectivo",
+    "recipe": {
+      "table": "h_viajes_gastos_liquidacion",
+      "column": "monto_caseta_efectivo",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
   }
 }

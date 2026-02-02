@@ -158,7 +158,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
 
     db_selector = dmc.Select(
         id="db-selector",
-        data=db_options,
+        data=db_options, # type: ignore
         value=final_value,
         leftSection=DashIconify(icon="tabler:database", width=16),
         size="xs", radius="md", variant="filled",

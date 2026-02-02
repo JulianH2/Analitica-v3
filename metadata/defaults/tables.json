@@ -15,20 +15,10 @@
         "type": "INNER",
         "on": "h_viaje.id_tipo_operacion = d_tipo_operacion.id_tipo_operacion"
       },
-      "area": { 
+      "area": {
         "target_table": "d_area",
         "type": "INNER",
         "on": "h_viaje.id_area = d_area.id_area"
-      },
-      "cliente": {
-        "target_table": "d_trafico_cliente",
-        "type": "INNER",
-        "on": "h_viaje.id_cliente = d_trafico_cliente.id_cliente"
-      },
-      "estatus": {
-        "target_table": "d_estatus_guia",
-        "type": "LEFT",
-        "on": "h_viaje.id_estatus = d_estatus_guia.id_estatus"
       }
     }
   },
@@ -37,6 +27,9 @@
     "type": "dim",
     "pk": "no_viaje",
     "description": "Tabla operativa de viajes con detalles de ruta y kilometraje",
+    "fields": {
+      "ind_cargado": "integer"
+    },
     "joins": {
       "ruta": {
         "target_table": "d_ruta",
@@ -52,6 +45,11 @@
         "target_table": "d_personal",
         "type": "INNER",
         "on": "d_viaje.id_operador = d_personal.id_personal"
+      },
+      "relacion_cp": {
+        "target_table": "h_relacion_viaje_cp",
+        "type": "INNER",
+        "on": "d_viaje.id_area = h_relacion_viaje_cp.id_area AND d_viaje.no_viaje = h_relacion_viaje_cp.no_viaje"
       }
     }
   },
@@ -70,22 +68,26 @@
     "table_name": "h_viajes_gastos_liquidacion",
     "type": "fact",
     "pk": "id_gasto",
-    "date_column": "fecha_gasto",
     "joins": {
-      "viaje": {
-        "target_table": "h_viaje",
+      "liquidacion": {
+        "target_table": "d_liquidacion",
         "type": "INNER",
-        "on": "h_viajes_gastos_liquidacion.no_viaje = h_viaje.no_viaje"
+        "on": "h_viajes_gastos_liquidacion.id_area_liq = d_liquidacion.id_area AND h_viajes_gastos_liquidacion.no_liquidacion = d_liquidacion.no_liquidacion"
       },
       "concepto": {
         "target_table": "d_trafico_concepto",
         "type": "INNER",
         "on": "h_viajes_gastos_liquidacion.id_concepto = d_trafico_concepto.id_concepto"
       },
-      "clasificacion": {
-        "target_table": "d_trafico_concepto_clasificacion",
-        "type": "LEFT",
-        "on": "h_viajes_gastos_liquidacion.id_clasificacion = d_trafico_concepto_clasificacion.id_clasificacion"
+      "gpogasto": {
+        "target_table": "d_trafico_gpogasto",
+        "type": "INNER",
+        "on": "h_viajes_gastos_liquidacion.id_gpogasto = d_trafico_gpogasto.id_gpogasto"
+      },
+      "viaje": {
+        "target_table": "d_viaje",
+        "type": "INNER",
+        "on": "h_viajes_gastos_liquidacion.id_area_viaje = d_viaje.id_area AND h_viajes_gastos_liquidacion.no_viaje = d_viaje.no_viaje"
       }
     }
   },
@@ -111,13 +113,52 @@
     "table_name": "d_personal",
     "type": "dim",
     "pk": "id_personal",
-    "label_column": "nombre_completo"
+    "label_column": "nombre"
   },
   "d_trafico_cliente": {
     "table_name": "d_trafico_cliente",
     "type": "dim",
     "pk": "id_cliente",
     "label_column": "nombre_cliente"
+  },
+  "d_trafico_guia": {
+    "table_name": "d_trafico_guia",
+    "type": "dim",
+    "pk": "pk_guia",
+    "joins": {
+      "estatus_guia": {
+        "target_table": "d_estatus_guia",
+        "type": "INNER",
+        "on": "d_trafico_guia.estatus_guia = d_estatus_guia.id_estatus_guia"
+      },
+      "guia_proceso_cancelasat": {
+        "target_table": "d_guia_proceso_cancelasat",
+        "type": "LEFT",
+        "on": "d_trafico_guia.num_guia = d_guia_proceso_cancelasat.factura"
+      },
+      "cliente": {
+        "target_table": "d_trafico_cliente",
+        "type": "INNER",
+        "on": "d_trafico_guia.id_cliente = d_trafico_cliente.id_cliente"
+      }
+    }
+  },
+  "h_relacion_viaje_cp": {
+    "table_name": "h_relacion_viaje_cp",
+    "type": "fact",
+    "pk": "id_relacion",
+    "joins": {
+      "guia": {
+        "target_table": "d_trafico_guia",
+        "type": "INNER",
+        "on": "h_relacion_viaje_cp.id_area_guia = d_trafico_guia.id_area AND h_relacion_viaje_cp.no_guia = d_trafico_guia.no_guia"
+      },
+      "viaje": {
+        "target_table": "d_viaje",
+        "type": "INNER",
+        "on": "h_relacion_viaje_cp.id_area = d_viaje.id_area AND h_relacion_viaje_cp.no_viaje = d_viaje.no_viaje"
+      }
+    }
   },
   "d_trafico_concepto": {
     "table_name": "d_trafico_concepto",
@@ -145,5 +186,34 @@
     "type": "dim",
     "pk": "id_tipo_operacion",
     "label_column": "tipo_operacion"
+  },
+  "d_liquidacion": {
+    "table_name": "d_liquidacion",
+    "type": "dim",
+    "pk": "pk_liquidacion",
+    "business_key": [
+      "id_area",
+      "no_liquidacion"
+    ]
+  },
+  "d_trafico_gpogasto": {
+    "table_name": "d_trafico_gpogasto",
+    "type": "dim",
+    "pk": "id_gpogasto"
+  },
+  "d_tipo_unidad": {
+    "table_name": "d_tipo_unidad",
+    "type": "dim",
+    "pk": "id_tipo_unidad"
+  },
+  "d_estatus_guia": {
+    "table_name": "d_estatus_guia",
+    "type": "dim",
+    "pk": "id_estatus_guia"
+  },
+  "d_guia_proceso_cancelasat": {
+    "table_name": "d_guia_proceso_cancelasat",
+    "type": "dim",
+    "pk": "factura"
   }
 }

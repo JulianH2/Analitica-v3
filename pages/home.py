@@ -1,152 +1,122 @@
 from flask import session
-import dash
-from dash import html, callback, Input, Output, ALL, no_update
 import dash_mantine_components as dmc
+from dash import html
+import dash
+from dash import callback, Input, Output, ALL, no_update
 from dash_iconify import DashIconify
-
 from services.data_manager import data_manager
 from components.smart_widget import SmartWidget
 from components.visual_widget import ChartWidget
 from strategies.executive import ExecutiveKPIStrategy, ExecutiveMiniKPIStrategy, ExecutiveDonutStrategy
 from strategies.charts import MainTrendChartStrategy
-from strategies.operational import FleetEfficiencyStrategy
 from utils.helpers import safe_get
 
 dash.register_page(__name__, path="/", title="Dashboard Principal")
-
 SCREEN_ID = "home"
 
-MAIN_KPI_H = 205
-top_layout = {"height": MAIN_KPI_H, "span": 2}
+top_layout = {"height": 220, "span": 2}
+mini_layout = {"height": 140, "span": 2}
 
-w_income = SmartWidget("h_inc", ExecutiveKPIStrategy("operational", "dashboard", "trip_revenue", "Ingresos", "tabler:coin", "blue", layout_config=top_layout))
-w_costs = SmartWidget("h_cost", ExecutiveKPIStrategy("operational", "dashboard", "total_cost", "Costos", "tabler:wallet", "red", layout_config=top_layout))
-w_margin = SmartWidget("h_marg", ExecutiveKPIStrategy("operational", "dashboard", "trip_profit", "% Margen", "tabler:chart-pie", "green", is_pct=True, layout_config=top_layout))
+w_income = SmartWidget("h_inc", ExecutiveKPIStrategy(SCREEN_ID, "trip_revenue", "Ingresos", "tabler:coin", "blue", layout_config=top_layout))
+w_costs = SmartWidget("h_cost", ExecutiveKPIStrategy(SCREEN_ID, "trip_costs", "Costos", "tabler:wallet", "red", layout_config=top_layout, inverse=True))
+w_margin = SmartWidget("h_marg", ExecutiveKPIStrategy(SCREEN_ID, "profit_margin", "% Margen", "tabler:chart-pie", "green", is_pct=True, layout_config=top_layout))
+w_bank = SmartWidget("h_bank", ExecutiveKPIStrategy(SCREEN_ID, "bank_balance", "Bancos M.N.", "tabler:building-bank", "indigo", layout_config=top_layout))
 
-w_viajes = SmartWidget("h_via", ExecutiveMiniKPIStrategy("operational", "dashboard", "trips", "Viajes", "blue", "tabler:steering-wheel", layout_config=top_layout))
-w_units = SmartWidget("h_uni", ExecutiveMiniKPIStrategy("operational", "dashboard", "units_used", "Unidades", "cyan", "tabler:bus", layout_config=top_layout))
-w_clients = SmartWidget("h_cli", ExecutiveMiniKPIStrategy("operational", "dashboard", "customers_served", "Clientes", "indigo", "tabler:users", layout_config=top_layout))
+w_yield = SmartWidget("h_yld", ExecutiveKPIStrategy(SCREEN_ID, "fuel_yield", "Rendimiento", "tabler:gas-station", "orange", layout_config=mini_layout))
+w_km = SmartWidget("h_km", ExecutiveKPIStrategy(SCREEN_ID, "total_km", "Kilómetros", "tabler:road", "blue", layout_config=mini_layout))
+w_liters = SmartWidget("h_lit", ExecutiveKPIStrategy(SCREEN_ID, "total_liters", "Litros Total", "tabler:droplet", "cyan", layout_config=mini_layout))
 
-w_cost_viaje_km = SmartWidget("h_cvkm", ExecutiveMiniKPIStrategy("operational", "dashboard", "average_trip_revenue", "Ingreso Prom.", "orange", "tabler:ruler-2", layout_config={"height": 140}))
-w_cost_mtto_km = SmartWidget("h_cmkm", ExecutiveMiniKPIStrategy("maintenance", "dashboard", "cost_per_km", "Mtto x Km", "red", "tabler:tool", prefix="$", layout_config={"height": 140}))
+w_cvkm = SmartWidget("h_cvkm", ExecutiveKPIStrategy(SCREEN_ID, "revenue_per_km", "Ingreso x Km", "tabler:ruler-2", "teal", layout_config=mini_layout))
+w_cmkm = SmartWidget("h_cmkm", ExecutiveKPIStrategy(SCREEN_ID, "maintenance_cost_per_km", "Mtto x Km", "tabler:tool", "red", layout_config=mini_layout, inverse=True))
 
-w_main_chart = ChartWidget("h_chart", MainTrendChartStrategy(layout_config={"height": 380}))
-w_yield = SmartWidget("h_yield", FleetEfficiencyStrategy(layout_config={"height": 220}))
+w_viajes = SmartWidget("h_via", ExecutiveKPIStrategy(SCREEN_ID, "trips", "Viajes", "tabler:steering-wheel", "blue", layout_config=mini_layout))
+w_units = SmartWidget("h_uni", ExecutiveKPIStrategy(SCREEN_ID, "units_used", "Unidades", "tabler:bus", "cyan", layout_config=mini_layout))
+w_clients = SmartWidget("h_cli", ExecutiveKPIStrategy(SCREEN_ID, "customers_served", "Clientes", "tabler:users", "indigo", layout_config=mini_layout))
 
-w_portfolio = ChartWidget("h_port", ExecutiveDonutStrategy(
-    "Cartera Clientes M.N.", "financial", "dashboard", "mix", 
-    {"SIN CARTA COBRO": "blue", "POR VENCER": "yellow", "VENCIDO": "red"}, 
-    layout_config={"height": 220}
-))
-w_suppliers = ChartWidget("h_supp", ExecutiveDonutStrategy(
-    "Saldo Proveedores M.N.", "financial", "dashboard", "payables_mix", 
-    {"POR VENCER": "blue", "VENCIDO": "red"}, 
-    layout_config={"height": 220}
-))
+w_total_mtto = SmartWidget("h_mt", ExecutiveKPIStrategy(SCREEN_ID, "total_maintenance", "Total Mtto", "tabler:tool", "red", layout_config=top_layout, inverse=True))
 
-WIDGET_REGISTRY = {
-    "h_inc": w_income, "h_cost": w_costs, "h_marg": w_margin, "h_yield": w_yield,
-    "h_via": w_viajes, "h_uni": w_units, "h_cli": w_clients, "h_cvkm": w_cost_viaje_km,
-    "h_cmkm": w_cost_mtto_km
-}
+w_mi = SmartWidget("h_mi", ExecutiveMiniKPIStrategy(SCREEN_ID, "mtto_interno", "Interno", "teal", "tabler:building", layout_config=top_layout))
+w_me = SmartWidget("h_me", ExecutiveMiniKPIStrategy(SCREEN_ID, "mtto_externo", "Externo", "lime", "tabler:building-store", layout_config=top_layout))
+w_ml = SmartWidget("h_ml", ExecutiveMiniKPIStrategy(SCREEN_ID, "mtto_llantas", "Llantas", "gray", "tabler:circle", layout_config=top_layout))
+
+w_main_chart = ChartWidget("h_chart", MainTrendChartStrategy(SCREEN_ID, "main_indicators", "Tendencia", layout_config={"height": 380}))
+w_port = ChartWidget("h_port", ExecutiveDonutStrategy(SCREEN_ID, "client_portfolio", "Cartera", layout_config={"height": 260}))
+w_supp = ChartWidget("h_supp", ExecutiveDonutStrategy(SCREEN_ID, "supplier_balance", "Proveedores", layout_config={"height": 260}))
 
 def _render_home_body(ctx):
-    def truck_visual():
-        val = safe_get(ctx, "operational.dashboard.kpis.utilization.value", 0)
-        return dmc.Paper(p="md", withBorder=True, shadow="xs", radius="md", h=220, children=[
-            dmc.Stack(justify="center", align="center", h="100%", gap="sm", children=[
-                dmc.Text("Estado Carga Flota", size="xs", c="gray", fw="bold", tt="uppercase", ta="center"),
-                dmc.Center(h=70, children=DashIconify(icon="tabler:truck-loading", width=55, color="green")),
-                dmc.Progress(value=val, color="green", h=22, radius="xl", style={"width": "100%"}),
-                dmc.Text(f"{val}% Cargado", size="sm", fw="bold", ta="center", mt=5)
-            ])
-        ])
+    val_disp = safe_get(ctx, "main.dashboard.kpis.units_availability.value", 0)
+    if val_disp <= 1: val_disp *= 100
+    val_disp = int(val_disp)
 
-    filter_content = html.Div([
-        dmc.Grid(align="center", gutter="sm", children=[
-            dmc.GridCol(span="content", children=[
-                dmc.Select(id="home-year-filter", data=["2025", "2024", "2023"], value="2025", variant="filled", style={"width": "100px"}, allowDeselect=False, size="sm")
-            ]),
-            dmc.GridCol(span="auto", children=[
-                dmc.ScrollArea(w="100%", type="scroll", scrollbarSize=6, offsetScrollbars=True, children=[ # type: ignore
-                    dmc.SegmentedControl(
-                        id="home-month-filter", value="noviembre", color="blue", radius="md", size="sm", fullWidth=True, style={"minWidth": "800px"},
-                        data=[{"label": m, "value": m} for m in ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]] # type: ignore
-                    )
-                ])
-            ])
+    truck_visual = dmc.Paper(p="md", withBorder=True, shadow="sm", radius="md", h=260, children=[
+        dmc.Stack(justify="center", align="center", h="100%", gap="sm", children=[
+            dmc.Text("Disponibilidad Flota", size="xs", c="gray", fw="bold", tt="uppercase", ta="center"),
+            dmc.Center(h=80, children=DashIconify(icon="tabler:truck-loading", width=60, color="green")),
+            dmc.Progress(value=val_disp, color="green", h=25, radius="xl", style={"width": "100%"}),
+            dmc.Text(f"{val_disp}% Disponible", size="lg", fw="bold", ta="center", mt=5)
         ])
     ])
 
-    collapsible_filters = dmc.Accordion(
-        value="filtros", variant="contained", radius="md", mb="md",
-        children=[
-            dmc.AccordionItem(value="filtros", children=[
-                dmc.AccordionControl(dmc.Group([DashIconify(icon="tabler:filter"), dmc.Text("Filtros y Controles")]), h=40),
-                dmc.AccordionPanel(filter_content)
-            ])
-        ]
-    )
-
     return html.Div([
-        collapsible_filters,
-
-        dmc.SimpleGrid(cols={"base": 2, "sm": 3, "lg": 6}, spacing="xs", mb="md", children=[ # type: ignore
-            w_income.render(ctx), w_costs.render(ctx), w_margin.render(ctx),
-            w_viajes.render(ctx), w_units.render(ctx), w_clients.render(ctx)
+        dmc.SimpleGrid(cols={"base": 1, "lg": 4}, spacing="md", mb="md", children=[ # type: ignore
+            w_income.render(ctx), w_costs.render(ctx), w_margin.render(ctx), w_bank.render(ctx)
         ]),
 
-        dmc.Grid(gutter="xs", mb="md", children=[
-            dmc.GridCol(span={"base": 12, "lg": 8}, children=[w_main_chart.render(ctx)]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 4}, children=[ # type: ignore
-                dmc.Stack(justify="center", h="100%", gap="xs", children=[
-                    dmc.Text("Eficiencia Operativa", size="xs", fw=700, c="dimmed", tt="uppercase", ta="center"), # type: ignore
-                    w_cost_viaje_km.render(ctx),
-                    w_cost_mtto_km.render(ctx)
+        dmc.Grid(gutter="md", mb="md", children=[
+            dmc.GridCol(span={"base": 12, "xl": 8}, children=[w_main_chart.render(ctx)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "xl": 4}, children=[ # type: ignore
+                dmc.SimpleGrid(cols=2, spacing="sm", children=[
+                    w_yield.render(ctx), w_km.render(ctx),
+                    w_liters.render(ctx), w_cvkm.render(ctx),
+                    w_cmkm.render(ctx), w_viajes.render(ctx)
+                ]),
+                dmc.SimpleGrid(cols=2, spacing="sm", mt="sm", children=[
+                    w_units.render(ctx), w_clients.render(ctx)
                 ])
             ])
         ]),
 
-        dmc.Divider(label="Mantenimiento", labelPosition="left", mb="xs"),
-        dmc.SimpleGrid(cols={"base": 2, "md": 4}, spacing="xs", mb="md", children=[ # type: ignore
-            SmartWidget("h_mt", ExecutiveMiniKPIStrategy("maintenance", "dashboard", "total_maintenance_cost", "Total", "green", "tabler:tool", layout_config={"height": 130})).render(ctx),
-            SmartWidget("h_mi", ExecutiveMiniKPIStrategy("maintenance", "dashboard", "internal_labour_cost", "Interno", "teal", "tabler:building", layout_config={"height": 130})).render(ctx),
-            SmartWidget("h_me", ExecutiveMiniKPIStrategy("maintenance", "dashboard", "external_labour_cost", "Externo", "lime", "tabler:building-store", layout_config={"height": 130})).render(ctx),
-            SmartWidget("h_ml", ExecutiveMiniKPIStrategy("maintenance", "dashboard", "tire_cost", "Llantas", "gray", "tabler:circle", layout_config={"height": 130})).render(ctx),
+        dmc.Divider(label="Desglose de Mantenimiento", mb="md", fw=500), # type: ignore
+        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "xl": 4}, spacing="md", mb="md", children=[ # type: ignore
+            w_total_mtto.render(ctx), w_mi.render(ctx), w_me.render(ctx), w_ml.render(ctx)
         ]),
 
-        dmc.Divider(label="Análisis de Cartera y Activos", labelPosition="left", mb="xs"),
-        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "lg": 4}, spacing="xs", children=[ # type: ignore
-            w_yield.render(ctx), truck_visual(), w_portfolio.render(ctx), w_suppliers.render(ctx)
+        dmc.Divider(label="Análisis de Cartera y Flota", mb="md", fw=500), # type: ignore
+        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="md", children=[ # type: ignore
+            truck_visual, w_port.render(ctx), w_supp.render(ctx)
         ]),
         dmc.Space(h=50)
     ])
 
 def layout():
-    if not session.get("user"): return dmc.Text("No autorizado...")
-    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
-    refresh_components, _ids = data_manager.dash_refresh_components(SCREEN_ID, interval_ms=800, max_intervals=1)
-    return dmc.Container(fluid=True, px="xs", children=[
+    if not session.get("user"): return dmc.Text("No autorizado")
+    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True)
+    comps, _ = data_manager.dash_refresh_components(SCREEN_ID)
+    return dmc.Container(fluid=True, children=[
         dmc.Modal(id="home-smart-modal", size="xl", centered=True, children=[html.Div(id="home-modal-content")]),
-        *refresh_components,
-        html.Div(id="home-body", children=_render_home_body(ctx)),
+        *comps, html.Div(id="hb", children=_render_home_body(ctx))
     ])
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="home-body", render_body=_render_home_body)
+data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="hb", render_body=_render_home_body)
 
 @callback(
-    Output("home-smart-modal", "opened"),
-    Output("home-smart-modal", "title"),
-    Output("home-modal-content", "children"),
-    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"),
-    prevent_initial_call=True,
+    Output("home-smart-modal", "opened"), Output("home-smart-modal", "title"), Output("home-modal-content", "children"),
+    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"), prevent_initial_call=True
 )
-def handle_home_click(n_clicks):
+def handle_click(n_clicks):
     if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
     if dash.ctx.triggered_id is None: return no_update, no_update, no_update
-    w_id = dash.ctx.triggered_id["index"]
-    widget = WIDGET_REGISTRY.get(str(w_id))
-    if not widget: return no_update, no_update, no_update
-    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
-    cfg = widget.strategy.get_card_config(ctx)
-    return True, cfg.get("title"), widget.strategy.render_detail(ctx)
+    wid = dash.ctx.triggered_id["index"]
+    target_w = {
+        "h_inc": w_income, "h_cost": w_costs, "h_marg": w_margin, "h_bank": w_bank,
+        "h_yld": w_yield, "h_km": w_km, "h_lit": w_liters,
+        "h_cvkm": w_cvkm, "h_cmkm": w_cmkm,
+        "h_via": w_viajes, "h_uni": w_units, "h_cli": w_clients,
+        "h_mi": w_mi, "h_me": w_me, "h_ml": w_ml, "h_mt": w_total_mtto,
+        "h_port": w_port, "h_supp": w_supp
+    }.get(wid)
+
+    if not target_w: return no_update, no_update, no_update
+    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True)
+    cfg = target_w.strategy.get_card_config(ctx)
+    return True, cfg.get("title"), target_w.strategy.render_detail(ctx)

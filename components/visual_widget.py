@@ -23,6 +23,10 @@ class ChartWidget:
                 margin=dict(t=30, b=10, l=10, r=10)
             )
 
+        icon_color = getattr(self.strategy, 'hex_color', '#94a3b8')
+        if not icon_color.startswith("#"):
+            icon_color = DesignSystem.COLOR_MAP.get(icon_color, '#94a3b8')
+
         return dmc.Paper(
             p="xs",
             radius=layout.get("radius", "md"), 
@@ -39,12 +43,12 @@ class ChartWidget:
                 dmc.Group(justify="space-between", mb=5, children=[
                     dmc.Group(gap=6, children=[
                         DashIconify(
-                            icon=config_data.get("icon", self.strategy.icon), 
-                            color=getattr(self.strategy, 'hex_color', '#94a3b8'), 
+                            icon=config_data.get("icon", getattr(self.strategy, 'icon', "tabler:chart-bar")), 
+                            color=icon_color, 
                             width=16
                         ),
                         dmc.Text(
-                            config_data.get("title", self.strategy.title), 
+                            config_data.get("title", getattr(self.strategy, 'title', "Gráfica")), 
                             fw=700, size="xs", c="dimmed", tt="uppercase" # type: ignore
                         ),
                     ]),
