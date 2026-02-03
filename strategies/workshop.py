@@ -4,6 +4,7 @@ import math
 from .base_strategy import KPIStrategy
 from settings.theme import DesignSystem, SemanticColors
 from utils.helpers import format_value
+from datetime import datetime
 
 class WorkshopKPIStrategy(KPIStrategy):
     def __init__(self, screen_id, kpi_key, title, icon, color, has_detail=True, layout_config=None, inverse=False):
@@ -40,7 +41,7 @@ class WorkshopKPIStrategy(KPIStrategy):
             "ytd_delta": node.get("ytd_delta"),
             "ytd_delta_formatted": node.get("ytd_delta_formatted"),
             "status": node.get("status"),
-            "status_color": node.get("status_color")
+            "status_color": node.get("status_color") or self.color
         }
         
         if node.get("percentage_of_total"):
@@ -236,15 +237,11 @@ class WorkshopTrendChartStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        
-        categories = (data_source.get("categories") or 
-                     data_source.get("months") or 
-                     data_source.get("meses") or [])
-        
+        categories = (data_source.get("categories") or data_source.get("months") or [])
         series_list = data_source.get("series", [])
         
         if not categories or not series_list:
-            return self._create_empty_figure("Sin datos temporales")
+            return self._create_empty_figure("Sin datos")
         
         fig = go.Figure()
         
@@ -257,22 +254,14 @@ class WorkshopTrendChartStrategy(KPIStrategy):
             
             if s_type == "line" or is_dashed:
                 fig.add_trace(go.Scatter(
-                    x=categories,
-                    y=s_data,
-                    name=s_name,
+                    x=categories, y=s_data, name=s_name,
                     mode='lines+markers',
-                    line=dict(
-                        color=s_color,
-                        width=3,
-                        dash='dot' if is_dashed else 'solid'
-                    ),
+                    line=dict(color=s_color, width=3, dash='dot' if is_dashed else 'solid'),
                     marker=dict(size=6)
                 ))
             else:
                 fig.add_trace(go.Bar(
-                    x=categories,
-                    y=s_data,
-                    name=s_name,
+                    x=categories, y=s_data, name=s_name,
                     marker_color=s_color
                 ))
         
@@ -308,10 +297,10 @@ class WorkshopDonutChartStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        
         labels = data_source.get("labels", [])
         values = data_source.get("values", [])
         colors = data_source.get("colors", [])
+        total = data_source.get("total_formatted", "")
         
         if not labels or not values:
             return self._create_empty_figure("Sin datos")
@@ -324,9 +313,14 @@ class WorkshopDonutChartStrategy(KPIStrategy):
             values=values, 
             hole=0.6,
             marker=dict(colors=colors),
-            textinfo='percent+label',
-            textposition='auto'
+            textinfo='percent'
         )])
+        
+        if total:
+            fig.add_annotation(
+                text=total, x=0.5, y=0.5, showarrow=False,
+                font=dict(size=14, weight="bold", color=DesignSystem.SLATE[7])
+            )
         
         fig.update_layout(
             showlegend=True,
@@ -359,7 +353,6 @@ class WorkshopHorizontalBarStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        
         categories = data_source.get("categories", [])
         series_list = data_source.get("series", [])
         
@@ -374,19 +367,15 @@ class WorkshopHorizontalBarStrategy(KPIStrategy):
             s_color = serie.get("color", self.hex_color)
             
             fig.add_trace(go.Bar(
-                y=categories,
-                x=s_data,
-                name=s_name,
-                orientation='h',
-                marker_color=s_color,
-                text=[f"${v:,.0f}" if v > 1000 else f"{v:,.2f}" for v in s_data],
+                y=categories, x=s_data, name=s_name,
+                orientation='h', marker_color=s_color,
+                text=[f"${v:,.0f}" if isinstance(v, (int, float)) and v > 1000 else str(v) for v in s_data],
                 textposition='outside'
             ))
         
         fig.update_layout(
-            barmode='relative',
-            height=max(300, len(categories) * 30),
-            margin=dict(l=120, r=40, t=30, b=40),
+            height=max(300, len(categories) * 35),
+            margin=dict(l=140, r=60, t=30, b=40),
             yaxis=dict(autorange="reversed"),
             paper_bgcolor=DesignSystem.TRANSPARENT,
             plot_bgcolor=DesignSystem.TRANSPARENT,
@@ -415,7 +404,6 @@ class WorkshopBarChartStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        
         categories = data_source.get("categories", [])
         series_list = data_source.get("series", [])
         
@@ -430,17 +418,12 @@ class WorkshopBarChartStrategy(KPIStrategy):
             s_color = serie.get("color", self.hex_color)
             
             fig.add_trace(go.Bar(
-                x=categories,
-                y=s_data,
-                name=s_name,
-                marker_color=s_color,
-                text=[f"${v/1e6:.1f}M" if v > 1e6 else f"${v:,.0f}" for v in s_data],
-                textposition='auto'
+                x=categories, y=s_data, name=s_name,
+                marker_color=s_color
             ))
         
         fig.update_layout(
-            height=350,
-            margin=dict(t=30, b=40, l=40, r=20),
+            height=350, margin=dict(t=30, b=40, l=40, r=20),
             paper_bgcolor=DesignSystem.TRANSPARENT,
             plot_bgcolor=DesignSystem.TRANSPARENT,
             showlegend=len(series_list) > 1
@@ -468,7 +451,6 @@ class WorkshopComboChartStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        
         categories = data_source.get("categories", [])
         series_list = data_source.get("series", [])
         
@@ -485,9 +467,7 @@ class WorkshopComboChartStrategy(KPIStrategy):
             
             if s_type == "line":
                 fig.add_trace(go.Scatter(
-                    x=categories,
-                    y=s_data,
-                    name=s_name,
+                    x=categories, y=s_data, name=s_name,
                     mode='lines+markers',
                     line=dict(color=s_color, width=3),
                     marker=dict(size=6),
@@ -495,15 +475,12 @@ class WorkshopComboChartStrategy(KPIStrategy):
                 ))
             else:
                 fig.add_trace(go.Bar(
-                    x=categories,
-                    y=s_data,
-                    name=s_name,
+                    x=categories, y=s_data, name=s_name,
                     marker_color=s_color
                 ))
         
         fig.update_layout(
-            height=350,
-            margin=dict(t=30, b=40, l=40, r=40),
+            height=350, margin=dict(t=30, b=40, l=40, r=40),
             legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
             paper_bgcolor=DesignSystem.TRANSPARENT,
             plot_bgcolor=DesignSystem.TRANSPARENT,
@@ -525,39 +502,40 @@ class WorkshopTableStrategy:
 
     def _resolve_table_data(self, data_context):
         from services.data_manager import data_manager
-        
         screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {}) # type: ignore
         inject_paths = screen_config.get("inject_paths", {})
-        
         path = inject_paths.get(self.table_key)
-        if not path:
-            return None
-        
+        if not path: return None
         from utils.helpers import safe_get
         return safe_get(data_context, path)
 
     def render(self, data_context, **kwargs):
         node = self._resolve_table_data(data_context)
-        
-        if not node:
-            return dmc.Text("Sin datos de tabla", c="dimmed", ta="center", py="xl") # type: ignore
+        if not node: return dmc.Text("Sin datos de tabla", c="dimmed", ta="center", py="xl") # type: ignore
         
         data_source = node.get("data", node)
         headers = data_source.get("headers", [])
         rows = data_source.get("rows", [])
+        summary = node.get("summary", {})
+        total_row = data_source.get("total_row")
         
-        if not headers or not rows:
-            return dmc.Text("Sin datos", c="dimmed", ta="center", py="xl") # type: ignore
+        if not headers or not rows: return dmc.Text("Sin datos", c="dimmed", ta="center", py="xl") # type: ignore
         
         table_body = []
-        for row in rows:
+        for row in rows[:50]:
             table_body.append(dmc.TableTr([
                 dmc.TableTd(str(cell), style={"fontSize": "11px"}) 
                 for cell in row
             ]))
         
-        total_row = data_source.get("total_row")
-        if total_row:
+        if summary:
+            summary_row = dmc.TableTr([
+                dmc.TableTd(str(summary.get(h.lower().replace(" ", "_"), "---")),
+                    style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": DesignSystem.SLATE[0]})
+                for h in headers
+            ])
+            table_body.append(summary_row)
+        elif total_row:
             table_body.append(dmc.TableTr([
                 dmc.TableTd(str(cell), style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": "#f8f9fa"}) 
                 for cell in total_row
@@ -565,8 +543,8 @@ class WorkshopTableStrategy:
         
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([
-                dmc.TableTh(h, style={"fontSize": "11px", "fontWeight": "bold"}) 
+                dmc.TableTh(h, style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": DesignSystem.SLATE[0]}) 
                 for h in headers
             ])),
             dmc.TableTbody(table_body)
-        ], striped="odd", withTableBorder=True, withColumnBorders=True, highlightOnHover=True)
+        ], striped=True, highlightOnHover=True, withTableBorder=True, withColumnBorders=True) # type: ignore

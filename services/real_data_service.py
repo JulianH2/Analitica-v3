@@ -14,7 +14,7 @@ class RealDataService:
         return {
             "main": { "dashboard": { "kpis": {}, "charts": {}, "tables": {} } },
             "operational": { "dashboard": { "kpis": {}, "charts": {}, "tables": {} } },
-            "administration": { "dashboard": { "kpis": {}, "charts": {} } },
+            "administration": { "dashboard": { "kpis": {}, "charts": {}, "tables": {} } },
             "workshop": { "dashboard": { "kpis": {}, "charts": {}, "tables": {} } }
         }
     
@@ -243,6 +243,18 @@ class RealDataService:
                 "labels": ["SIN CARTA COBRO", "POR VENCER", "VENCIDO"],
                 "values": [0.3, 0.3, 0.3],
                 "colors": ["#7BC950", "#FFD166", "#EF476F"],
+                "total_formatted": "$1"
+            }
+        }
+
+        main["charts"]["supplier_balance"] = {
+            "type": "donut_chart",
+            "title": "Balance Proveedores",
+            "description": "Distribución de saldos con proveedores",
+            "data": {
+                "labels": ["Por Pagar", "Pagado", "Vencido"],
+                "values": [0.1, 0.1, 0.1],
+                "colors": ["#FFD166", "#06D6A0", "#EF476F"],
                 "total_formatted": "$1"
             }
         }
@@ -876,16 +888,16 @@ class RealDataService:
             "title": "Rutas en Vacío",
             "headers": ["Ruta", "Viajes", "Kms", "Costo x Km", "Costo Total"],
             "rows": [
-                ["RUTA A - VACÍO", "5", "1,200", "$12.50", "$15,000"],
-                ["RUTA B - VACÍO", "3", "800", "$14.20", "$11,360"],
-                ["RUTA C - VACÍO", "7", "1,500", "$11.80", "$17,700"],
-                ["RUTA D - VACÍO", "2", "600", "$15.00", "$9,000"],
-                ["RUTA E - VACÍO", "4", "950", "$13.50", "$12,825"]
+                ["RUTA A - VACÍO", "1", "1", "$1", "$1"],
+                ["RUTA B - VACÍO", "1", "1", "$1", "$1"],
+                ["RUTA C - VACÍO", "1", "1", "$1", "$1"],
+                ["RUTA D - VACÍO", "1", "1", "$1", "$1"],
+                ["RUTA E - VACÍO", "1", "1", "$1", "$1"]
             ],
             "summary": {
-                "total_trips": 21,
-                "total_km": 5050,
-                "total_cost": "$65,885"
+                "total_trips": 1,
+                "total_km": 1,
+                "total_cost": "$1"
             }
         }
         
@@ -894,22 +906,49 @@ class RealDataService:
             "title": "Rutas Cargado",
             "headers": ["Ruta", "Viajes", "Kms", "Ingresos", "% Ingreso"],
             "rows": [
-                ["CANOITAS-OWENS MTY", "192", "130,560", "$4.77M", "18.5%"],
-                ["CANOITAS-LAMPAZOS", "144", "38,880", "$1.49M", "5.8%"],
-                ["CANOITAS-VIDRIO PLANO", "73", "49,640", "$1.85M", "7.2%"],
-                ["CANOITAS-VITRO AUTOMOTRIZ", "63", "42,840", "$1.50M", "5.8%"],
-                ["3T-LYCRA", "1", "29", "$5,750", "0.02%"],
-                ["ALCALI-CRISA LIBBEY", "15", "780", "$78.0k", "0.3%"],
-                ["CANOITAS-PESQUERIA", "28", "11,088", "$761.7k", "3.0%"],
-                ["GARCIA ALCALI-SANTA CATARINA RIASA", "11", "253", "$76.5k", "0.3%"],
-                ["LA MORITA-COLOMBIA", "37", "6,586", "$470.5k", "1.8%"],
-                ["LAMPAZOS-CANOITAS", "1", "133", "$9,175.50", "0.04%"]
+                ["RUTA A", "1", "1", "$1", "0.1%"],
+                ["RUTA B", "1", "1", "$1", "0.1%"],
+                ["RUTA C", "1", "1", "$1", "0.1%"],
+                ["RUTA D", "1", "1", "$1", "0.1%"],
+                ["RUTA E", "1", "1", "$1", "0.1%"]
             ],
             "summary": {
-                "total_trips": 565,
-                "total_km": 280789,
-                "total_revenue": "$10.98M"
+                "total_trips": 1,
+                "total_km": 1,
+                "total_revenue": "$1"
             }
+        }
+
+        operational["tables"]["main_routes"] = {
+            "type": "table",
+            "title": "Rutas Principales",
+            "headers": ["Ruta", "Origen", "Destino", "Viajes", "Kms", "Ingresos"],
+            "rows": [
+                ["RUTA A", "ORIGEN A", "DESTINO A", "1", "1", "$1"],
+                ["RUTA B", "ORIGEN B", "DESTINO B", "1", "1", "$1"],
+                ["RUTA C", "ORIGEN C", "DESTINO C", "1", "1", "$1"]
+            ]
+        }
+
+        operational["tables"]["operator_performance"] = {
+            "type": "table",
+            "title": "Rendimiento por Operador",
+            "headers": ["Operador", "Viajes", "Kms", "Rendimiento", "Litros", "Eficiencia"],
+            "rows": [
+                ["Op-001", "1", "1", "1 km/l", "1", "0.1%"],
+                ["Op-002", "1", "1", "1 km/l", "1", "0.1%"],
+                ["Op-003", "1", "1", "1 km/l", "1", "0.1%"]
+            ]
+        }
+
+        operational["tables"]["performance_by_unit"] = {
+            "type": "table",
+            "title": "Rendimiento por Unidad",
+            "headers": ["Unidad", "Viajes", "Kms", "Rendimiento", "Combustible"],
+            "rows": [
+                ["UNIDAD 001", "1", "1", "1 km/l", "$1"],
+                ["UNIDAD 002", "1", "1", "1 km/l", "$1"]
+            ]
         }
 
     def _inject_administration_data(self, data):
@@ -1079,7 +1118,26 @@ class RealDataService:
             target_value=0.1,
             kpi_type="percent"
         )
+
+        administration["kpis"]["initial_balance"] = KPICalculator.calculate_kpi(title="Saldo Inicial", current_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["total_income"] = KPICalculator.calculate_kpi(title="Ingresos Totales", current_value=1, previous_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["total_expenses"] = KPICalculator.calculate_kpi(title="Egresos Totales", current_value=1, previous_value=1, kpi_type="currency", unit="MXN", inverse=True)
+        administration["kpis"]["final_balance"] = KPICalculator.calculate_kpi(title="Saldo Final", current_value=1, kpi_type="currency", unit="MXN")
         
+        administration["kpis"]["billed_amount"] = KPICalculator.calculate_kpi(title="Facturado", current_value=1, previous_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["credit_notes"] = KPICalculator.calculate_kpi(title="Notas Crédito", current_value=1, kpi_type="currency", unit="MXN", inverse=True)
+        administration["kpis"]["debit_notes"] = KPICalculator.calculate_kpi(title="Notas Cargo", current_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["collected_amount"] = KPICalculator.calculate_kpi(title="Cobrado", current_value=1, previous_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["net_balance"] = KPICalculator.calculate_kpi(title="Saldo Neto", current_value=1, kpi_type="currency", unit="MXN")
+        
+        administration["kpis"]["payables_initial_balance"] = KPICalculator.calculate_kpi(title="Saldo Inicial CxP", current_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["payables_credit_notes"] = KPICalculator.calculate_kpi(title="NC Proveedores", current_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["advances"] = KPICalculator.calculate_kpi(title="Anticipos", current_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["supplier_payments"] = KPICalculator.calculate_kpi(title="Pagos a Proveedores", current_value=1, previous_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["payables_final_balance"] = KPICalculator.calculate_kpi(title="Saldo Final CxP", current_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["payment_efficiency"] = KPICalculator.calculate_kpi(title="Eficiencia de Pago", current_value=0.1, target_value=0.1, kpi_type="percent")
+        administration["kpis"]["average_payment_days"] = KPICalculator.calculate_kpi(title="Días Promedio Pago", current_value=1, target_value=1, kpi_type="number", unit="días")
+
         administration["charts"]["receivables_by_status"] = {
             "type": "donut_chart",
             "title": "Cartera por Estatus",
@@ -1197,6 +1255,101 @@ class RealDataService:
             }
         }
 
+        administration["charts"]["daily_cash_flow"] = {
+            "type": "bar_chart",
+            "title": "Flujo de Efectivo Diario",
+            "data": {
+                "categories": ["1", "5", "10", "15", "20", "25", "30"],
+                "series": [
+                    {"name": "Ingresos", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#06D6A0"},
+                    {"name": "Egresos", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#EF476F"}
+                ]
+            }
+        }
+
+        administration["charts"]["balance_by_bank"] = {
+            "type": "donut_chart",
+            "title": "Saldo por Institución Bancaria",
+            "data": {
+                "labels": ["BBVA", "Banorte", "Santander", "HSBC", "Banamex"],
+                "values": [0.1, 0.1, 0.1, 0.1, 0.1],
+                "colors": ["#0033A0", "#EB0029", "#EC0000", "#DB0011", "#004B87"]
+            }
+        }
+
+        administration["charts"]["debtors_by_range"] = {
+            "type": "horizontal_bar_chart",
+            "title": "Deudores por Rango de Antigüedad",
+            "data": {
+                "categories": ["0-30 días", "31-60 días", "61-90 días", "+90 días"],
+                "series": [{"name": "Saldo", "data": [0.1, 0.1, 0.1, 0.1], "color": "#118AB2"}]
+            }
+        }
+
+        administration["charts"]["collection_trends"] = {
+            "type": "line_chart",
+            "title": "Tendencia Cobranza",
+            "data": {
+                "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep"],
+                "series": [
+                    {"name": "Facturado", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#118AB2"},
+                    {"name": "Cobrado", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#06D6A0"}
+                ]
+            }
+        }
+
+        administration["charts"]["payables_by_status"] = {
+            "type": "donut_chart",
+            "title": "CxP por Estatus",
+            "data": {
+                "labels": ["Vigente", "Por Vencer", "Vencido"],
+                "values": [0.1, 0.1, 0.1],
+                "colors": ["#06D6A0", "#FFD166", "#EF476F"]
+            }
+        }
+
+        administration["charts"]["suppliers_by_range"] = {
+            "type": "horizontal_bar_chart",
+            "title": "Proveedores por Rango",
+            "data": {
+                "categories": ["0-15 días", "16-30 días", "31-45 días", "+45 días"],
+                "series": [{"name": "Saldo", "data": [0.1, 0.1, 0.1, 0.1], "color": "#EF476F"}]
+            }
+        }
+
+        administration["charts"]["payables_trends"] = {
+            "type": "line_chart",
+            "title": "Tendencia CxP",
+            "data": {
+                "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep"],
+                "series": [
+                    {"name": "CxP", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#EF476F"},
+                    {"name": "Pagado", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#06D6A0"}
+                ]
+            }
+        }
+
+        administration["tables"]["income_expense_concepts"] = {
+            "type": "table",
+            "title": "Ingresos y Egresos por Concepto",
+            "headers": ["Concepto", "Ingresos", "Egresos", "Neto"],
+            "rows": [["Fletes", "$1", "$0", "$1"], ["Combustible", "$0", "$1", "-$1"]]
+        }
+
+        administration["tables"]["aging_by_client"] = {
+            "type": "table",
+            "title": "Antigüedad de Saldos por Cliente",
+            "headers": ["Cliente", "0-30 días", "31-60 días", "61-90 días", "+90 días", "Total"],
+            "rows": [["CLIENTE A", "$1", "$1", "$1", "$1", "$1"]]
+        }
+
+        administration["tables"]["aging_by_supplier"] = {
+            "type": "table",
+            "title": "Antigüedad de Saldos por Proveedor",
+            "headers": ["Proveedor", "0-15 días", "16-30 días", "31-45 días", "+45 días", "Total"],
+            "rows": [["PROVEEDOR A", "$1", "$1", "$1", "$1", "$1"]]
+        }
+
     def _inject_workshop_data(self, data):
         workshop = data["workshop"]["dashboard"]
         
@@ -1257,18 +1410,10 @@ class RealDataService:
         
         workshop["kpis"]["availability_percent"] = KPICalculator.calculate_kpi(
             title="% Disponibilidad",
-            current_value=0.58,
+            current_value=0.1,
             previous_value=0.1,
-            target_value=0.95,
-            kpi_type="percent",
-            metadata={
-                "gauge_config": {
-                    "min": 0,
-                    "max": 100,
-                    "warning_threshold": 70,
-                    "critical_threshold": 50
-                }
-            }
+            target_value=0.1,
+            kpi_type="percent"
         )
         
         workshop["kpis"]["workshop_entries"] = KPICalculator.calculate_kpi(
@@ -1287,10 +1432,7 @@ class RealDataService:
             previous_value=1,
             target_value=1,
             kpi_type="currency",
-            unit="MXN",
-            metadata={
-                "percentage_of_total": 0.1
-            }
+            unit="MXN"
         )
         
         workshop["kpis"]["preventive_cost"] = KPICalculator.calculate_kpi(
@@ -1299,10 +1441,7 @@ class RealDataService:
             previous_value=1,
             target_value=1,
             kpi_type="currency",
-            unit="MXN",
-            metadata={
-                "percentage_of_total": 0.1
-            }
+            unit="MXN"
         )
         
         workshop["kpis"]["avg_repair_time"] = KPICalculator.calculate_kpi(
@@ -1317,7 +1456,7 @@ class RealDataService:
         
         workshop["kpis"]["units_in_workshop"] = KPICalculator.calculate_kpi(
             title="Unidades en Taller",
-            current_value=18,
+            current_value=1,
             previous_value=1,
             target_value=1,
             kpi_type="number",
@@ -1326,7 +1465,7 @@ class RealDataService:
         
         workshop["kpis"]["pending_orders"] = KPICalculator.calculate_kpi(
             title="Órdenes Pendientes",
-            current_value=12,
+            current_value=1,
             previous_value=1,
             target_value=1,
             kpi_type="number",
@@ -1349,10 +1488,7 @@ class RealDataService:
             previous_value=1,
             target_value=1,
             kpi_type="currency",
-            unit="MXN",
-            metadata={
-                "percentage_of_total": 0.1
-            }
+            unit="MXN"
         )
 
         workshop["kpis"]["parts_purchases"] = KPICalculator.calculate_kpi(
@@ -1361,10 +1497,7 @@ class RealDataService:
             previous_value=1,
             target_value=1,
             kpi_type="currency",
-            unit="MXN",
-            metadata={
-                "percentage_of_total": 0.1
-            }
+            unit="MXN"
         )
 
         workshop["kpis"]["tire_purchases"] = KPICalculator.calculate_kpi(
@@ -1373,10 +1506,7 @@ class RealDataService:
             previous_value=1,
             target_value=1,
             kpi_type="currency",
-            unit="MXN",
-            metadata={
-                "percentage_of_total": 0.1
-            }
+            unit="MXN"
         )
 
         workshop["kpis"]["initial_inventory"] = KPICalculator.calculate_kpi(
@@ -1399,7 +1529,7 @@ class RealDataService:
 
         workshop["kpis"]["compliance_level"] = KPICalculator.calculate_kpi(
             title="Nivel Cumplimiento",
-            current_value=0.47,
+            current_value=0.1,
             previous_value=0.1,
             target_value=0.1,
             kpi_type="percent"
@@ -1407,7 +1537,7 @@ class RealDataService:
 
         workshop["kpis"]["items_with_stock"] = KPICalculator.calculate_kpi(
             title="Insumos con Existencia",
-            current_value=4000,
+            current_value=1,
             previous_value=1,
             target_value=1,
             kpi_type="number",
@@ -1416,472 +1546,244 @@ class RealDataService:
 
         workshop["kpis"]["items_without_stock"] = KPICalculator.calculate_kpi(
             title="Insumos sin Existencia",
-            current_value=4000,
+            current_value=1,
             previous_value=1,
             target_value=1,
             kpi_type="number",
             unit="insumos"
         )
+
+        workshop["kpis"]["inventory_entries"] = KPICalculator.calculate_kpi(title="Entradas", current_value=1, previous_value=1, kpi_type="currency", unit="MXN")
+        workshop["kpis"]["inventory_outputs"] = KPICalculator.calculate_kpi(title="Salidas", current_value=1, previous_value=1, kpi_type="currency", unit="MXN")
+        workshop["kpis"]["historical_valuation"] = KPICalculator.calculate_kpi(title="Valorización Histórica", current_value=1, kpi_type="currency", unit="MXN")
+        workshop["kpis"]["items_registered"] = KPICalculator.calculate_kpi(title="Insumos Registrados", current_value=1, kpi_type="number", unit="items")
         
         workshop["charts"]["maintenance_costs_trend"] = {
             "type": "bar_chart",
             "title": "Costo Total Mantenimiento 2025 vs. 2024",
-            "description": "Comparativa mensual de costos de mantenimiento",
             "data": {
                 "categories": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
                 "series": [
-                    {
-                        "name": "Actual 2025",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#118AB2"
-                    },
-                    {
-                        "name": "Anterior 2024",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#CCCCCC"
-                    }
-                ],
-                "y_axis_label": "Millones MXN",
-                "x_axis_label": "Meses"
+                    {"name": "Actual 2025", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#118AB2"},
+                    {"name": "Anterior 2024", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#CCCCCC"}
+                ]
             }
         }
         
         workshop["charts"]["maintenance_by_type"] = {
             "type": "donut_chart",
             "title": "Costo por Tipo de Reparación",
-            "description": "Distribución entre mantenimiento Correctivo y Preventivo",
             "data": {
                 "labels": ["CORRECTIVO", "PREVENTIVO"],
-                "values": [0.5, 0.5],
+                "values": [0.1, 0.1],
                 "colors": ["#EF476F", "#06D6A0"],
                 "total_formatted": "$1"
             }
         }
-        
+
         workshop["charts"]["maintenance_by_family"] = {
             "type": "horizontal_bar_chart",
-            "title": "Costo Total Mantenimiento por Familia y Subfamilia",
-            "description": "Distribución del costo por familia de componentes",
+            "title": "Costo Total Mantenimiento por Familia",
             "data": {
-                "categories": ["MOTOR", "SISTEMA DE FRENOS", "REMOLQUES", "GENERAL", "SISTEMA ELÉCTRICO"],
-                "series": [
-                    {
-                        "name": "Costo",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#118AB2"
-                    }
-                ],
-                "x_axis_label": "Miles MXN",
-                "y_axis_label": "Familia"
+                "categories": ["MOTOR", "FRENOS", "ELECTRICO"],
+                "series": [{"name": "Costo", "data": [0.1, 0.1, 0.1], "color": "#118AB2"}]
             }
         }
-        
+
         workshop["charts"]["maintenance_by_fleet"] = {
             "type": "horizontal_bar_chart",
-            "title": "Costo Total Mantenimiento por Flota/Marca/Modelo",
-            "description": "Distribución del costo por tipo de flota",
+            "title": "Costo Total Mantenimiento por Flota",
             "data": {
-                "categories": ["GENERAL", "DEDICADO", "SIN ASIGNAR"],
-                "series": [
-                    {
-                        "name": "Costo",
-                        "data": [0.1, 0.1, 0.1],
-                        "color": "#FFD166"
-                    }
-                ],
-                "x_axis_label": "Miles MXN",
-                "y_axis_label": "Flota"
+                "categories": ["GENERAL", "DEDICADO"],
+                "series": [{"name": "Costo", "data": [0.1, 0.1], "color": "#FFD166"}]
             }
         }
-        
+
         workshop["charts"]["maintenance_by_operation"] = {
             "type": "donut_chart",
             "title": "Costo por Tipo de Operación",
-            "description": "Distribución del costo por área operativa",
             "data": {
-                "labels": ["SIN ASIGNAR"],
-                "values": [1],
-                "colors": ["#8338EC"],
+                "labels": ["OPERACION A", "OPERACION B"],
+                "values": [0.1, 0.1],
+                "colors": ["#8338EC", "#118AB2"],
                 "total_formatted": "$1"
             }
         }
-        
+
         workshop["charts"]["cost_per_km_by_unit"] = {
             "type": "horizontal_bar_chart",
-            "title": "Costo por Kilómetro por Unidad y Modelo",
-            "description": "Ranking de unidades con mayor costo por km",
+            "title": "Costo por Kilómetro por Unidad",
             "data": {
-                "categories": ["UNIDAD 001", "UNIDAD 002", "UNIDAD 003", "UNIDAD 004", "UNIDAD 005"],
-                "series": [
-                    {
-                        "name": "Costo/km",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#EF476F"
-                    }
-                ],
-                "x_axis_label": "MXN/km",
-                "y_axis_label": "Unidad"
+                "categories": ["U1", "U2"],
+                "series": [{"name": "Costo/km", "data": [0.1, 0.1], "color": "#EF476F"}]
             }
         }
-        
+
         workshop["charts"]["cost_per_km_by_brand"] = {
             "type": "horizontal_bar_chart",
-            "title": "Costo por Kilómetro por Marca, Modelo y Unidad",
-            "description": "Comparativa de costos por marca",
+            "title": "Costo por Kilómetro por Marca",
             "data": {
-                "categories": ["MARCA A", "MARCA B", "MARCA C", "MARCA D", "MARCA E"],
-                "series": [
-                    {
-                        "name": "Costo/km",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#118AB2"
-                    }
-                ],
-                "x_axis_label": "MXN/km",
-                "y_axis_label": "Marca"
+                "categories": ["MARCA A", "MARCA B"],
+                "series": [{"name": "Costo/km", "data": [0.1, 0.1], "color": "#118AB2"}]
             }
         }
-        
+
         workshop["charts"]["workshop_entries_by_unit"] = {
             "type": "horizontal_bar_chart",
             "title": "Entradas a Taller por Unidad",
-            "description": "Frecuencia de entradas al taller por unidad",
             "data": {
-                "categories": ["UNIDAD 001", "UNIDAD 002", "UNIDAD 003", "UNIDAD 004", "UNIDAD 005"],
-                "series": [
-                    {
-                        "name": "Entradas",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#FFD166"
-                    }
-                ],
-                "x_axis_label": "Número de Entradas",
-                "y_axis_label": "Unidad"
+                "categories": ["U1", "U2"],
+                "series": [{"name": "Entradas", "data": [0.1, 0.1], "color": "#FFD166"}]
             }
         }
-        
+
         workshop["charts"]["availability_trends"] = {
-            "type": "bar_chart",
-            "title": "% Disponibilidad Unidades 2025 vs. 2024",
-            "description": "Comparativa mensual de disponibilidad de unidades",
+            "type": "line_chart",
+            "title": "Tendencia Disponibilidad",
             "data": {
-                "categories": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+                "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep"],
                 "series": [
-                    {
-                        "name": "Actual 2025",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#06D6A0"
-                    },
-                    {
-                        "name": "Anterior 2024",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, None],
-                        "color": "#CCCCCC"
-                    },
-                    {
-                        "name": "Meta",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#F24236",
-                        "dashed": True
-                    }
-                ],
-                "y_axis_label": "Porcentaje %",
-                "x_axis_label": "Meses"
+                    {"name": "Disponibilidad %", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#06D6A0"},
+                    {"name": "Meta", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#EF476F", "dashed": True}
+                ]
             }
         }
-        
+
         workshop["charts"]["entries_and_km_by_unit"] = {
-            "type": "combo_chart",
-            "title": "Entradas a Taller y Kms Recorridos por Unidad",
-            "description": "Relación entre entradas al taller y kilómetros recorridos",
+            "type": "bar_chart",
+            "title": "Entradas vs Kilómetros por Unidad",
             "data": {
-                "categories": ["U-001", "U-002", "U-003", "U-004", "U-005", "U-006", "U-007", "U-008"],
+                "categories": ["U1", "U2"],
                 "series": [
-                    {
-                        "name": "Entradas a Taller",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#EF476F",
-                        "type": "bar"
-                    },
-                    {
-                        "name": "Kms Unidad",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#118AB2",
-                        "type": "line"
-                    }
-                ],
-                "y_axis_left_label": "Entradas",
-                "y_axis_right_label": "Kilómetros",
-                "x_axis_label": "Unidad"
+                    {"name": "Entradas", "data": [0.1, 0.1], "color": "#118AB2"},
+                    {"name": "Kms", "data": [0.1, 0.1], "color": "#06D6A0"}
+                ]
             }
         }
-        
+
         workshop["charts"]["purchases_trend"] = {
-            "type": "bar_chart",
-            "title": "Compras 2025 vs. 2024",
-            "description": "Comparativa mensual de compras totales",
+            "type": "line_chart",
+            "title": "Tendencia de Compras",
             "data": {
-                "categories": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                "series": [
-                    {
-                        "name": "Actual 2025",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#118AB2"
-                    },
-                    {
-                        "name": "Anterior 2024",
-                        "data": [0.1, None, 0.1, 0.1, 0.1, None, 0.1, None, 0.1, None, 0.1, None],
-                        "color": "#CCCCCC"
-                    }
-                ],
-                "y_axis_label": "Millones MXN",
-                "x_axis_label": "Meses"
+                "months": ["Ene", "Feb", "Mar"],
+                "series": [{"name": "Compras", "data": [0.1, 0.1, 0.1], "color": "#118AB2"}]
             }
         }
 
         workshop["charts"]["purchases_by_area"] = {
             "type": "horizontal_bar_chart",
-            "title": "Total Compra por Área",
-            "description": "Distribución de compras por ubicación",
+            "title": "Compras por Área",
             "data": {
-                "categories": ["ÁREA A", "ÁREA B", "ÁREA C", "ÁREA D", "ÁREA E"],
-                "series": [
-                    {
-                        "name": "Compras",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#06D6A0"
-                    }
-                ],
-                "x_axis_label": "Millones MXN",
-                "y_axis_label": "Área"
+                "categories": ["AREA A", "AREA B"],
+                "series": [{"name": "Monto", "data": [0.1, 0.1], "color": "#118AB2"}]
             }
         }
 
         workshop["charts"]["purchases_by_type"] = {
             "type": "donut_chart",
-            "title": "Compras por Tipo",
-            "description": "Distribución de compras por categoría",
+            "title": "Distribución por Tipo",
             "data": {
-                "labels": ["DIESEL", "REFACCIONES", "LLANTAS", "OTROS"],
-                "values": [0.25, 0.25, 0.25, 0.25],
-                "colors": ["#EF476F", "#FFD166", "#06D6A0", "#8338EC"],
-                "total_formatted": "$1"
+                "labels": ["REFACCIONES", "DIESEL"],
+                "values": [0.1, 0.1],
+                "colors": ["#118AB2", "#06D6A0"]
             }
         }
 
         workshop["charts"]["top_suppliers_chart"] = {
             "type": "horizontal_bar_chart",
-            "title": "Top 10 Proveedores",
-            "description": "Principales proveedores por monto de compras",
+            "title": "Top Proveedores",
             "data": {
-                "categories": ["PROVEEDOR A", "PROVEEDOR B", "PROVEEDOR C", "PROVEEDOR D", "PROVEEDOR E", "PROVEEDOR F", "PROVEEDOR G", "PROVEEDOR H", "PROVEEDOR I", "PROVEEDOR J"],
-                "series": [
-                    {
-                        "name": "Monto",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#118AB2"
-                    }
-                ],
-                "x_axis_label": "Millones MXN",
-                "y_axis_label": "Proveedores"
+                "categories": ["PROVEEDOR A", "PROVEEDOR B"],
+                "series": [{"name": "Compras", "data": [0.1, 0.1], "color": "#FFD166"}]
             }
         }
 
         workshop["charts"]["valuation_trends"] = {
             "type": "line_chart",
-            "title": "Valorización Histórica 2025 vs. 2024",
-            "description": "Evolución mensual del valor del inventario",
+            "title": "Tendencia Valorización",
             "data": {
-                "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                "series": [
-                    {
-                        "name": "Actual 2025",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#118AB2"
-                    },
-                    {
-                        "name": "Anterior 2024",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, None, 0.1, 0.1, 0.1],
-                        "color": "#CCCCCC"
-                    }
-                ],
-                "y_axis_label": "Millones MXN",
-                "x_axis_label": "Meses"
+                "months": ["Ene", "Feb", "Mar"],
+                "series": [{"name": "Valor", "data": [0.1, 0.1, 0.1], "color": "#8338EC"}]
             }
         }
 
         workshop["charts"]["valuation_by_area"] = {
-            "type": "bar_chart",
-            "title": "Valorización Actual por Área",
-            "description": "Distribución del inventario por ubicación",
+            "type": "horizontal_bar_chart",
+            "title": "Valorización por Área",
             "data": {
-                "categories": ["ÁREA 01", "ÁREA 02", "ÁREA 03", "ÁREA 04", "ÁREA 05"],
-                "series": [
-                    {
-                        "name": "Valor Actual",
-                        "data": [0.1, 0.1, 0.1, 0.1, 0.1],
-                        "color": "#118AB2"
-                    }
-                ],
-                "y_axis_label": "Millones MXN",
-                "x_axis_label": "Área"
+                "categories": ["AREA A", "AREA B"],
+                "series": [{"name": "Valor", "data": [0.1, 0.1], "color": "#8338EC"}]
             }
         }
 
         workshop["tables"]["availability_detail"] = {
             "type": "table",
-            "title": "Detalle de Disponibilidad por Área/Tipo Operación/Unidad",
-            "headers": ["Tipo Operación", "Días del Mes", "Días en Taller", "Días Disponibles", "Disponibilidad"],
-            "rows": [
-                ["SIN ASIGNAR", "4991", "2083", "2908", "58%"],
-                ["CADEREYTA MULTIFLET", "93", "37", "56", "60%"],
-                ["M07", "31", "14", "17", "55%"],
-                ["M10", "31", "22", "9", "29%"],
-                ["VMR25", "31", "1", "30", "97%"],
-                ["CADEREYTA TINSA", "1922", "837", "1085", "56%"],
-                ["05", "31", "31", "0", "0%"],
-                ["09", "31", "31", "0", "0%"],
-                ["103", "31", "31", "0", "0%"],
-                ["106", "31", "31", "0", "0%"],
-                ["144", "31", "1", "30", "97%"]
-            ],
-            "summary": {
-                "total_days": "4991",
-                "total_workshop_days": "2083",
-                "total_available_days": "2908",
-                "overall_availability": "58%"
-            }
+            "title": "Detalle Disponibilidad por Unidad",
+            "headers": ["Unidad", "Área", "Días Operando", "Días Taller", "% Disponibilidad"],
+            "rows": [["U1", "AREA A", "1", "1", "0.1%"]]
         }
         
         workshop["tables"]["expenses_by_unit"] = {
             "type": "table",
             "title": "Detalle Gastos x Unidad",
-            "headers": ["Unidad", "Costo Mtto x Km", "Gasto Llantas Nuevas", "Gasto Llantas Renovadas", "Gasto Mano de Obra", "Gasto Refacciones", "Gasto Taller Externo", "Costo de Mantenimiento", "Costo Total"],
-            "rows": [
-                ["02", "$1", "", "", "$1", "$1", "", "$1", "$1"],
-                ["03", "$1", "$1", "", "$1", "$1", "", "$1", "$1"],
-                ["05", "$1", "", "", "$1", "$1", "", "$1", "$1"],
-                ["07", "$1", "$1", "", "$1", "$1", "", "$1", "$1"],
-                ["09", "$1", "", "", "", "$1", "$1", "$1", "$1"],
-                ["106", "$1", "", "", "$1", "$1", "$1", "$1", "$1"],
-                ["118", "$1", "", "", "$1", "$1", "", "$1", "$1"],
-                ["21", "$1", "", "", "$1", "$1", "$1", "$1", "$1"]
-            ],
-            "total_row": ["TOTAL", "$1", "$1", "$1", "$1", "$1", "$1", "$1", "$1"]
+            "headers": ["Unidad", "Costo Mtto x Km", "Costo Total"],
+            "rows": [["U1", "$1", "$1"]]
         }
         
         workshop["tables"]["service_orders_detail"] = {
             "type": "table",
             "title": "Detalle Órdenes de Servicio",
-            "headers": ["Área", "Orden", "Fecha Inicio", "Unidad", "Tipo Operación", "Costo Mtto Interno", "Costo Mtto Externo", "Costo Llantas", "Subtotal", "Fecha Cierre", "Tipo Reparación"],
-            "rows": [
-                ["ÁREA A", "2307", "22/07/2025", "03", "SIN ASIGNAR", "$1", "", "$1", "$1", "22/07/2025", "CORRECTIVO"],
-                ["ÁREA A", "2300", "21/07/2025", "07", "SIN ASIGNAR", "$1", "", "$1", "$1", "21/07/2025", "CORRECTIVO"],
-                ["ÁREA A", "2140", "01/07/2025", "02", "SIN ASIGNAR", "$1", "", "", "$1", "01/07/2025", "CORRECTIVO"],
-                ["ÁREA A", "2148", "02/07/2025", "02", "SIN ASIGNAR", "$1", "", "", "$1", "02/07/2025", "CORRECTIVO"],
-                ["ÁREA B", "2353", "09/07/2025", "05", "SIN ASIGNAR", "$1", "", "", "$1", "09/07/2025", "CORRECTIVO"],
-                ["ÁREA B", "2403", "26/06/2025", "09", "SIN ASIGNAR", "", "$1", "", "$1", "03/07/2025", "CORRECTIVO"]
-            ],
-            "summary": {
-                "total_orders": 1,
-                "total_internal_cost": "$1",
-                "total_external_cost": "$1",
-                "total_tire_cost": "$1",
-                "total_cost": "$1"
-            }
+            "headers": ["Orden", "Fecha Inicio", "Unidad", "Subtotal"],
+            "rows": [["1", "01/01/2025", "U1", "$1"]]
         }
         
         workshop["tables"]["components_by_order"] = {
             "type": "table",
             "title": "Detalle de Componentes por Orden",
-            "headers": ["Área", "Orden", "Familia", "Subfamilia", "Componente", "Costo Mtto Interno", "Costo Mtto Externo", "Costo"],
-            "rows": [
-                ["ÁREA A", "284", "GENERAL", "ACCESORIOS", "COMPONENTE A", "", "$1", "$1"],
-                ["ÁREA A", "287", "GENERAL", "ACCESORIOS", "COMPONENTE B", "$1", "", "$1"],
-                ["ÁREA A", "288", "SISTEMA ELECTRICO", "SISTEMA DE LUCES", "COMPONENTE C", "$1", "", "$1"],
-                ["ÁREA B", "2313", "CHASIS Y CARROCERIA", "CARROCERIA", "COMPONENTE D", "$1", "", "$1"],
-                ["ÁREA B", "2313", "GENERAL", "EQUIPO DE SEGURIDAD", "COMPONENTE E", "$1", "", "$1"],
-                ["ÁREA B", "2317", "SISTEMA DE AIRE", "VALVULAS", "COMPONENTE F", "$1", "", "$1"]
-            ],
-            "summary": {
-                "total_components": 1,
-                "total_internal": "$1",
-                "total_external": "$1",
-                "total": "$1"
-            }
+            "headers": ["Orden", "Familia", "Componente", "Costo"],
+            "rows": [["1", "FAMILIA A", "COMPONENTE A", "$1"]]
         }
         
         workshop["tables"]["open_orders"] = {
             "type": "table",
             "title": "Órdenes No Cerradas",
-            "headers": ["#", "Orden", "Estatus", "Fecha", "Unidad", "Tipo Reparación", "Días Abierta"],
-            "rows": [
-                ["1", "104", "ABIERTAS", "29/05/2024", "118", "CORRECTIVO", "1"],
-                ["2", "406", "ABIERTAS", "26/12/2025", "M-32", "PREVENTIVO", "1"],
-                ["3", "767", "ABIERTAS", "26/12/2025", "U-45", "CORRECTIVO", "1"],
-                ["4", "3089", "ABIERTAS", "07/10/2025", "U-67", "CORRECTIVO", "1"],
-                ["5", "3107", "ABIERTAS", "26/12/2025", "U-89", "PREVENTIVO", "1"],
-                ["6", "118", "LIBERADAS", "05/06/2024", "U-23", "CORRECTIVO", "1"],
-                ["7", "125", "LIBERADAS", "04/07/2024", "U-56", "PREVENTIVO", "1"],
-                ["8", "165", "LIBERADAS", "13/12/2023", "U-78", "CORRECTIVO", "1"]
-            ],
-            "summary": {
-                "total_open": 1,
-                "total_released": 1,
-                "avg_days_open": 1
-            }
+            "headers": ["Orden", "Estatus", "Fecha", "Unidad"],
+            "rows": [["1", "ABIERTAS", "01/01/2025", "U1"]]
         }
 
         workshop["tables"]["valuation_by_family"] = {
             "type": "table",
-            "title": "Valorización Actual por Familia, Subfamilia, Insumo y Medida",
-            "headers": ["Familia", "Cantidad", "Valorización Actual", "% TG Valorización", "Estado MinMax"],
-            "rows": [
-                ["FAMILIA A", "1", "$1", "0.1%", "Dentro del rango"],
-                ["FAMILIA B", "1", "$1", "0.1%", "Dentro del rango"],
-                ["FAMILIA C", "1", "$1", "0.1%", "Dentro del rango"],
-                ["FAMILIA D", "1", "$1", "0.1%", "Dentro del rango"],
-                ["FAMILIA E", "1", "$1", "0.1%", "Dentro del rango"],
-                ["FAMILIA F", "1", "$1", "0.1%", "Dentro del rango"],
-                ["FAMILIA G", "1", "$1", "0.1%", "Dentro del rango"],
-                ["FAMILIA H", "1", "$1", "0.1%", "Dentro del rango"]
-            ],
-            "total_row": ["TOTAL", "1", "$1", "100.00%", ""]
+            "title": "Valorización por Familia",
+            "headers": ["Familia", "Items", "Valor Total"],
+            "rows": [["FAMILIA A", "1", "$1"]]
         }
 
         workshop["tables"]["purchase_orders_detail"] = {
             "type": "table",
-            "title": "Detalle de Órdenes de Compra",
-            "headers": ["Área", "Orden Compra", "Fecha", "Proveedor", "RFC", "Tipo", "Subtotal", "Total Compra"],
-            "rows": [
-                ["ÁREA 01", "202500556", "01/07/2025", "PROVEEDOR A", "RFC001", "REFACCIONES", "$1", "$1"],
-                ["ÁREA 01", "202500560", "01/07/2025", "PROVEEDOR B", "RFC002", "REFACCIONES", "$1", "$1"],
-                ["ÁREA 01", "202500572", "04/07/2025", "PROVEEDOR C", "RFC003", "UREA", "$1", "$1"],
-                ["ÁREA 01", "202500574", "05/07/2025", "PROVEEDOR D", "RFC004", "REFACCIONES", "$1", "$1"],
-                ["ÁREA 05", "202500015", "01/01/2025", "PROVEEDOR E", "RFC005", "SOLDADURA", "$1", "$1"],
-                ["ÁREA 04", "202500114", "15/01/2025", "PROVEEDOR F", "RFC006", "REFACCIONES", "$1", "$1"]
-            ],
-            "summary": {
-                "total_orders": 1,
-                "total_amount": "$1"
-            }
+            "title": "Detalle Órdenes de Compra",
+            "headers": ["OC", "Fecha", "Proveedor", "Monto"],
+            "rows": [["1", "01/01/2025", "PROVEEDOR A", "$1"]]
         }
 
         workshop["tables"]["inventory_detail"] = {
             "type": "table",
-            "title": "Detalle Insumos de Almacén",
-            "headers": ["Área", "Almacén", "Insumo", "Unidad", "Nombre", "Familia", "Cantidad", "Costo Uni"],
-            "rows": [
-                ["ÁREA 02", "REFACCIONES", "0107001023", "LITROS", "INSUMO A", "LUBRICANTES", "1.00", "$1"],
-                ["ÁREA 01", "REFACCIONES", "0107001004", "LITROS", "INSUMO B", "LUBRICANTES", "1.00", "$1"],
-                ["ÁREA 01", "REFACCIONES", "0107001002", "LITROS", "INSUMO C", "LUBRICANTES", "1.00", "$1"],
-                ["ÁREA 02", "REFACCIONES", "0117001008", "LITROS", "INSUMO D", "DIESEL", "1.00", "$1"],
-                ["ÁREA 01", "ACEITES", "0117001006", "LITROS", "INSUMO E", "DIESEL", "1.00", "$1"]
-            ],
-            "summary": {
-                "total_items": 1,
-                "total_with_stock": 1,
-                "total_without_stock": 1
-            }
+            "title": "Detalle de Insumos",
+            "headers": ["Código", "Nombre", "Stock", "Valor"],
+            "rows": [["C1", "INSUMO A", "1", "$1"]]
+        }
+
+        workshop["tables"]["top_suppliers"] = {
+            "type": "table",
+            "title": "Top Proveedores",
+            "headers": ["Proveedor", "Compras Mes", "Compras Año", "% Part.", "Días Pago"],
+            "rows": [["PROVEEDOR A", "$1", "$1", "0.1%", "1"]]
+        }
+
+        workshop["tables"]["inventory_history"] = {
+            "type": "table",
+            "title": "Historial de Movimientos",
+            "headers": ["Fecha", "Tipo", "Concepto", "Cantidad", "Valor", "Saldo"],
+            "rows": [["01/01/2025", "Entrada", "OC-1", "+1", "$1", "$1"]]
         }
 
         return data

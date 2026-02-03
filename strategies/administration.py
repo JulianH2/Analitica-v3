@@ -5,6 +5,10 @@ from .base_strategy import KPIStrategy
 from settings.theme import DesignSystem, SemanticColors
 from utils.helpers import format_value
 from dash import dcc
+from datetime import datetime
+
+def get_current_month():
+    return datetime.now().month
 
 class AdminKPIStrategy(KPIStrategy):
     def __init__(self, screen_id, kpi_key, title, icon, color, has_detail=True, layout_config=None, inverse=False):
@@ -41,7 +45,7 @@ class AdminKPIStrategy(KPIStrategy):
             "ytd_delta": node.get("ytd_delta"),
             "ytd_delta_formatted": node.get("ytd_delta_formatted"),
             "status": node.get("status"),
-            "status_color": node.get("status_color")
+            "status_color": node.get("status_color") or self.color
         }
         
         return config
@@ -171,34 +175,37 @@ class AdminDonutChartStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        
         labels = data_source.get("labels", [])
         values = data_source.get("values", [])
         colors = data_source.get("colors", [])
+        total = data_source.get("total_formatted", "")
         
         if not labels or not values:
-            return self._create_empty_figure("Sin datos de cartera")
+            return self._create_empty_figure("Sin datos")
         
         if not colors:
-            colors = [DesignSystem.COLOR_MAP.get("green"), 
-                     DesignSystem.COLOR_MAP.get("yellow"), 
-                     DesignSystem.COLOR_MAP.get("red")]
+            colors = [DesignSystem.BRAND[5], DesignSystem.INFO[5], DesignSystem.SUCCESS[5], DesignSystem.WARNING[5], DesignSystem.DANGER[5]]
         
         fig = go.Figure(data=[go.Pie(
             labels=labels, 
             values=values, 
-            hole=0.5,
+            hole=0.6,
             marker=dict(colors=colors),
-            textinfo='percent+label',
-            textposition='auto'
+            textinfo='percent',
+            textposition='outside'
         )])
+        
+        if total:
+            fig.add_annotation(
+                text=total, x=0.5, y=0.5, showarrow=False,
+                font=dict(size=14, weight="bold", color=DesignSystem.SLATE[7])
+            )
         
         fig.update_layout(
             showlegend=True,
-            legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center"),
-            margin=dict(t=10, b=10, l=10, r=10),
+            legend=dict(orientation="v", y=0.5, x=1.1),
+            margin=dict(t=20, b=20, l=10, r=80),
             paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
             height=300
         )
         
@@ -224,43 +231,34 @@ class AdminTrendChartStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        
-        categories = (data_source.get("categories") or 
-                     data_source.get("months") or 
-                     data_source.get("meses") or [])
-        
+        all_categories = (data_source.get("categories") or data_source.get("months") or [])
         series_list = data_source.get("series", [])
         
-        if not categories or not series_list:
-            return self._create_empty_figure("Sin datos temporales")
+        if not all_categories or not series_list:
+            return self._create_empty_figure("Sin datos")
+        
+        current_month = get_current_month()
+        categories = all_categories[:current_month]
         
         fig = go.Figure()
         
         for idx, serie in enumerate(series_list):
             s_name = serie.get("name", f"Serie {idx}")
-            s_data = serie.get("data", [])
+            s_data = serie.get("data", [])[:current_month]
             s_color = serie.get("color", DesignSystem.BRAND[5])
             s_type = serie.get("type", "bar")
-            is_dashed = serie.get("dashed", False) or "Meta" in s_name or "Presupuesto" in s_name
+            is_dashed = serie.get("dashed", False) or "Meta" in s_name
             
             if s_type == "line" or is_dashed:
                 fig.add_trace(go.Scatter(
-                    x=categories,
-                    y=s_data,
-                    name=s_name,
+                    x=categories, y=s_data, name=s_name,
                     mode='lines+markers',
-                    line=dict(
-                        color=s_color,
-                        width=3,
-                        dash='dot' if is_dashed else 'solid'
-                    ),
+                    line=dict(color=s_color, width=3, dash='dot' if is_dashed else 'solid'),
                     marker=dict(size=6)
                 ))
             else:
                 fig.add_trace(go.Bar(
-                    x=categories,
-                    y=s_data,
-                    name=s_name,
+                    x=categories, y=s_data, name=s_name,
                     marker_color=s_color
                 ))
         
@@ -296,7 +294,6 @@ class AdminHorizontalBarStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        
         categories = data_source.get("categories", [])
         series_list = data_source.get("series", [])
         
@@ -311,19 +308,15 @@ class AdminHorizontalBarStrategy(KPIStrategy):
             s_color = serie.get("color", self.hex_color)
             
             fig.add_trace(go.Bar(
-                y=categories,
-                x=s_data,
-                name=s_name,
-                orientation='h',
-                marker_color=s_color,
+                y=categories, x=s_data, name=s_name,
+                orientation='h', marker_color=s_color,
                 text=[f"${v:,.0f}" if v > 1000 else f"${v:.2f}" for v in s_data],
                 textposition='outside'
             ))
         
         fig.update_layout(
-            barmode='stack' if len(series_list) > 1 else 'relative',
-            height=max(300, len(categories) * 30),
-            margin=dict(l=120, r=40, t=30, b=40),
+            height=max(300, len(categories) * 35),
+            margin=dict(l=140, r=60, t=30, b=40),
             yaxis=dict(autorange="reversed"),
             paper_bgcolor=DesignSystem.TRANSPARENT,
             plot_bgcolor=DesignSystem.TRANSPARENT,
@@ -352,36 +345,27 @@ class AdminStackedBarStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        
         categories = data_source.get("categories", [])
         series_list = data_source.get("series", [])
         
         if not categories:
-            return self._create_empty_figure("Sin categorías")
+            return self._create_empty_figure("Sin datos")
         
         fig = go.Figure()
         
         for serie in series_list:
-            s_name = serie.get("name", "Valor")
-            s_data = serie.get("data", [])
-            s_color = serie.get("color", self.hex_color)
-            
             fig.add_trace(go.Bar(
-                y=categories,
-                x=s_data,
-                name=s_name,
-                orientation='h',
-                marker_color=s_color
+                y=categories, x=serie.get("data", []),
+                name=serie.get("name", ""),
+                orientation='h', marker_color=serie.get("color", self.hex_color)
             ))
         
         fig.update_layout(
             barmode='stack',
             height=max(300, len(categories) * 40),
-            margin=dict(l=120, r=40, t=30, b=40),
+            margin=dict(l=140, r=40, t=30, b=40),
             yaxis=dict(autorange="reversed"),
             paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            showlegend=True,
             legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center")
         )
         
@@ -398,43 +382,36 @@ class AdminTableStrategy:
 
     def _resolve_table_data(self, data_context):
         from services.data_manager import data_manager
-        
         screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {}) # type: ignore
         inject_paths = screen_config.get("inject_paths", {})
-        
         path = inject_paths.get(self.table_key)
-        if not path:
-            return None
-        
+        if not path: return None
         from utils.helpers import safe_get
         return safe_get(data_context, path)
 
     def render(self, data_context, **kwargs):
         node = self._resolve_table_data(data_context)
-        
-        if not node:
-            return dmc.Text("Sin datos de tabla", c="dimmed", ta="center", py="xl") # type: ignore
+        if not node: return dmc.Text("Sin datos de tabla", c="dimmed", ta="center", py="xl") # type: ignore
         
         data_source = node.get("data", node)
         headers = data_source.get("headers", [])
         rows = data_source.get("rows", [])
         
-        if not headers or not rows:
-            return dmc.Text("Sin datos", c="dimmed", ta="center", py="xl") # type: ignore
+        if not headers or not rows: return dmc.Text("Sin datos", c="dimmed", ta="center", py="xl") # type: ignore
         
         return dmc.Table([
             dmc.TableThead(dmc.TableTr([
-                dmc.TableTh(h, style={"fontSize": "11px", "fontWeight": "bold"}) 
+                dmc.TableTh(h, style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": DesignSystem.SLATE[0]}) 
                 for h in headers
             ])),
             dmc.TableTbody([
                 dmc.TableTr([
-                    dmc.TableTd(str(cell), style={"fontSize": "11px"}) 
-                    for cell in row
+                    dmc.TableTd(str(cell), style={"fontSize": "11px", "fontWeight": "bold" if idx == 0 else "normal"}) 
+                    for idx, cell in enumerate(row)
                 ]) 
                 for row in rows
             ])
-        ], striped="odd", withTableBorder=True, withColumnBorders=True)
+        ], striped=True, highlightOnHover=True, withTableBorder=True, withColumnBorders=True) # type: ignore
 
 
 class AdminCashFlowChartStrategy(KPIStrategy):
@@ -448,42 +425,25 @@ class AdminCashFlowChartStrategy(KPIStrategy):
 
     def get_figure(self, data_context):
         node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
-        
-        if not node:
-            return self._create_empty_figure()
+        if not node: return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        
         categories = data_source.get("categories", [])
         series_list = data_source.get("series", [])
         
-        if not categories or not series_list:
-            return self._create_empty_figure("Sin datos de flujo")
-        
         fig = go.Figure()
-        
         for serie in series_list:
-            s_name = serie.get("name", "")
-            s_data = serie.get("data", [])
-            s_color = serie.get("color", self.hex_color)
-            
             fig.add_trace(go.Bar(
-                x=categories,
-                y=s_data,
-                name=s_name,
-                marker_color=s_color
+                x=categories, y=serie.get("data", []),
+                name=serie.get("name", ""),
+                marker_color=serie.get("color", self.hex_color)
             ))
         
         fig.update_layout(
-            barmode='group',
-            height=350,
-            margin=dict(t=30, b=40, l=40, r=20),
-            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            hovermode='x unified'
+            barmode='group', height=350, margin=dict(t=30, b=40, l=40, r=20),
+            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
+            paper_bgcolor=DesignSystem.TRANSPARENT, hovermode='x unified'
         )
-        
         return fig
 
     def render_detail(self, data_context):
@@ -501,44 +461,26 @@ class AdminMultiLineChartStrategy(KPIStrategy):
 
     def get_figure(self, data_context):
         node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
-        
-        if not node:
-            return self._create_empty_figure()
+        if not node: return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        
-        categories = (data_source.get("months") or 
-                     data_source.get("categories") or [])
+        categories = (data_source.get("months") or data_source.get("categories") or [])
         series_list = data_source.get("series", [])
         
-        if not categories or not series_list:
-            return self._create_empty_figure("Sin datos")
-        
         fig = go.Figure()
-        
         for serie in series_list:
-            s_name = serie.get("name", "")
-            s_data = serie.get("data", [])
-            s_color = serie.get("color", self.hex_color)
-            
             fig.add_trace(go.Scatter(
-                x=categories,
-                y=s_data,
-                name=s_name,
-                mode='lines+markers',
-                line=dict(color=s_color, width=3),
+                x=categories, y=serie.get("data", []),
+                name=serie.get("name", ""), mode='lines+markers',
+                line=dict(color=serie.get("color", self.hex_color), width=3),
                 marker=dict(size=6)
             ))
         
         fig.update_layout(
-            height=350,
-            margin=dict(t=30, b=40, l=40, r=20),
-            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            hovermode='x unified'
+            height=350, margin=dict(t=30, b=40, l=40, r=20),
+            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
+            paper_bgcolor=DesignSystem.TRANSPARENT, hovermode='x unified'
         )
-        
         return fig
 
     def render_detail(self, data_context):

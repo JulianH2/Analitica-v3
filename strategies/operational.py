@@ -233,8 +233,8 @@ class OpsTrendChartStrategy(KPIStrategy):
             s_data_filtered = s_data[:current_month]
             
             is_meta = "meta" in s_name.lower()
-            is_anterior = "anterior" in s_name.lower() or "2024" in s_name or "2025" in s_name
-            is_actual = "actual" in s_name.lower() or "2025" in s_name or "2026" in s_name
+            is_anterior = "anterior" in s_name.lower() or "2024" in s_name
+            is_actual = "actual" in s_name.lower() or "2025" in s_name
             
             x_clean, y_clean = clean_series(categories, s_data_filtered)
             
@@ -420,52 +420,47 @@ class OpsTableStrategy:
                 ], align="center", gap="xs"),
                 py="xl"
             )
+
         headers = node.get("headers", [])
         rows = node.get("rows", [])
+        summary = node.get("summary", {})
         
         if not headers and "data" in node:
             data_source = node.get("data", {})
             headers = data_source.get("headers", [])
             rows = data_source.get("rows", [])
-        
+
         if not headers:
             return dmc.Text(f"Sin headers: {self.table_key}", c="dimmed", ta="center", py="xl") # type: ignore
-        
-        if not rows:
-            return dmc.Text("Sin filas de datos", c="dimmed", ta="center", py="xl") # type: ignore
-        
+
+        table_rows = [
+            dmc.TableTr([
+                dmc.TableTd(str(cell) if cell is not None else "", 
+                    style={"fontSize": "11px", "whiteSpace": "nowrap", "padding": "6px 12px"}) 
+                for cell in row
+            ]) for row in rows[:50]
+        ]
+
+        if summary:
+            summary_row = dmc.TableTr([
+                dmc.TableTd(str(summary.get(h.lower().replace(" ", "_"), "---")),
+                    style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": DesignSystem.SLATE[0]})
+                for h in headers
+            ])
+            table_rows.append(summary_row)
+
         return dmc.Table(
             [
                 dmc.TableThead(
                     dmc.TableTr([
-                        dmc.TableTh(
-                            str(h), 
-                            style={
-                                "fontSize": "11px", 
-                                "fontWeight": "600", 
-                                "whiteSpace": "nowrap",
-                                "backgroundColor": DesignSystem.SLATE[0],
-                                "color": DesignSystem.SLATE[7],
-                                "padding": "8px 12px"
-                            }
-                        ) 
+                        dmc.TableTh(str(h), 
+                            style={"fontSize": "11px", "fontWeight": "600", "whiteSpace": "nowrap",
+                                   "backgroundColor": DesignSystem.SLATE[0], "color": DesignSystem.SLATE[7],
+                                   "padding": "8px 12px"}) 
                         for h in headers
                     ])
                 ),
-                dmc.TableTbody([
-                    dmc.TableTr([
-                        dmc.TableTd(
-                            str(cell) if cell is not None else "", 
-                            style={
-                                "fontSize": "11px", 
-                                "whiteSpace": "nowrap",
-                                "padding": "6px 12px"
-                            }
-                        ) 
-                        for cell in row
-                    ]) 
-                    for row in rows[:50]
-                ])
+                dmc.TableTbody(table_rows)
             ], 
             striped=True, # type: ignore
             highlightOnHover=True,
@@ -473,7 +468,6 @@ class OpsTableStrategy:
             withColumnBorders=True,
             style={"width": "100%"}
         )
-
 
 class OpsMapStrategy(KPIStrategy):
     def __init__(self, screen_id, chart_key, title="Mapa de Rutas", icon="tabler:map-2", color="indigo", has_detail=True, layout_config=None):
@@ -485,11 +479,31 @@ class OpsMapStrategy(KPIStrategy):
         return {"title": self.title, "icon": self.icon, "is_chart": True}
 
     def get_figure(self, data_context):
-        return self._create_empty_figure("Mapa no disponible")
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+        if not node or "data" not in node:
+            return self._create_empty_figure("Mapa no disponible")
+            
+        routes = node["data"].get("routes", [])
+        fig = go.Figure()
+
+        for route in routes:
+            fig.add_trace(go.Scattergeo(
+                lat = [route["origin"]["lat"], route["destination"]["lat"]],
+                lon = [route["origin"]["lng"], route["destination"]["lng"]],
+                mode = 'lines+markers',
+                line = dict(width = 2, color = DesignSystem.BRAND[5]),
+                marker = dict(size = 4, color = DesignSystem.BRAND[5])
+            ))
+
+        fig.update_layout(
+            height=350,
+            margin=dict(l=0, r=0, t=0, b=0),
+            geo = dict(scope='north america', projection_type='azimuthal equal area', showland=True, landcolor=DesignSystem.SLATE[0])
+        )
+        return fig
 
     def render_detail(self, data_context):
         return None
-
 
 class OpsComboChartStrategy(KPIStrategy):
     def __init__(self, screen_id, chart_key, title, icon="tabler:chart-line", color="indigo", layout_config=None):

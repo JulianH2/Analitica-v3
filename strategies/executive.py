@@ -43,8 +43,9 @@ class ExecutiveKPIStrategy(KPIStrategy):
             "icon": self.icon,
             "color": self.color,
             "inverse": self.inverse,
-            "value": config["value_formatted"],
-            "main_value": config["value_formatted"]
+            "value": config.get("value_formatted", "---"),
+            "main_value": config.get("value_formatted", "---"),
+            "status_color": config.get("status_color") or self.color
         }) # type: ignore
 
         return config
@@ -102,8 +103,36 @@ class ExecutiveDonutStrategy(KPIStrategy):
         data_source = node.get("data", node)
         labels = data_source.get("labels", [])
         values = data_source.get("values", [])
-        if not labels or not values: return self._create_empty_figure()
-        hex_colors = [DesignSystem.COLOR_MAP.get(self.color_map.get(l, "gray"), DesignSystem.SLATE[5]) for l in labels]
-        fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.7, marker=dict(colors=hex_colors), textinfo='percent', textposition='inside')])
-        fig.update_layout(paper_bgcolor=DesignSystem.TRANSPARENT, plot_bgcolor=DesignSystem.TRANSPARENT, height=210, margin=dict(t=20, b=20, l=20, r=20), showlegend=True, legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.0))
+        colors = data_source.get("colors", [])
+        total = data_source.get("total_formatted", "")
+
+        if not labels or not values: 
+            return self._create_empty_figure()
+        
+        if not colors:
+            colors = [DesignSystem.COLOR_MAP.get(self.color_map.get(l, "gray"), DesignSystem.SLATE[5]) for l in labels]
+            
+        fig = go.Figure(data=[go.Pie(
+            labels=labels, 
+            values=values, 
+            hole=.7, 
+            marker=dict(colors=colors), 
+            textinfo='percent', 
+            textposition='inside'
+        )])
+
+        if total:
+            fig.add_annotation(
+                text=total, x=0.5, y=0.5, showarrow=False,
+                font=dict(size=14, weight="bold", color=DesignSystem.SLATE[7])
+            )
+
+        fig.update_layout(
+            paper_bgcolor=DesignSystem.TRANSPARENT, 
+            plot_bgcolor=DesignSystem.TRANSPARENT, 
+            height=210, 
+            margin=dict(t=20, b=20, l=20, r=20), 
+            showlegend=True, 
+            legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.0)
+        )
         return fig

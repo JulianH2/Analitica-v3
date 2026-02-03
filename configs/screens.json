@@ -80,6 +80,7 @@
       "mtto_llantas": ["main", "dashboard", "kpis", "mtto_llantas"],
       "main_indicators": ["main", "dashboard", "charts", "main_indicators"],
       "client_portfolio": ["main", "dashboard", "charts", "client_portfolio"],
+      "supplier_balance": ["main", "dashboard", "charts", "supplier_balance"],
       "top_routes": ["main", "dashboard", "tables", "top_routes"],
       "top_clients": ["main", "dashboard", "tables", "top_clients"]
     }
@@ -131,373 +132,98 @@
     },
     "table_roadmap": {
       "routes_empty": {
-        "dimensions": [
-          "d_ruta.ruta"
-        ],
-        "metrics": [
-          "trips",
-          "kilometers",
-          "settlement_costs",
-          "driver_salary"
-        ],
-        "fixed_filters": {
-          "d_viaje.ind_cargado": 0
-        },
+        "dimensions": ["d_ruta.ruta"],
+        "metrics": ["trips", "kilometers", "settlement_costs", "driver_salary"],
+        "fixed_filters": {"d_viaje.ind_cargado": 0},
         "columns": [
-          {
-            "key": "d_ruta.ruta",
-            "label": "Ruta",
-            "format": "text"
-          },
-          {
-            "key": "trips",
-            "label": "Viajes",
-            "format": "integer"
-          },
-          {
-            "key": "kilometers",
-            "label": "Kms",
-            "format": "integer"
-          },
-          {
-            "key": "cost_total",
-            "label": "Costo Total",
-            "format": "currency"
-          }
+          {"key": "d_ruta.ruta", "label": "Ruta", "format": "text"},
+          {"key": "trips", "label": "Viajes", "format": "integer"},
+          {"key": "kilometers", "label": "Kms", "format": "integer"},
+          {"key": "cost_total", "label": "Costo Total", "format": "currency"}
         ]
       },
       "routes_loaded": {
-        "dimensions": [
-          "d_ruta.ruta"
-        ],
-        "metrics": [
-          "trips",
-          "kilometers",
-          "trip_revenue"
-        ],
-        "fixed_filters": {
-          "d_viaje.ind_cargado": 1
-        },
+        "dimensions": ["d_ruta.ruta"],
+        "metrics": ["trips", "kilometers", "trip_revenue"],
+        "fixed_filters": {"d_viaje.ind_cargado": 1},
         "columns": [
-          {
-            "key": "d_ruta.ruta",
-            "label": "Ruta",
-            "format": "text"
-          },
-          {
-            "key": "trips",
-            "label": "Viajes",
-            "format": "integer"
-          },
-          {
-            "key": "kilometers",
-            "label": "Kms",
-            "format": "integer"
-          },
-          {
-            "key": "trip_revenue",
-            "label": "Ingresos",
-            "format": "currency"
-          }
+          {"key": "d_ruta.ruta", "label": "Ruta", "format": "text"},
+          {"key": "trips", "label": "Viajes", "format": "integer"},
+          {"key": "kilometers", "label": "Kms", "format": "integer"},
+          {"key": "trip_revenue", "label": "Ingresos", "format": "currency"}
         ]
       },
       "top_routes": {
-        "dimensions": [
-          "d_ruta.ruta"
-        ],
-        "metrics": [
-          "trips",
-          "kilometers",
-          "trip_revenue"
-        ],
+        "dimensions": ["d_ruta.ruta"],
+        "metrics": ["trips", "kilometers", "trip_revenue"],
         "columns": [
-          {
-            "key": "d_ruta.ruta",
-            "label": "Ruta",
-            "format": "text"
-          },
-          {
-            "key": "trips",
-            "label": "Viajes",
-            "format": "integer"
-          },
-          {
-            "key": "kilometers",
-            "label": "Kms",
-            "format": "integer"
-          },
-          {
-            "key": "trip_revenue",
-            "label": "Ingresos",
-            "format": "currency"
-          }
+          {"key": "d_ruta.ruta", "label": "Ruta", "format": "text"},
+          {"key": "trips", "label": "Viajes", "format": "integer"},
+          {"key": "kilometers", "label": "Kms", "format": "integer"},
+          {"key": "trip_revenue", "label": "Ingresos", "format": "currency"}
         ]
       },
       "top_clients": {
-        "dimensions": [
-          "d_trafico_cliente.nombre_cliente"
-        ],
-        "metrics": [
-          "trip_revenue",
-          "trips"
-        ],
+        "dimensions": ["d_trafico_cliente.nombre_cliente"],
+        "metrics": ["trip_revenue", "trips"],
         "columns": [
-          {
-            "key": "d_trafico_cliente.nombre_cliente",
-            "label": "Cliente",
-            "format": "text"
-          },
-          {
-            "key": "trip_revenue",
-            "label": "Ingresos",
-            "format": "currency"
-          },
-          {
-            "key": "trips",
-            "label": "Viajes",
-            "format": "integer"
-          },
-          {
-            "key": "pct_total",
-            "label": "% Total",
-            "format": "percent",
-            "is_total_ratio": true,
-            "numerator_key": "trip_revenue"
-          }
+          {"key": "d_trafico_cliente.nombre_cliente", "label": "Cliente", "format": "text"},
+          {"key": "trip_revenue", "label": "Ingresos", "format": "currency"},
+          {"key": "trips", "label": "Viajes", "format": "integer"},
+          {"key": "pct_total", "label": "% Total", "format": "percent", "is_total_ratio": true, "numerator_key": "trip_revenue"}
         ]
       },
       "income_by_operator_report": {
-        "dimensions": [
-          "d_personal.nombre"
-        ],
-        "metrics": [
-          "trip_revenue",
-          "trips",
-          "kilometers"
-        ],
+        "dimensions": ["d_personal.nombre"],
+        "metrics": ["trip_revenue", "trips", "kilometers"],
         "columns": [
-          {
-            "key": "d_personal.nombre",
-            "label": "Operador",
-            "format": "text"
-          },
-          {
-            "key": "trip_revenue",
-            "label": "Ingresos",
-            "format": "currency"
-          },
-          {
-            "key": "trips",
-            "label": "Viajes",
-            "format": "integer"
-          },
-          {
-            "key": "kilometers",
-            "label": "Kms",
-            "format": "integer"
-          },
-          {
-            "key": "revenue_per_trip_calc",
-            "label": "Ing/Viaje",
-            "format": "currency",
-            "formula": "trip_revenue / trips if trips else 0"
-          }
+          {"key": "d_personal.nombre", "label": "Operador", "format": "text"},
+          {"key": "trip_revenue", "label": "Ingresos", "format": "currency"},
+          {"key": "trips", "label": "Viajes", "format": "integer"},
+          {"key": "kilometers", "label": "Kms", "format": "integer"},
+          {"key": "revenue_per_trip_calc", "label": "Ing/Viaje", "format": "currency", "formula": "trip_revenue / trips if trips else 0"}
         ]
       },
       "income_by_unit_report": {
-        "dimensions": [
-          "d_unidad.id_unidad"
-        ],
-        "metrics": [
-          "trip_revenue",
-          "trips",
-          "kilometers"
-        ],
+        "dimensions": ["d_unidad.id_unidad"],
+        "metrics": ["trip_revenue", "trips", "kilometers"],
         "columns": [
-          {
-            "key": "d_unidad.id_unidad",
-            "label": "Unidad",
-            "format": "text"
-          },
-          {
-            "key": "trip_revenue",
-            "label": "Ingreso Viaje",
-            "format": "currency"
-          },
-          {
-            "key": "trips",
-            "label": "Viajes",
-            "format": "integer"
-          },
-          {
-            "key": "kilometers",
-            "label": "Kms",
-            "format": "integer"
-          },
-          {
-            "key": "pct_ingreso",
-            "label": "% Ingresos",
-            "format": "percent",
-            "is_total_ratio": true,
-            "numerator_key": "trip_revenue"
-          }
+          {"key": "d_unidad.id_unidad", "label": "Unidad", "format": "text"},
+          {"key": "trip_revenue", "label": "Ingreso Viaje", "format": "currency"},
+          {"key": "trips", "label": "Viajes", "format": "integer"},
+          {"key": "kilometers", "label": "Kms", "format": "integer"},
+          {"key": "pct_ingreso", "label": "% Ingresos", "format": "percent", "is_total_ratio": true, "numerator_key": "trip_revenue"}
         ]
       }
     },
     "inject_paths": {
-      "revenue_total": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "revenue_total"
-      ],
-      "revenue_previous": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "revenue_previous"
-      ],
-      "revenue_variance": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "revenue_variance"
-      ],
-      "total_trips": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "total_trips"
-      ],
-      "trips_previous": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "trips_previous"
-      ],
-      "trips_variance": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "trips_variance"
-      ],
-      "total_kilometers": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "total_kilometers"
-      ],
-      "kilometers_previous": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "kilometers_previous"
-      ],
-      "kilometers_variance": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "kilometers_variance"
-      ],
-      "revenue_per_trip": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "revenue_per_trip"
-      ],
-      "revenue_per_unit": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "revenue_per_unit"
-      ],
-      "units_used": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "units_used"
-      ],
-      "customers_served": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "customers_served"
-      ],
-      "load_status": [
-        "operational",
-        "dashboard",
-        "kpis",
-        "load_status"
-      ],
-      "revenue_trends": [
-        "operational",
-        "dashboard",
-        "charts",
-        "revenue_trends"
-      ],
-      "trips_trends": [
-        "operational",
-        "dashboard",
-        "charts",
-        "trips_trends"
-      ],
-      "revenue_by_operation_type": [
-        "operational",
-        "dashboard",
-        "charts",
-        "revenue_by_operation_type"
-      ],
-      "revenue_by_unit": [
-        "operational",
-        "dashboard",
-        "charts",
-        "revenue_by_unit"
-      ],
-      "main_routes": [
-        "operational",
-        "dashboard",
-        "charts",
-        "main_routes"
-      ],
-      "routes_empty": [
-        "operational",
-        "dashboard",
-        "tables",
-        "routes_empty"
-      ],
-      "routes_loaded": [
-        "operational",
-        "dashboard",
-        "tables",
-        "routes_loaded"
-      ],
-      "top_routes": [
-        "operational",
-        "dashboard",
-        "tables",
-        "top_routes"
-      ],
-      "top_clients": [
-        "operational",
-        "dashboard",
-        "tables",
-        "top_clients"
-      ],
-      "income_by_operator_report": [
-        "operational",
-        "dashboard",
-        "tables",
-        "income_by_operator_report"
-      ],
-      "income_by_unit_report": [
-        "operational",
-        "dashboard",
-        "tables",
-        "income_by_unit_report"
-      ]
+      "revenue_total": ["operational", "dashboard", "kpis", "revenue_total"],
+      "revenue_previous": ["operational", "dashboard", "kpis", "revenue_previous"],
+      "revenue_variance": ["operational", "dashboard", "kpis", "revenue_variance"],
+      "total_trips": ["operational", "dashboard", "kpis", "total_trips"],
+      "trips_previous": ["operational", "dashboard", "kpis", "trips_previous"],
+      "trips_variance": ["operational", "dashboard", "kpis", "trips_variance"],
+      "total_kilometers": ["operational", "dashboard", "kpis", "total_kilometers"],
+      "kilometers_previous": ["operational", "dashboard", "kpis", "kilometers_previous"],
+      "kilometers_variance": ["operational", "dashboard", "kpis", "kilometers_variance"],
+      "revenue_per_trip": ["operational", "dashboard", "kpis", "revenue_per_trip"],
+      "revenue_per_unit": ["operational", "dashboard", "kpis", "revenue_per_unit"],
+      "units_used": ["operational", "dashboard", "kpis", "units_used"],
+      "customers_served": ["operational", "dashboard", "kpis", "customers_served"],
+      "load_status": ["operational", "dashboard", "kpis", "load_status"],
+      "revenue_trends": ["operational", "dashboard", "charts", "revenue_trends"],
+      "trips_trends": ["operational", "dashboard", "charts", "trips_trends"],
+      "revenue_by_operation_type": ["operational", "dashboard", "charts", "revenue_by_operation_type"],
+      "revenue_by_unit": ["operational", "dashboard", "charts", "revenue_by_unit"],
+      "main_routes": ["operational", "dashboard", "tables", "main_routes"],
+      "routes_empty": ["operational", "dashboard", "tables", "routes_empty"],
+      "routes_loaded": ["operational", "dashboard", "tables", "routes_loaded"],
+      "top_routes": ["operational", "dashboard", "tables", "top_routes"],
+      "top_clients": ["operational", "dashboard", "tables", "top_clients"],
+      "income_by_operator_report": ["operational", "dashboard", "tables", "income_by_operator_report"],
+      "income_by_unit_report": ["operational", "dashboard", "tables", "income_by_unit_report"]
     }
   },
-
   "operational-costs": {
     "section_key": "operational",
     "ttl_seconds": 3600,
@@ -550,6 +276,7 @@
       }
     },
     "inject_paths": {
+      "profit_per_trip": ["operational", "dashboard", "kpis", "profit_per_trip"],
       "total_trip_cost": ["operational", "dashboard", "kpis", "total_trip_cost"],
       "net_profit": ["operational", "dashboard", "kpis", "net_profit"],
       "profit_margin": ["operational", "dashboard", "kpis", "profit_margin"],
@@ -560,11 +287,11 @@
       "driver_salary": ["operational", "dashboard", "kpis", "driver_salary"],
       "cost_and_profit_trends": ["operational", "dashboard", "charts", "cost_and_profit_trends"],
       "cost_by_concept": ["operational", "dashboard", "charts", "cost_by_concept"],
+      "cost_breakdown": ["operational", "dashboard", "charts", "cost_breakdown"],
       "margin_by_route": ["operational", "dashboard", "tables", "margin_by_route"],
       "income_by_unit_report": ["operational", "dashboard", "tables", "income_by_unit_report"]
     }
   },
-
   "operational-performance": {
     "section_key": "operational",
     "ttl_seconds": 3600,
@@ -623,7 +350,6 @@
       "performance_by_unit": ["operational", "dashboard", "tables", "performance_by_unit"]
     }
   },
-
   "operational-routes": {
     "section_key": "operational",
     "ttl_seconds": 3600,
@@ -652,7 +378,6 @@
       "main_routes": ["operational", "dashboard", "tables", "main_routes"]
     }
   },
-
   "administration-banks": {
     "section_key": "administration",
     "ttl_seconds": 3600,
@@ -676,10 +401,10 @@
       "final_balance": ["administration", "dashboard", "kpis", "final_balance"],
       "cash_flow": ["administration", "dashboard", "kpis", "cash_flow"],
       "daily_cash_flow": ["administration", "dashboard", "charts", "daily_cash_flow"],
-      "balance_by_bank": ["administration", "dashboard", "charts", "balance_by_bank"]
+      "balance_by_bank": ["administration", "dashboard", "charts", "balance_by_bank"],
+      "income_expense_concepts": ["administration", "dashboard", "tables", "income_expense_concepts"]
     }
   },
-
   "administration-receivables": {
     "section_key": "administration",
     "ttl_seconds": 3600,
@@ -718,17 +443,19 @@
     },
     "inject_paths": {
       "billed_amount": ["administration", "dashboard", "kpis", "billed_amount"],
-      "accounts_receivable": ["administration", "dashboard", "kpis", "accounts_receivable"],
+      "credit_notes": ["administration", "dashboard", "kpis", "credit_notes"],
+      "debit_notes": ["administration", "dashboard", "kpis", "debit_notes"],
       "collected_amount": ["administration", "dashboard", "kpis", "collected_amount"],
+      "accounts_receivable": ["administration", "dashboard", "kpis", "accounts_receivable"],
+      "net_balance": ["administration", "dashboard", "kpis", "net_balance"],
       "collection_efficiency": ["administration", "dashboard", "kpis", "collection_efficiency"],
-      "average_collection_days": ["administration", "dashboard", "kpis", "average_collection_days"],
+      "average_collection_days": ["administration", "dashboard", "kpis", "avg_collection_days"],
       "receivables_by_status": ["administration", "dashboard", "charts", "receivables_by_status"],
       "debtors_by_range": ["administration", "dashboard", "charts", "debtors_by_range"],
       "collection_trends": ["administration", "dashboard", "charts", "collection_trends"],
       "aging_by_client": ["administration", "dashboard", "tables", "aging_by_client"]
     }
   },
-
   "administration-payables": {
     "section_key": "administration",
     "ttl_seconds": 3600,
@@ -755,16 +482,20 @@
       }
     },
     "inject_paths": {
+      "initial_balance": ["administration", "dashboard", "kpis", "payables_initial_balance"],
       "accounts_payable": ["administration", "dashboard", "kpis", "accounts_payable"],
+      "credit_notes": ["administration", "dashboard", "kpis", "payables_credit_notes"],
+      "advances": ["administration", "dashboard", "kpis", "advances"],
       "supplier_payments": ["administration", "dashboard", "kpis", "supplier_payments"],
+      "final_balance": ["administration", "dashboard", "kpis", "payables_final_balance"],
       "payment_efficiency": ["administration", "dashboard", "kpis", "payment_efficiency"],
       "average_payment_days": ["administration", "dashboard", "kpis", "average_payment_days"],
       "payables_by_status": ["administration", "dashboard", "charts", "payables_by_status"],
       "suppliers_by_range": ["administration", "dashboard", "charts", "suppliers_by_range"],
-      "payables_trends": ["administration", "dashboard", "charts", "payables_trends"]
+      "payables_trends": ["administration", "dashboard", "charts", "payables_trends"],
+      "aging_by_supplier": ["administration", "dashboard", "tables", "aging_by_supplier"]
     }
   },
-
   "workshop-dashboard": {
     "section_key": "workshop",
     "ttl_seconds": 30,
@@ -837,10 +568,12 @@
       "maintenance_by_family": ["workshop", "dashboard", "charts", "maintenance_by_family"],
       "maintenance_by_fleet": ["workshop", "dashboard", "charts", "maintenance_by_fleet"],
       "maintenance_by_operation": ["workshop", "dashboard", "charts", "maintenance_by_operation"],
+      "cost_per_km_by_unit": ["workshop", "dashboard", "charts", "cost_per_km_by_unit"],
+      "cost_per_km_by_brand": ["workshop", "dashboard", "charts", "cost_per_km_by_brand"],
+      "workshop_entries_by_unit": ["workshop", "dashboard", "charts", "workshop_entries_by_unit"],
       "expenses_by_unit": ["workshop", "dashboard", "tables", "expenses_by_unit"]
     }
   },
-
   "workshop-availability": {
     "section_key": "workshop",
     "ttl_seconds": 30,
@@ -865,10 +598,10 @@
       "workshop_entries": ["workshop", "dashboard", "kpis", "workshop_entries"],
       "units_in_workshop": ["workshop", "dashboard", "kpis", "units_in_workshop"],
       "availability_trends": ["workshop", "dashboard", "charts", "availability_trends"],
-      "entries_and_km_by_unit": ["workshop", "dashboard", "charts", "entries_and_km_by_unit"]
+      "entries_and_km_by_unit": ["workshop", "dashboard", "charts", "entries_and_km_by_unit"],
+      "availability_detail": ["workshop", "dashboard", "tables", "availability_detail"]
     }
   },
-
   "workshop-purchases": {
     "section_key": "workshop",
     "ttl_seconds": 30,
@@ -905,10 +638,12 @@
       "purchases_trend": ["workshop", "dashboard", "charts", "purchases_trend"],
       "purchases_by_area": ["workshop", "dashboard", "charts", "purchases_by_area"],
       "purchases_by_type": ["workshop", "dashboard", "charts", "purchases_by_type"],
-      "top_suppliers_chart": ["workshop", "dashboard", "charts", "top_suppliers_chart"]
+      "top_suppliers_chart": ["workshop", "dashboard", "charts", "top_suppliers_chart"],
+      "purchase_orders_detail": ["workshop", "dashboard", "tables", "purchase_orders_detail"],
+      "inventory_detail": ["workshop", "dashboard", "tables", "inventory_detail"],
+      "top_suppliers": ["workshop", "dashboard", "tables", "top_suppliers"]
     }
   },
-
   "workshop-inventory": {
     "section_key": "workshop",
     "ttl_seconds": 30,
@@ -932,12 +667,18 @@
     },
     "inject_paths": {
       "initial_inventory": ["workshop", "dashboard", "kpis", "initial_inventory"],
+      "entries": ["workshop", "dashboard", "kpis", "inventory_entries"],
+      "outputs": ["workshop", "dashboard", "kpis", "inventory_outputs"],
+      "historical_valuation": ["workshop", "dashboard", "kpis", "historical_valuation"],
       "current_valuation": ["workshop", "dashboard", "kpis", "current_valuation"],
       "compliance_level": ["workshop", "dashboard", "kpis", "compliance_level"],
-      "items_with_stock": ["workshop", "dashboard", "kpis", "items_with_stock"],
-      "items_without_stock": ["workshop", "dashboard", "kpis", "items_without_stock"],
+      "items_registered": ["workshop", "dashboard", "kpis", "items_registered"],
+      "with_stock": ["workshop", "dashboard", "kpis", "items_with_stock"],
+      "without_stock": ["workshop", "dashboard", "kpis", "items_without_stock"],
       "valuation_trends": ["workshop", "dashboard", "charts", "valuation_trends"],
-      "valuation_by_area": ["workshop", "dashboard", "charts", "valuation_by_area"]
+      "valuation_by_area": ["workshop", "dashboard", "charts", "valuation_by_area"],
+      "valuation_by_family": ["workshop", "dashboard", "tables", "valuation_by_family"],
+      "inventory_history": ["workshop", "dashboard", "tables", "inventory_history"]
     }
   }
 }

@@ -80,7 +80,7 @@ def logout():
 def get_app_shell():
     return dmc.MantineProvider(
         id="mantine-provider",
-        theme=DesignSystem.get_mantine_theme(),
+        theme=DesignSystem.get_mantine_theme(), # type: ignore
         children=[
             dcc.Location(id="url", refresh=False),
             dcc.Store(id="theme-store", storage_type="local"),

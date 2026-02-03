@@ -2,6 +2,10 @@ import plotly.graph_objects as go
 import dash_mantine_components as dmc
 from .base_strategy import KPIStrategy
 from settings.theme import DesignSystem
+from datetime import datetime
+
+def get_current_month():
+    return datetime.now().month
 
 class MainTrendChartStrategy(KPIStrategy):
     def __init__(self, screen_id, chart_key, title, icon="tabler:chart-area-line", layout_config=None):
@@ -21,19 +25,21 @@ class MainTrendChartStrategy(KPIStrategy):
             return self._create_empty_figure()
 
         data_source = node.get("data", node)
-
-        categories = data_source.get("categories") or data_source.get("months") or []
+        all_categories = data_source.get("categories") or data_source.get("months") or []
         series_list = data_source.get("series", [])
 
-        if not categories:
+        if not all_categories:
             return self._create_empty_figure("Sin eje temporal")
+
+        current_month = get_current_month()
+        categories = all_categories[:current_month]
 
         fig = go.Figure()
 
         for idx, s in enumerate(series_list):
             s_type = s.get("type", "bar")
             s_name = s.get("name", f"Serie {idx}")
-            s_data = s.get("data", [])
+            s_data = s.get("data", [])[:current_month]
             s_color = s.get("color", DesignSystem.BRAND[5])
 
             if s_type == "line" or "Meta" in s_name:
@@ -79,7 +85,7 @@ class TableChartStrategy(KPIStrategy):
         if not headers:
             return self._create_empty_figure("Sin estructura de tabla")
 
-        cols = list(map(list, zip(*rows))) if rows else []
+        cols = list(map(list, zip(*rows))) if rows else [[] for _ in headers]
 
         fig = go.Figure(data=[go.Table(
             header=dict(
