@@ -40,7 +40,16 @@ class SmartQueryBuilder:
     
     def build_kpi_query(self, kpi_key, filters=None):
         kpi = self.metrics.get(kpi_key)
-        if not kpi: return {"error": f"KPI '{kpi_key}' no encontrado"}
+        if not kpi: 
+            return {"error": f"KPI '{kpi_key}' no encontrado"}
+        
+        # Manejar métricas placeholder (sin tabla en BD aún)
+        if kpi.get('type') == 'placeholder':
+            return {
+                "type": "placeholder", 
+                "default_value": kpi.get('default_value', 0),
+                "format": kpi.get('format')
+            }
     
         if kpi.get('type') == 'derived':
             return {"type": "derived", "formula": kpi.get('formula'), "format": kpi.get('format')}
@@ -54,7 +63,8 @@ class SmartQueryBuilder:
         fact_alias = target_alias
         fact_def = self.tables.get(fact_alias)
     
-        if not fact_def: return {"error": f"Tabla '{fact_alias}' no encontrada"}
+        if not fact_def: 
+            return {"error": f"Tabla '{fact_alias}' no encontrada"}
     
         joins_sql = ""
         date_col = fact_def.get('date_column')
@@ -112,7 +122,12 @@ class SmartQueryBuilder:
     
     def build_series_query(self, kpi_key, filters=None):
         kpi = self.metrics.get(kpi_key)
-        if not kpi: return {"error": "KPI not found"}
+        if not kpi: 
+            return {"error": "KPI not found"}
+        
+        # Manejar placeholders en series
+        if kpi.get('type') == 'placeholder':
+            return {"type": "placeholder", "default_value": kpi.get('default_value', 0)}
     
         recipe = kpi.get('recipe', {})
         table_alias = recipe.get('table')
@@ -152,7 +167,12 @@ class SmartQueryBuilder:
     
     def build_categorical_query(self, kpi_key, dimension_key, filters=None):
         kpi = self.metrics.get(kpi_key)
-        if not kpi: return {"error": f"KPI {kpi_key} no encontrado"}
+        if not kpi: 
+            return {"error": f"KPI {kpi_key} no encontrado"}
+        
+        # Manejar placeholders en categorías
+        if kpi.get('type') == 'placeholder':
+            return {"type": "placeholder", "default_value": kpi.get('default_value', 0)}
     
         recipe = kpi.get('recipe', {})
         fact_alias = recipe.get('table')
@@ -191,7 +211,7 @@ class SmartQueryBuilder:
         date_col = fact_def.get('date_column')
     
         if date_col:
-            target_year = 2025
+            target_year = datetime.datetime.now().year
             if filters and filters.get('year'):
                 target_year = int(filters['year'])
     
@@ -226,9 +246,25 @@ class SmartQueryBuilder:
     
     def get_dataframe_query(self, metrics: list, dimensions: list, filters=None):
         first_metric = self.metrics.get(metrics[0])
-        if not first_metric: return None
+        if not first_metric: 
+            return None
+        
+        if first_metric.get('type') == 'placeholder':
+            return {"type": "placeholder", "default_value": []}
+        
+        if first_metric.get('type') == 'derived':
+            for m in metrics:
+                metric_def = self.metrics.get(m)
+                if metric_def and metric_def.get('recipe'):
+                    first_metric = metric_def
+                    break
+            else:
+                return {"error": "No se encontró métrica base para el dataframe"}
     
-        fact_alias = first_metric['recipe']['table']
+        fact_alias = first_metric.get('recipe', {}).get('table')
+        if not fact_alias:
+            return {"error": "Métrica sin tabla definida"}
+            
         fact_def = self.tables.get(fact_alias)
         if not fact_def:
             return {"error": f"Table definition for '{fact_alias}' not found"}
@@ -262,10 +298,11 @@ class SmartQueryBuilder:
     
         for m_key in metrics:
             m = self.metrics.get(m_key)
-            if not m or m.get('type') == 'derived': continue
+            if not m or m.get('type') in ['derived', 'placeholder']: 
+                continue
     
-            recipe = m['recipe']
-            m_table = recipe['table']
+            recipe = m.get('recipe', {})
+            m_table = recipe.get('table')
             col = recipe.get('column')
             agg = recipe.get('aggregation', 'SUM')
     
@@ -283,9 +320,6 @@ class SmartQueryBuilder:
         joins_sql = ""
         processed_joins = set()
         active_tables_with_date = []
-    
-        if fact_alias != fact_alias:
-            joins_needed.add(fact_alias)
     
         sorted_targets = sorted(list(joins_needed))
     

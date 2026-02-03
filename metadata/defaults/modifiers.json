@@ -1,13 +1,29 @@
 {
   "anio_actual": {
-    "sql_fragment": "YEAR(h_facturado.fecha_consulta) = YEAR(GETDATE())",
+    "sql_fragment": "YEAR(h_viaje.fecha_real_viaje) = YEAR(GETDATE())",
     "tables_required": [] 
+  },
+  "previous_year": {
+    "type": "time",
+    "behavior": "shift_year",
+    "value": -1,
+    "description": "Resta 1 año a los filtros de fecha para comparación"
+  },
+  "ytd": {
+    "type": "time",
+    "behavior": "ytd",
+    "description": "Fuerza el rango desde Enero 1 hasta la fecha actual"
+  },
+  "month_group": {
+    "type": "grouping",
+    "sql_fragment": "MONTH(fecha_real_viaje)",
+    "description": "Agrupación mensual para gráficas de línea"
   },
   "cliente_vip": {
     "sql_fragment": "d_cliente.clasificacion = 'VIP'",
     "tables_required": ["d_cliente"]
   },
   "solo_activos": {
-    "sql_fragment": "h_facturado.estatus != 'CANCELADA'"
+    "sql_fragment": "h_viaje.estatus != 'CANCELADA'"
   }
 }

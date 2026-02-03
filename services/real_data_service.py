@@ -305,6 +305,19 @@ class RealDataService:
             unit="MXN"
         )
         
+        operational["kpis"]["revenue_previous"] = KPICalculator.calculate_kpi(
+            title="Ingreso Año Anterior",
+            current_value=1,
+            kpi_type="currency",
+            unit="MXN"
+        )
+        
+        operational["kpis"]["revenue_variance"] = KPICalculator.calculate_kpi(
+            title="Var vs Anterior",
+            current_value=0.1,
+            kpi_type="percent"
+        )
+        
         operational["kpis"]["total_trips"] = KPICalculator.calculate_kpi(
             title="Viajes",
             current_value=1,
@@ -315,6 +328,19 @@ class RealDataService:
             kpi_type="number",
             unit="viajes",
             inverse=False
+        )
+
+        operational["kpis"]["trips_previous"] = KPICalculator.calculate_kpi(
+            title="Viajes Año Ant.",
+            current_value=1,
+            kpi_type="number",
+            unit="viajes"
+        )
+        
+        operational["kpis"]["trips_variance"] = KPICalculator.calculate_kpi(
+            title="Var Viajes",
+            current_value=0.1,
+            kpi_type="percent"
         )
         
         operational["kpis"]["total_kilometers"] = KPICalculator.calculate_kpi(
@@ -327,6 +353,19 @@ class RealDataService:
             kpi_type="number",
             unit="km",
             inverse=False
+        )
+
+        operational["kpis"]["kilometers_previous"] = KPICalculator.calculate_kpi(
+            title="Kms Año Ant.",
+            current_value=1,
+            kpi_type="number",
+            unit="km"
+        )
+        
+        operational["kpis"]["kilometers_variance"] = KPICalculator.calculate_kpi(
+            title="Var Kms",
+            current_value=0.1,
+            kpi_type="percent"
         )
         
         operational["kpis"]["revenue_per_trip"] = KPICalculator.calculate_kpi(
@@ -369,6 +408,12 @@ class RealDataService:
             kpi_type="number",
             unit="cli",
             inverse=False
+        )
+
+        operational["kpis"]["load_status"] = KPICalculator.calculate_kpi(
+            title="% Carga",
+            current_value=0.1,
+            kpi_type="percent"
         )
         
         operational["kpis"]["profit_per_trip"] = KPICalculator.calculate_kpi(
@@ -437,6 +482,7 @@ class RealDataService:
             inverse=True
         )
         
+        # --- Gráficas y Tablas (Tus datos originales intactos) ---
         operational["charts"]["revenue_trends"] = {
             "type": "line_chart",
             "title": "Tendencia Ingresos 2025 vs 2024",

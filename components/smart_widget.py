@@ -122,28 +122,28 @@ class SmartWidget:
                 return None
 
             badge = None
+            badge_text = None
+            badge_color = "gray"
 
             try:
                 delta_num = float(delta) # type: ignore
-            except (TypeError, ValueError):
-                delta_num = None
-
-            if delta_num is not None:
+                badge_text = delta_fmt if delta_fmt else f"{'+' if delta_num > 0 else ''}{delta_num:.1f}%"
+                
                 if delta_num > 0:
-                    color = "red" if is_inverse else "green"
-                    prefix = "+"
+                    badge_color = "red" if is_inverse else "green"
                 elif delta_num < 0:
-                    color = "green" if is_inverse else "red"
-                    prefix = ""
+                    badge_color = "green" if is_inverse else "red"
                 else:
-                    color = "gray"
-                    prefix = ""
+                    badge_color = "gray"
+            except (TypeError, ValueError):
+                if delta:
+                    badge_text = str(delta)
+                    badge_color = "gray"
 
-                txt = delta_fmt if delta_fmt else f"{prefix}{delta_num:.1f}%"
-
+            if badge_text:
                 badge = dmc.Badge(
-                    txt,
-                    color=color,
+                    badge_text,
+                    color=badge_color,
                     variant="light",
                     size="xs",
                     style={
@@ -160,14 +160,13 @@ class SmartWidget:
                     dmc.Group(
                         gap=4,
                         children=[
-                            dmc.Text(label, size="10px", c="dimmed"),  # type: ignore
-                            dmc.Text(str(value), size="11px", fw=600, c="dark"),  # type: ignore
+                            dmc.Text(label, size="10px", c="dimmed"), # type: ignore
+                            dmc.Text(str(value), size="11px", fw=600, c="dark"), # type: ignore
                         ],
                     ),
                     badge,
                 ],
             )
-
 
         prev_row = make_row(config.get("label_prev_year", "Año Ant:"), config.get("vs_last_year_formatted"), config.get("vs_last_year_delta"), config.get("vs_last_year_delta_formatted"))
         if prev_row: footer_items.append(prev_row)
@@ -182,8 +181,17 @@ class SmartWidget:
         if not footer_items and config.get("trend") is not None:
              trend = config.get("trend")
              trend_txt = config.get("trend_text") or "vs Meta"
+             
+             try:
+                 trend_val = float(trend)
+                 badge_txt = f"{trend_val:+.1f}%"
+                 badge_color = "blue"
+             except (TypeError, ValueError):
+                 badge_txt = str(trend)
+                 badge_color = "gray"
+
              return dmc.Group(gap=4, mt=10, children=[
-                 dmc.Badge(f"{trend:+.1f}%", color="blue", variant="light", size="xs"),
+                 dmc.Badge(badge_txt, color=badge_color, variant="light", size="xs"),
                  dmc.Text(trend_txt, size="10px", c="dimmed") # type: ignore
              ])
 
