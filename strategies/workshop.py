@@ -1,124 +1,174 @@
 import plotly.graph_objects as go
 import dash_mantine_components as dmc
 import math
-from utils.helpers import format_value, safe_get 
 from .base_strategy import KPIStrategy
-from settings.theme import DesignSystem
+from settings.theme import DesignSystem, SemanticColors
+from utils.helpers import format_value
 
-class TallerMiniGaugeStrategy(KPIStrategy):
-    def __init__(self, title, key, color, prefix="$", suffix="", section="dashboard", layout_config=None):
-        super().__init__(title=title, color=color, layout_config=layout_config)
-        self.key, self.prefix, self.suffix, self.section = key, prefix, suffix, section
-
-    def get_card_config(self, data_context):
-        try:
-            node = data_context.get("mantenimiento", {}).get(self.section, {}).get("indicadores", {}).get(self.key, {})
-        except:
-            node = {"valor": 0, "meta": 1}
-        return {"title": self.title, "node": node}
-
-    def get_figure(self, data_context):
-        cfg = self.get_card_config(data_context)
-        val, meta = cfg["node"].get('valor', 0), cfg["node"].get('meta', 1)
-        pct = (val / meta * 100) if meta > 0 else 0
-        hex_color = DesignSystem.COLOR_MAP.get(self.color, DesignSystem.BRAND[5])
-        
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number", value=pct, 
-            number={'suffix': "%", 'font': {'size': 14, 'weight': 'bold'}},
-            gauge={
-                'shape': "angular", 
-                'axis': {'range': [0, 100], 'visible': False}, 
-                'bar': {'color': hex_color, 'thickness': 1},
-                'bgcolor': "rgba(148, 163, 184, 0.08)"
-            }, 
-            domain={'x': [0, 1], 'y': [0, 1]}
-        ))
-        fig.update_layout(
-            height=70, 
-            margin=dict(l=0, r=0, t=5, b=5),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
-        )
-        return fig
-    def render_detail(self, data_context): return None
-
-class TallerGaugeStrategy(KPIStrategy):
-    def __init__(self, title, key, color, prefix="$", suffix="", section="dashboard", has_detail=True, layout_config=None):
-        super().__init__(
-            title=title, color=color, icon="tabler:gauge", 
-            has_detail=has_detail, layout_config=layout_config 
-        )
-        self.key, self.prefix, self.suffix, self.section = key, prefix, suffix, section
+class WorkshopKPIStrategy(KPIStrategy):
+    def __init__(self, screen_id, kpi_key, title, icon, color, has_detail=True, layout_config=None, inverse=False):
+        super().__init__(title=title, color=color, icon=icon, has_detail=has_detail, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.kpi_key = kpi_key
+        self.inverse = inverse
 
     def get_card_config(self, data_context):
-        node = safe_get(data_context, f"mantenimiento.{self.section}.indicadores.{self.key}", {})
-        val = node.get("valor", 0)
+        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
         
+        if isinstance(raw_node, (int, float, str)) and raw_node is not None:
+            node = {"value": raw_node}
+        elif raw_node is None:
+            node = {}
+        else:
+            node = raw_node
+
         config = {
             "title": self.title,
-            "value": f"{format_value(val, self.prefix)}{self.suffix}",
             "icon": self.icon,
-            "is_simple": True
+            "color": self.color,
+            "inverse": self.inverse,
+            "value": node.get("value_formatted", "---"),
+            "main_value": node.get("value_formatted", "---"),
+            "vs_last_year_formatted": node.get("vs_last_year_formatted"),
+            "vs_last_year_delta": node.get("vs_last_year_delta"),
+            "vs_last_year_delta_formatted": node.get("vs_last_year_delta_formatted"),
+            "label_prev_year": node.get("label_prev_year", "Año Ant"),
+            "target_formatted": node.get("target_formatted"),
+            "target_delta_formatted": node.get("target_delta_formatted"),
+            "trend": node.get("trend_direction"),
+            "ytd_formatted": node.get("ytd_formatted"),
+            "ytd_delta": node.get("ytd_delta"),
+            "ytd_delta_formatted": node.get("ytd_delta_formatted"),
+            "status": node.get("status"),
+            "status_color": node.get("status_color")
         }
         
-        config.update(node)
-
-        if "vs_2024" in node:
-            config["monthly_display"] = format_value(val, self.prefix)
-        if "ytd" in node:
-            config["ytd_display"] = format_value(node.get("ytd", 0), self.prefix)
-
+        if node.get("percentage_of_total"):
+            config["percentage_of_total"] = node.get("percentage_of_total")
+        
         return config
 
-    def get_figure(self, data_context):
-        node = safe_get(data_context, f"mantenimiento.{self.section}.indicadores.{self.key}", {})
-        val_pct = node.get("valor_porcentaje", 0)
-        meta_pct = node.get("meta_porcentaje", 100)
-        hex_color = DesignSystem.COLOR_MAP.get(self.color, DesignSystem.BRAND[5])
-        
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number", value=val_pct, 
-            number={'suffix': "%", 'font': {'size': 18, 'weight': 'bold'}},
-            gauge={
-                'shape': "angular", 
-                'axis': {'range': [0, 100], 'visible': False}, 
-                'bar': {'color': hex_color, 'thickness': 0.8}, 
-                'bgcolor': "rgba(148, 163, 184, 0.05)",
-                'threshold': {'line': {'color': "#f59e0b", 'width': 4}, 'value': meta_pct}
-            }, 
-            domain={'x': [0, 1], 'y': [0, 1]}
-        ))
-        fig.update_layout(height=140, margin=dict(l=10, r=10, t=10, b=10), paper_bgcolor='rgba(0,0,0,0)')
-        return fig
-
     def render_detail(self, data_context):
-        return dmc.Text("Cargando detalle técnico...", c="dimmed") # type: ignore
-    
-class TallerNeedleGaugeStrategy(KPIStrategy):
-    def __init__(self, title, key, section="disponibilidad", has_detail=True):
-        super().__init__(title=title, color="gray", icon="tabler:clock-hour-4", has_detail=has_detail)
-        self.key, self.section = key, section
+        return dmc.Text("Detalle de métrica de mantenimiento.", size="sm", c=SemanticColors.TEXT_MUTED) # type: ignore
+
+
+class WorkshopGaugeStrategy(KPIStrategy):
+    def __init__(self, screen_id, kpi_key, title, color="indigo", icon="tabler:gauge", 
+                 has_detail=True, layout_config=None, use_needle=False):
+        super().__init__(title=title, color=color, icon=icon, has_detail=has_detail, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.kpi_key = kpi_key
+        self.use_needle = use_needle
+        self.gauge_params = {
+            "range_max_mult": 1.15,
+            "threshold_width": 5,
+            "threshold_color": DesignSystem.WARNING[5],
+            "exceed_color": DesignSystem.INFO[5],
+            "bg_color": "rgba(148, 163, 184, 0.05)",
+            "font_size": 18
+        }
 
     def get_card_config(self, data_context):
-        node = safe_get(data_context, f"mantenimiento.{self.section}.indicadores.{self.key}", {})
-        val = node.get("valor", 0)
+        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
+        
+        if isinstance(raw_node, (int, float)):
+            node = {"value": raw_node}
+        elif raw_node is None:
+            node = {}
+        else:
+            node = raw_node
+        
         return {
             "title": self.title,
-            "value": f"{val}%",
-            "monthly_display": node.get("monthly_display"),
-            "monthly_delta": node.get("monthly_delta"),
-            "label_mes": node.get("label_mes"),
-            "meta_text": f"Meta: {node.get('meta', 0)}%"
+            "icon": self.icon,
+            "value": node.get("value_formatted", "---"),
+            "vs_last_year_formatted": node.get("vs_last_year_formatted"),
+            "vs_last_year_delta": node.get("vs_last_year_delta"),
+            "vs_last_year_delta_formatted": node.get("vs_last_year_delta_formatted"),
+            "label_prev_year": node.get("label_prev_year"),
+            "target_formatted": node.get("target_formatted"),
+            "meta_text": f"Meta: {node.get('target_formatted')}" if node.get('target_formatted') else ""
         }
 
     def get_figure(self, data_context):
-        node = safe_get(data_context, f"mantenimiento.{self.section}.indicadores.{self.key}", {})
-        value = node.get("valor_porcentaje", 0)
+        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
+        
+        if isinstance(raw_node, (int, float)):
+            node = {"value": raw_node}
+        elif raw_node is None:
+            node = {}
+        else:
+            node = raw_node
+        
+        current_val = node.get("value", 0)
+        target_val = node.get("target", 0)
+        
+        if isinstance(current_val, float) and current_val <= 1.0:
+            current_val = current_val * 100
+        if isinstance(target_val, float) and target_val <= 1.0:
+            target_val = target_val * 100
+        
+        if self.use_needle:
+            return self._create_needle_gauge(current_val, target_val)
+        else:
+            return self._create_standard_gauge(current_val, target_val)
+    
+    def _create_standard_gauge(self, current_val, target_val):
+        max_val = max(current_val, target_val) if target_val else current_val
+        
+        val_pct = (current_val / max_val * 100) if max_val > 0 else 0
+        target_pct = (target_val / max_val * 100) if max_val > 0 and target_val > 0 else 100
+        
+        exceeds = val_pct > target_pct
+        bar_color = self.gauge_params["exceed_color"] if exceeds else self.hex_color
         
         fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=val_pct,
+            number={
+                'suffix': "%",
+                'font': {'size': self.gauge_params["font_size"], 'weight': 'bold'},
+                'valueformat': '.1f'
+            },
+            gauge={
+                'axis': {
+                    'range': [0, max(val_pct, target_pct) * self.gauge_params["range_max_mult"]],
+                    'visible': False
+                },
+                'bar': {'color': bar_color, 'thickness': 0.8},
+                'bgcolor': self.gauge_params["bg_color"],
+                'threshold': {
+                    'line': {
+                        'color': self.gauge_params["threshold_color"],
+                        'width': self.gauge_params["threshold_width"]
+                    },
+                    'thickness': 0.75,
+                    'value': target_pct
+                }
+            },
+            domain={'x': [0, 1], 'y': [0, 1]}
+        ))
+        
+        if exceeds:
+            fig.add_annotation(
+                x=0.5, y=1.05,
+                text="★ META SUPERADA",
+                showarrow=False,
+                font=dict(color=bar_color, size=9, weight="bold")
+            )
+        
+        fig.update_layout(
+            height=150,
+            margin=dict(l=10, r=10, t=10, b=10),
+            paper_bgcolor='rgba(0,0,0,0)'
+        )
+        
+        return fig
+    
+    def _create_needle_gauge(self, current_val, target_val):
+        fig = go.Figure(go.Indicator(
             mode="gauge",
-            value=value,
+            value=current_val,
             gauge={
                 'axis': {'range': [0, 100], 'visible': True, 'tickwidth': 1, 'tickcolor': "gray"},
                 'bar': {'color': "rgba(0,0,0,0)"},
@@ -127,27 +177,27 @@ class TallerNeedleGaugeStrategy(KPIStrategy):
                     {'range': [0, 85], 'color': "#fa5252"},
                     {'range': [85, 95], 'color': "#fcc419"},
                     {'range': [95, 100], 'color': "#228be6"}
-                ],
+                ]
             }
         ))
 
-        theta = 180 - (value * 1.8)
-        r = 0.45 
-        x_pivote, y_pivote = 0.5, 0.25
+        theta = 180 - (current_val * 1.8)
+        r = 0.45
+        x_pivot, y_pivot = 0.5, 0.25
         
-        x_punta = x_pivote + r * math.cos(math.radians(theta))
-        y_punta = y_pivote + r * math.sin(math.radians(theta))
+        x_tip = x_pivot + r * math.cos(math.radians(theta))
+        y_tip = y_pivot + r * math.sin(math.radians(theta))
 
         fig.add_shape(
             type="line",
-            x0=x_pivote, y0=y_pivote, x1=x_punta, y1=y_punta,
+            x0=x_pivot, y0=y_pivot, x1=x_tip, y1=y_tip,
             line=dict(color="black", width=4),
             xref="paper", yref="paper"
         )
         
         fig.add_shape(
             type="circle",
-            x0=x_pivote-0.02, y0=y_pivote-0.02, x1=x_pivote+0.02, y1=y_pivote+0.02,
+            x0=x_pivot-0.02, y0=y_pivot-0.02, x1=x_pivot+0.02, y1=y_pivot+0.02,
             fillcolor="black", line_color="black",
             xref="paper", yref="paper"
         )
@@ -157,378 +207,366 @@ class TallerNeedleGaugeStrategy(KPIStrategy):
             margin=dict(l=25, r=25, t=40, b=5),
             paper_bgcolor='rgba(0,0,0,0)',
             annotations=[dict(
-                x=0.5, y=0.45, text=f"{value}%", 
-                showarrow=False, font=dict(size=18, weight="bold")
+                x=0.5, y=0.45, 
+                text=f"{current_val:.0f}%",
+                showarrow=False, 
+                font=dict(size=18, weight="bold")
             )]
         )
+        
         return fig
 
     def render_detail(self, data_context):
-        return dmc.Text("Detalle de disponibilidad")
-    
-class AvailabilityMonthlyStrategy(KPIStrategy):
-    def __init__(self, has_detail=True):
-        super().__init__(title="% Disponibilidad Unidades 2025 vs. 2024", color="indigo", icon="tabler:calendar-stats", has_detail=has_detail)
+        return dmc.Text("Análisis de eficiencia de mantenimiento.", size="sm", c=SemanticColors.TEXT_MUTED) # type: ignore
 
-    def get_card_config(self, data_context): return {"title": self.title}
 
-    def get_figure(self, data_context):
-        try: ds = data_context["mantenimiento"]["disponibilidad"]["graficas"]["disponibilidad_mensual"]
-        except: ds = {"meses": [], "anterior": [], "actual": [], "meta": []}
-        
-        fig = go.Figure()
-        fig.add_trace(go.Bar(name='2024', x=ds["meses"], y=ds["anterior"], marker_color=DesignSystem.SLATE[3], opacity=0.6))
-        fig.add_trace(go.Bar(name='2025', x=ds["meses"], y=ds["actual"], marker_color=self.hex_color))
-        fig.add_trace(go.Scatter(name='Meta', x=ds["meses"], y=ds["meta"], mode='lines', line=dict(color=DesignSystem.SUCCESS[5], width=2, dash='dot')))
-        fig.update_layout(barmode='group', yaxis=dict(ticksuffix="%"), margin=dict(t=40, b=20))
-        return fig
-
-    def render_detail(self, data_context): return None
-
-class AvailabilityKmEntriesStrategy(KPIStrategy):
-    def __init__(self, has_detail=True):
-        super().__init__(title="Entradas a Taller y Kms Recorridos", color="red", icon="tabler:tool", has_detail=has_detail)
-
-    def get_card_config(self, data_context): return {"title": self.title}
-
-    def get_figure(self, data_context):
-        try: ds = data_context["mantenimiento"]["disponibilidad"]["graficas"]["entradas_vs_kms"]
-        except: ds = {"unidades": [], "entradas": [], "kms": []}
-        
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=ds["unidades"], y=ds["entradas"], name="Entradas", yaxis='y', marker_color=DesignSystem.DANGER[5]))
-        fig.add_trace(go.Scatter(x=ds["unidades"], y=ds["kms"], name="Kilómetros", yaxis='y2', mode='lines+markers', line=dict(color=self.hex_color, width=3)))
-        fig.update_layout(
-            yaxis2=dict(overlaying='y', side='right', showgrid=False),
-            margin=dict(t=40, b=20),
-            hovermode="x unified"
-        )
-        return fig
-
-    def render_detail(self, data_context): return None
-
-class AvailabilityTableStrategy:
-    def render(self, data_context):
-        try: ds = data_context["mantenimiento"]["disponibilidad"]["tablas"]["detalle"]
-        except: return dmc.Text("Sin datos disponibles", c="dimmed", ta="center", py="xl") # type: ignore
-        return dmc.Table([
-            dmc.TableThead(dmc.TableTr([dmc.TableTh(h, style={"fontSize": "11px"}) for h in ds["h"]])),
-            dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), fw=700 if str(row[0]) in ["Total", "SIN ASIGNAR"] else 400, style={"fontSize": "11px"}) for c in row]) for row in ds["r"]]) # type: ignore
-        ], striped="odd", withTableBorder=True, highlightOnHover=True)
-
-class TallerTrendStrategy(KPIStrategy):
-    def __init__(self, has_detail=True):
-        super().__init__(title="Evolución de Costos de Mantenimiento", color="indigo", icon="tabler:trending-up", has_detail=has_detail)
-
-    def get_card_config(self, data_context): return {"title": self.title}
-
-    def get_figure(self, data_context):
-        try: ds = data_context["mantenimiento"]["dashboard"]["graficas"]["tendencia_anual"]
-        except: ds = {"meses": [], "anterior": [], "actual": []}
-        
-        fig = go.Figure()
-        fig.add_trace(go.Bar(name='2024', x=ds["meses"], y=ds["anterior"], marker_color=DesignSystem.SLATE[3], opacity=0.6))
-        fig.add_trace(go.Bar(name='2025', x=ds["meses"], y=ds["actual"], marker_color=self.hex_color))
-        
-        fig.update_layout(
-            barmode='group', 
-            bargap=0.15,
-            height=320,
-            margin=dict(t=40, b=20, l=10, r=10),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
-        return fig
-
-    def render_detail(self, data_context): return None
-
-class TallerMaintenanceTypeStrategy(KPIStrategy):
-    def __init__(self, has_detail=True):
-        super().__init__(title="Distribución por Tipo de Mantenimiento", color="indigo", icon="tabler:chart-bar-stacked", has_detail=has_detail)
-
-    def get_card_config(self, data_context): return {"title": self.title}
-
-    def get_figure(self, data_context):
-        try: ds = data_context["mantenimiento"]["dashboard"]["graficas"]["corrective_preventive"]
-        except: ds = {"values": [0,0]}
-        
-        fig = go.Figure()
-        fig.add_trace(go.Bar(name='Correctivo', x=['CORRECTIVO'], y=[ds["values"][0]], marker_color=DesignSystem.DANGER[5], width=0.5))
-        fig.add_trace(go.Bar(name='Preventivo', x=['PREVENTIVO'], y=[ds["values"][1]], marker_color=DesignSystem.SUCCESS[5], width=0.5))
-        
-        fig.update_layout(
-            barmode='stack', 
-            height=320,
-            margin=dict(t=40, b=20, l=10, r=10),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
-        return fig
-
-    def render_detail(self, data_context): return None
-
-class TallerHorizontalBarStrategy(KPIStrategy):
-    def __init__(self, title, key, color="indigo", has_detail=True):
-        super().__init__(title=title, color=color, icon="tabler:list-details", has_detail=has_detail)
-        self.key = key
-
-    def get_card_config(self, data_context): return {"title": self.title}
-
-    def get_figure(self, data_context):
-        try: ds = data_context["mantenimiento"]["dashboard"]["graficas"][self.key]
-        except: ds = {"values": [], "labels": []}
-        
-        fig = go.Figure(go.Bar(
-            x=ds["values"], y=ds["labels"], orientation='h', 
-            marker_color=self.hex_color,
-            text=ds["values"], textposition="auto"
-        ))
-        
-        fig.update_layout(
-            yaxis=dict(autorange="reversed", automargin=True),
-            margin=dict(t=30, b=20, l=10, r=20),
-            height=350,
-            bargap=0.1,
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
-        return fig
-
-    def render_detail(self, data_context): return None
-
-class TallerDonutStrategy(KPIStrategy):
-    def __init__(self, title, key, has_detail=True):
-        super().__init__(title=title, icon="tabler:chart-pie", has_detail=has_detail)
-        self.key = key
-
-    def get_card_config(self, data_context): return {"title": self.title}
-
-    def get_figure(self, data_context):
-        try: ds = data_context["mantenimiento"]["dashboard"]["graficas"][self.key]
-        except: ds = {"labels": [], "values": []}
-        
-        fig = go.Figure(data=[go.Pie(
-            labels=ds["labels"], values=ds["values"], 
-            hole=.6, 
-            marker=dict(colors=DesignSystem.CHART_COLORS)
-        )])
-        fig.update_layout(showlegend=True, legend=dict(orientation="h", y=-0.2), margin=dict(t=30, b=40))
-        return fig
-
-    def render_detail(self, data_context): return None
-
-class PurchasesTrendStrategy(KPIStrategy):
-    def __init__(self, has_detail=True):
-        super().__init__(title="Compras 2025 vs. 2024", color="indigo", icon="tabler:shopping-cart", has_detail=has_detail)
-
-    def get_card_config(self, data_context): return {"title": self.title}
-
-    def get_figure(self, data_context):
-        try: ds = data_context["mantenimiento"]["compras"]["graficas"]["tendencia"]
-        except: ds = {"meses": [], "anterior": [], "actual": []}
-        
-        fig = go.Figure()
-        fig.add_trace(go.Bar(name='2024', x=ds["meses"], y=ds["anterior"], marker_color=DesignSystem.SLATE[3], opacity=0.6))
-        fig.add_trace(go.Bar(name='2025', x=ds["meses"], y=ds["actual"], marker_color=self.hex_color))
-        
-        fig.update_layout(
-            barmode='group', 
-            bargap=0.15,
-            height=320,
-            margin=dict(t=40, b=20, l=10, r=10),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
-        return fig
-
-    def render_detail(self, data_context): return None
-
-class PurchasesAreaBarStrategy(KPIStrategy):
-    def __init__(self, has_detail=True):
-        super().__init__(title="Total Compra por Área", color="green", icon="tabler:category", has_detail=has_detail)
-
-    def get_card_config(self, data_context): return {"title": self.title}
-
-    def get_figure(self, data_context):
-        try: ds = data_context["mantenimiento"]["compras"]["graficas"]["por_area"]
-        except: ds = {"valores": [], "areas": []}
-        
-        fig = go.Figure(go.Bar(
-            x=ds["valores"], y=ds["areas"], orientation='h', 
-            marker_color=self.hex_color, 
-            text=[f"${v}M" for v in ds["valores"]], textposition="auto"
-        ))
-        
-        fig.update_layout(
-            yaxis=dict(autorange="reversed", automargin=True),
-            margin=dict(t=30, b=20, l=10, r=20),
-            height=350,
-            bargap=0.1, 
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
-        return fig
-
-    def render_detail(self, data_context): return None
-
-class PurchasesTypeDonutStrategy(KPIStrategy):
-    def __init__(self, has_detail=True):
-        super().__init__(title="Compras por Tipo Compra", icon="tabler:chart-donut", has_detail=has_detail)
-
-    def get_card_config(self, data_context): return {"title": self.title}
-
-    def get_figure(self, data_context):
-        try: ds = data_context["mantenimiento"]["compras"]["graficas"]["tipo"]
-        except: ds = {"labels": [], "values": []}
-        
-        fig = go.Figure(data=[go.Pie(
-            labels=ds["labels"], values=ds["values"], 
-            hole=.6, 
-            marker_colors=[DesignSystem.DANGER[5], DesignSystem.BRAND[5], DesignSystem.WARNING[5]]
-        )])
-        fig.update_layout(showlegend=True, legend=dict(orientation="h", y=-0.2), margin=dict(t=30, b=40))
-        return fig
-
-    def render_detail(self, data_context): return None
-
-class WorkshopPurchasesTableStrategy:
-    def _build(self, h, r):
-        return dmc.Table([
-            dmc.TableThead(dmc.TableTr([dmc.TableTh(x, style={"fontSize": "11px"}) for x in h])),
-            dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in row]) for row in r])
-        ], striped="odd", withTableBorder=True, highlightOnHover=True)
-
-    def render_proveedor(self, data_context): return self._build(data_context["mantenimiento"]["compras"]["tablas"]["proveedores"]["h"], data_context["mantenimiento"]["compras"]["tablas"]["proveedores"]["r"])
-    def render_ordenes(self, data_context): return self._build(data_context["mantenimiento"]["compras"]["tablas"]["ordenes"]["h"], data_context["mantenimiento"]["compras"]["tablas"]["ordenes"]["r"])
-    def render_insumos(self, data_context): return self._build(data_context["mantenimiento"]["compras"]["tablas"]["insumos"]["h"], data_context["mantenimiento"]["compras"]["tablas"]["insumos"]["r"])
-
-class InventoryGaugeStrategy(KPIStrategy):
-    def __init__(self, title, key, color, section="indicadores", has_detail=True):
-        super().__init__(title=title, color=color, icon="tabler:building-warehouse", has_detail=has_detail)
-        self.key, self.section = key, section
+class WorkshopTrendChartStrategy(KPIStrategy):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-line", color="indigo", layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.chart_key = chart_key
 
     def get_card_config(self, data_context):
-        node = safe_get(data_context, f"mantenimiento.almacen.{self.section}.{self.key}", {})
-        val = node.get("valor", 0)
-        return {
-            "title": self.title,
-            "value": format_value(val, "$"),
-            "monthly_display": node.get("monthly_display"),
-            "monthly_delta": node.get("monthly_delta"),
-            "label_mes": node.get("label_mes"),
-            "meta_text": f"Meta: {format_value(node.get('meta', 0), '$')}" if node.get("meta") else ""
-        }
+        return {"title": self.title, "icon": self.icon}
 
     def get_figure(self, data_context):
-        node = safe_get(data_context, f"mantenimiento.almacen.{self.section}.{self.key}", {})
-        val_pct = node.get("valor_porcentaje", 0)
-        meta_pct = node.get("meta_porcentaje", 100)
-        hex_color = DesignSystem.COLOR_MAP.get(self.color, DesignSystem.BRAND[5])
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
         
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=val_pct,
-            number={'suffix': "%", 'font': {'size': 20, 'weight': 'bold'}},
-            gauge={
-                'axis': {'range': [0, 100], 'visible': False},
-                'bar': {'color': hex_color, 'thickness': 1},
-                'bgcolor': "rgba(0,0,0,0.05)",
-                'threshold': {'line': {'color': "#f59e0b", 'width': 4}, 'value': meta_pct}
-            }
-        ))
-        fig.update_layout(height=150, margin=dict(l=15, r=15, t=25, b=5), paper_bgcolor='rgba(0,0,0,0)')
+        if not node:
+            return self._create_empty_figure()
+        
+        data_source = node.get("data", node)
+        
+        categories = (data_source.get("categories") or 
+                     data_source.get("months") or 
+                     data_source.get("meses") or [])
+        
+        series_list = data_source.get("series", [])
+        
+        if not categories or not series_list:
+            return self._create_empty_figure("Sin datos temporales")
+        
+        fig = go.Figure()
+        
+        for idx, serie in enumerate(series_list):
+            s_name = serie.get("name", f"Serie {idx}")
+            s_data = serie.get("data", [])
+            s_color = serie.get("color", DesignSystem.BRAND[5])
+            s_type = serie.get("type", "bar")
+            is_dashed = serie.get("dashed", False) or "Meta" in s_name
+            
+            if s_type == "line" or is_dashed:
+                fig.add_trace(go.Scatter(
+                    x=categories,
+                    y=s_data,
+                    name=s_name,
+                    mode='lines+markers',
+                    line=dict(
+                        color=s_color,
+                        width=3,
+                        dash='dot' if is_dashed else 'solid'
+                    ),
+                    marker=dict(size=6)
+                ))
+            else:
+                fig.add_trace(go.Bar(
+                    x=categories,
+                    y=s_data,
+                    name=s_name,
+                    marker_color=s_color
+                ))
+        
+        fig.update_layout(
+            barmode='group',
+            height=350,
+            margin=dict(t=40, b=50, l=40, r=20),
+            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT,
+            hovermode='x unified'
+        )
+        
         return fig
 
     def render_detail(self, data_context):
         return None
-    
-class InventoryHistoricalTrendStrategy(KPIStrategy):
-    def __init__(self, has_detail=True):
-        super().__init__(
-            title="Valorización Histórica 2025 vs. 2024", 
-            color="indigo", 
-            icon="tabler:history", 
-            has_detail=has_detail
-        )
 
-    def get_card_config(self, data_context): 
-        return {"title": self.title}
+
+class WorkshopDonutChartStrategy(KPIStrategy):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-pie", color="indigo", layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.chart_key = chart_key
+
+    def get_card_config(self, data_context):
+        return {"title": self.title, "icon": self.icon}
 
     def get_figure(self, data_context):
-        try: 
-            ds = data_context["mantenimiento"]["almacen"]["graficas"]["historico_anual"]
-        except: 
-            ds = {"meses": [], "anterior": [], "actual": []}
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
         
-        fig = go.Figure()
-
-        fig.add_trace(go.Bar(
-            name='2025', 
-            x=ds["meses"], 
-            y=ds["actual"], 
-            marker_color=self.hex_color,
-            opacity=0.8
-        ))
-
-        fig.add_trace(go.Scatter(
-            name='2024', 
-            x=ds["meses"], 
-            y=ds["anterior"], 
-            mode='lines+markers', 
-            line=dict(color=DesignSystem.SLATE[4], width=3, shape='spline')
-        ))
-
+        if not node:
+            return self._create_empty_figure()
+        
+        data_source = node.get("data", node)
+        
+        labels = data_source.get("labels", [])
+        values = data_source.get("values", [])
+        colors = data_source.get("colors", [])
+        
+        if not labels or not values:
+            return self._create_empty_figure("Sin datos")
+        
+        if not colors:
+            colors = DesignSystem.CHART_COLORS[:len(labels)]
+        
+        fig = go.Figure(data=[go.Pie(
+            labels=labels, 
+            values=values, 
+            hole=0.6,
+            marker=dict(colors=colors),
+            textinfo='percent+label',
+            textposition='auto'
+        )])
+        
         fig.update_layout(
-            margin=dict(t=40, b=20, l=40, r=10),
-            hovermode="x unified",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            xaxis=dict(showgrid=False),
-            yaxis=dict(
-                title="Valorización",
-                tickformat="$,.0f",
-                gridcolor="rgba(0,0,0,0.05)"
-            ),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)'
+            showlegend=True,
+            legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center"),
+            margin=dict(t=20, b=40, l=10, r=10),
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT,
+            height=300
         )
+        
         return fig
 
-    def render_detail(self, data_context): 
+    def render_detail(self, data_context):
         return None
 
-class InventoryAreaDistributionStrategy(KPIStrategy):
-    def __init__(self, has_detail=True):
-        super().__init__(title="Valorización Actual por Área", color="indigo", icon="tabler:section", has_detail=has_detail)
 
-    def get_card_config(self, data_context): return {"title": self.title}
+class WorkshopHorizontalBarStrategy(KPIStrategy):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-bar", color="indigo", layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.chart_key = chart_key
+
+    def get_card_config(self, data_context):
+        return {"title": self.title, "icon": self.icon}
 
     def get_figure(self, data_context):
-        try: ds = data_context["mantenimiento"]["almacen"]["graficas"]["por_area"]
-        except: ds = {"labels": [], "values": []}
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
         
-        fig = go.Figure(go.Bar(
-            x=ds["labels"], y=ds["values"], 
-            marker_color=self.hex_color, 
-            text=[f"${v/1e6:.1f}M" for v in ds["values"]], textposition="auto"
-        ))
-        fig.update_layout(margin=dict(t=40, b=20))
+        if not node:
+            return self._create_empty_figure()
+        
+        data_source = node.get("data", node)
+        
+        categories = data_source.get("categories", [])
+        series_list = data_source.get("series", [])
+        
+        if not categories:
+            return self._create_empty_figure("Sin categorías")
+        
+        fig = go.Figure()
+        
+        for serie in series_list:
+            s_name = serie.get("name", "Valor")
+            s_data = serie.get("data", [])
+            s_color = serie.get("color", self.hex_color)
+            
+            fig.add_trace(go.Bar(
+                y=categories,
+                x=s_data,
+                name=s_name,
+                orientation='h',
+                marker_color=s_color,
+                text=[f"${v:,.0f}" if v > 1000 else f"{v:,.2f}" for v in s_data],
+                textposition='outside'
+            ))
+        
+        fig.update_layout(
+            barmode='relative',
+            height=max(300, len(categories) * 30),
+            margin=dict(l=120, r=40, t=30, b=40),
+            yaxis=dict(autorange="reversed"),
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT,
+            showlegend=len(series_list) > 1
+        )
+        
         return fig
 
-    def render_detail(self, data_context): return None
+    def render_detail(self, data_context):
+        return None
 
-class InventoryDetailedTableStrategy:
-    def render_family(self, data_context):
-        try: ds = data_context["mantenimiento"]["almacen"]["tablas"]["familia"]
-        except: return dmc.Text("Sin datos", c="dimmed", ta="center", py="xl") # type: ignore
-        return dmc.Table([
-            dmc.TableThead(dmc.TableTr([dmc.TableTh(x, style={"fontSize": "11px"}) for x in ds["h"]])),
-            dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in row]) for row in ds["r"]])
-        ], striped="odd", withTableBorder=True)
 
-    def render_history(self, data_context):
-        try: ds = data_context["mantenimiento"]["almacen"]["tablas"]["historico"]
-        except: return dmc.Text("Sin datos", c="dimmed", ta="center", py="xl") # type: ignore
+class WorkshopBarChartStrategy(KPIStrategy):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-bar", color="indigo", layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.chart_key = chart_key
+
+    def get_card_config(self, data_context):
+        return {"title": self.title, "icon": self.icon}
+
+    def get_figure(self, data_context):
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+        
+        if not node:
+            return self._create_empty_figure()
+        
+        data_source = node.get("data", node)
+        
+        categories = data_source.get("categories", [])
+        series_list = data_source.get("series", [])
+        
+        if not categories:
+            return self._create_empty_figure("Sin categorías")
+        
+        fig = go.Figure()
+        
+        for serie in series_list:
+            s_name = serie.get("name", "Valor")
+            s_data = serie.get("data", [])
+            s_color = serie.get("color", self.hex_color)
+            
+            fig.add_trace(go.Bar(
+                x=categories,
+                y=s_data,
+                name=s_name,
+                marker_color=s_color,
+                text=[f"${v/1e6:.1f}M" if v > 1e6 else f"${v:,.0f}" for v in s_data],
+                textposition='auto'
+            ))
+        
+        fig.update_layout(
+            height=350,
+            margin=dict(t=30, b=40, l=40, r=20),
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT,
+            showlegend=len(series_list) > 1
+        )
+        
+        return fig
+
+    def render_detail(self, data_context):
+        return None
+
+
+class WorkshopComboChartStrategy(KPIStrategy):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-line", color="indigo", layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.chart_key = chart_key
+
+    def get_card_config(self, data_context):
+        return {"title": self.title, "icon": self.icon}
+
+    def get_figure(self, data_context):
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+        
+        if not node:
+            return self._create_empty_figure()
+        
+        data_source = node.get("data", node)
+        
+        categories = data_source.get("categories", [])
+        series_list = data_source.get("series", [])
+        
+        if not categories or not series_list:
+            return self._create_empty_figure("Sin datos")
+        
+        fig = go.Figure()
+        
+        for serie in series_list:
+            s_name = serie.get("name", "")
+            s_data = serie.get("data", [])
+            s_color = serie.get("color", self.hex_color)
+            s_type = serie.get("type", "bar")
+            
+            if s_type == "line":
+                fig.add_trace(go.Scatter(
+                    x=categories,
+                    y=s_data,
+                    name=s_name,
+                    mode='lines+markers',
+                    line=dict(color=s_color, width=3),
+                    marker=dict(size=6),
+                    yaxis='y2'
+                ))
+            else:
+                fig.add_trace(go.Bar(
+                    x=categories,
+                    y=s_data,
+                    name=s_name,
+                    marker_color=s_color
+                ))
+        
+        fig.update_layout(
+            height=350,
+            margin=dict(t=30, b=40, l=40, r=40),
+            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT,
+            hovermode='x unified',
+            yaxis=dict(title=""),
+            yaxis2=dict(title="", overlaying='y', side='right')
+        )
+        
+        return fig
+
+    def render_detail(self, data_context):
+        return None
+
+
+class WorkshopTableStrategy:
+    def __init__(self, screen_id, table_key):
+        self.screen_id = screen_id
+        self.table_key = table_key
+
+    def _resolve_table_data(self, data_context):
+        from services.data_manager import data_manager
+        
+        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {}) # type: ignore
+        inject_paths = screen_config.get("inject_paths", {})
+        
+        path = inject_paths.get(self.table_key)
+        if not path:
+            return None
+        
+        from utils.helpers import safe_get
+        return safe_get(data_context, path)
+
+    def render(self, data_context, **kwargs):
+        node = self._resolve_table_data(data_context)
+        
+        if not node:
+            return dmc.Text("Sin datos de tabla", c="dimmed", ta="center", py="xl") # type: ignore
+        
+        data_source = node.get("data", node)
+        headers = data_source.get("headers", [])
+        rows = data_source.get("rows", [])
+        
+        if not headers or not rows:
+            return dmc.Text("Sin datos", c="dimmed", ta="center", py="xl") # type: ignore
+        
+        table_body = []
+        for row in rows:
+            table_body.append(dmc.TableTr([
+                dmc.TableTd(str(cell), style={"fontSize": "11px"}) 
+                for cell in row
+            ]))
+        
+        total_row = data_source.get("total_row")
+        if total_row:
+            table_body.append(dmc.TableTr([
+                dmc.TableTd(str(cell), style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": "#f8f9fa"}) 
+                for cell in total_row
+            ]))
+        
         return dmc.Table([
-            dmc.TableThead(dmc.TableTr([dmc.TableTh(x, style={"fontSize": "11px"}) for x in ds["h"]])),
-            dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in row]) for row in ds["r"]])
-        ], striped="odd", withTableBorder=True)
+            dmc.TableThead(dmc.TableTr([
+                dmc.TableTh(h, style={"fontSize": "11px", "fontWeight": "bold"}) 
+                for h in headers
+            ])),
+            dmc.TableTbody(table_body)
+        ], striped="odd", withTableBorder=True, withColumnBorders=True, highlightOnHover=True)

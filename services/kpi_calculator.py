@@ -17,7 +17,8 @@ class KPICalculator:
         category="generic",
         description="",
         last_updated=None,
-        inverse=False
+        inverse=False,
+        metadata=None
     ):
         fmt_type = kpi_type
         ts = TimeService()
@@ -27,6 +28,9 @@ class KPICalculator:
         else:
             value_formatted = "---"
             current_value = 0
+            
+        if metadata is None:
+            metadata = {}
 
         vs_prev_fmt = "---"
         vs_prev_delta = None
@@ -110,5 +114,6 @@ class KPICalculator:
             "category": category,
             "type": kpi_type,
             "description": description,
-            "last_updated": last_updated or datetime.datetime.now().isoformat()
+            "last_updated": last_updated or datetime.datetime.now().isoformat(),
+            "metadata": metadata
         }

@@ -45,67 +45,115 @@ w_supp = ChartWidget("h_supp", ExecutiveDonutStrategy(SCREEN_ID, "supplier_balan
 
 def _render_home_body(ctx):
     val_disp = safe_get(ctx, "main.dashboard.kpis.units_availability.value", 0)
-    if val_disp <= 1: val_disp *= 100
+    if val_disp <= 1:
+        val_disp *= 100
     val_disp = int(val_disp)
 
-    truck_visual = dmc.Paper(p="md", withBorder=True, shadow="sm", radius="md", h=260, children=[
-        dmc.Stack(justify="center", align="center", h="100%", gap="sm", children=[
-            dmc.Text("Disponibilidad Flota", size="xs", c="gray", fw="bold", tt="uppercase", ta="center"),
-            dmc.Center(h=80, children=DashIconify(icon="tabler:truck-loading", width=60, color="green")),
-            dmc.Progress(value=val_disp, color="green", h=25, radius="xl", style={"width": "100%"}),
-            dmc.Text(f"{val_disp}% Disponible", size="lg", fw="bold", ta="center", mt=5)
-        ])
-    ])
+    truck_visual = dmc.Paper(
+        p="md",
+        withBorder=True,
+        shadow="sm",
+        radius="md",
+        h=260,
+        children=[
+            dmc.Stack(
+                justify="center",
+                align="center",
+                h="100%",
+                gap="sm",
+                children=[
+                    dmc.Text("Disponibilidad Flota", size="xs", c="gray", fw="bold", tt="uppercase", ta="center"),
+                    dmc.Center(h=80, children=DashIconify(icon="tabler:truck-loading", width=60, color="green")),
+                    dmc.Progress(value=val_disp, color="green", h=25, radius="xl", style={"width": "100%"}),
+                    dmc.Text(f"{val_disp}% Disponible", size="lg", fw="bold", ta="center", mt=5)
+                ]
+            )
+        ]
+    )
 
     return html.Div([
-        dmc.SimpleGrid(cols={"base": 1, "lg": 4}, spacing="md", mb="md", children=[ # type: ignore
-            w_income.render(ctx), w_costs.render(ctx), w_margin.render(ctx), w_bank.render(ctx)
-        ]),
-
-        dmc.Grid(gutter="md", mb="md", children=[
-            dmc.GridCol(span={"base": 12, "xl": 8}, children=[w_main_chart.render(ctx)]), # type: ignore
-            dmc.GridCol(span={"base": 12, "xl": 4}, children=[ # type: ignore
-                dmc.SimpleGrid(cols=2, spacing="sm", children=[
-                    w_yield.render(ctx), w_km.render(ctx),
-                    w_liters.render(ctx), w_cvkm.render(ctx),
-                    w_cmkm.render(ctx), w_viajes.render(ctx)
-                ]),
-                dmc.SimpleGrid(cols=2, spacing="sm", mt="sm", children=[
-                    w_units.render(ctx), w_clients.render(ctx)
-                ])
-            ])
-        ]),
-
-        dmc.Divider(label="Desglose de Mantenimiento", mb="md", fw=500), # type: ignore
-        dmc.SimpleGrid(cols={"base": 1, "sm": 2, "xl": 4}, spacing="md", mb="md", children=[ # type: ignore
-            w_total_mtto.render(ctx), w_mi.render(ctx), w_me.render(ctx), w_ml.render(ctx)
-        ]),
-
-        dmc.Divider(label="Análisis de Cartera y Flota", mb="md", fw=500), # type: ignore
-        dmc.SimpleGrid(cols={"base": 1, "md": 3}, spacing="md", children=[ # type: ignore
-            truck_visual, w_port.render(ctx), w_supp.render(ctx)
-        ]),
+        dmc.SimpleGrid(
+            cols={"base": 1, "lg": 4}, # type: ignore
+            spacing="md",
+            mb="md",
+            children=[w_income.render(ctx), w_costs.render(ctx), w_margin.render(ctx), w_bank.render(ctx)]
+        ),
+        dmc.Grid(
+            gutter="md",
+            mb="md",
+            children=[
+                dmc.GridCol(span={"base": 12, "xl": 8}, children=[w_main_chart.render(ctx)]), # type: ignore
+                dmc.GridCol(
+                    span={"base": 12, "xl": 4}, # type: ignore
+                    children=[
+                        dmc.SimpleGrid(
+                            cols=2,
+                            spacing="sm",
+                            children=[
+                                w_yield.render(ctx), w_km.render(ctx),
+                                w_liters.render(ctx), w_cvkm.render(ctx),
+                                w_cmkm.render(ctx), w_viajes.render(ctx)
+                            ]
+                        ),
+                        dmc.SimpleGrid(
+                            cols=2,
+                            spacing="sm",
+                            mt="sm",
+                            children=[w_units.render(ctx), w_clients.render(ctx)]
+                        )
+                    ]
+                )
+            ]
+        ),
+        dmc.Divider(label="Desglose de Mantenimiento", mb="md", fw="bold"),
+        dmc.SimpleGrid(
+            cols={"base": 1, "sm": 2, "xl": 4}, # type: ignore
+            spacing="md",
+            mb="md",
+            children=[w_total_mtto.render(ctx), w_mi.render(ctx), w_me.render(ctx), w_ml.render(ctx)]
+        ),
+        dmc.Divider(label="Análisis de Cartera y Flota", mb="md", fw="bold"),
+        dmc.SimpleGrid(
+            cols={"base": 1, "md": 3}, # type: ignore
+            spacing="md",
+            children=[truck_visual, w_port.render(ctx), w_supp.render(ctx)]
+        ),
         dmc.Space(h=50)
     ])
 
 def layout():
-    if not session.get("user"): return dmc.Text("No autorizado")
+    if not session.get("user"):
+        return dmc.Text("No autorizado")
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True)
     comps, _ = data_manager.dash_refresh_components(SCREEN_ID)
-    return dmc.Container(fluid=True, children=[
-        dmc.Modal(id="home-smart-modal", size="xl", centered=True, children=[html.Div(id="home-modal-content")]),
-        *comps, html.Div(id="hb", children=_render_home_body(ctx))
-    ])
+    return dmc.Container(
+        fluid=True,
+        children=[
+            dmc.Modal(id="home-smart-modal", size="xl", centered=True, children=[html.Div(id="home-modal-content")]),
+            *comps,
+            html.Div(id="hb", children=_render_home_body(ctx))
+        ]
+    )
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="hb", render_body=_render_home_body)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID,
+    body_output_id="hb",
+    render_body=_render_home_body
+)
 
 @callback(
-    Output("home-smart-modal", "opened"), Output("home-smart-modal", "title"), Output("home-modal-content", "children"),
-    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"), prevent_initial_call=True
+    Output("home-smart-modal", "opened"),
+    Output("home-smart-modal", "title"),
+    Output("home-modal-content", "children"),
+    Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"),
+    prevent_initial_call=True
 )
 def handle_click(n_clicks):
-    if not dash.ctx.triggered or not any(n_clicks): return no_update, no_update, no_update
-    if dash.ctx.triggered_id is None: return no_update, no_update, no_update
+    if not dash.ctx.triggered or not any(n_clicks):
+        return no_update, no_update, no_update
+    if dash.ctx.triggered_id is None:
+        return no_update, no_update, no_update
+
     wid = dash.ctx.triggered_id["index"]
     target_w = {
         "h_inc": w_income, "h_cost": w_costs, "h_marg": w_margin, "h_bank": w_bank,
@@ -116,7 +164,9 @@ def handle_click(n_clicks):
         "h_port": w_port, "h_supp": w_supp
     }.get(wid)
 
-    if not target_w: return no_update, no_update, no_update
+    if not target_w:
+        return no_update, no_update, no_update
+
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True)
     cfg = target_w.strategy.get_card_config(ctx)
     return True, cfg.get("title"), target_w.strategy.render_detail(ctx)

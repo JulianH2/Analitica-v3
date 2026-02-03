@@ -3,44 +3,58 @@ import plotly.graph_objects as go
 import dash_mantine_components as dmc
 from .base_strategy import KPIStrategy
 from settings.theme import DesignSystem, SemanticColors
-from utils.helpers import format_value, safe_get
+from utils.helpers import format_value
 from dash import dcc
 
-class AdminRichKPIStrategy(KPIStrategy):
-    def __init__(self, section, key, title, icon, color, sub_section="indicadores", has_detail=True, layout_config=None):
+class AdminKPIStrategy(KPIStrategy):
+    def __init__(self, screen_id, kpi_key, title, icon, color, has_detail=True, layout_config=None, inverse=False):
         super().__init__(title=title, color=color, icon=icon, has_detail=has_detail, layout_config=layout_config)
-        self.section, self.key, self.sub_section = section, key, sub_section
+        self.screen_id = screen_id
+        self.kpi_key = kpi_key
+        self.inverse = inverse
 
     def get_card_config(self, data_context):
-        path = f"administracion.{self.section}.{self.sub_section}.{self.key}"
-        node = safe_get(data_context, path, {"valor": 0})
-        val = node.get('valor', 0) if isinstance(node, dict) else node
+        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
         
-        is_money = all(x not in self.key.lower() for x in ["dias", "viajes", "disponibilidad"])
-        prefix = "$" if is_money else ""
-        
-        l_mes = node.get("label_mes")
-        l_ytd = node.get("label_ytd")
-        
-        return {
+        if isinstance(raw_node, (int, float, str)) and raw_node is not None:
+            node = {"value": raw_node}
+        elif raw_node is None:
+            node = {}
+        else:
+            node = raw_node
+
+        config = {
             "title": self.title,
-            "value": format_value(val, prefix, format_type=self.layout.get("value_format", "abbreviated")),
-            "label_mes": l_mes if l_mes and l_mes not in ["0%", "0", 0] else None,
-            "label_ytd": l_ytd if l_ytd and l_ytd not in ["0%", "0", 0] else None,
+            "icon": self.icon,
             "color": self.color,
-            "icon": self.icon
+            "inverse": self.inverse,
+            "value": node.get("value_formatted", "---"),
+            "main_value": node.get("value_formatted", "---"),
+            "vs_last_year_formatted": node.get("vs_last_year_formatted"),
+            "vs_last_year_delta": node.get("vs_last_year_delta"),
+            "vs_last_year_delta_formatted": node.get("vs_last_year_delta_formatted"),
+            "label_prev_year": node.get("label_prev_year", "Año Ant"),
+            "target_formatted": node.get("target_formatted"),
+            "target_delta_formatted": node.get("target_delta_formatted"),
+            "trend": node.get("trend_direction"),
+            "ytd_formatted": node.get("ytd_formatted"),
+            "ytd_delta": node.get("ytd_delta"),
+            "ytd_delta_formatted": node.get("ytd_delta_formatted"),
+            "status": node.get("status"),
+            "status_color": node.get("status_color")
         }
+        
+        return config
 
     def render_detail(self, data_context):
-        return dmc.Text("Detalle de métrica administrativa.", size="sm", c=SemanticColors.TEXT_MUTED)  # type: ignore
+        return dmc.Text("Detalle de métrica administrativa.", size="sm", c=SemanticColors.TEXT_MUTED) # type: ignore
 
 
-class CollectionGaugeStrategy(KPIStrategy):
-    def __init__(self, title, val_key, color, prefix="$", section="facturacion_cobranza", has_detail=True, layout_config=None):
-        super().__init__(title=title, color=color, icon="tabler:wallet", has_detail=has_detail, layout_config=layout_config)
-        self.val_key = val_key
-        self.prefix = prefix
-        self.section = section
+class AdminGaugeStrategy(KPIStrategy):
+    def __init__(self, screen_id, kpi_key, title, color="indigo", icon="tabler:gauge", has_detail=True, layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, has_detail=has_detail, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.kpi_key = kpi_key
         self.gauge_params = {
             "range_max_mult": 1.15,
             "threshold_width": 5,
@@ -51,45 +65,70 @@ class CollectionGaugeStrategy(KPIStrategy):
         }
 
     def get_card_config(self, data_context):
-        path = f"administracion.{self.section}.indicadores.{self.val_key}"
-        node = safe_get(data_context, path, {})
-        val = node.get("valor", 0)
+        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
+        
+        if isinstance(raw_node, (int, float)):
+            node = {"value": raw_node}
+        elif raw_node is None:
+            node = {}
+        else:
+            node = raw_node
         
         return {
             "title": self.title,
-            "value": format_value(val, self.prefix),
-            "monthly_display": node.get("monthly_display"),
-            "monthly_delta": node.get("monthly_delta"),
-            "label_mes": node.get("label_mes"),
-            "meta_text": f"Meta: {format_value(node.get('meta', 0), self.prefix)}" if node.get("meta") else ""
+            "icon": self.icon,
+            "value": node.get("value_formatted", "---"),
+            "vs_last_year_formatted": node.get("vs_last_year_formatted"),
+            "vs_last_year_delta": node.get("vs_last_year_delta"),
+            "vs_last_year_delta_formatted": node.get("vs_last_year_delta_formatted"),
+            "label_prev_year": node.get("label_prev_year"),
+            "target_formatted": node.get("target_formatted"),
+            "meta_text": f"Meta: {node.get('target_formatted')}" if node.get('target_formatted') else ""
         }
 
     def get_figure(self, data_context):
-        path = f"administracion.{self.section}.indicadores.{self.val_key}"
-        node = safe_get(data_context, path, {})
+        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
         
-        val_pct = node.get("valor_porcentaje", 0)
-        meta_pct = node.get("meta_porcentaje", 100)
-        exceeds = val_pct > meta_pct
+        if isinstance(raw_node, (int, float)):
+            node = {"value": raw_node}
+        elif raw_node is None:
+            node = {}
+        else:
+            node = raw_node
         
+        current_val = node.get("value", 0)
+        target_val = node.get("target", 0)
+        
+        max_val = max(current_val, target_val) if target_val else current_val
+        
+        val_pct = (current_val / max_val * 100) if max_val > 0 else 0
+        target_pct = (target_val / max_val * 100) if max_val > 0 and target_val > 0 else 100
+        
+        exceeds = val_pct > target_pct
         bar_color = self.gauge_params["exceed_color"] if exceeds else self.hex_color
         
         fig = go.Figure(go.Indicator(
-            mode="gauge+number", 
+            mode="gauge+number",
             value=val_pct,
             number={
-                'suffix': "%", 
+                'suffix': "%",
                 'font': {'size': self.gauge_params["font_size"], 'weight': 'bold'},
                 'valueformat': '.1f'
             },
             gauge={
-                'axis': {'range': [0, max(val_pct, meta_pct) * self.gauge_params["range_max_mult"]], 'visible': False},
+                'axis': {
+                    'range': [0, max(val_pct, target_pct) * self.gauge_params["range_max_mult"]],
+                    'visible': False
+                },
                 'bar': {'color': bar_color, 'thickness': 0.8},
                 'bgcolor': self.gauge_params["bg_color"],
                 'threshold': {
-                    'line': {'color': self.gauge_params["threshold_color"], 'width': self.gauge_params["threshold_width"]}, 
-                    'thickness': 0.75, 
-                    'value': meta_pct
+                    'line': {
+                        'color': self.gauge_params["threshold_color"],
+                        'width': self.gauge_params["threshold_width"]
+                    },
+                    'thickness': 0.75,
+                    'value': target_pct
                 }
             },
             domain={'x': [0, 1], 'y': [0, 1]}
@@ -97,370 +136,410 @@ class CollectionGaugeStrategy(KPIStrategy):
         
         if exceeds:
             fig.add_annotation(
-                x=0.5, y=1.05, 
-                text="★ META SUPERADA", 
-                showarrow=False, 
+                x=0.5, y=1.05,
+                text="★ META SUPERADA",
+                showarrow=False,
                 font=dict(color=bar_color, size=9, weight="bold")
             )
-
+        
         fig.update_layout(
             height=150,
             margin=dict(l=5, r=5, t=0, b=30),
             paper_bgcolor='rgba(0,0,0,0)',
             font={'family': "Inter, sans-serif"}
         )
+        
         return fig
 
-    def render_detail(self, data_context): 
-        return dmc.Text("Análisis de eficiencia operativa de cobranza.", size="sm", c=SemanticColors.TEXT_MUTED)   # type: ignore
+    def render_detail(self, data_context):
+        return dmc.Text("Análisis de eficiencia operativa.", size="sm", c=SemanticColors.TEXT_MUTED) # type: ignore
 
 
-class CollectionComparisonStrategy(KPIStrategy):
-    def __init__(self, layout_config=None):
-        super().__init__(title="Comparativo de Facturación Anual", color="indigo", layout_config=layout_config)
+class AdminDonutChartStrategy(KPIStrategy):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-pie", color="indigo", layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.chart_key = chart_key
 
-    def get_card_config(self, data_context): return {"title": self.title}
-
-    def get_figure(self, data_context):
-        path = "administracion.facturacion_cobranza.graficas.comparativa"
-        ds = safe_get(data_context, path, {"meses": [], "actual": [], "anterior": []})
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=ds["meses"], y=ds["anterior"], name="2024", marker_color=DesignSystem.SLATE[3], opacity=0.5))
-        fig.add_trace(go.Bar(x=ds["meses"], y=ds["actual"], name="2025", marker_color=self.hex_color))
-        
-        fig.add_trace(go.Scatter(
-            x=ds["meses"], y=[18.5] * len(ds["meses"]),
-            name="Presupuesto", mode="lines", 
-            line=dict(color=DesignSystem.WARNING[5], width=3, dash="dot")
-        ))
-        
-        fig.update_layout(
-            barmode='group', height=400, bargap=0.15,
-            margin=dict(t=50, b=40, l=20, r=20),
-            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
-        return fig
-
-    def render_detail(self, data_context): return None
-
-
-class CollectionMixStrategy(KPIStrategy):
-    def __init__(self, layout_config=None):
-        super().__init__(title="Distribución de Cartera", color="indigo", layout_config=layout_config)
-
-    def get_card_config(self, data_context): return {"title": self.title}
+    def get_card_config(self, data_context):
+        return {"title": self.title, "icon": self.icon}
 
     def get_figure(self, data_context):
-        path = "administracion.facturacion_cobranza.graficas.mix"
-        ds = safe_get(data_context, path, {"labels": [], "values": []})
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+        
+        if not node:
+            return self._create_empty_figure()
+        
+        data_source = node.get("data", node)
+        
+        labels = data_source.get("labels", [])
+        values = data_source.get("values", [])
+        colors = data_source.get("colors", [])
+        
+        if not labels or not values:
+            return self._create_empty_figure("Sin datos de cartera")
+        
+        if not colors:
+            colors = [DesignSystem.COLOR_MAP.get("green"), 
+                     DesignSystem.COLOR_MAP.get("yellow"), 
+                     DesignSystem.COLOR_MAP.get("red")]
+        
         fig = go.Figure(data=[go.Pie(
-            labels=ds["labels"], values=ds["values"], hole=0.5,
-            marker=dict(colors=[SemanticColors.INGRESO, DesignSystem.WARNING[5], SemanticColors.EGRESO])
+            labels=labels, 
+            values=values, 
+            hole=0.5,
+            marker=dict(colors=colors),
+            textinfo='percent+label',
+            textposition='auto'
         )])
+        
         fig.update_layout(
-            showlegend=True, 
+            showlegend=True,
             legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center"),
             margin=dict(t=10, b=10, l=10, r=10),
             paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
-        return fig
-    def render_detail(self, data_context): return None
-
-class DebtorsStackedStrategy(KPIStrategy):
-    def __init__(self, layout_config=None):
-        super().__init__(title="Saldo por Cliente", color="indigo", layout_config=layout_config)
-
-    def get_card_config(self, data_context): return {"title": self.title}
-
-    def get_figure(self, data_context):
-        path = "administracion.facturacion_cobranza.graficas.stack"
-        ds = safe_get(data_context, path, {"clientes": [], "por_vencer": [], "sin_carta": [], "vencido": []})
-        fig = go.Figure()
-        fig.add_trace(go.Bar(y=ds["clientes"], x=ds["por_vencer"], name="Vigente", orientation='h', marker_color=SemanticColors.INGRESO))
-        fig.add_trace(go.Bar(y=ds["clientes"], x=ds["sin_carta"], name="Pendiente", orientation='h', marker_color=DesignSystem.WARNING[5]))
-        fig.add_trace(go.Bar(y=ds["clientes"], x=ds["vencido"], name="Vencido", orientation='h', marker_color=SemanticColors.EGRESO))
-        
-        fig.update_layout(
-            barmode='stack', 
-            bargap=0.15,
-            height=500, 
-            margin=dict(l=10, r=20, t=10, b=10), 
-            yaxis=dict(autorange="reversed"),
-            legend=dict(orientation="h", y=1.02, x=0.5, xanchor="center"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
-        return fig
-
-    def render_detail(self, data_context):
-        return dmc.Text("Detalle.", size="sm", c=SemanticColors.TEXT_MUTED) # type: ignore
-    
-class CollectionAgingTableStrategy:
-    def render(self, data_context):
-        path = "administracion.facturacion_cobranza.antiguedad"
-        ds = safe_get(data_context, path, {"h": [], "r": []})
-        return dmc.Table([
-            dmc.TableThead(dmc.TableTr([
-                dmc.TableTh(x, fz=DesignSystem.FONT_TABLE, c=SemanticColors.TEXT_MUTED, fw=DesignSystem.FW_NORMAL)   # type: ignore
-                for x in ds["h"]
-            ])),
-            dmc.TableTbody([dmc.TableTr([
-                dmc.TableTd(str(c), fz=DesignSystem.FONT_TABLE) 
-                for c in r
-            ]) for r in ds["r"]])
-        ], striped="odd", withTableBorder=True, highlightOnHover=True)
-
-
-class BankDailyEvolutionStrategy(KPIStrategy):
-    def __init__(self, layout_config=None):
-        super().__init__(title="Flujo Diario de Caja", color="green", icon="tabler:timeline", layout_config=layout_config)
-
-    def get_card_config(self, data_context):
-        return {"title": self.title}
-
-    def get_figure(self, data_context):
-        path = "administracion.bancos.graficas.diaria"
-        ds = safe_get(data_context, path, {"dias": [], "ingresos": [], "egresos": []})
-        
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=ds["dias"], y=ds["ingresos"], name="Ingresos",
-            line=dict(color=SemanticColors.INGRESO, width=4, shape='spline'),
-            fill='tozeroy', fillcolor='rgba(34, 197, 94, 0.05)'
-        ))
-        fig.add_trace(go.Scatter(
-            x=ds["dias"], y=ds["egresos"], name="Egresos",
-            line=dict(color=SemanticColors.EGRESO, width=4, shape='spline'),
-            fill='tozeroy', fillcolor='rgba(239, 68, 68, 0.05)'
-        ))
-        
-        fig.update_layout(
-            height=400, hovermode="x unified",
-            margin=dict(t=50, b=20, l=10, r=10),
-            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
-        return fig
-
-    def render_detail(self, data_context): return None
-
-
-class BankDonutStrategy(KPIStrategy):
-    def __init__(self, layout_config=None):
-        super().__init__(title="Saldo por Institución", color="orange", icon="tabler:building-bank", layout_config=layout_config)
-
-    def get_card_config(self, data_context): return {"title": self.title}
-
-    def get_figure(self, data_context):
-        path = "administracion.bancos.graficas.donut"
-        ds = safe_get(data_context, path, {"labels": [], "values": []})
-        
-        fig = go.Figure(data=[go.Pie(
-            labels=ds["labels"], values=ds["values"], 
-            hole=0.45, 
-            marker=dict(colors=DesignSystem.CHART_COLORS)
-        )])
-        fig.update_layout(
-            height=380, showlegend=True, 
-            legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center"),
-            margin=dict(t=30, b=50, l=10, r=10),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
-        return fig
-
-    def render_detail(self, data_context): return None
-
-
-class BankConceptsStrategy:
-    def render(self, data_context, title=None):
-        path = "administracion.bancos.conceptos"
-        ds = safe_get(data_context, path, {"h": [], "r": []})
-        
-        return dmc.Stack(gap="xs", children=[
-            dmc.Text(title, fw=DesignSystem.FW_BOLD, size="xs", c=SemanticColors.TEXT_MUTED, tt="uppercase") if title else None,  # type: ignore
-            dmc.Table([
-                dmc.TableThead(dmc.TableTr([
-                    dmc.TableTh(x, fz=DesignSystem.FONT_TABLE, c=SemanticColors.TEXT_MUTED, fw=DesignSystem.FW_NORMAL)   # type: ignore
-                    for x in ds["h"]
-                ])),
-                dmc.TableTbody([dmc.TableTr([
-                    dmc.TableTd(str(c), fz=DesignSystem.FONT_TABLE) 
-                    for c in r
-                ]) for r in ds["r"]])
-            ], striped="odd", withTableBorder=True, highlightOnHover=True)
-        ])
-
-class PayablesGaugeStrategy(KPIStrategy):
-    def __init__(self, title, val_key, color="red", prefix="$", section="cuentas_por_pagar", has_detail=True):
-        super().__init__(title=title, color=color, icon="tabler:receipt-refund", has_detail=has_detail)
-        self.val_key, self.prefix, self.section = val_key, prefix, section
-
-    def get_card_config(self, data_context):
-        path = f"administracion.{self.section}.indicadores.{self.val_key}"
-        node = safe_get(data_context, path, {})
-        val = node.get("valor", 0)
-        config = {
-            "title": self.title,
-            "value": format_value(val, self.prefix),
-            "icon": self.icon,
-            "meta_text": f"Meta: {format_value(node.get('meta', 0), self.prefix)}" if node.get("meta") else ""
-        }
-        config.update(node)
-        return config
-
-    def get_figure(self, data_context):
-        path = f"administracion.{self.section}.indicadores.{self.val_key}"
-        node = safe_get(data_context, path, {})
-        val, meta = node.get("valor", 0), node.get("meta", 0)
-        t_vals = node.get("tickvals", [0, val, meta])
-        t_text = node.get("ticktext", [f"{self.prefix}0", format_value(val, self.prefix), format_value(meta, self.prefix)])
-        
-        fig = go.Figure(go.Indicator(
-            mode="gauge+number", value=val,
-            number={'valueformat': '$,.0f' if self.prefix=="$" else '.1f', 'font': {'size': 18, 'weight': 'bold'}},
-            gauge={
-                'axis': {'range': [0, max(t_vals)*1.1], 'tickvals': t_vals, 'ticktext': t_text, 'visible': True, 'tickfont': {'size': 10}},
-                'bar': {'color': self.hex_color, 'thickness': 0.8},
-                'bgcolor': "rgba(0,0,0,0.05)",
-                'threshold': {'line': {'color': "#f59e0b", 'width': 4}, 'value': meta}
-            }
-        ))
-        fig.update_layout(height=150, margin=dict(l=5, r=5, t=0, b=30), paper_bgcolor='rgba(0,0,0,0)')
-        return fig
-
-    def render_detail(self, data_context):
-        return dmc.Text("Análisis de cumplimiento de pagos.")
-    
-class PayablesDynamicChartStrategy:
-    def render(self, data_context, view="comparativa", height=400):
-        path = f"administracion.cuentas_por_pagar.graficas.{view}"
-        ds = safe_get(data_context, path, {})
-        fig = go.Figure()
-
-        if view == "comparativa":
-            fig.add_trace(go.Scatter(x=ds.get("meses"), y=ds.get("actual"), name="2025", mode="lines+markers", line=dict(color=DesignSystem.BRAND[6], width=3)))
-            fig.add_trace(go.Scatter(x=ds.get("meses"), y=ds.get("anterior"), name="2024", mode="lines", line=dict(color=DesignSystem.SLATE[4], dash="dash")))
-        
-        elif view == "mix":
-            fig = go.Figure(go.Pie(labels=ds.get("labels"), values=ds.get("values"), hole=.5, marker=dict(colors=[DesignSystem.BRAND[6], DesignSystem.SLATE[4]])))
-        
-        elif view == "saldo_proveedor":
-            fig.add_trace(go.Bar(y=ds.get("prov"), x=ds.get("por_vencer"), name="Vigente", orientation='h', marker_color=SemanticColors.INGRESO))
-            fig.add_trace(go.Bar(y=ds.get("prov"), x=ds.get("vencido"), name="Vencido", orientation='h', marker_color=SemanticColors.EGRESO))
-            fig.update_layout(barmode='stack', yaxis=dict(autorange="reversed"))
-
-        fig.update_layout(height=height, margin=dict(l=15, r=1, t=0, b=35), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
-        return dcc.Graph(figure=fig, config={'displayModeBar': False})
-
-class PayablesAgingTableStrategy:
-    def render(self, data_context, view="aging"):
-        map_paths = {
-            "aging": "administracion.cuentas_por_pagar.antiguedad",
-            "area": "administracion.cuentas_por_pagar.antiguedad_area",
-            "prov": "administracion.cuentas_por_pagar.antiguedad_proveedor"
-        }
-        ds = safe_get(data_context, map_paths.get(view, "aging"), {"h": [], "r": []})
-        if not ds.get("r"): return dmc.Text("Sin datos", c="dimmed", ta="center", py="xl") # type: ignore
-        return dmc.Table([
-            dmc.TableThead(dmc.TableTr([dmc.TableTh(x, style={"fontSize": "11px"}) for x in ds["h"]])),
-            dmc.TableTbody([dmc.TableTr([dmc.TableTd(str(c), style={"fontSize": "11px"}) for c in row]) for row in ds["r"]])
-        ], striped="odd", withTableBorder=True, withColumnBorders=True)
-
-class PayablesComparisonStrategy(KPIStrategy):
-    def __init__(self, has_detail=True):
-        super().__init__(title="Cuentas x Pagar 2025 vs. 2024", color="red", icon="tabler:scale", has_detail=has_detail)
-
-    def get_card_config(self, data_context):
-        return {"title": self.title}
-
-    def get_figure(self, data_context, view="monthly"):
-        try:
-            ds = data_context["administracion"]["cuentas_por_pagar"]["graficas"]["comparativa"]
-        except:
-            ds = {"meses": [], "actual": [], "anterior": []}
-        
-        fig = go.Figure()
-        
-        if view == "monthly":
-            fig.add_trace(go.Bar(x=ds["meses"], y=ds["actual"], name="2025", marker_color=self.hex_color))
-            fig.add_trace(go.Bar(x=ds["meses"], y=ds["anterior"], name="2024", marker_color=DesignSystem.SLATE[3], opacity=0.6))
-            fig.update_layout(barmode='group')
-        
-        elif view == "cumulative":
-            import pandas as pd
-            actual_cum = pd.Series(ds["actual"]).cumsum()
-            anterior_cum = pd.Series(ds["anterior"]).cumsum()
-            fig.add_trace(go.Scatter(x=ds["meses"], y=actual_cum, name="2025 (Acum)", fill='tozeroy', line=dict(color=self.hex_color)))
-            fig.add_trace(go.Scatter(x=ds["meses"], y=anterior_cum, name="2024 (Acum)", line=dict(color=DesignSystem.SLATE[4], dash='dash')))
-
-        elif view == "comparison":
-            diff = [a - b for a, b in zip(ds["actual"], ds["anterior"])]
-            fig.add_trace(go.Bar(x=ds["meses"], y=diff, name="Diferencia", marker_color=DesignSystem.BRAND[5]))
-
-        fig.update_layout(
-            margin=dict(t=10, b=20, l=10, r=10),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
             plot_bgcolor=DesignSystem.TRANSPARENT,
-            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center")
+            height=300
         )
+        
         return fig
-
-    def get_figure_by_view(self, data_context, view="monthly"):
-        fig = self.get_figure(data_context, view=view)
-        return dcc.Graph(figure=fig, config={'displayModeBar': False}, style={"height": "400px"})
 
     def render_detail(self, data_context):
         return None
 
-class PayablesMixStrategy(KPIStrategy):
-    def __init__(self, has_detail=True):
-        super().__init__(title="Saldo por Clasificación", color="red", icon="tabler:chart-pie-2", has_detail=has_detail)
 
-    def get_card_config(self, data_context): return {"title": self.title}
+class AdminTrendChartStrategy(KPIStrategy):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-line", color="indigo", layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.chart_key = chart_key
 
-    def get_figure(self, data_context):
-        try: ds = data_context["administracion"]["cuentas_por_pagar"]["graficas"]["mix"]
-        except: ds = {"labels": [], "values": []}
-        fig = go.Figure(data=[go.Pie(
-            labels=ds["labels"], values=ds["values"], hole=.5, 
-            marker=dict(colors=[SemanticColors.INGRESO, SemanticColors.EGRESO])
-        )])
-        fig.update_layout(
-            showlegend=True, legend=dict(orientation="h", y=-0.1), 
-            margin=dict(t=10, b=10, l=10, r=10),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
-        )
-        return fig
-
-    def render_detail(self, data_context): return None
-    
-class SupplierSaldoStrategy(KPIStrategy):
-    def __init__(self, layout_config=None):
-        super().__init__(title="Saldo por Proveedor", color="red", icon="tabler:truck-loading", layout_config=layout_config)
-
-    def get_card_config(self, data_context): return {"title": self.title}
+    def get_card_config(self, data_context):
+        return {"title": self.title, "icon": self.icon}
 
     def get_figure(self, data_context):
-        path = "administracion.cuentas_por_pagar.graficas.saldo_proveedor"
-        ds = safe_get(data_context, path, {"prov": [], "por_vencer": [], "vencido": []})
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+        
+        if not node:
+            return self._create_empty_figure()
+        
+        data_source = node.get("data", node)
+        
+        categories = (data_source.get("categories") or 
+                     data_source.get("months") or 
+                     data_source.get("meses") or [])
+        
+        series_list = data_source.get("series", [])
+        
+        if not categories or not series_list:
+            return self._create_empty_figure("Sin datos temporales")
         
         fig = go.Figure()
-        fig.add_trace(go.Bar(y=ds["prov"], x=ds["por_vencer"], name="Vigente", orientation='h', marker_color=SemanticColors.INGRESO))
-        fig.add_trace(go.Bar(y=ds["prov"], x=ds["vencido"], name="Vencido", orientation='h', marker_color=SemanticColors.EGRESO))
+        
+        for idx, serie in enumerate(series_list):
+            s_name = serie.get("name", f"Serie {idx}")
+            s_data = serie.get("data", [])
+            s_color = serie.get("color", DesignSystem.BRAND[5])
+            s_type = serie.get("type", "bar")
+            is_dashed = serie.get("dashed", False) or "Meta" in s_name or "Presupuesto" in s_name
+            
+            if s_type == "line" or is_dashed:
+                fig.add_trace(go.Scatter(
+                    x=categories,
+                    y=s_data,
+                    name=s_name,
+                    mode='lines+markers',
+                    line=dict(
+                        color=s_color,
+                        width=3,
+                        dash='dot' if is_dashed else 'solid'
+                    ),
+                    marker=dict(size=6)
+                ))
+            else:
+                fig.add_trace(go.Bar(
+                    x=categories,
+                    y=s_data,
+                    name=s_name,
+                    marker_color=s_color
+                ))
         
         fig.update_layout(
-            barmode='stack', bargap=0.1, height=550, 
-            margin=dict(l=10, r=20, t=30, b=10), yaxis=dict(autorange="reversed"),
+            barmode='group',
+            height=350,
+            margin=dict(t=30, b=40, l=40, r=20),
+            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
             paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT
+            plot_bgcolor=DesignSystem.TRANSPARENT,
+            hovermode='x unified'
         )
+        
         return fig
 
-    def render_detail(self, data_context): 
-        return dmc.Text("Desglose de deuda vigente vs. vencida por proveedor.", size="sm", c=SemanticColors.TEXT_MUTED)  # type: ignore
+    def render_detail(self, data_context):
+        return None
+
+
+class AdminHorizontalBarStrategy(KPIStrategy):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-bar", color="indigo", layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.chart_key = chart_key
+
+    def get_card_config(self, data_context):
+        return {"title": self.title, "icon": self.icon}
+
+    def get_figure(self, data_context):
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+        
+        if not node:
+            return self._create_empty_figure()
+        
+        data_source = node.get("data", node)
+        
+        categories = data_source.get("categories", [])
+        series_list = data_source.get("series", [])
+        
+        if not categories:
+            return self._create_empty_figure("Sin categorías")
+        
+        fig = go.Figure()
+        
+        for serie in series_list:
+            s_name = serie.get("name", "Valor")
+            s_data = serie.get("data", [])
+            s_color = serie.get("color", self.hex_color)
+            
+            fig.add_trace(go.Bar(
+                y=categories,
+                x=s_data,
+                name=s_name,
+                orientation='h',
+                marker_color=s_color,
+                text=[f"${v:,.0f}" if v > 1000 else f"${v:.2f}" for v in s_data],
+                textposition='outside'
+            ))
+        
+        fig.update_layout(
+            barmode='stack' if len(series_list) > 1 else 'relative',
+            height=max(300, len(categories) * 30),
+            margin=dict(l=120, r=40, t=30, b=40),
+            yaxis=dict(autorange="reversed"),
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT,
+            showlegend=len(series_list) > 1
+        )
+        
+        return fig
+
+    def render_detail(self, data_context):
+        return None
+
+
+class AdminStackedBarStrategy(KPIStrategy):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-bar", color="indigo", layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.chart_key = chart_key
+
+    def get_card_config(self, data_context):
+        return {"title": self.title, "icon": self.icon}
+
+    def get_figure(self, data_context):
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+        
+        if not node:
+            return self._create_empty_figure()
+        
+        data_source = node.get("data", node)
+        
+        categories = data_source.get("categories", [])
+        series_list = data_source.get("series", [])
+        
+        if not categories:
+            return self._create_empty_figure("Sin categorías")
+        
+        fig = go.Figure()
+        
+        for serie in series_list:
+            s_name = serie.get("name", "Valor")
+            s_data = serie.get("data", [])
+            s_color = serie.get("color", self.hex_color)
+            
+            fig.add_trace(go.Bar(
+                y=categories,
+                x=s_data,
+                name=s_name,
+                orientation='h',
+                marker_color=s_color
+            ))
+        
+        fig.update_layout(
+            barmode='stack',
+            height=max(300, len(categories) * 40),
+            margin=dict(l=120, r=40, t=30, b=40),
+            yaxis=dict(autorange="reversed"),
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT,
+            showlegend=True,
+            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center")
+        )
+        
+        return fig
+
+    def render_detail(self, data_context):
+        return None
+
+
+class AdminTableStrategy:
+    def __init__(self, screen_id, table_key):
+        self.screen_id = screen_id
+        self.table_key = table_key
+
+    def _resolve_table_data(self, data_context):
+        from services.data_manager import data_manager
+        
+        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {}) # type: ignore
+        inject_paths = screen_config.get("inject_paths", {})
+        
+        path = inject_paths.get(self.table_key)
+        if not path:
+            return None
+        
+        from utils.helpers import safe_get
+        return safe_get(data_context, path)
+
+    def render(self, data_context, **kwargs):
+        node = self._resolve_table_data(data_context)
+        
+        if not node:
+            return dmc.Text("Sin datos de tabla", c="dimmed", ta="center", py="xl") # type: ignore
+        
+        data_source = node.get("data", node)
+        headers = data_source.get("headers", [])
+        rows = data_source.get("rows", [])
+        
+        if not headers or not rows:
+            return dmc.Text("Sin datos", c="dimmed", ta="center", py="xl") # type: ignore
+        
+        return dmc.Table([
+            dmc.TableThead(dmc.TableTr([
+                dmc.TableTh(h, style={"fontSize": "11px", "fontWeight": "bold"}) 
+                for h in headers
+            ])),
+            dmc.TableTbody([
+                dmc.TableTr([
+                    dmc.TableTd(str(cell), style={"fontSize": "11px"}) 
+                    for cell in row
+                ]) 
+                for row in rows
+            ])
+        ], striped="odd", withTableBorder=True, withColumnBorders=True)
+
+
+class AdminCashFlowChartStrategy(KPIStrategy):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:cash", color="blue", layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.chart_key = chart_key
+
+    def get_card_config(self, data_context):
+        return {"title": self.title, "icon": self.icon}
+
+    def get_figure(self, data_context):
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+        
+        if not node:
+            return self._create_empty_figure()
+        
+        data_source = node.get("data", node)
+        
+        categories = data_source.get("categories", [])
+        series_list = data_source.get("series", [])
+        
+        if not categories or not series_list:
+            return self._create_empty_figure("Sin datos de flujo")
+        
+        fig = go.Figure()
+        
+        for serie in series_list:
+            s_name = serie.get("name", "")
+            s_data = serie.get("data", [])
+            s_color = serie.get("color", self.hex_color)
+            
+            fig.add_trace(go.Bar(
+                x=categories,
+                y=s_data,
+                name=s_name,
+                marker_color=s_color
+            ))
+        
+        fig.update_layout(
+            barmode='group',
+            height=350,
+            margin=dict(t=30, b=40, l=40, r=20),
+            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT,
+            hovermode='x unified'
+        )
+        
+        return fig
+
+    def render_detail(self, data_context):
+        return None
+
+
+class AdminMultiLineChartStrategy(KPIStrategy):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-line", color="indigo", layout_config=None):
+        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
+        self.screen_id = screen_id
+        self.chart_key = chart_key
+
+    def get_card_config(self, data_context):
+        return {"title": self.title, "icon": self.icon}
+
+    def get_figure(self, data_context):
+        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+        
+        if not node:
+            return self._create_empty_figure()
+        
+        data_source = node.get("data", node)
+        
+        categories = (data_source.get("months") or 
+                     data_source.get("categories") or [])
+        series_list = data_source.get("series", [])
+        
+        if not categories or not series_list:
+            return self._create_empty_figure("Sin datos")
+        
+        fig = go.Figure()
+        
+        for serie in series_list:
+            s_name = serie.get("name", "")
+            s_data = serie.get("data", [])
+            s_color = serie.get("color", self.hex_color)
+            
+            fig.add_trace(go.Scatter(
+                x=categories,
+                y=s_data,
+                name=s_name,
+                mode='lines+markers',
+                line=dict(color=s_color, width=3),
+                marker=dict(size=6)
+            ))
+        
+        fig.update_layout(
+            height=350,
+            margin=dict(t=30, b=40, l=40, r=20),
+            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
+            paper_bgcolor=DesignSystem.TRANSPARENT,
+            plot_bgcolor=DesignSystem.TRANSPARENT,
+            hovermode='x unified'
+        )
+        
+        return fig
+
+    def render_detail(self, data_context):
+        return None

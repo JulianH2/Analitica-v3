@@ -117,22 +117,57 @@ class SmartWidget:
         footer_items = []
         is_inverse = config.get("inverse", False)
         
-        def make_row(label, value, delta=None, delta_fmt=None):
-            if not value or value == "---": return None
+        def make_row(label, value, delta=None, delta_fmt=None, is_inverse=False):
+            if value in (None, "---"):
+                return None
+
             badge = None
-            if delta is not None:
-                if delta > 0: color = "red" if is_inverse else "green"; prefix = "+"
-                elif delta < 0: color = "green" if is_inverse else "red"; prefix = ""
-                else: color = "gray"; prefix = ""
-                txt = delta_fmt if delta_fmt else f"{prefix}{delta:.1f}%"
-                badge = dmc.Badge(txt, color=color, variant="light", size="xs", style={"padding": "0 4px", "height": "16px", "fontSize": "9px"})
-            return dmc.Group(justify="space-between", w="100%", children=[
-                dmc.Group(gap=4, children=[
-                    dmc.Text(label, size="10px", c="dimmed"), # type: ignore
-                    dmc.Text(str(value), size="11px", fw=600, c="dark"), # type: ignore
-                ]),
-                badge
-            ])
+
+            try:
+                delta_num = float(delta) # type: ignore
+            except (TypeError, ValueError):
+                delta_num = None
+
+            if delta_num is not None:
+                if delta_num > 0:
+                    color = "red" if is_inverse else "green"
+                    prefix = "+"
+                elif delta_num < 0:
+                    color = "green" if is_inverse else "red"
+                    prefix = ""
+                else:
+                    color = "gray"
+                    prefix = ""
+
+                txt = delta_fmt if delta_fmt else f"{prefix}{delta_num:.1f}%"
+
+                badge = dmc.Badge(
+                    txt,
+                    color=color,
+                    variant="light",
+                    size="xs",
+                    style={
+                        "padding": "0 4px",
+                        "height": "16px",
+                        "fontSize": "9px",
+                    },
+                )
+
+            return dmc.Group(
+                justify="space-between",
+                w="100%",
+                children=[
+                    dmc.Group(
+                        gap=4,
+                        children=[
+                            dmc.Text(label, size="10px", c="dimmed"),  # type: ignore
+                            dmc.Text(str(value), size="11px", fw=600, c="dark"),  # type: ignore
+                        ],
+                    ),
+                    badge,
+                ],
+            )
+
 
         prev_row = make_row(config.get("label_prev_year", "Año Ant:"), config.get("vs_last_year_formatted"), config.get("vs_last_year_delta"), config.get("vs_last_year_delta_formatted"))
         if prev_row: footer_items.append(prev_row)
