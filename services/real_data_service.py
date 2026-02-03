@@ -482,7 +482,6 @@ class RealDataService:
             inverse=True
         )
         
-        # --- Gráficas y Tablas (Tus datos originales intactos) ---
         operational["charts"]["revenue_trends"] = {
             "type": "line_chart",
             "title": "Tendencia Ingresos 2025 vs 2024",
@@ -869,6 +868,47 @@ class RealDataService:
                 "total_revenue": "$1",
                 "total_clients": 1,
                 "total_km": 1
+            }
+        }
+        
+        operational["tables"]["routes_empty"] = {
+            "type": "table",
+            "title": "Rutas en Vacío",
+            "headers": ["Ruta", "Viajes", "Kms", "Costo x Km", "Costo Total"],
+            "rows": [
+                ["RUTA A - VACÍO", "5", "1,200", "$12.50", "$15,000"],
+                ["RUTA B - VACÍO", "3", "800", "$14.20", "$11,360"],
+                ["RUTA C - VACÍO", "7", "1,500", "$11.80", "$17,700"],
+                ["RUTA D - VACÍO", "2", "600", "$15.00", "$9,000"],
+                ["RUTA E - VACÍO", "4", "950", "$13.50", "$12,825"]
+            ],
+            "summary": {
+                "total_trips": 21,
+                "total_km": 5050,
+                "total_cost": "$65,885"
+            }
+        }
+        
+        operational["tables"]["routes_loaded"] = {
+            "type": "table",
+            "title": "Rutas Cargado",
+            "headers": ["Ruta", "Viajes", "Kms", "Ingresos", "% Ingreso"],
+            "rows": [
+                ["CANOITAS-OWENS MTY", "192", "130,560", "$4.77M", "18.5%"],
+                ["CANOITAS-LAMPAZOS", "144", "38,880", "$1.49M", "5.8%"],
+                ["CANOITAS-VIDRIO PLANO", "73", "49,640", "$1.85M", "7.2%"],
+                ["CANOITAS-VITRO AUTOMOTRIZ", "63", "42,840", "$1.50M", "5.8%"],
+                ["3T-LYCRA", "1", "29", "$5,750", "0.02%"],
+                ["ALCALI-CRISA LIBBEY", "15", "780", "$78.0k", "0.3%"],
+                ["CANOITAS-PESQUERIA", "28", "11,088", "$761.7k", "3.0%"],
+                ["GARCIA ALCALI-SANTA CATARINA RIASA", "11", "253", "$76.5k", "0.3%"],
+                ["LA MORITA-COLOMBIA", "37", "6,586", "$470.5k", "1.8%"],
+                ["LAMPAZOS-CANOITAS", "1", "133", "$9,175.50", "0.04%"]
+            ],
+            "summary": {
+                "total_trips": 565,
+                "total_km": 280789,
+                "total_revenue": "$10.98M"
             }
         }
 

@@ -166,7 +166,7 @@ def layout():
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     refresh_components, _ = data_manager.dash_refresh_components(
         SCREEN_ID,
-        interval_ms=800,
+        interval_ms=60 * 60 * 1000,
         max_intervals=1
     )
     filters = create_filter_section(

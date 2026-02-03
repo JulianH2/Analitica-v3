@@ -164,7 +164,14 @@ def create_workshop_filters(prefix="workshop"):
 
 def get_filter_ids(prefix, additional_count=5):
     ids = [f"{prefix}-year", f"{prefix}-month"]
-    common_additional = ["empresa", "clasificacion", "cliente", "unidad", "operador"]
-    for i in range(min(additional_count, len(common_additional))):
-        ids.append(f"{prefix}-{common_additional[i]}")
+    
+    if prefix in ["workshop", "avail", "pur", "inv"]:
+        workshop_filters = ["empresa", "unidad", "tipo-op", "clasificacion", "razon", "motor"]
+        for f in workshop_filters:
+            ids.append(f"{prefix}-{f}")
+    else:
+        common_additional = ["empresa", "clasificacion", "cliente", "unidad", "operador"]
+        for i in range(min(additional_count, len(common_additional))):
+            ids.append(f"{prefix}-{common_additional[i]}")
+            
     return ids

@@ -1,29 +1,30 @@
-import os
-from django.db import connections
-from django.conf import settings
+import pandas as pd
+from sqlalchemy import create_engine, text
+from config import Config
 from asgiref.sync import sync_to_async
 
+def _execute_dynamic_query_sync(db_name: str, query: str):
+    if not db_name:
+        return []
+    conn_str = Config.get_connection_string(target_db=db_name)
+    
+    if not conn_str:
+        return []
 
-def _execute_dynamic_query_sync(session_db_config: str, sql_query: str):
-    base = settings.DATABASES["default"].copy()
-    base.update({
-        "NAME": session_db_config
-    })
-    connections.databases["client_db"] = base
-
+    engine = None
     try:
-        with connections["client_db"].cursor() as cursor:
-            #print(f"Executing SQL Query on {session_db_config}:\n{sql_query}\n")
-            cursor.execute(sql_query)
-            if cursor.description:
-                columns = [col[0] for col in cursor.description]
-                return [dict(zip(columns, row)) for row in cursor.fetchall()]
-            return []
+        engine = create_engine(conn_str, echo=False)
+        with engine.connect() as connection:
+            result = connection.execute(text(query))
+            keys = result.keys()
+            return [dict(zip(keys, row)) for row in result.fetchall()]
+            
+    except Exception as e:
+        print(f"❌ Error SQL en {db_name}: {e}") 
+        return [] 
+        
     finally:
-        try:
-            connections["client_db"].close()
-        finally:
-            if "client_db" in connections.databases:
-                del connections.databases["client_db"]
+        if engine:
+            engine.dispose()
 
 execute_dynamic_query = sync_to_async(_execute_dynamic_query_sync, thread_sensitive=True)

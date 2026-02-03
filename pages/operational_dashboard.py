@@ -1,8 +1,9 @@
 from flask import session
 import dash
-from dash import html
+from dash import html, dcc
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
+from datetime import datetime
 
 from services.data_manager import data_manager
 from components.visual_widget import ChartWidget
@@ -16,6 +17,12 @@ from strategies.operational import (
     OpsHorizontalBarStrategy,
     OpsTableStrategy
 )
+
+# Importar OpsGaugeStrategy solo si existe, sino usar OpsKPIStrategy
+try:
+    from strategies.operational import OpsGaugeStrategy
+except ImportError:
+    OpsGaugeStrategy = OpsKPIStrategy
 from settings.theme import DesignSystem
 from utils.helpers import safe_get
 
@@ -23,9 +30,27 @@ dash.register_page(__name__, path="/ops-dashboard", title="Control Operativo")
 
 SCREEN_ID = "operational-dashboard"
 
+# ==========================================
+# SERVICIO DE TIEMPO DINÁMICO
+# ==========================================
+def get_current_year():
+    return datetime.now().year
+
+def get_previous_year():
+    return datetime.now().year - 1
+
+def get_dynamic_title(base_title: str) -> str:
+    """Genera título dinámico con años actuales"""
+    return f"{base_title} {get_current_year()} vs {get_previous_year()}"
+
+# ==========================================
+# WIDGETS KPI CON GAUGE DONDE HAY META
+# ==========================================
+
+# Los KPIs principales usan OpsGaugeStrategy para mostrar gauge cuando hay meta
 w_inc = SmartWidget(
     "go_inc",
-    OpsKPIStrategy(
+    OpsGaugeStrategy(
         screen_id=SCREEN_ID,
         kpi_key="revenue_total",
         title="Ingreso Viaje",
@@ -37,7 +62,7 @@ w_inc = SmartWidget(
 
 w_tri = SmartWidget(
     "go_tri",
-    OpsKPIStrategy(
+    OpsGaugeStrategy(
         screen_id=SCREEN_ID,
         kpi_key="total_trips",
         title="Viajes",
@@ -49,7 +74,7 @@ w_tri = SmartWidget(
 
 w_kms = SmartWidget(
     "go_kms",
-    OpsKPIStrategy(
+    OpsGaugeStrategy(
         screen_id=SCREEN_ID,
         kpi_key="total_kilometers",
         title="Kilómetros",
@@ -59,6 +84,7 @@ w_kms = SmartWidget(
     )
 )
 
+# KPIs secundarios sin gauge (no tienen meta)
 w_avg_trip = SmartWidget(
     "avg_trip",
     OpsKPIStrategy(
@@ -103,12 +129,29 @@ w_customers = SmartWidget(
     )
 )
 
+# ==========================================
+# WIDGETS DE GRÁFICAS CON TÍTULOS DINÁMICOS
+# ==========================================
+
+class DynamicTrendChartStrategy(OpsTrendChartStrategy):
+    """Strategy que genera título dinámico basado en el año actual"""
+    def __init__(self, screen_id, chart_key, base_title, icon="tabler:chart-line", color="indigo", layout_config=None):
+        dynamic_title = get_dynamic_title(base_title)
+        super().__init__(screen_id, chart_key, dynamic_title, icon, color, layout_config)
+        self.base_title = base_title
+    
+    def get_card_config(self, data_context):
+        config = super().get_card_config(data_context)
+        # Actualizar título cada vez que se renderiza
+        config["title"] = get_dynamic_title(self.base_title)
+        return config
+
 w_inc_comp = ChartWidget(
     "co_inc_comp",
-    OpsTrendChartStrategy(
+    DynamicTrendChartStrategy(
         screen_id=SCREEN_ID,
         chart_key="revenue_trends",
-        title="Ingresos 2025 vs 2024",
+        base_title="Ingresos",
         icon="tabler:chart-line",
         color="indigo",
         layout_config={"height": 360}
@@ -117,10 +160,10 @@ w_inc_comp = ChartWidget(
 
 w_trips_comp = ChartWidget(
     "co_trips_comp",
-    OpsTrendChartStrategy(
+    DynamicTrendChartStrategy(
         screen_id=SCREEN_ID,
         chart_key="trips_trends",
-        title="Viajes 2025 vs 2024",
+        base_title="Viajes",
         icon="tabler:chart-line",
         color="green",
         layout_config={"height": 360}
@@ -157,8 +200,37 @@ WIDGET_REGISTRY = {
     "customers": w_customers
 }
 
+# ==========================================
+# RENDERIZADO DE COMPONENTES DINÁMICOS
+# ==========================================
+
 def _render_fleet_status(ctx):
-    val = safe_get(ctx, ["operational", "dashboard", "kpis", "load_status", "value"], 92)
+    """Renderiza el estado de carga de flota con datos reales"""
+    # Obtener valor real del contexto
+    load_data = safe_get(ctx, ["operational", "dashboard", "kpis", "load_status"], {})
+    
+    if isinstance(load_data, dict):
+        val = load_data.get("value", 0)
+        val_formatted = load_data.get("value_formatted", f"{val:.1f}%")
+    else:
+        val = float(load_data) if load_data else 0
+        val_formatted = f"{val:.1f}%"
+    
+    # Convertir a porcentaje si viene como decimal
+    if val < 1:
+        val = val * 100
+    
+    # Determinar color según nivel
+    if val >= 80:
+        color = "green"
+        icon_color = DesignSystem.SUCCESS[5]
+    elif val >= 60:
+        color = "yellow"
+        icon_color = DesignSystem.WARNING[5]
+    else:
+        color = "red"
+        icon_color = DesignSystem.DANGER[5]
+    
     return dmc.Paper(
         p="md",
         withBorder=True,
@@ -171,15 +243,17 @@ def _render_fleet_status(ctx):
                 style={"height": "100%"},
                 children=[
                     dmc.Text("Estado de Carga de Flota", fw="bold", size="xs", c="dimmed", tt="uppercase"), # type: ignore
-                    DashIconify(icon="tabler:truck-loading", width=60, color=DesignSystem.SUCCESS[5]),
-                    dmc.Text(f"{val}% Cargado", fw="bold", size="xl", c="green"),
-                    dmc.Progress(value=val, color="green", h=22, radius="xl", style={"width": "100%"})
+                    DashIconify(icon="tabler:truck-loading", width=60, color=icon_color),
+                    dmc.Text(f"{val:.1f}%", fw="bold", size="2rem", c=color), # type: ignore
+                    dmc.Text("Cargado", size="sm", c="dimmed"), # type: ignore
+                    dmc.Progress(value=min(val, 100), color=color, h=22, radius="xl", style={"width": "100%"})
                 ]
             )
         ]
     )
 
 def _render_routes_tabs(ctx):
+    """Renderiza tabs de rutas - vacío y cargado separadas"""
     return dmc.Paper(
         p="md",
         withBorder=True,
@@ -194,11 +268,11 @@ def _render_routes_tabs(ctx):
                         dmc.TabsTab("Rutas Cargado", value="rutas_cargado", leftSection=DashIconify(icon="tabler:map-pin"))
                     ]),
                     dmc.TabsPanel(
-                        dmc.ScrollArea(h=350, pt="xs", children=[OpsTableStrategy(SCREEN_ID, "main_routes").render(ctx)]),
+                        dmc.ScrollArea(h=350, pt="xs", children=[OpsTableStrategy(SCREEN_ID, "routes_empty").render(ctx)]),
                         value="rutas_vacio"
                     ),
                     dmc.TabsPanel(
-                        dmc.ScrollArea(h=350, pt="xs", children=[OpsTableStrategy(SCREEN_ID, "top_routes").render(ctx)]),
+                        dmc.ScrollArea(h=350, pt="xs", children=[OpsTableStrategy(SCREEN_ID, "routes_loaded").render(ctx)]),
                         value="rutas_cargado"
                     )
                 ]
@@ -243,9 +317,9 @@ def _render_body(ctx):
             spacing="md",
             mb="md",
             children=[
-                w_inc.render(ctx, mode="combined"),
-                w_tri.render(ctx, mode="combined"),
-                w_kms.render(ctx, mode="combined")
+                w_inc.render(ctx),
+                w_tri.render(ctx),
+                w_kms.render(ctx)
             ]
         ),
         dmc.SimpleGrid(
@@ -303,8 +377,15 @@ def _render_body(ctx):
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
+        
     ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
-    refresh_components, _ = data_manager.dash_refresh_components(SCREEN_ID, interval_ms=800, max_intervals=1)
+    
+    refresh_components, _ = data_manager.dash_refresh_components(
+        SCREEN_ID, 
+        interval_ms=60 * 60 * 1000, 
+        max_intervals=-1
+    )
+    
     return dmc.Container(
         fluid=True,
         px="xs",
@@ -312,7 +393,13 @@ def layout():
             create_smart_modal("ops-modal"),
             *refresh_components,
             create_operational_filters(prefix="ops"),
-            html.Div(id="ops-body", children=_render_body(ctx))
+            
+            dcc.Loading(
+                id="loading-ops",
+                type="circle",
+                color=DesignSystem.BRAND[5],
+                children=html.Div(id="ops-body", children=_render_body(ctx))
+            )
         ]
     )
 

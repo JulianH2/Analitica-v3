@@ -1,6 +1,9 @@
 import bcrypt
 from flask import session
 from data.db_service import db_service
+import logging
+
+logger = logging.getLogger(__name__)
 
 class UserService:
     def get_user_by_email(self, email):
@@ -84,6 +87,7 @@ class UserService:
         databases = self.get_user_databases(email, id_tipo_usuario)
         
         if not databases:
+            logger.error(f"Usuario {email} no tiene bases de datos asignadas")
             return "Tu usuario existe, pero no tiene clientes/bases de datos asignadas."
             
         session["user"] = {
@@ -97,9 +101,48 @@ class UserService:
         session["databases"] = databases
         session["role_id"] = id_tipo_usuario
         
-        if databases:
-            session["current_db"] = "PowerZAM_tinsadb"
-            session["current_client_logo"] = databases[0].get("url_logo") 
+        tinsa_db = None
+        first_db = None
+        
+        for db in databases:
+            db_name = db.get("base_de_datos", "")
+            client_name = db.get("nombre_cliente", "")
+            
+            logger.info(f"Base disponible: {db_name} - Cliente: {client_name}")
+            
+            if db_name == "PowerZAM_tinsadb":
+                tinsa_db = db
+                logger.info(f"✅ Encontrada base TINSA: {db_name}")
+            
+            if first_db is None:
+                first_db = db
+        
+        if tinsa_db:
+            selected_db = tinsa_db
+            logger.info(f"🔧 Usando TINSA como base por defecto")
+        elif first_db:
+            selected_db = first_db
+            logger.warning(f"⚠️ TINSA no encontrada. Usando primera disponible: {first_db.get('base_de_datos')}")
+        else:
+            selected_db = None
+            logger.error(f"No hay bases de datos disponibles")
+        
+        if selected_db:
+            session["current_db"] = selected_db.get("base_de_datos")
+            session["current_client_logo"] = selected_db.get("url_logo")
+            
+            logger.info(f"""
+            📊 RESUMEN DE CONEXIÓN:
+            - Usuario: {email}
+            - Bases disponibles: {len(databases)}
+            - Base seleccionada: {session['current_db']}
+            - Cliente: {selected_db.get('nombre_cliente')}
+            - Logo: {session.get('current_client_logo', 'No disponible')}
+            """)
+        else:
+            session["current_db"] = None
+            session["current_client_logo"] = None
+            logger.error(f"❌ No se pudo seleccionar ninguna base de datos")
         
         session.modified = True 
         return True

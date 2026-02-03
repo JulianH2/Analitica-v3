@@ -27,18 +27,30 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
         elif href == "/": section = "/"
         
         config = colors.get(section, colors["/"])
-        if not is_active:
-            return {"color": "gray", "style": {"borderRadius": "8px", "marginBottom": "4px"}}
-        return {
-            "color": config["main"],
-            "style": {
-                "borderRadius": "0 8px 8px 0",
-                "marginBottom": "4px",
-                "borderLeft": f"5px solid {config['main']}",
-                "background": f"linear-gradient(90deg, {config['light']} 0%, rgba(0,0,0,0) 100%)",
-                "fontWeight": 700
-            }
+        
+        # Estilos base para el botón de navegación
+        base_style = {
+            "textDecoration": "none",
+            "padding": "10px 12px",
+            "display": "block",
+            "borderRadius": "8px",
+            "marginBottom": "4px",
+            "cursor": "pointer",
+            "transition": "background-color 0.2s ease"
         }
+
+        if not is_active:
+            base_style.update({"color": "#C1C2C5" if current_theme == "dark" else "#495057"})
+            return {"color": "gray", "style": base_style, "bg": "transparent"}
+        
+        base_style.update({
+            "color": config["main"],
+            "borderRadius": "0 8px 8px 0",
+            "borderLeft": f"5px solid {config['main']}",
+            "background": f"linear-gradient(90deg, {config['light']} 0%, rgba(0,0,0,0) 100%)",
+            "fontWeight": 700
+        }) # type: ignore
+        return {"color": config["main"], "style": base_style, "bg": config["light"]}
 
     menu_structure = [
         {"type": "link", "label": "Dashboard Principal", "href": "/", "icon": "tabler:layout-dashboard"},
@@ -74,21 +86,21 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
     def render_link(item):
         is_active = active_path == item["href"]
         cfg = get_section_styles(item["href"], is_active)
-        
-        nav_visual = dmc.NavLink(
-            label=item["label"] if not collapsed else None,
-            leftSection=DashIconify(icon=item["icon"], width=20),
-            active="exact" if is_active else None,
-            variant="filled" if is_active else "subtle",
-            color=cfg["color"],
-            style=cfg["style"]
+        link_content = dmc.Group(
+            gap="sm",
+            children=[
+                DashIconify(icon=item["icon"], width=20, color=cfg["color"] if is_active else "inherit"),
+                dmc.Text(item["label"], size="sm", fw=700 if is_active else 400) if not collapsed else None # type: ignore
+            ]
         )
         
         link = dcc.Link(
-            nav_visual,
+            link_content,
             href=item["href"],
-            style={"textDecoration": "none"}
+            style=cfg["style"],
+            className="nav-link-hover"
         )
+        
         return dmc.Tooltip(label=item["label"], position="right", children=link) if collapsed else link
 
     def render_group(group):
@@ -98,16 +110,22 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
         
         children = []
         for child in group["children"]:
-            child_nav = dmc.NavLink(
-                label=child["label"],
-                leftSection=DashIconify(icon=child["icon"], width=18),
-                active="exact" if active_path == child["href"] else None,
-                variant="subtle",
-                color=cfg["color"] if active_path == child["href"] else "gray",
-                style={"borderRadius": "8px"}
+            is_child_active = active_path == child["href"]
+            child_cfg = get_section_styles(child["href"], is_child_active)
+            child_content = dmc.Group(
+                gap="sm",
+                children=[
+                    DashIconify(icon=child["icon"], width=18, color=child_cfg["color"] if is_child_active else "inherit"),
+                    dmc.Text(child["label"], size="sm", fw=700 if is_child_active else 400) # type: ignore
+                ]
             )
+            
             children.append(
-                dcc.Link(child_nav, href=child["href"], style={"textDecoration": "none"})
+                dcc.Link(
+                    child_content, 
+                    href=child["href"], 
+                    style={**child_cfg["style"], "marginLeft": "10px"}
+                )
             )
         
         nav_group = dmc.NavLink(
@@ -117,8 +135,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
             opened=is_group_active and not collapsed,
             active="exact" if is_group_active else None,
             variant="light" if is_group_active else "subtle",
-            color=cfg["color"],
-            style=cfg["style"] if not collapsed else {"borderRadius": "8px", "marginBottom": "4px"}
+            color=cfg["color"] if isinstance(cfg["color"], str) else "gray", # type: ignore
         )
 
         if collapsed:
@@ -151,8 +168,14 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
     if not db_options:
         db_options = [{"label": "Sin bases asignadas", "value": "error", "disabled": True}]
 
-    valid_values = [opt['value'] for opt in db_options]
-    final_value = current_db if current_db in valid_values else (valid_values[0] if valid_values else None)
+    valid_values = [opt['value'] for opt in db_options if not opt.get('disabled', False)]
+    
+    if current_db and current_db in valid_values:
+        final_value = current_db
+    elif valid_values:
+        final_value = valid_values[0] 
+    else:
+        final_value = None
 
     show_selector = not collapsed
 

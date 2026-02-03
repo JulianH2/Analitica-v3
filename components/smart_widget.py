@@ -3,6 +3,7 @@ from dash import dcc, html
 from dash_iconify import DashIconify
 from settings.theme import DesignSystem, SemanticColors
 from typing import Any
+import math
 
 class SmartWidget:
     def __init__(self, widget_id: str, strategy: Any):
@@ -21,8 +22,26 @@ class SmartWidget:
         
         figure = None
         if hasattr(self.strategy, 'get_figure'):
-            try: figure = self.strategy.get_figure(data_context)
-            except: pass
+            try: 
+                figure = self.strategy.get_figure(data_context)
+                if figure and hasattr(figure, 'data'):
+                    has_data = False
+                    for trace in figure.data:
+                        for attr in ['x', 'y', 'values', 'value']:
+                            val = getattr(trace, attr, None)
+                            if isinstance(val, (list, tuple)) and len(val) > 0:
+                                if any(v is not None for v in val):
+                                    has_data = True
+                                    break
+                            elif isinstance(val, (int, float)) and not math.isnan(val):
+                                has_data = True
+                                break
+                        if has_data: break
+                    
+                    if not has_data:
+                        figure = None
+            except: 
+                figure = None
 
         val = config.get("main_value") or config.get("value")
 
@@ -41,7 +60,7 @@ class SmartWidget:
         display_val = config.get("main_value") or config.get("value", "---")
 
         main_value = dmc.Center(style={"flex": 1, "flexDirection": "column"}, children=[
-            dmc.Text(display_val, fw=800, fz="2rem", lh="1", ta="center", c=SemanticColors.TEXT_MAIN), # type: ignore
+            dmc.Text(display_val, fw=800, fz="2rem", lh="1", ta="center", c=SemanticColors.TEXT_MAIN),  # type: ignore
         ])
 
         return dmc.Paper(
@@ -67,7 +86,7 @@ class SmartWidget:
             style={"height": height, "backgroundColor": DesignSystem.TRANSPARENT},
             children=dmc.Grid(gutter="xs", align="stretch", style={"height": "100%"}, children=[
                 dmc.GridCol(span=5, children=dmc.Stack(justify="space-between", h="100%", gap=0, children=[
-                    header, dmc.Text(display_val, fw=800, fz="1.5rem", lh=1, mt=5), footer # type: ignore
+                    header, dmc.Text(display_val, fw=800, fz="1.5rem", lh=1, mt=5), footer  # type: ignore
                 ])),
                 dmc.GridCol(span=7, children=html.Div(style={"height": "100%", "width": "100%"}, children=[
                     dcc.Graph(figure=figure, config={'displayModeBar': False}, style={"height": "100%", "width": "100%"})
@@ -77,15 +96,18 @@ class SmartWidget:
 
     def _render_chart_only(self, config, figure, height):
         header = self._build_header(config)
+        
+        content = dmc.Center(dmc.Text("Sin datos", size="xs", c="dimmed"), style={"height": "100%"}) # type: ignore
         if figure:
             figure.update_layout(margin=dict(l=5, r=5, t=5, b=5), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+            content = dcc.Graph(figure=figure, config={'displayModeBar': False, 'responsive': True}, style={"height": "100%", "width": "100%"})
 
         return dmc.Paper(
             p="sm", radius="md", withBorder=True, shadow="sm",
             style={"height": height, "backgroundColor": DesignSystem.TRANSPARENT},
             children=dmc.Stack(h="100%", gap=0, children=[
                 header,
-                html.Div(style={"flex": 1, "marginTop": "-10px", "minHeight": 0}, children=dcc.Graph(figure=figure, config={'displayModeBar': False, 'responsive': True}, style={"height": "100%", "width": "100%"}))
+                html.Div(style={"flex": 1, "marginTop": "-10px", "minHeight": 0}, children=content)
             ])
         )
 
@@ -96,9 +118,46 @@ class SmartWidget:
         hex_color = DesignSystem.COLOR_MAP.get(color, color) if not color.startswith("#") else color
 
         return dmc.Group(justify="space-between", align="flex-start", w="100%", mb=0, children=[
-            dmc.Text(title, size="xs", c="dimmed", fw="bold", tt="uppercase"), # type: ignore
-            dmc.ThemeIcon(DashIconify(icon=icon, width=18), variant="light", color=hex_color, size="md", radius="md") # type: ignore
+            dmc.Text(title, size="xs", c="dimmed", fw="bold", tt="uppercase"),  # type: ignore
+            dmc.ThemeIcon(DashIconify(icon=icon, width=18), variant="light", color=hex_color, size="md", radius="md")  # type: ignore
         ])
+
+    def _safe_to_float(self, val, default=0.0):
+        """Convierte cualquier valor a float de forma segura"""
+        if val is None:
+            return default
+        if isinstance(val, (int, float)):
+            return float(val)
+        if isinstance(val, str):
+            clean = val.replace('%', '').replace('+', '').replace(',', '').replace('$', '').strip()
+            try:
+                return float(clean)
+            except ValueError:
+                return default
+        return default
+
+    def _safe_format_delta(self, delta, delta_fmt=None):
+        """Formatea un delta de forma segura, manejando strings y números"""
+        if delta is None:
+            return None, "gray"
+        
+        if delta_fmt and isinstance(delta_fmt, str) and delta_fmt not in ("N/A", "---", ""):
+            delta_num = self._safe_to_float(delta_fmt)
+            if delta_num > 0:
+                return delta_fmt, "green"
+            elif delta_num < 0:
+                return delta_fmt, "red"
+            return delta_fmt, "gray"
+        
+        delta_num = self._safe_to_float(delta)
+        
+        if delta_num == 0:
+            return "0%", "gray"
+        
+        badge_text = f"{delta_num:+.1f}%"
+        badge_color = "green" if delta_num > 0 else "red"
+        
+        return badge_text, badge_color
 
     def _build_footer(self, config):
         if config.get("extra_rows"):
@@ -109,36 +168,23 @@ class SmartWidget:
                 elif color == "red": color = "red"
                 elif color == "blue": color = "blue"
                 rows.append(dmc.Group(justify="space-between", w="100%", children=[
-                    dmc.Text(item.get("label"), size="10px", c="dimmed", fw=500), # type: ignore
-                    dmc.Text(item.get("value"), size="10px", fw=700, c=color) # type: ignore
+                    dmc.Text(item.get("label"), size="10px", c="dimmed", fw=500),  # type: ignore
+                    dmc.Text(item.get("value"), size="10px", fw=700, c=color)  # type: ignore
                 ]))
-            return dmc.Card(p=5, radius="sm", bg="gray.0", children=dmc.Stack(gap=2, w="100%", children=rows)) # type: ignore
+            return dmc.Card(p=5, radius="sm", bg="gray.0", children=dmc.Stack(gap=2, w="100%", children=rows))  # type: ignore
     
         footer_items = []
         is_inverse = config.get("inverse", False)
         
         def make_row(label, value, delta=None, delta_fmt=None, is_inverse=False):
-            if value in (None, "---"):
+            if value in (None, "---", "N/A", ""):
                 return None
 
             badge = None
-            badge_text = None
-            badge_color = "gray"
-
-            try:
-                delta_num = float(delta) # type: ignore
-                badge_text = delta_fmt if delta_fmt else f"{'+' if delta_num > 0 else ''}{delta_num:.1f}%"
-                
-                if delta_num > 0:
-                    badge_color = "red" if is_inverse else "green"
-                elif delta_num < 0:
-                    badge_color = "green" if is_inverse else "red"
-                else:
-                    badge_color = "gray"
-            except (TypeError, ValueError):
-                if delta:
-                    badge_text = str(delta)
-                    badge_color = "gray"
+            badge_text, badge_color = self._safe_format_delta(delta, delta_fmt)
+            
+            if is_inverse and badge_color in ("green", "red"):
+                badge_color = "red" if badge_color == "green" else "green"
 
             if badge_text:
                 badge = dmc.Badge(
@@ -146,55 +192,65 @@ class SmartWidget:
                     color=badge_color,
                     variant="light",
                     size="xs",
-                    style={
-                        "padding": "0 4px",
-                        "height": "16px",
-                        "fontSize": "9px",
-                    },
+                    style={"padding": "0 4px", "height": "16px", "fontSize": "9px"},
                 )
 
             return dmc.Group(
-                justify="space-between",
-                w="100%",
+                justify="space-between", w="100%",
                 children=[
-                    dmc.Group(
-                        gap=4,
-                        children=[
-                            dmc.Text(label, size="10px", c="dimmed"), # type: ignore
-                            dmc.Text(str(value), size="11px", fw=600, c="dark"), # type: ignore
-                        ],
-                    ),
+                    dmc.Group(gap=4, children=[
+                        dmc.Text(label, size="10px", c="dimmed"),  # type: ignore
+                        dmc.Text(str(value), size="11px", fw=600, c="dark"),  # type: ignore
+                    ]),
                     badge,
                 ],
             )
+        prev_row = make_row(
+            config.get("label_prev_year", "Año Ant:"), 
+            config.get("vs_last_year_formatted"), 
+            config.get("vs_last_year_delta"), 
+            config.get("vs_last_year_delta_formatted"),
+            is_inverse
+        )
+        if prev_row: 
+            footer_items.append(prev_row)
 
-        prev_row = make_row(config.get("label_prev_year", "Año Ant:"), config.get("vs_last_year_formatted"), config.get("vs_last_year_delta"), config.get("vs_last_year_delta_formatted"))
-        if prev_row: footer_items.append(prev_row)
+        if config.get("target_formatted") and config.get("target_formatted") not in ("---", "N/A"):
+            meta_row = make_row(
+                "Meta:", 
+                config.get("target_formatted"), 
+                config.get("target_delta"),
+                config.get("target_delta_formatted"),
+                is_inverse
+            )
+            if meta_row: 
+                footer_items.append(meta_row)
 
-        if config.get("target_formatted"):
-             meta_row = make_row("Meta:", config.get("target_formatted"), config.get("trend"), config.get("target_delta_formatted"))
-             if meta_row: footer_items.append(meta_row)
-
-        ytd_row = make_row("YTD:", config.get("ytd_formatted"), config.get("ytd_delta"), config.get("ytd_delta_formatted"))
-        if ytd_row: footer_items.append(ytd_row)
+        ytd_row = make_row(
+            "YTD:", 
+            config.get("ytd_formatted"), 
+            config.get("ytd_delta"), 
+            config.get("ytd_delta_formatted"),
+            is_inverse
+        )
+        if ytd_row: 
+            footer_items.append(ytd_row)
 
         if not footer_items and config.get("trend") is not None:
-             trend = config.get("trend")
-             trend_txt = config.get("trend_text") or "vs Meta"
-             
-             try:
-                 trend_val = float(trend)
-                 badge_txt = f"{trend_val:+.1f}%"
-                 badge_color = "blue"
-             except (TypeError, ValueError):
-                 badge_txt = str(trend)
-                 badge_color = "gray"
+            trend = config.get("trend")
+            trend_txt = config.get("trend_text") or "vs Ant."
+            
+            badge_text, badge_color = self._safe_format_delta(trend)
+            
+            if is_inverse and badge_color in ("green", "red"):
+                badge_color = "red" if badge_color == "green" else "green"
 
-             return dmc.Group(gap=4, mt=10, children=[
-                 dmc.Badge(badge_txt, color=badge_color, variant="light", size="xs"),
-                 dmc.Text(trend_txt, size="10px", c="dimmed") # type: ignore
-             ])
+            return dmc.Group(gap=4, mt=10, children=[
+                dmc.Badge(badge_text, color=badge_color, variant="light", size="xs"),
+                dmc.Text(trend_txt, size="10px", c="dimmed")  # type: ignore
+            ])
 
-        if not footer_items: return html.Div(style={"height": "10px"})
+        if not footer_items: 
+            return html.Div(style={"height": "10px"})
 
         return dmc.Stack(gap=4, w="100%", mt=8, children=footer_items)
