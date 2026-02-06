@@ -1,3 +1,4 @@
+from components.skeleton import get_skeleton
 from flask import session
 import dash
 from dash import html
@@ -27,7 +28,8 @@ w_utilidad = SmartWidget(
         kpi_key="profit_per_trip",
         title="Utilidad Viaje",
         icon="tabler:trending-up",
-        color="teal"
+        color="teal",
+        layout_config={"height": 185}
     )
 )
 
@@ -38,7 +40,8 @@ w_costo_total = SmartWidget(
         kpi_key="total_trip_cost",
         title="Costo Viaje Total",
         icon="tabler:calculator",
-        color="red"
+        color="red",
+        layout_config={"height": 185}
     )
 )
 
@@ -48,7 +51,7 @@ chart_cost_stack = ChartWidget(
         screen_id=SCREEN_ID,
         chart_key="cost_and_profit_trends",
         title="Costo y Utilidad",
-        layout_config={"height": 380}
+        layout_config={"height": 386}
     )
 )
 
@@ -58,7 +61,7 @@ chart_cost_breakdown = ChartWidget(
         screen_id=SCREEN_ID,
         chart_key="cost_by_concept",
         title="Costos por Concepto",
-        layout_config={"height": 380}
+        layout_config={"height": 360}
     )
 )
 
@@ -70,7 +73,7 @@ chart_cost_yearly_comp = ChartWidget(
         title="Costo Viaje Total 2025 vs 2024",
         icon="tabler:chart-line",
         color="red",
-        layout_config={"height": 380}
+        layout_config={"height": 360}
     )
 )
 
@@ -117,10 +120,11 @@ def _render_ops_costs_body(ctx):
     return html.Div([
         dmc.Grid(
             gutter="md",
-            mb="xl",
+            mb="lg",
+            align="stretch",
             children=[
                 dmc.GridCol(
-                    span={"base": 12, "lg": 4}, # type: ignore
+                    span={"base": 12, "lg": 4},
                     children=[
                         dmc.Stack(
                             gap="md",
@@ -132,38 +136,38 @@ def _render_ops_costs_body(ctx):
                     ]
                 ),
                 dmc.GridCol(
-                    span={"base": 12, "lg": 8}, # type: ignore
+                    span={"base": 12, "lg": 8},
                     children=[chart_cost_stack.render(ctx)]
                 )
             ]
         ),
         dmc.Grid(
             gutter="md",
-            mb="xl",
+            mb="lg",
+            align="stretch",
             children=[
                 dmc.GridCol(
-                    span={"base": 12, "lg": 5}, # type: ignore
+                    span={"base": 12, "lg": 5},
                     children=[chart_cost_breakdown.render(ctx)]
                 ),
                 dmc.GridCol(
-                    span={"base": 12, "lg": 7}, # type: ignore
+                    span={"base": 12, "lg": 7},
                     children=[chart_cost_yearly_comp.render(ctx)]
                 )
             ]
         ),
         dmc.Divider(
-            my="xl",
-            label="Análisis de Margen por Ruta",
+            my="lg",
+            label="Analisis de Margen por Ruta",
             labelPosition="center"
         ),
         _render_cost_tabs(ctx),
-        dmc.Space(h=50)
+        dmc.Space(h=30)
     ])
 
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
-    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     refresh_components, _ = data_manager.dash_refresh_components(
         SCREEN_ID,
         interval_ms=60 * 60 * 1000,
@@ -174,8 +178,8 @@ def layout():
         month_id="cost-month",
         default_month="septiembre",
         additional_filters=[
-            {"id": "cost-empresa", "label": "Empresa Área", "data": ["Todas"], "value": "Todas"},
-            {"id": "cost-clasificacion", "label": "Clasificación", "data": ["Todas"], "value": "Todas"},
+            {"id": "cost-empresa", "label": "Empresa", "data": ["Todas"], "value": "Todas"},
+            {"id": "cost-clasificacion", "label": "Clasificacion", "data": ["Todas"], "value": "Todas"},
             {"id": "cost-concepto", "label": "Concepto Costo", "data": ["Todos"], "value": "Todos"},
             {"id": "cost-unidad", "label": "Unidad", "data": ["Todas"], "value": "Todas"},
             {"id": "cost-operador", "label": "Operador", "data": ["Todas"], "value": "Todas"}
@@ -188,7 +192,7 @@ def layout():
             create_smart_modal("costs-modal"),
             *refresh_components,
             filters,
-            html.Div(id="ops-costs-body", children=_render_ops_costs_body(ctx))
+            html.Div(id="ops-costs-body", children=get_skeleton(SCREEN_ID))
         ]
     )
 

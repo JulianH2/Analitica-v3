@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 from flask import Flask, redirect, request, session
 from werkzeug.middleware.proxy_fix import ProxyFix
+from dash import html, dcc
 
 logging.basicConfig(
     level=logging.INFO,
@@ -80,7 +81,7 @@ def logout():
 def get_app_shell():
     return dmc.MantineProvider(
         id="mantine-provider",
-        theme=DesignSystem.get_mantine_theme(), # type: ignore
+        theme=DesignSystem.get_mantine_theme(),  # type: ignore
         children=[
             dcc.Location(id="url", refresh=False),
             dcc.Store(id="theme-store", storage_type="local"),
@@ -95,26 +96,47 @@ def get_app_shell():
                     dmc.AppShellHeader(
                         px="md",
                         children=dmc.Group(
-                            [
-                                DashIconify(icon="tabler:hexagon-letter-a", width=35, color=DesignSystem.BRAND[5]),
-                                dmc.Text("Analitica", size="xl", fw="bold"),
-                            ],
+                            justify="space-between",
                             h="100%",
+                            children=[
+                                dmc.Group(
+                                    [
+                                        dmc.Burger(
+                                            id="mobile-burger",
+                                            hiddenFrom="sm",
+                                            size="sm",
+                                        ),
+                                        html.Img(
+    src="/assets/logo.png",
+    style={
+        "height": "58px",
+        "width": "auto",
+        "padding": "5px",
+        "borderRadius": "12px",
+        "objectFit": "contain",
+    },
+)
+,
+                                        dmc.Text(
+                                            "Analitica",
+                                            size="xl",
+                                            fw=800,
+                                        ),
+                                    ],
+                                    gap="sm",
+                                ),
+                            ],
                         ),
                     ),
                     dmc.AppShellNavbar(id="navbar", children=[]),
                     dmc.AppShellMain(
-                        children=dcc.Loading(
-                            id="loading-overlay",
-                            type="circle",
-                            color=DesignSystem.BRAND[5],
-                            children=dash.page_container
-                        )
+                        children=dash.page_container
                     ),
                 ],
             ),
         ],
     )
+
 
 app.layout = lambda: (
     get_login_layout() if Config.ENABLE_LOGIN and not session.get("user") else get_app_shell()
@@ -209,12 +231,18 @@ app.clientside_callback(
 )
 
 @app.callback(
-    Output("loading-overlay", "children"),
-    Input("selected-db-store", "data"),
-    Input("url", "pathname"),
+    Output("app-shell", "navbar", allow_duplicate=True),
+    Input("mobile-burger", "opened"),
+    State("sidebar-store", "data"),
+    prevent_initial_call=True
 )
-def refresh_content_on_db_change(selected_db, pathname):
-    return dash.page_container
+def toggle_mobile_navbar(opened, collapsed):
+    collapsed = collapsed if collapsed is not None else False
+    return {
+        "width": 80 if collapsed else 260,
+        "breakpoint": "sm",
+        "collapsed": {"mobile": not opened if opened is not None else True},
+    }
 
 if __name__ == "__main__":
     logger.info("Iniciando aplicacion Analitica")

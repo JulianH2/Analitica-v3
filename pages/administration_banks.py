@@ -1,3 +1,4 @@
+from components.skeleton import get_skeleton
 from flask import session
 import dash
 from dash import html
@@ -22,9 +23,10 @@ kpi_bank_initial = SmartWidget(
     AdminKPIStrategy(
         screen_id=SCREEN_ID,
         kpi_key="initial_balance",
-        title="Saldo Inicial Consolidado",
+        title="Saldo Inicial",
         icon="tabler:wallet",
-        color="gray"
+        color="gray",
+        layout_config={"height": 160}
     )
 )
 
@@ -33,9 +35,10 @@ kpi_bank_incomes = SmartWidget(
     AdminKPIStrategy(
         screen_id=SCREEN_ID,
         kpi_key="total_income",
-        title="Ingresos Consolidado",
+        title="Ingresos",
         icon="tabler:trending-up",
-        color="green"
+        color="green",
+        layout_config={"height": 160}
     )
 )
 
@@ -44,9 +47,10 @@ kpi_bank_expenses = SmartWidget(
     AdminKPIStrategy(
         screen_id=SCREEN_ID,
         kpi_key="total_expenses",
-        title="Egresos Consolidado",
+        title="Egresos",
         icon="tabler:trending-down",
-        color="red"
+        color="red",
+        layout_config={"height": 160}
     )
 )
 
@@ -55,9 +59,10 @@ kpi_bank_final = SmartWidget(
     AdminKPIStrategy(
         screen_id=SCREEN_ID,
         kpi_key="final_balance",
-        title="Saldo Final Consolidado",
+        title="Saldo Final",
         icon="tabler:cash",
-        color="indigo"
+        color="indigo",
+        layout_config={"height": 160}
     )
 )
 
@@ -67,7 +72,8 @@ chart_bank_daily = ChartWidget(
         screen_id=SCREEN_ID,
         chart_key="daily_cash_flow",
         title="Evolución Diaria de Flujo",
-        icon="tabler:chart-line"
+        icon="tabler:chart-line",
+        layout_config={"height": 360}
     )
 )
 
@@ -77,7 +83,8 @@ chart_bank_donut = ChartWidget(
         screen_id=SCREEN_ID,
         chart_key="balance_by_bank",
         title="Saldo por Institución Bancaria",
-        icon="tabler:chart-pie"
+        icon="tabler:chart-pie",
+        layout_config={"height": 380}
     )
 )
 
@@ -90,12 +97,10 @@ WIDGET_REGISTRY = {
 
 def _render_admin_banks_body(ctx):
     return html.Div([
-        dmc.Title("Administración - Bancos", order=3, mb="lg", c="dimmed"), # type: ignore
-        
         dmc.SimpleGrid(
-            cols={"base": 1, "sm": 2, "lg": 4}, # type: ignore
+            cols={"base": 2, "lg": 4}, # type: ignore
             spacing="md",
-            mb="xl",
+            mb="lg",
             children=[
                 kpi_bank_initial.render(ctx),
                 kpi_bank_incomes.render(ctx),
@@ -104,20 +109,16 @@ def _render_admin_banks_body(ctx):
             ]
         ),
         
-        dmc.Paper(
-            p="md",
-            withBorder=True,
-            mb="xl",
-            shadow="sm",
-            children=[chart_bank_daily.render(ctx, h=380)]
-        ),
+        chart_bank_daily.render(ctx, h=360),
+        dmc.Space(h="lg"),
         
         dmc.Grid(
-            gutter="lg",
+            gutter="md",
+            align="stretch",
             children=[
                 dmc.GridCol(
                     span={"base": 12, "md": 5}, # type: ignore
-                    children=[chart_bank_donut.render(ctx, h=400)]
+                    children=[chart_bank_donut.render(ctx, h=380)]
                 ),
                 dmc.GridCol(
                     span={"base": 12, "md": 7}, # type: ignore
@@ -126,6 +127,7 @@ def _render_admin_banks_body(ctx):
                             p="md",
                             withBorder=True,
                             shadow="sm",
+                            h=380,
                             children=[
                                 dmc.Text(
                                     "INGRESOS Y EGRESOS POR CONCEPTO",
@@ -135,7 +137,7 @@ def _render_admin_banks_body(ctx):
                                     mb="md"
                                 ),
                                 dmc.ScrollArea(
-                                    h=360,
+                                    h=320,
                                     children=[
                                         AdminTableStrategy(
                                             SCREEN_ID,
@@ -150,14 +152,13 @@ def _render_admin_banks_body(ctx):
             ]
         ),
         
-        dmc.Space(h=50)
+        dmc.Space(h=30)
     ])
 
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
     
-    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     refresh_components, _ = data_manager.dash_refresh_components(
         SCREEN_ID,
         interval_ms=800,
@@ -181,7 +182,7 @@ def layout():
             create_smart_modal("bank-modal"),
             *refresh_components,
             filters,
-            html.Div(id="admin-banks-body", children=_render_admin_banks_body(ctx))
+            html.Div(id="admin-banks-body", children=get_skeleton(SCREEN_ID))
         ]
     )
 

@@ -8,13 +8,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, Callable
 
-from dash import no_update
+from dash import no_update, html
 from flask import session
 
 from dashboard_core.query_builder import SmartQueryBuilder
 from dashboard_core.db_helper import execute_dynamic_query
 from services.real_data_service import RealDataService
 from utils.helpers import format_value
+from components.skeleton import get_skeleton
 
 Json = Union[Dict[str, Any], List[Any]]
 PathList = List[Union[str, int]]
@@ -59,16 +60,16 @@ class DataManager:
                     break
             
             if config_path:
-                print(f"✅ Configuración cargada desde: {config_path}")
+                print(f"âœ… ConfiguraciÃ³n cargada desde: {config_path}")
                 with open(config_path, 'r', encoding='utf-8') as f:
                     self.SCREEN_MAP = json.load(f)
                 self._validate_and_normalize_configs()
             else:
-                print(f"⚠️ NO SE ENCONTRÓ screens.json.")
+                print(f"âš ï¸ NO SE ENCONTRÃ“ screens.json.")
                 self.SCREEN_MAP = self._get_minimal_config()
                 
         except Exception as e:
-            print(f"❌ Error cargando configuración: {str(e)}")
+            print(f"âŒ Error cargando configuraciÃ³n: {str(e)}")
             self.SCREEN_MAP = self._get_minimal_config()
     
     def _validate_and_normalize_configs(self) -> None:
@@ -329,6 +330,9 @@ class DataManager:
             target_delta = self._safe_divide(val - target_val, target_val)
             ytd_delta = self._safe_divide(ytd_val - target_ytd, target_ytd) if ytd_val else 0
             
+            from datetime import date
+            prev_year_num = date.today().year - 1
+            
             kpi_object = {
                 "title": metric_def.get("name", ui_key),
                 "value": val,
@@ -338,7 +342,7 @@ class DataManager:
                 "vs_last_year_formatted": self._format_val(prev_val, fmt) if prev_val else "---",
                 "vs_last_year_delta": vs_prev_delta,
                 "vs_last_year_delta_formatted": self._format_delta(vs_prev_delta, prev_val > 0),
-                "label_prev_year": "Año Ant.",
+                "label_prev_year": f"Vs {prev_year_num}",
                 "target": target_val,
                 "target_formatted": self._format_val(target_val, fmt) if target_val else "---",
                 "target_delta": target_delta,
@@ -522,21 +526,35 @@ class DataManager:
                     if val:
                         filters[key] = val
             await self.refresh_screen(screen_id, filters=filters, use_cache=True)
-            return json.dumps(filters)
+            return json.dumps({"filters": filters, "loaded": True, "ts": time.time()})
 
         @callback(Output(body_output_id, "children"), Input(ids["token_store"], "data"))
         def _rerender(token_data):
-            if token_data is None:
-                return no_update
+            if token_data is None or token_data == 0:
+                return get_skeleton(screen_id)
+            
             current_filters = {}
+            is_loaded = False
+            
             try:
                 if isinstance(token_data, str):
-                    current_filters = json.loads(token_data)
+                    parsed = json.loads(token_data)
+                    if isinstance(parsed, dict):
+                        current_filters = parsed.get("filters", {})
+                        is_loaded = parsed.get("loaded", False)
+                    else:
+                        current_filters = parsed
                 elif isinstance(token_data, dict):
-                    current_filters = token_data
+                    current_filters = token_data.get("filters", token_data)
+                    is_loaded = token_data.get("loaded", False)
             except:
                 pass
-            return render_body(self.get_screen(screen_id, use_cache=True, allow_stale=True, filters=current_filters))
+            
+            if not is_loaded:
+                return get_skeleton(screen_id)
+            
+            content = render_body(self.get_screen(screen_id, use_cache=True, allow_stale=True, filters=current_filters))
+            return html.Div(content, className="page-content-loaded")
 
         return ids
 

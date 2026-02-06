@@ -1,3 +1,4 @@
+from components.skeleton import get_skeleton
 from flask import session
 import dash
 from dash import html, dcc
@@ -17,8 +18,6 @@ from strategies.operational import (
     OpsHorizontalBarStrategy,
     OpsTableStrategy
 )
-
-# Importar OpsGaugeStrategy solo si existe, sino usar OpsKPIStrategy
 try:
     from strategies.operational import OpsGaugeStrategy
 except ImportError:
@@ -29,10 +28,6 @@ from utils.helpers import safe_get
 dash.register_page(__name__, path="/ops-dashboard", title="Control Operativo")
 
 SCREEN_ID = "operational-dashboard"
-
-# ==========================================
-# SERVICIO DE TIEMPO DINÁMICO
-# ==========================================
 def get_current_year():
     return datetime.now().year
 
@@ -42,12 +37,6 @@ def get_previous_year():
 def get_dynamic_title(base_title: str) -> str:
     """Genera título dinámico con años actuales"""
     return f"{base_title} {get_current_year()} vs {get_previous_year()}"
-
-# ==========================================
-# WIDGETS KPI CON GAUGE DONDE HAY META
-# ==========================================
-
-# Los KPIs principales usan OpsGaugeStrategy para mostrar gauge cuando hay meta
 w_inc = SmartWidget(
     "go_inc",
     OpsGaugeStrategy(
@@ -56,7 +45,7 @@ w_inc = SmartWidget(
         title="Ingreso Viaje",
         icon="tabler:cash",
         color="indigo",
-        layout_config={"height": 205}
+        layout_config={"height": 180}
     )
 )
 
@@ -68,7 +57,7 @@ w_tri = SmartWidget(
         title="Viajes",
         icon="tabler:truck",
         color="green",
-        layout_config={"height": 205}
+        layout_config={"height": 180}
     )
 )
 
@@ -80,11 +69,9 @@ w_kms = SmartWidget(
         title="Kilómetros",
         icon="tabler:route",
         color="yellow",
-        layout_config={"height": 205}
+        layout_config={"height": 180}
     )
 )
-
-# KPIs secundarios sin gauge (no tienen meta)
 w_avg_trip = SmartWidget(
     "avg_trip",
     OpsKPIStrategy(
@@ -92,7 +79,8 @@ w_avg_trip = SmartWidget(
         kpi_key="revenue_per_trip",
         title="Prom. x Viaje",
         icon="tabler:calculator",
-        color="blue"
+        color="blue",
+        layout_config={"height": 120}
     )
 )
 
@@ -103,7 +91,8 @@ w_avg_unit = SmartWidget(
         kpi_key="revenue_per_unit",
         title="Prom. x Unidad",
         icon="tabler:truck-delivery",
-        color="indigo"
+        color="indigo",
+        layout_config={"height": 120}
     )
 )
 
@@ -114,7 +103,8 @@ w_units_qty = SmartWidget(
         kpi_key="units_used",
         title="Unidades Uso",
         icon="tabler:packages",
-        color="violet"
+        color="violet",
+        layout_config={"height": 120}
     )
 )
 
@@ -125,16 +115,12 @@ w_customers = SmartWidget(
         kpi_key="customers_served",
         title="Clientes",
         icon="tabler:users",
-        color="teal"
+        color="teal",
+        layout_config={"height": 120}
     )
 )
 
-# ==========================================
-# WIDGETS DE GRÁFICAS CON TÍTULOS DINÁMICOS
-# ==========================================
-
 class DynamicTrendChartStrategy(OpsTrendChartStrategy):
-    """Strategy que genera título dinámico basado en el año actual"""
     def __init__(self, screen_id, chart_key, base_title, icon="tabler:chart-line", color="indigo", layout_config=None):
         dynamic_title = get_dynamic_title(base_title)
         super().__init__(screen_id, chart_key, dynamic_title, icon, color, layout_config)
@@ -142,7 +128,6 @@ class DynamicTrendChartStrategy(OpsTrendChartStrategy):
     
     def get_card_config(self, data_context):
         config = super().get_card_config(data_context)
-        # Actualizar título cada vez que se renderiza
         config["title"] = get_dynamic_title(self.base_title)
         return config
 
@@ -154,7 +139,7 @@ w_inc_comp = ChartWidget(
         base_title="Ingresos",
         icon="tabler:chart-line",
         color="indigo",
-        layout_config={"height": 360}
+        layout_config={"height": 340}
     )
 )
 
@@ -166,7 +151,7 @@ w_trips_comp = ChartWidget(
         base_title="Viajes",
         icon="tabler:chart-line",
         color="green",
-        layout_config={"height": 360}
+        layout_config={"height": 340}
     )
 )
 
@@ -176,7 +161,7 @@ w_mix = ChartWidget(
         screen_id=SCREEN_ID,
         chart_key="revenue_by_operation_type",
         title="Ingreso por Tipo Operación",
-        layout_config={"height": 400}
+        layout_config={"height": 380}
     )
 )
 
@@ -186,7 +171,7 @@ w_unit_bal = ChartWidget(
         screen_id=SCREEN_ID,
         chart_key="revenue_by_unit",
         title="Balanceo Ingresos por Unidad",
-        layout_config={"height": 360}
+        layout_config={"height": 340}
     )
 )
 
@@ -200,13 +185,8 @@ WIDGET_REGISTRY = {
     "customers": w_customers
 }
 
-# ==========================================
-# RENDERIZADO DE COMPONENTES DINÁMICOS
-# ==========================================
-
 def _render_fleet_status(ctx):
     """Renderiza el estado de carga de flota con datos reales"""
-    # Obtener valor real del contexto
     load_data = safe_get(ctx, ["operational", "dashboard", "kpis", "load_status"], {})
     
     if isinstance(load_data, dict):
@@ -215,12 +195,8 @@ def _render_fleet_status(ctx):
     else:
         val = float(load_data) if load_data else 0
         val_formatted = f"{val:.1f}%"
-    
-    # Convertir a porcentaje si viene como decimal
     if val < 1:
         val = val * 100
-    
-    # Determinar color según nivel
     if val >= 80:
         color = "green"
         icon_color = DesignSystem.SUCCESS[5]
@@ -235,18 +211,18 @@ def _render_fleet_status(ctx):
         p="md",
         withBorder=True,
         radius="md",
-        style={"height": "420px"},
+        h=380,
         children=[
             dmc.Stack(
                 justify="center",
                 align="center",
-                style={"height": "100%"},
+                h="100%",
                 children=[
                     dmc.Text("Estado de Carga de Flota", fw="bold", size="xs", c="dimmed", tt="uppercase"), # type: ignore
-                    DashIconify(icon="tabler:truck-loading", width=60, color=icon_color),
-                    dmc.Text(f"{val:.1f}%", fw="bold", size="2rem", c=color), # type: ignore
+                    DashIconify(icon="tabler:truck-loading", width=70, color=icon_color),
+                    dmc.Text(f"{val:.1f}%", fw="bold", size="2.5rem", c=color), # type: ignore
                     dmc.Text("Cargado", size="sm", c="dimmed"), # type: ignore
-                    dmc.Progress(value=min(val, 100), color=color, h=22, radius="xl", style={"width": "100%"})
+                    dmc.Progress(value=min(val, 100), color=color, h=24, radius="xl", style={"width": "100%"})
                 ]
             )
         ]
@@ -258,7 +234,7 @@ def _render_routes_tabs(ctx):
         p="md",
         withBorder=True,
         radius="md",
-        style={"height": "420px"},
+        h=380,
         children=[
             dmc.Tabs(
                 value="rutas_cargado",
@@ -268,11 +244,11 @@ def _render_routes_tabs(ctx):
                         dmc.TabsTab("Rutas Cargado", value="rutas_cargado", leftSection=DashIconify(icon="tabler:map-pin"))
                     ]),
                     dmc.TabsPanel(
-                        dmc.ScrollArea(h=350, pt="xs", children=[OpsTableStrategy(SCREEN_ID, "routes_empty").render(ctx)]),
+                        dmc.ScrollArea(h=310, pt="xs", children=[OpsTableStrategy(SCREEN_ID, "routes_empty").render(ctx)]),
                         value="rutas_vacio"
                     ),
                     dmc.TabsPanel(
-                        dmc.ScrollArea(h=350, pt="xs", children=[OpsTableStrategy(SCREEN_ID, "routes_loaded").render(ctx)]),
+                        dmc.ScrollArea(h=310, pt="xs", children=[OpsTableStrategy(SCREEN_ID, "routes_loaded").render(ctx)]),
                         value="rutas_cargado"
                     )
                 ]
@@ -313,7 +289,7 @@ def _render_income_tabs(ctx):
 def _render_body(ctx):
     return html.Div([
         dmc.SimpleGrid(
-            cols={"base": 1, "lg": 3}, # type: ignore
+            cols={"base": 1, "sm": 3}, # type: ignore
             spacing="md",
             mb="md",
             children=[
@@ -323,9 +299,9 @@ def _render_body(ctx):
             ]
         ),
         dmc.SimpleGrid(
-            cols={"base": 2, "sm": 2, "lg": 4}, # type: ignore
-            spacing="sm",
-            mb="xl",
+            cols={"base": 2, "lg": 4}, # type: ignore
+            spacing="md",
+            mb="lg",
             children=[
                 w_avg_trip.render(ctx),
                 w_avg_unit.render(ctx),
@@ -336,7 +312,7 @@ def _render_body(ctx):
         dmc.SimpleGrid(
             cols={"base": 1, "md": 2}, # type: ignore
             spacing="md",
-            mb="xl",
+            mb="lg",
             children=[
                 w_inc_comp.render(ctx),
                 w_trips_comp.render(ctx)
@@ -344,41 +320,41 @@ def _render_body(ctx):
         ),
         dmc.Grid(
             gutter="md",
-            mb="xl",
+            mb="lg",
+            align="stretch",
             children=[
-                dmc.GridCol(span={"base": 12, "lg": 4}, children=[_render_fleet_status(ctx)]), # type: ignore
-                dmc.GridCol(span={"base": 12, "lg": 8}, children=[_render_routes_tabs(ctx)]) # type: ignore
+                dmc.GridCol(span={"base": 12, "md": 4}, children=[_render_fleet_status(ctx)]), # type: ignore
+                dmc.GridCol(span={"base": 12, "md": 8}, children=[_render_routes_tabs(ctx)]) # type: ignore
             ]
         ),
         dmc.Grid(
             gutter="md",
-            mb="xl",
+            mb="lg",
+            align="stretch",
             children=[
                 dmc.GridCol(span={"base": 12, "md": 5}, children=[w_mix.render(ctx)]), # type: ignore
                 dmc.GridCol(
-                    span={"base": 12, "md": 7}, # type: ignore
-                    children=[
-                        dmc.Paper(
-                            p="md",
-                            withBorder=True,
-                            children=[
-                                dmc.Text("Balanceo de Ingresos por Unidad", fw=600, size="sm", mb="sm", c="dimmed"), # type: ignore
-                                dmc.ScrollArea(h=360, children=[w_unit_bal.render(ctx)])
-                            ]
-                        )
-                    ]
-                )
+    span={"base": 12, "md": 7}, # type: ignore
+    children=[
+        dmc.ScrollArea(
+            h=420,
+            type="auto",
+            children=[w_unit_bal.render(ctx)]
+        )
+    ]
+)
+
+                    
+                
             ]
         ),
         _render_income_tabs(ctx),
-        dmc.Space(h=50)
+        dmc.Space(h=30)
     ])
 
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
-        
-    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     
     refresh_components, _ = data_manager.dash_refresh_components(
         SCREEN_ID, 
@@ -393,13 +369,7 @@ def layout():
             create_smart_modal("ops-modal"),
             *refresh_components,
             create_operational_filters(prefix="ops"),
-            
-            dcc.Loading(
-                id="loading-ops",
-                type="circle",
-                color=DesignSystem.BRAND[5],
-                children=html.Div(id="ops-body", children=_render_body(ctx))
-            )
+            html.Div(id="ops-body", children=get_skeleton(SCREEN_ID))
         ]
     )
 

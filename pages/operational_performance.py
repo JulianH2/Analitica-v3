@@ -1,3 +1,4 @@
+from components.skeleton import get_skeleton
 from flask import session
 import dash
 from dash import html
@@ -27,7 +28,8 @@ w_kms_lt = SmartWidget(
         kpi_key="real_yield",
         title="Rendimiento (Kms/Lt)",
         icon="tabler:gauge",
-        color="green"
+        color="green",
+        layout_config={"height": 180}
     )
 )
 
@@ -38,7 +40,8 @@ w_kms_re = SmartWidget(
         kpi_key="real_kilometers",
         title="Kms Reales",
         icon="tabler:route",
-        color="blue"
+        color="blue",
+        layout_config={"height": 180}
     )
 )
 
@@ -49,7 +52,8 @@ w_litros = SmartWidget(
         kpi_key="liters_consumed",
         title="Litros Consumidos",
         icon="tabler:droplet",
-        color="orange"
+        color="orange",
+        layout_config={"height": 180}
     )
 )
 
@@ -61,7 +65,7 @@ w_trend = ChartWidget(
         title="Tendencia Rendimiento Real (Kms/Lt)",
         icon="tabler:timeline",
         color="indigo",
-        layout_config={"height": 380}
+        layout_config={"height": 360}
     )
 )
 
@@ -73,7 +77,7 @@ w_mix = ChartWidget(
         title="Distribución de Rendimiento por Operación",
         icon="tabler:chart-pie-2",
         color="indigo",
-        layout_config={"height": 380}
+        layout_config={"height": 360}
     )
 )
 
@@ -151,7 +155,6 @@ def _render_ops_performance_body(ctx):
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
-    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     refresh_components, _ = data_manager.dash_refresh_components(
         SCREEN_ID,
         interval_ms=60 * 60 * 1000,
@@ -176,7 +179,7 @@ def layout():
             create_smart_modal("perf-modal"),
             *refresh_components,
             filters,
-            html.Div(id="ops-performance-body", children=_render_ops_performance_body(ctx))
+            html.Div(id="ops-performance-body", children=get_skeleton(SCREEN_ID))
         ]
     )
 

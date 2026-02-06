@@ -1,8 +1,7 @@
-from typing import Any, Dict, Final, List, Literal, TypedDict
+from typing import Any, Dict, Final, List, TypedDict
 import plotly.graph_objects as go
 import plotly.io as pio
 
-# --- 1. DEFINICIONES DE TIPO ---
 class TypographyConfig(TypedDict):
     family: str
     weights: Dict[str, int]
@@ -19,58 +18,97 @@ class LayoutConfig(TypedDict):
     default_span: int
 
 class DesignSystem:
+    NEXA_ORANGE: Final[str] = "#e27f08"
+    NEXA_BLUE: Final[str] = "#418cdf"
+    NEXA_GREEN: Final[str] = "#4c9f54"
+    NEXA_RED: Final[str] = "#ff0000"
+    NEXA_BLACK: Final[str] = "#1d1d1b"
+    NEXA_GOLD: Final[str] = "#e9a13b"
+    NEXA_GRAY_LIGHT: Final[str] = "#f2f2f2"
+    NEXA_GRAY: Final[str] = "#808080"
+    NEXA_CREAM: Final[str] = "#f9daa0"
+    NEXA_PINK_LIGHT: Final[str] = "#fccaca"
 
-    SLATE: Final[List[str]] = ["#f8fafc", "#f1f5f9", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#475569", "#334155", "#1e293b", "#0f172a"]
-    BRAND: Final[List[str]] = ["#eef2ff", "#e0e7ff", "#c7d2fe", "#a5b4fc", "#818cf8", "#6366f1", "#4f46e5", "#4338ca", "#3730a3", "#312e81"]
-    SUCCESS: Final[List[str]] = ["#f0fdf4", "#dcfce7", "#bbf7d0", "#86efac", "#4ade80", "#22c55e", "#16a34a", "#15803d", "#166534", "#14532d"]
-    WARNING: Final[List[str]] = ["#fffbeb", "#fef3c7", "#fde68a", "#fcd34d", "#fbbf24", "#f59e0b", "#d97706", "#b45309", "#92400e", "#78350f"]
-    DANGER: Final[List[str]] = ["#fef2f2", "#fee2e2", "#fecaca", "#fca5a5", "#f87171", "#ef4444", "#dc2626", "#b91c1c", "#991b1b", "#7f1d1d"]
-    INFO: Final[List[str]] = ["#f0f9ff", "#e0f2fe", "#bae6fd", "#7dd3fc", "#38bdf8", "#0ea5e9", "#0284c7", "#0369a1", "#075985", "#0c4a6e"]
+    NEXA_BG_LIGHT: Final[str] = "#f8f6f3"
+    NEXA_BG_DARK: Final[str] = "#1d1d1b"
+    TEXT_DARK: Final[str] = "#f2f2f2"
+
+    SLATE: Final[List[str]] = ["#f8fafc", "#f2f2f2", "#e2e8f0", "#cbd5e1", "#94a3b8", "#808080", "#475569", "#334155", "#1d1d1b", "#0f172a"]
+    BRAND: Final[List[str]] = ["#e8f4fd", "#d1e9fb", "#a3d3f7", "#75bdf3", "#47a7ef", "#418cdf", "#3570b3", "#295487", "#1d385b", "#111c2f"]
+    SUCCESS: Final[List[str]] = ["#edf7ee", "#d4edd6", "#a9dbb0", "#7ec98a", "#53b764", "#4c9f54", "#3d7f43", "#2e5f32", "#1f3f21", "#101f10"]
+    WARNING: Final[List[str]] = ["#fef6e8", "#fdecd1", "#fbd9a3", "#f9c675", "#f7b347", "#e9a13b", "#ba812f", "#8c6123", "#5d4017", "#2f200b"]
+    DANGER: Final[List[str]] = ["#fff2f2", "#ffe6e6", "#ffcccc", "#ffb3b3", "#ff9999", "#ff0000", "#cc0000", "#990000", "#660000", "#330000"]
+    INFO: Final[List[str]] = ["#e8f4fd", "#d1e9fb", "#a3d3f7", "#75bdf3", "#47a7ef", "#418cdf", "#3570b3", "#295487", "#1d385b", "#111c2f"]
+    ORANGE: Final[List[str]] = ["#fef3e8", "#fde7d1", "#fbcfa3", "#f9b775", "#f79f47", "#e27f08", "#b56606", "#884d05", "#5b3403", "#2d1a01"]
 
     TRANSPARENT: Final[str] = "rgba(0,0,0,0)"
     WHITE: Final[str] = "#ffffff"
 
     COLOR_MAP: Final[Dict[str, str]] = {
         "indigo": BRAND[5],
-        "blue": INFO[5],
-        "green": SUCCESS[5],
+        "blue": NEXA_BLUE,
+        "green": NEXA_GREEN,
         "emerald": SUCCESS[5],
-        "yellow": WARNING[5],
+        "yellow": NEXA_GOLD,
         "amber": WARNING[5],
-        "orange": "#f97316",
-        "red": DANGER[5],
+        "orange": NEXA_ORANGE,
+        "red": NEXA_RED,
         "rose": "#f43f5e",
         "slate": SLATE[5],
-        "gray": SLATE[5],
-        "dark": SLATE[8],
-        "black": SLATE[9],
+        "gray": NEXA_GRAY,
+        "dark": NEXA_BLACK,
+        "black": NEXA_BLACK,
         "cyan": "#06b6d4",
         "teal": "#14b8a6",
         "violet": "#8b5cf6",
         "grape": "#be4bdb",
-        "pink": "#ec4899",
+        "pink": NEXA_PINK_LIGHT,
         "lime": "#84cc16",
+        "gold": NEXA_GOLD,
+        "cream": NEXA_CREAM,
     }
 
     CHART_COLORS: Final[List[str]] = [
-        BRAND[5], SUCCESS[5], WARNING[5], "#ec4899", "#8b5cf6", "#06b6d4"
+        NEXA_BLUE,
+        NEXA_ORANGE,
+        NEXA_GREEN,
+        NEXA_GOLD,
+        "#808080",
+        NEXA_RED,
+    ]
+
+    CHART_YEAR_COLORS: Final[Dict[str, str]] = {
+        "current": NEXA_BLUE,
+        "previous": NEXA_ORANGE,
+        "target": NEXA_GREEN,
+        "meta": "#808080",
+    }
+
+    CHART_DONUT_COLORS: Final[List[str]] = [
+        NEXA_BLUE,
+        NEXA_ORANGE,
+        NEXA_GREEN,
+        NEXA_GOLD,
+        "#808080",
+        NEXA_CREAM,
+        NEXA_PINK_LIGHT,
     ]
 
     TYPOGRAPHY: Final[TypographyConfig] = {
-        "family": "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+        "family": "'Nexa', 'Montserrat', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
         "weights": {
-            "normal": 400, 
-            "medium": 500, 
-            "bold": 700, 
+            "normal": 400,
+            "medium": 600,
+            "bold": 800,
             "black": 900
         },
         "sizes": {
             "xs_tiny": 9,
-            "xs": 10, 
-            "table": 11, 
-            "sm": 12, 
-            "md": 14, 
-            "lg": 18, 
+            "xs": 10,
+            "table": 11,
+            "sm": 12,
+            "md": 14,
+            "lg": 18,
             "xl": 24,
             "xxl": 32
         },
@@ -116,7 +154,9 @@ class DesignSystem:
             "height_default": 320,
             "height_sm": 250,
             "height_lg": 450,
-            "bg_color": "rgba(0,0,0,0)"
+            "bg_color": "rgba(0,0,0,0)",
+            "bar_width": 0.6,
+            "bar_gap": 0.15,
         }
     }
 
@@ -124,7 +164,7 @@ class DesignSystem:
     FONT_XS: Final[int] = TYPOGRAPHY["sizes"]["xs"]
     FONT_SM: Final[int] = TYPOGRAPHY["sizes"]["sm"]
     FONT_MD: Final[int] = TYPOGRAPHY["sizes"]["md"]
-    
+
     FW_NORMAL: Final[int] = TYPOGRAPHY["weights"]["normal"]
     FW_BOLD: Final[int] = TYPOGRAPHY["weights"]["bold"]
     FW_MEDIUM: Final[int] = TYPOGRAPHY["weights"]["medium"]
@@ -134,60 +174,79 @@ class DesignSystem:
         return {
             "colorScheme": "light",
             "fontFamily": DesignSystem.TYPOGRAPHY["family"],
-            "primaryColor": "indigo",
+            "primaryColor": "blue",
             "defaultRadius": DesignSystem.LAYOUT["card_radius"],
-            "white": "#ffffff",
-            "black": DesignSystem.SLATE[9],
+            "white": DesignSystem.NEXA_BG_LIGHT,
+            "black": DesignSystem.NEXA_BLACK,
             "colors": {
-                "indigo": DesignSystem.BRAND, 
-                "dark": DesignSystem.SLATE, 
+                "indigo": DesignSystem.BRAND,
+                "dark": DesignSystem.SLATE,
                 "gray": DesignSystem.SLATE,
-                "green": DesignSystem.SUCCESS, 
-                "yellow": DesignSystem.WARNING, 
-                "red": DesignSystem.DANGER, 
-                "blue": DesignSystem.INFO
+                "green": DesignSystem.SUCCESS,
+                "yellow": DesignSystem.WARNING,
+                "red": DesignSystem.DANGER,
+                "blue": DesignSystem.INFO,
+                "orange": DesignSystem.ORANGE,
             },
             "components": {
-                "Button": {"defaultProps": {"size": "sm", "fw": 500}},
-                "Paper": {"defaultProps": {"withBorder": True, "shadow": "sm"}},
-                "Card": {"defaultProps": {"withBorder": True, "shadow": "sm", "radius": "md"}}
+                "Button": {"defaultProps": {"size": "sm", "fw": 600, "radius": "md"}},
+                "Paper": {"defaultProps": {"withBorder": True, "shadow": "md"}},
+                "Card": {"defaultProps": {"withBorder": True, "shadow": "md", "radius": "lg"}}
             }
         }
+
+    @staticmethod
+    def get_mantine_theme_dark() -> Dict[str, Any]:
+        theme = DesignSystem.get_mantine_theme()
+        theme["colorScheme"] = "dark"
+        theme["white"] = DesignSystem.NEXA_BG_DARK
+        theme["black"] = DesignSystem.TEXT_DARK
+        return theme
 
     @staticmethod
     def setup_plotly_templates():
         base_layout = dict(
             paper_bgcolor=DesignSystem.TRANSPARENT,
             plot_bgcolor=DesignSystem.TRANSPARENT,
-            margin=dict(t=30, b=10, l=10, r=10),
+            margin=dict(t=35, b=35, l=45, r=20),
             colorway=DesignSystem.CHART_COLORS,
             font=dict(
                 family=DesignSystem.TYPOGRAPHY["family"],
-                color=DesignSystem.SLATE[7]
+                color=DesignSystem.NEXA_BLACK,
+                size=11
             ),
             xaxis=dict(
-                showgrid=False, 
+                showgrid=False,
                 zeroline=False,
-                tickfont=dict(size=10, color=DesignSystem.SLATE[5])
+                tickfont=dict(size=10, color=DesignSystem.NEXA_GRAY)
             ),
             yaxis=dict(
-                showgrid=True, 
+                showgrid=True,
                 gridcolor=DesignSystem.SLATE[2],
+                gridwidth=1,
                 zeroline=False,
-                tickfont=dict(size=10, color=DesignSystem.SLATE[5])
+                tickfont=dict(size=10, color=DesignSystem.NEXA_GRAY)
             ),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5,
+                font=dict(size=10)
+            ),
+            bargap=0.18,
+            bargroupgap=0.12,
         )
-        clean_theme = go.layout.Template(layout=base_layout)
-        pio.templates["zam_clean"] = clean_theme
+        pio.templates["zam_clean"] = go.layout.Template(layout=base_layout)
         pio.templates.default = "zam_clean"
 
 class SemanticColors:
-    INGRESO: Final[str] = DesignSystem.SUCCESS[6] 
-    EGRESO: Final[str] = DesignSystem.DANGER[5]
-    PROFIT: Final[str] = DesignSystem.BRAND[6]
-    
-    TEXT_MAIN: Final[str] = DesignSystem.SLATE[8]
-    TEXT_MUTED: Final[str] = DesignSystem.SLATE[5]
+    INGRESO: Final[str] = DesignSystem.NEXA_GREEN
+    EGRESO: Final[str] = DesignSystem.NEXA_RED
+    PROFIT: Final[str] = DesignSystem.NEXA_BLUE
+    TEXT_MAIN: Final[str] = DesignSystem.NEXA_BLACK
+    TEXT_MUTED: Final[str] = DesignSystem.NEXA_GRAY
     BORDER: Final[str] = DesignSystem.SLATE[2]
 
 DesignSystem.setup_plotly_templates()

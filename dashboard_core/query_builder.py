@@ -38,212 +38,6 @@ class SmartQueryBuilder:
     
         return None
     
-    def build_kpi_query(self, kpi_key, filters=None):
-        kpi = self.metrics.get(kpi_key)
-        if not kpi: 
-            return {"error": f"KPI '{kpi_key}' no encontrado"}
-        
-        # Manejar métricas placeholder (sin tabla en BD aún)
-        if kpi.get('type') == 'placeholder':
-            return {
-                "type": "placeholder", 
-                "default_value": kpi.get('default_value', 0),
-                "format": kpi.get('format')
-            }
-    
-        if kpi.get('type') == 'derived':
-            return {"type": "derived", "formula": kpi.get('formula'), "format": kpi.get('format')}
-    
-        recipe = kpi.get('recipe', {})
-        target_alias = recipe.get('table')
-        column = recipe.get('column')
-        aggregation = recipe.get('aggregation')
-        time_modifier = recipe.get('time_modifier')
-    
-        fact_alias = target_alias
-        fact_def = self.tables.get(fact_alias)
-    
-        if not fact_def: 
-            return {"error": f"Tabla '{fact_alias}' no encontrada"}
-    
-        joins_sql = ""
-        date_col = fact_def.get('date_column')
-    
-        if not date_col:
-            for potential_parent in ["h_viaje", "d_meta_tiempo"]:
-                if potential_parent in self.tables and potential_parent != target_alias:
-                    path = self._find_join_path(potential_parent, target_alias)
-                    if path:
-                        fact_alias = potential_parent
-                        fact_def = self.tables[fact_alias]
-                        date_col = fact_def.get('date_column')
-                        for next_alias, join_def in path:
-                            t_name = self.tables[next_alias]['table_name']
-                            joins_sql += f" {join_def.get('type', 'INNER')} JOIN {t_name} as {next_alias} ON {join_def['on']}"
-                        break
-                    
-        if aggregation == "DISTINCTCOUNT":
-            select_expr = f"COUNT(DISTINCT {target_alias}.{column})"
-        else:
-            select_expr = f"{aggregation}({target_alias}.{column})"
-    
-        query = f"SELECT {select_expr} as valor FROM {fact_def['table_name']} as {fact_alias} {joins_sql}"
-        wheres = []
-    
-        if date_col:
-            base_year = datetime.datetime.now().year
-            if filters and filters.get('year'): base_year = int(filters['year'])
-            if time_modifier == 'previous_year': base_year -= 1
-    
-            wheres.append(f"YEAR({fact_alias}.{date_col}) = {base_year}")
-    
-            if filters and filters.get('month'):
-                m_name = filters['month'].lower()
-                if m_name in self.MONTH_MAP:
-                    m_num = self.MONTH_MAP[m_name]
-                    if time_modifier == 'ytd':
-                        wheres.append(f"MONTH({fact_alias}.{date_col}) <= {m_num}")
-                    elif time_modifier == 'mes_anterior':
-                        wheres.append(f"MONTH({fact_alias}.{date_col}) = {12 if m_num == 1 else m_num - 1}")
-                    else:
-                        wheres.append(f"MONTH({fact_alias}.{date_col}) = {m_num}")
-    
-        if filters:
-            ignore = ['year', 'month']
-            for k, v in filters.items():
-                if k not in ignore and v not in ["Todas", "Todos", None]:
-                    ref = k if "." in k else f"{target_alias}.{k}"
-                    val = f"'{v}'" if isinstance(v, str) else v
-                    wheres.append(f"{ref} = {val}")
-    
-        if wheres: query += " WHERE " + " AND ".join(wheres)
-    
-        return {"type": "sql", "query": query, "format": kpi.get('format')}
-    
-    def build_series_query(self, kpi_key, filters=None):
-        kpi = self.metrics.get(kpi_key)
-        if not kpi: 
-            return {"error": "KPI not found"}
-        
-        # Manejar placeholders en series
-        if kpi.get('type') == 'placeholder':
-            return {"type": "placeholder", "default_value": kpi.get('default_value', 0)}
-    
-        recipe = kpi.get('recipe', {})
-        table_alias = recipe.get('table')
-        column = recipe.get('column')
-        aggregation = recipe.get('aggregation')
-        time_modifier = recipe.get('time_modifier')
-    
-        table_def = self.tables.get(table_alias)
-        if not table_def: return {"error": f"Tabla {table_alias} no encontrada"}
-    
-        date_col = table_def.get('date_column')
-        if not date_col: return {"error": "Tabla sin columna de fecha"}
-    
-        query = f"SELECT MONTH({table_alias}.{date_col}) as period, {aggregation}({table_alias}.{column}) as value FROM {table_def['table_name']} as {table_alias}"
-        wheres = []
-    
-        target_year = datetime.datetime.now().year
-        if filters and filters.get('year'):
-            target_year = int(filters['year'])
-    
-        if time_modifier == 'previous_year':
-            target_year -= 1
-    
-        if filters:
-            ignore = ['year', 'month']
-            for k, v in filters.items():
-                if k not in ignore and v not in ["Todas", "Todos", None]:
-                    val = f"'{v}'" if isinstance(v, str) else v
-                    wheres.append(f"{table_alias}.{k} = {val}")
-    
-        wheres.append(f"YEAR({table_alias}.{date_col}) = {target_year}")
-    
-        if wheres: query += " WHERE " + " AND ".join(wheres)
-        query += f" GROUP BY MONTH({table_alias}.{date_col}) ORDER BY period"
-    
-        return {"type": "sql", "query": query}
-    
-    def build_categorical_query(self, kpi_key, dimension_key, filters=None):
-        kpi = self.metrics.get(kpi_key)
-        if not kpi: 
-            return {"error": f"KPI {kpi_key} no encontrado"}
-        
-        # Manejar placeholders en categorías
-        if kpi.get('type') == 'placeholder':
-            return {"type": "placeholder", "default_value": kpi.get('default_value', 0)}
-    
-        recipe = kpi.get('recipe', {})
-        fact_alias = recipe.get('table')
-        fact_col = recipe.get('column')
-        agg = recipe.get('aggregation', 'SUM')
-        fact_def = self.tables.get(fact_alias)
-    
-        if not fact_def: return {"error": f"Tabla base {fact_alias} no existe"}
-    
-        join_path = self._find_join_path(fact_alias, dimension_key)
-    
-        if not join_path:
-             return {"error": f"No se encontró ruta de relación entre '{fact_alias}' y '{dimension_key}'"}
-    
-        joins_sql = ""
-    
-        for next_alias, join_def in join_path:
-            next_table = self.tables.get(next_alias)
-            if not next_table:
-                return {"error": f"Definición de tabla para '{next_alias}' no encontrada"}
-            table_name = next_table.get('table_name')
-            join_type = join_def.get('type', 'INNER')
-            join_on = join_def.get('on')
-    
-            joins_sql += f" {join_type} JOIN {table_name} as {next_alias} ON {join_on}"
-    
-        target_dim_alias, _ = join_path[-1]
-        target_dim_def = self.tables.get(target_dim_alias)
-    
-        if not target_dim_def:
-            return {"error": f"Definición de tabla objetivo '{target_dim_alias}' no encontrada"}
-    
-        label_col = target_dim_def.get('label_column', 'id')
-    
-        wheres = []
-        date_col = fact_def.get('date_column')
-    
-        if date_col:
-            target_year = datetime.datetime.now().year
-            if filters and filters.get('year'):
-                target_year = int(filters['year'])
-    
-            wheres.append(f"YEAR({fact_alias}.{date_col}) = {target_year}")
-    
-            if filters and filters.get('month'):
-                m_name = filters['month'].lower()
-                if hasattr(self, 'MONTH_MAP') and m_name in self.MONTH_MAP:
-                    m_num = self.MONTH_MAP[m_name]
-                    wheres.append(f"MONTH({fact_alias}.{date_col}) = {m_num}")
-    
-        if filters:
-            ignore = ['year', 'month']
-            for k, v in filters.items():
-                if k not in ignore and v not in ["Todas", "Todos", None]:
-                    val = f"'{v}'" if isinstance(v, str) else v
-                    wheres.append(f"{fact_alias}.{k} = {val}")
-    
-        where_sql = (" WHERE " + " AND ".join(wheres)) if wheres else ""
-    
-        query = f"""
-            SELECT {target_dim_alias}.{label_col} as label,
-                   {agg}({fact_alias}.{fact_col}) as value
-            FROM {fact_def['table_name']} as {fact_alias}
-            {joins_sql}
-            {where_sql}
-            GROUP BY {target_dim_alias}.{label_col}
-            ORDER BY value DESC
-        """
-    
-        return {"type": "sql", "query": query}
-    
     def get_dataframe_query(self, metrics: list, dimensions: list, filters=None):
         first_metric = self.metrics.get(metrics[0])
         if not first_metric: 
@@ -281,7 +75,12 @@ class SmartQueryBuilder:
         selects = []
         group_bys = []
         joins_needed = set()
-    
+        group_by_month = False
+        
+        if "__month__" in dimensions:
+            group_by_month = True
+            dimensions = [d for d in dimensions if d != "__month__"]
+        # Dimensiones
         for dim in dimensions:
             if "." in dim:
                 tbl, col = dim.split(".")
@@ -305,24 +104,41 @@ class SmartQueryBuilder:
             m_table = recipe.get('table')
             col = recipe.get('column')
             agg = recipe.get('aggregation', 'SUM')
-    
+            
+            # Función auxiliar para formatear la agregación
+            def get_agg_expr(table_alias, column_name, aggregation_type):
+                if aggregation_type == "DISTINCTCOUNT":
+                    return f"COUNT(DISTINCT {table_alias}.{column_name})"
+                return f"{aggregation_type}({table_alias}.{column_name})"
+
+            # Si la métrica está en otra tabla, necesitamos asegurar el JOIN
             if m_table != fact_alias:
                 path = self._find_join_path(fact_alias, m_table)
                 if path:
                     for neighbor, _ in path:
                         joins_needed.add(neighbor)
-                    selects.append(f"{agg}({m_table}.{col}) as {m_key}")
+                    
+                    # Usamos la nueva lógica de formateo
+                    expr = get_agg_expr(m_table, col, agg)
+                    selects.append(f"{expr} as {m_key}")
                 else:
                     print(f"WARNING: No join path found from {fact_alias} to {m_table} for metric {m_key}")
             else:
-                selects.append(f"{agg}({fact_alias}.{col}) as {m_key}")
-    
+                # Usamos la nueva lógica de formateo
+                expr = get_agg_expr(fact_alias, col, agg)
+                selects.append(f"{expr} as {m_key}")
+
+        # 3. Construir JOINS
         joins_sql = ""
         processed_joins = set()
         active_tables_with_date = []
-    
-        sorted_targets = sorted(list(joins_needed))
-    
+        
+        # Ordenamos joins para asegurar consistencia
+        if fact_alias != fact_alias:
+            joins_needed.add(fact_alias)
+        
+        sorted_targets = sorted(list(joins_needed)) 
+        
         for target in sorted_targets:
              path = self._find_join_path(fact_alias, target)
              if path:
@@ -356,7 +172,24 @@ class SmartQueryBuilder:
                 m_name = filters['month'].lower()
                 if hasattr(self, 'MONTH_MAP') and m_name in self.MONTH_MAP:
                     target_month = self.MONTH_MAP[m_name]
-    
+        
+        # Analizamos la primera métrica para ver si el grupo requiere un desplazamiento temporal
+        time_modifier = None
+        for m_key in metrics:
+            m_def = self.metrics.get(m_key)
+            if m_def and 'recipe' in m_def and m_def['recipe'].get('time_modifier'):
+                time_modifier = m_def['recipe']['time_modifier']
+                break # Asumimos que todo el grupo comparte el mismo contexto temporal
+        
+        # Aplicar modificaciones
+        month_operator = "="
+        
+        if time_modifier == 'previous_year':
+            target_year -= 1 # Retrocedemos el año
+        elif time_modifier == 'ytd':
+            month_operator = "<=" # Cambiamos a acumulado
+
+        # Definir columna de fecha
         date_col_to_use = None
         if fact_def.get('date_column'):
             date_col_to_use = f"{fact_alias}.{fact_def['date_column']}"
@@ -366,10 +199,16 @@ class SmartQueryBuilder:
             date_col_to_use = col if "." in col else f"{tbl}.{col}"
     
         if date_col_to_use:
+            if group_by_month:
+                selects.insert(0, f"MONTH({date_col_to_use}) as period")
+                group_bys.insert(0, f"MONTH({date_col_to_use})")
+
             wheres.append(f"YEAR({date_col_to_use}) = {target_year}")
-            if target_month:
-                wheres.append(f"MONTH({date_col_to_use}) = {target_month}")
-    
+            if target_month and not group_by_month:
+                # Usamos el operador dinámico (= o <=)
+                wheres.append(f"MONTH({date_col_to_use}) {month_operator} {target_month}")
+
+        # Filtros adicionales (Igual que antes)
         if filters:
             ignore_keys = ['year', 'month']
             ignore_values = ["Todas", "Todos", "All", None]
@@ -378,19 +217,21 @@ class SmartQueryBuilder:
                 if k in ignore_keys: continue
                 if v in ignore_values: continue
                 val = f"'{v}'" if isinstance(v, str) else v
-                if "." in k:
-                    wheres.append(f"{k} = {val}")
-                else:
-                    wheres.append(f"{fact_alias}.{k} = {val}")
-    
+                if "." in k: wheres.append(f"{k} = {val}")
+                else: wheres.append(f"{fact_alias}.{k} = {val}")
+
         where_sql = " WHERE " + " AND ".join(wheres) if wheres else ""
-    
+
+        # 5. Query Final (Con corrección de GROUP BY escalar del paso anterior)
+        group_by_clause = f"GROUP BY {', '.join(group_bys)}" if group_bys else ""
+
         query = f"""
             SELECT {', '.join(selects)}
             FROM {fact_def['table_name']} as {fact_alias}
             {joins_sql}
             {where_sql}
-            GROUP BY {', '.join(group_bys)}
+            {group_by_clause}
         """
-    
+        ###print("Generated DataFrame Query:", query)  # Debugging
+
         return {"type": "sql", "query": query}

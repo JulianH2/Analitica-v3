@@ -1,10 +1,31 @@
 import plotly.graph_objects as go
 import dash_mantine_components as dmc
+from dash_iconify import DashIconify
 import math
 from .base_strategy import KPIStrategy
 from settings.theme import DesignSystem, SemanticColors
-from utils.helpers import format_value
+from utils.helpers import format_value, safe_get
 from datetime import datetime
+
+def safe_float(val, default=0.0):
+    if val is None:
+        return default
+    if isinstance(val, (int, float)):
+        return float(val)
+    if isinstance(val, str):
+        try:
+            clean = val.replace('%', '').replace('$', '').replace(',', '').strip()
+            return float(clean) if clean else default
+        except:
+            return default
+    return default
+
+def get_current_month():
+    return datetime.now().month
+BAR_WIDTH = 0.4
+BAR_GAP = 0.2
+MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+
 
 class WorkshopKPIStrategy(KPIStrategy):
     def __init__(self, screen_id, kpi_key, title, icon, color, has_detail=True, layout_config=None, inverse=False):
@@ -23,7 +44,7 @@ class WorkshopKPIStrategy(KPIStrategy):
         else:
             node = raw_node
 
-        config = {
+        return {
             "title": self.title,
             "icon": self.icon,
             "color": self.color,
@@ -33,7 +54,7 @@ class WorkshopKPIStrategy(KPIStrategy):
             "vs_last_year_formatted": node.get("vs_last_year_formatted"),
             "vs_last_year_delta": node.get("vs_last_year_delta"),
             "vs_last_year_delta_formatted": node.get("vs_last_year_delta_formatted"),
-            "label_prev_year": node.get("label_prev_year", "Año Ant"),
+            "label_prev_year": node.get("label_prev_year", f"Vs {datetime.now().year - 1}"),
             "target_formatted": node.get("target_formatted"),
             "target_delta_formatted": node.get("target_delta_formatted"),
             "trend": node.get("trend_direction"),
@@ -43,14 +64,9 @@ class WorkshopKPIStrategy(KPIStrategy):
             "status": node.get("status"),
             "status_color": node.get("status_color") or self.color
         }
-        
-        if node.get("percentage_of_total"):
-            config["percentage_of_total"] = node.get("percentage_of_total")
-        
-        return config
 
     def render_detail(self, data_context):
-        return dmc.Text("Detalle de métrica de mantenimiento.", size="sm", c=SemanticColors.TEXT_MUTED) # type: ignore
+        return dmc.Text("Detalle de metrica de mantenimiento.", size="sm", c=SemanticColors.TEXT_MUTED) # type: ignore
 
 
 class WorkshopGaugeStrategy(KPIStrategy):
@@ -60,14 +76,6 @@ class WorkshopGaugeStrategy(KPIStrategy):
         self.screen_id = screen_id
         self.kpi_key = kpi_key
         self.use_needle = use_needle
-        self.gauge_params = {
-            "range_max_mult": 1.15,
-            "threshold_width": 5,
-            "threshold_color": DesignSystem.WARNING[5],
-            "exceed_color": DesignSystem.INFO[5],
-            "bg_color": "rgba(148, 163, 184, 0.05)",
-            "font_size": 18
-        }
 
     def get_card_config(self, data_context):
         raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
@@ -101,124 +109,68 @@ class WorkshopGaugeStrategy(KPIStrategy):
         else:
             node = raw_node
         
-        current_val = node.get("value", 0)
-        target_val = node.get("target", 0)
+        current_val = safe_float(node.get("value", 0))
+        target_val = safe_float(node.get("target", 0))
         
-        if isinstance(current_val, float) and current_val <= 1.0:
-            current_val = current_val * 100
-        if isinstance(target_val, float) and target_val <= 1.0:
-            target_val = target_val * 100
-        
-        if self.use_needle:
-            return self._create_needle_gauge(current_val, target_val)
-        else:
-            return self._create_standard_gauge(current_val, target_val)
-    
-    def _create_standard_gauge(self, current_val, target_val):
         max_val = max(current_val, target_val) if target_val else current_val
+        if max_val <= 0:
+            return None
         
         val_pct = (current_val / max_val * 100) if max_val > 0 else 0
         target_pct = (target_val / max_val * 100) if max_val > 0 and target_val > 0 else 100
         
-        exceeds = val_pct > target_pct
-        bar_color = self.gauge_params["exceed_color"] if exceeds else self.hex_color
+        exceeds = val_pct >= target_pct
+        if exceeds:
+            bar_color = DesignSystem.NEXA_GREEN
+        elif val_pct >= 80:
+            bar_color = DesignSystem.NEXA_GOLD
+        else:
+            bar_color = DesignSystem.NEXA_BLUE
         
         fig = go.Figure(go.Indicator(
             mode="gauge+number",
             value=val_pct,
             number={
                 'suffix': "%",
-                'font': {'size': self.gauge_params["font_size"], 'weight': 'bold'},
+                'font': {'size': 18, 'weight': 'bold', 'color': DesignSystem.NEXA_BLACK},
                 'valueformat': '.1f'
             },
             gauge={
-                'axis': {
-                    'range': [0, max(val_pct, target_pct) * self.gauge_params["range_max_mult"]],
-                    'visible': False
-                },
-                'bar': {'color': bar_color, 'thickness': 0.8},
-                'bgcolor': self.gauge_params["bg_color"],
+                'axis': {'range': [0, max(val_pct, target_pct) * 1.1], 'visible': False},
+                'bar': {'color': bar_color, 'thickness': 0.7},
+                'bgcolor': DesignSystem.NEXA_GRAY_LIGHT,
+                'borderwidth': 0,
                 'threshold': {
-                    'line': {
-                        'color': self.gauge_params["threshold_color"],
-                        'width': self.gauge_params["threshold_width"]
-                    },
-                    'thickness': 0.75,
+                    'line': {'color': DesignSystem.NEXA_GRAY, 'width': 3},
+                    'thickness': 0.8,
                     'value': target_pct
                 }
-            },
-            domain={'x': [0, 1], 'y': [0, 1]}
+            }
         ))
         
         if exceeds:
             fig.add_annotation(
-                x=0.5, y=1.05,
-                text="★ META SUPERADA",
+                x=0.5, y=0.3,
+                text="META SUPERADA",
                 showarrow=False,
-                font=dict(color=bar_color, size=9, weight="bold")
+                font=dict(color=DesignSystem.NEXA_GREEN, size=8, weight="bold"),
+                bgcolor="rgba(76, 159, 84, 0.15)",
+                bordercolor=DesignSystem.NEXA_GREEN,
+                borderwidth=1,
+                borderpad=2
             )
         
         fig.update_layout(
-            height=150,
-            margin=dict(l=10, r=10, t=10, b=10),
-            paper_bgcolor='rgba(0,0,0,0)'
-        )
-        
-        return fig
-    
-    def _create_needle_gauge(self, current_val, target_val):
-        fig = go.Figure(go.Indicator(
-            mode="gauge",
-            value=current_val,
-            gauge={
-                'axis': {'range': [0, 100], 'visible': True, 'tickwidth': 1, 'tickcolor': "gray"},
-                'bar': {'color': "rgba(0,0,0,0)"},
-                'bgcolor': "white",
-                'steps': [
-                    {'range': [0, 85], 'color': "#fa5252"},
-                    {'range': [85, 95], 'color': "#fcc419"},
-                    {'range': [95, 100], 'color': "#228be6"}
-                ]
-            }
-        ))
-
-        theta = 180 - (current_val * 1.8)
-        r = 0.45
-        x_pivot, y_pivot = 0.5, 0.25
-        
-        x_tip = x_pivot + r * math.cos(math.radians(theta))
-        y_tip = y_pivot + r * math.sin(math.radians(theta))
-
-        fig.add_shape(
-            type="line",
-            x0=x_pivot, y0=y_pivot, x1=x_tip, y1=y_tip,
-            line=dict(color="black", width=4),
-            xref="paper", yref="paper"
-        )
-        
-        fig.add_shape(
-            type="circle",
-            x0=x_pivot-0.02, y0=y_pivot-0.02, x1=x_pivot+0.02, y1=y_pivot+0.02,
-            fillcolor="black", line_color="black",
-            xref="paper", yref="paper"
-        )
-
-        fig.update_layout(
-            height=160,
-            margin=dict(l=25, r=25, t=40, b=5),
+            height=105,
+            margin=dict(l=8, r=8, t=18, b=8),
             paper_bgcolor='rgba(0,0,0,0)',
-            annotations=[dict(
-                x=0.5, y=0.45, 
-                text=f"{current_val:.0f}%",
-                showarrow=False, 
-                font=dict(size=18, weight="bold")
-            )]
+            font={'family': DesignSystem.TYPOGRAPHY["family"]}
         )
         
         return fig
 
     def render_detail(self, data_context):
-        return dmc.Text("Análisis de eficiencia de mantenimiento.", size="sm", c=SemanticColors.TEXT_MUTED) # type: ignore
+        return dmc.Text("Analisis de cumplimiento.", size="sm", c=SemanticColors.TEXT_MUTED) # type: ignore
 
 
 class WorkshopTrendChartStrategy(KPIStrategy):
@@ -237,42 +189,55 @@ class WorkshopTrendChartStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        categories = (data_source.get("categories") or data_source.get("months") or [])
+        all_categories = data_source.get("categories") or data_source.get("months") or MESES
         series_list = data_source.get("series", [])
         
-        if not categories or not series_list:
+        if not series_list:
             return self._create_empty_figure("Sin datos")
         
+        current_month = get_current_month()
+        categories = all_categories[:current_month]
+        
         fig = go.Figure()
+        series_colors = [DesignSystem.NEXA_BLUE, DesignSystem.NEXA_ORANGE, DesignSystem.NEXA_GREEN]
         
         for idx, serie in enumerate(series_list):
             s_name = serie.get("name", f"Serie {idx}")
-            s_data = serie.get("data", [])
-            s_color = serie.get("color", DesignSystem.BRAND[5])
+            s_data = serie.get("data", [])[:current_month]
             s_type = serie.get("type", "bar")
-            is_dashed = serie.get("dashed", False) or "Meta" in s_name
+            is_meta = "meta" in s_name.lower()
             
-            if s_type == "line" or is_dashed:
+            clean_data = [safe_float(v) for v in s_data]
+            s_color = series_colors[idx % len(series_colors)]
+            
+            if s_type == "line" or is_meta:
                 fig.add_trace(go.Scatter(
-                    x=categories, y=s_data, name=s_name,
+                    x=categories, y=clean_data, name=s_name,
                     mode='lines+markers',
-                    line=dict(color=s_color, width=3, dash='dot' if is_dashed else 'solid'),
-                    marker=dict(size=6)
+                    line=dict(color=DesignSystem.NEXA_GRAY if is_meta else s_color, width=2, dash='dash' if is_meta else 'solid'),
+                    marker=dict(size=5)
                 ))
             else:
                 fig.add_trace(go.Bar(
-                    x=categories, y=s_data, name=s_name,
-                    marker_color=s_color
+                    x=categories, y=clean_data, name=s_name,
+                    marker_color=s_color,
+                    marker_line_width=0,
+                    width=BAR_WIDTH
                 ))
         
         fig.update_layout(
             barmode='group',
-            height=350,
-            margin=dict(t=40, b=50, l=40, r=20),
-            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            hovermode='x unified'
+            bargap=BAR_GAP,
+            bargroupgap=0.1,
+            height=320,
+            margin=dict(t=20, b=40, l=50, r=20),
+            legend=dict(orientation="h", y=1.08, x=0.5, xanchor="center", font=dict(size=10)),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            hovermode='x unified',
+            xaxis=dict(showgrid=False, tickfont=dict(size=10, color=DesignSystem.NEXA_GRAY)),
+            yaxis=dict(showgrid=True, gridcolor=DesignSystem.SLATE[2], gridwidth=1, tickfont=dict(size=10, color=DesignSystem.NEXA_GRAY)),
+            font=dict(family=DesignSystem.TYPOGRAPHY["family"], color=DesignSystem.NEXA_BLACK)
         )
         
         return fig
@@ -297,38 +262,40 @@ class WorkshopDonutChartStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        labels = data_source.get("labels", [])
+        labels = data_source.get("labels") or data_source.get("categories", [])
         values = data_source.get("values", [])
-        colors = data_source.get("colors", [])
         total = data_source.get("total_formatted", "")
         
         if not labels or not values:
             return self._create_empty_figure("Sin datos")
         
-        if not colors:
-            colors = DesignSystem.CHART_COLORS[:len(labels)]
+        clean_values = [safe_float(v) for v in values]
+        donut_colors = DesignSystem.CHART_DONUT_COLORS[:len(labels)]
         
         fig = go.Figure(data=[go.Pie(
-            labels=labels, 
-            values=values, 
-            hole=0.6,
-            marker=dict(colors=colors),
-            textinfo='percent'
+            labels=labels,
+            values=clean_values,
+            hole=0.55,
+            marker=dict(colors=donut_colors, line=dict(color='white', width=2)),
+            textinfo='percent',
+            textposition='outside',
+            textfont=dict(size=10, color=DesignSystem.NEXA_BLACK),
+            pull=[0.02] * len(labels)
         )])
         
         if total:
             fig.add_annotation(
                 text=total, x=0.5, y=0.5, showarrow=False,
-                font=dict(size=14, weight="bold", color=DesignSystem.SLATE[7])
+                font=dict(size=11, weight="bold", color=DesignSystem.NEXA_BLACK)
             )
         
         fig.update_layout(
             showlegend=True,
-            legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center"),
-            margin=dict(t=20, b=40, l=10, r=10),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            height=300
+            legend=dict(orientation="v", y=0.5, x=1.02, font=dict(size=9, color=DesignSystem.NEXA_BLACK)),
+            margin=dict(t=15, b=15, l=15, r=80),
+            paper_bgcolor='rgba(0,0,0,0)',
+            height=300,
+            font=dict(family=DesignSystem.TYPOGRAPHY["family"])
         )
         
         return fig
@@ -353,80 +320,46 @@ class WorkshopHorizontalBarStrategy(KPIStrategy):
             return self._create_empty_figure()
         
         data_source = node.get("data", node)
-        categories = data_source.get("categories", [])
+        categories = data_source.get("categories") or data_source.get("labels", [])
         series_list = data_source.get("series", [])
         
         if not categories:
-            return self._create_empty_figure("Sin categorías")
+            return self._create_empty_figure("Sin categorias")
         
         fig = go.Figure()
         
-        for serie in series_list:
+        bar_colors = [DesignSystem.NEXA_BLUE, DesignSystem.NEXA_ORANGE, DesignSystem.NEXA_GREEN]
+        
+        for idx, serie in enumerate(series_list):
             s_name = serie.get("name", "Valor")
             s_data = serie.get("data", [])
-            s_color = serie.get("color", self.hex_color)
+            clean_data = [safe_float(v) for v in s_data]
+            bar_color = bar_colors[idx % len(bar_colors)]
             
             fig.add_trace(go.Bar(
-                y=categories, x=s_data, name=s_name,
-                orientation='h', marker_color=s_color,
-                text=[f"${v:,.0f}" if isinstance(v, (int, float)) and v > 1000 else str(v) for v in s_data],
-                textposition='outside'
+                y=categories,
+                x=clean_data,
+                name=s_name,
+                orientation='h',
+                marker_color=bar_color,
+                marker_line_width=0,
+                width=0.55  # Ancho uniforme
             ))
         
-        fig.update_layout(
-            height=max(300, len(categories) * 35),
-            margin=dict(l=140, r=60, t=30, b=40),
-            yaxis=dict(autorange="reversed"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            showlegend=len(series_list) > 1
-        )
-        
-        return fig
-
-    def render_detail(self, data_context):
-        return None
-
-
-class WorkshopBarChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-bar", color="indigo", layout_config=None):
-        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
-
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon}
-
-    def get_figure(self, data_context):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
-        
-        if not node:
-            return self._create_empty_figure()
-        
-        data_source = node.get("data", node)
-        categories = data_source.get("categories", [])
-        series_list = data_source.get("series", [])
-        
-        if not categories:
-            return self._create_empty_figure("Sin categorías")
-        
-        fig = go.Figure()
-        
-        for serie in series_list:
-            s_name = serie.get("name", "Valor")
-            s_data = serie.get("data", [])
-            s_color = serie.get("color", self.hex_color)
-            
-            fig.add_trace(go.Bar(
-                x=categories, y=s_data, name=s_name,
-                marker_color=s_color
-            ))
+        chart_height = max(280, min(len(categories) * 30, 420))
         
         fig.update_layout(
-            height=350, margin=dict(t=30, b=40, l=40, r=20),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            showlegend=len(series_list) > 1
+            barmode='group',
+            bargap=0.15,
+            height=chart_height,
+            margin=dict(l=90, r=25, t=15, b=25),
+            yaxis=dict(autorange="reversed", tickfont=dict(size=10, color=DesignSystem.NEXA_BLACK), showgrid=False),
+            xaxis=dict(tickfont=dict(size=10, color=DesignSystem.NEXA_GRAY), showgrid=True, gridcolor=DesignSystem.SLATE[2], gridwidth=1),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            showlegend=len(series_list) > 1,
+            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center", font=dict(size=10)),
+            font=dict(family=DesignSystem.TYPOGRAPHY["family"], color=DesignSystem.NEXA_BLACK)
         )
         
         return fig
@@ -436,7 +369,7 @@ class WorkshopBarChartStrategy(KPIStrategy):
 
 
 class WorkshopComboChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-line", color="indigo", layout_config=None):
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-arrows-vertical", color="indigo", layout_config=None):
         super().__init__(title=title, color=color, icon=icon, layout_config=layout_config)
         self.screen_id = screen_id
         self.chart_key = chart_key
@@ -459,34 +392,41 @@ class WorkshopComboChartStrategy(KPIStrategy):
         
         fig = go.Figure()
         
-        for serie in series_list:
+        for idx, serie in enumerate(series_list):
             s_name = serie.get("name", "")
             s_data = serie.get("data", [])
-            s_color = serie.get("color", self.hex_color)
             s_type = serie.get("type", "bar")
+            
+            clean_data = [safe_float(v) for v in s_data]
             
             if s_type == "line":
                 fig.add_trace(go.Scatter(
-                    x=categories, y=s_data, name=s_name,
+                    x=categories, y=clean_data, name=s_name,
                     mode='lines+markers',
-                    line=dict(color=s_color, width=3),
-                    marker=dict(size=6),
+                    line=dict(color=DesignSystem.NEXA_GREEN, width=3),
+                    marker=dict(size=7, symbol='circle'),
                     yaxis='y2'
                 ))
             else:
                 fig.add_trace(go.Bar(
-                    x=categories, y=s_data, name=s_name,
-                    marker_color=s_color
+                    x=categories, y=clean_data, name=s_name,
+                    marker_color=DesignSystem.NEXA_BLUE,
+                    marker_line_width=0,
+                    width=BAR_WIDTH
                 ))
         
         fig.update_layout(
-            height=350, margin=dict(t=30, b=40, l=40, r=40),
-            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
+            height=320,
+            margin=dict(t=20, b=40, l=50, r=50),
+            bargap=BAR_GAP,
+            legend=dict(orientation="h", y=1.08, x=0.5, xanchor="center", font=dict(size=10)),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
             hovermode='x unified',
-            yaxis=dict(title=""),
-            yaxis2=dict(title="", overlaying='y', side='right')
+            xaxis=dict(showgrid=False, tickfont=dict(size=10, color=DesignSystem.NEXA_GRAY)),
+            yaxis=dict(showgrid=True, gridcolor=DesignSystem.SLATE[2], tickfont=dict(size=10, color=DesignSystem.NEXA_GRAY)),
+            yaxis2=dict(overlaying='y', side='right', showgrid=False, tickfont=dict(size=10, color=DesignSystem.NEXA_GREEN)),
+            font=dict(family=DesignSystem.TYPOGRAPHY["family"], color=DesignSystem.NEXA_BLACK)
         )
         
         return fig
@@ -502,49 +442,68 @@ class WorkshopTableStrategy:
 
     def _resolve_table_data(self, data_context):
         from services.data_manager import data_manager
-        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {}) # type: ignore
+        
+        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {})
         inject_paths = screen_config.get("inject_paths", {})
+        
         path = inject_paths.get(self.table_key)
-        if not path: return None
-        from utils.helpers import safe_get
+        if not path:
+            return safe_get(data_context, ["workshop", "tables", self.table_key])
+        
         return safe_get(data_context, path)
 
     def render(self, data_context, **kwargs):
         node = self._resolve_table_data(data_context)
-        if not node: return dmc.Text("Sin datos de tabla", c="dimmed", ta="center", py="xl") # type: ignore
         
-        data_source = node.get("data", node)
-        headers = data_source.get("headers", [])
-        rows = data_source.get("rows", [])
-        summary = node.get("summary", {})
-        total_row = data_source.get("total_row")
+        if not node:
+            return dmc.Center(
+                dmc.Stack([
+                    DashIconify(icon="tabler:table-off", width=36, color=DesignSystem.NEXA_GRAY),
+                    dmc.Text(f"Sin datos", c="dimmed", size="sm")
+                ], align="center", gap="xs"),
+                py="lg"
+            )
+
+        headers = node.get("headers", [])
+        rows = node.get("rows", [])
         
-        if not headers or not rows: return dmc.Text("Sin datos", c="dimmed", ta="center", py="xl") # type: ignore
-        
-        table_body = []
-        for row in rows[:50]:
-            table_body.append(dmc.TableTr([
-                dmc.TableTd(str(cell), style={"fontSize": "11px"}) 
+        if not headers and "data" in node:
+            data_source = node.get("data", {})
+            headers = data_source.get("headers", [])
+            rows = data_source.get("rows", [])
+
+        if not headers:
+            return dmc.Text("Sin estructura de tabla", c="dimmed", ta="center", py="lg")
+
+        table_rows = [
+            dmc.TableTr([
+                dmc.TableTd(str(cell) if cell is not None else "", 
+                    style={"fontSize": "11px", "whiteSpace": "nowrap", "padding": "5px 10px"}) 
                 for cell in row
-            ]))
-        
-        if summary:
-            summary_row = dmc.TableTr([
-                dmc.TableTd(str(summary.get(h.lower().replace(" ", "_"), "---")),
-                    style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": DesignSystem.SLATE[0]})
-                for h in headers
-            ])
-            table_body.append(summary_row)
-        elif total_row:
-            table_body.append(dmc.TableTr([
-                dmc.TableTd(str(cell), style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": "#f8f9fa"}) 
-                for cell in total_row
-            ]))
-        
-        return dmc.Table([
-            dmc.TableThead(dmc.TableTr([
-                dmc.TableTh(h, style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": DesignSystem.SLATE[0]}) 
-                for h in headers
-            ])),
-            dmc.TableTbody(table_body)
-        ], striped=True, highlightOnHover=True, withTableBorder=True, withColumnBorders=True) # type: ignore
+            ]) for row in rows[:50]
+        ]
+
+        return dmc.Table(
+            [
+                dmc.TableThead(
+                    dmc.TableTr([
+                        dmc.TableTh(str(h), 
+                            style={
+                                "fontSize": "10px", 
+                                "fontWeight": "600", 
+                                "whiteSpace": "nowrap",
+                                "backgroundColor": DesignSystem.NEXA_GRAY_LIGHT, 
+                                "color": DesignSystem.NEXA_BLACK,
+                                "padding": "7px 10px"
+                            }) 
+                        for h in headers
+                    ])
+                ),
+                dmc.TableTbody(table_rows)
+            ], 
+            striped=True,
+            highlightOnHover=True,
+            withTableBorder=True,
+            withColumnBorders=True,
+            style={"width": "100%"}
+        )

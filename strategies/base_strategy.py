@@ -39,8 +39,9 @@ class KPIStrategy(ABC):
         path = inject_paths.get(kpi_key)
         if not path:
             return None
-            
-        return safe_get(data_context, path)
+        # Resolver al objeto KPI completo (padre del leaf) para que la estrategia tenga value, target, value_formatted, etc.
+        parent_path = path[:-1] if len(path) > 1 else path
+        return safe_get(data_context, parent_path)
     
     def _resolve_chart_data(self, data_context: Dict[str, Any], screen_id: str, chart_key: str) -> Optional[Dict]:
         from services.data_manager import data_manager

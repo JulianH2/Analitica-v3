@@ -1,11 +1,5 @@
 {
-  "_metadata": {
-    "version": "2.0",
-    "description": "Métricas completas sincronizadas con screens.json",
-    "last_updated": "2025-02-02"
-  },
-
-  "trip_revenue": {
+  "ingreso_viaje": {
     "name": "Ingreso Viaje (Subtotal)",
     "recipe": {
       "table": "h_viaje",
@@ -14,7 +8,7 @@
       "format": "currency"
     }
   },
-  "trip_revenue_previous_year": {
+  "ingreso_viaje_anterior": {
     "name": "Ingreso Viaje Año Anterior",
     "recipe": {
       "table": "h_viaje",
@@ -24,7 +18,7 @@
       "format": "currency"
     }
   },
-  "trip_revenue_ytd": {
+  "ingreso_viaje_acumulado": {
     "name": "Ingreso Viaje Acumulado (YTD)",
     "recipe": {
       "table": "h_viaje",
@@ -34,7 +28,7 @@
       "format": "currency"
     }
   },
-  "trip_revenue_target": {
+  "meta_ingreso_viaje": {
     "name": "Meta Ingreso Viaje",
     "recipe": {
       "table": "d_meta_tiempo",
@@ -43,17 +37,7 @@
       "format": "currency"
     }
   },
-  "trip_revenue_target_ytd": {
-    "name": "Meta Ingreso Viaje Acumulado (YTD)",
-    "recipe": {
-      "table": "d_meta_tiempo",
-      "column": "meta_ingreso_viaje",
-      "aggregation": "SUM",
-      "time_modifier": "ytd",
-      "format": "currency"
-    }
-  },
-  "expected_revenue": {
+  "ingreso_esperado": {
     "name": "Ingreso Esperado",
     "description": "Alias de Meta para contextos de proyección",
     "recipe": {
@@ -63,20 +47,19 @@
       "format": "currency"
     }
   },
-  "revenue_vs_previous_year_pct": {
+  "pct_desviacion_ingreso_vs_anterior": {
     "name": "% Desviación Ingreso vs Anterior",
     "type": "derived",
-    "formula": "(trip_revenue - trip_revenue_previous_year) / trip_revenue_previous_year",
+    "formula": "(ingreso_viaje - ingreso_viaje_anterior) / ingreso_viaje_anterior",
     "format": "percent"
   },
-  "revenue_ytd_vs_target_pct": {
+  "pct_desviacion_ingreso_acumulado": {
     "name": "% Desviación Ingreso Acumulado",
     "type": "derived",
-    "formula": "(trip_revenue_ytd - trip_revenue_target_ytd) / trip_revenue_target_ytd",
+    "formula": "(ingreso_viaje_acumulado - meta_ingreso_viaje_acumulado) / meta_ingreso_viaje_acumulado",
     "format": "percent"
   },
-
-  "trips": {
+  "viajes": {
     "name": "Viajes",
     "recipe": {
       "table": "h_viaje",
@@ -85,7 +68,7 @@
       "format": "integer"
     }
   },
-  "trips_previous_year": {
+  "viajes_anterior": {
     "name": "Viajes Año Anterior",
     "recipe": {
       "table": "h_viaje",
@@ -95,7 +78,7 @@
       "format": "integer"
     }
   },
-  "trips_ytd": {
+  "viajes_acumulado": {
     "name": "Viajes Acumulado (YTD)",
     "recipe": {
       "table": "h_viaje",
@@ -105,8 +88,8 @@
       "format": "integer"
     }
   },
-  "trips_target": {
-    "name": "Meta Viajes",
+  "meta_viajes": {
+    "name": "Meta Viaje",
     "recipe": {
       "table": "d_meta_tiempo",
       "column": "meta_viajes",
@@ -114,7 +97,17 @@
       "format": "integer"
     }
   },
-  "trips_target_ytd": {
+  "viajes_esperado": {
+    "name": "Viajes Esperado",
+    "description": "Proyección de viajes basada en meta",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_viajes",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+  "meta_viajes_acumulado": {
     "name": "Meta Viajes Acumulado (YTD)",
     "recipe": {
       "table": "d_meta_tiempo",
@@ -124,26 +117,25 @@
       "format": "integer"
     }
   },
-  "trips_vs_previous_diff": {
-    "name": "Viajes vs Anterior (Diferencia)",
+  "diff_viajes_vs_anterior": {
+    "name": "Viajes vs Anterior",
     "type": "derived",
-    "formula": "trips - trips_previous_year",
+    "formula": "viajes - viajes_anterior",
     "format": "integer"
   },
-  "trips_vs_previous_year_pct": {
+  "pct_desviacion_viajes_vs_anterior": {
     "name": "% Desviación Viajes vs Anterior",
     "type": "derived",
-    "formula": "(trips - trips_previous_year) / trips_previous_year",
+    "formula": "(viajes - viajes_anterior) / viajes_anterior",
     "format": "percent"
   },
-  "trips_ytd_vs_target_pct": {
+  "pct_desviacion_viajes_acumulado": {
     "name": "% Desviación Viajes Acumulado",
     "type": "derived",
-    "formula": "(trips_ytd - trips_target_ytd) / trips_target_ytd",
+    "formula": "(viajes_acumulado - meta_viajes_acumulado) / meta_viajes_acumulado",
     "format": "percent"
   },
-
-  "kilometers": {
+  "kilometros": {
     "name": "Kms Recorridos",
     "recipe": {
       "table": "h_viaje",
@@ -152,7 +144,7 @@
       "format": "integer"
     }
   },
-  "kilometers_previous_year": {
+  "kilometros_anterior": {
     "name": "Kms Recorridos Año Anterior",
     "recipe": {
       "table": "h_viaje",
@@ -162,7 +154,7 @@
       "format": "integer"
     }
   },
-  "kilometers_ytd": {
+  "kilometros_acumulado": {
     "name": "Kms Recorridos Acumulado (YTD)",
     "recipe": {
       "table": "h_viaje",
@@ -172,8 +164,8 @@
       "format": "integer"
     }
   },
-  "kilometers_target": {
-    "name": "Meta Kms",
+  "meta_kilometros": {
+    "name": "Meta Kms Real",
     "recipe": {
       "table": "d_meta_tiempo",
       "column": "meta_kms_recorridos",
@@ -181,8 +173,28 @@
       "format": "integer"
     }
   },
-  "kilometers_target_ytd": {
-    "name": "Meta Kms Acumulado (YTD)",
+  "kilometros_esperado": {
+    "name": "Kilómetros Esperado",
+    "description": "Alias de Meta Kms para proyecciones",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_kms_real",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+  "meta_ingreso_viaje_acumulado": {
+    "name": "Meta Ingreso Viaje Acumulado (YTD)",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_ingreso_viaje",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    }
+  },
+  "meta_kilometros_acumulado": {
+    "name": "Meta Kms Real Acumulado (YTD)",
     "recipe": {
       "table": "d_meta_tiempo",
       "column": "meta_kms_recorridos",
@@ -191,20 +203,19 @@
       "format": "integer"
     }
   },
-  "kilometers_vs_previous_year_pct": {
-    "name": "% Desviación Kms vs Anterior",
+  "pct_desviacion_kilometros_vs_anterior": {
+    "name": "% Desviación Kms Real vs Anterior",
     "type": "derived",
-    "formula": "(kilometers - kilometers_previous_year) / kilometers_previous_year",
+    "formula": "(kilometros - kilometros_anterior) / kilometros_anterior",
     "format": "percent"
   },
-  "kilometers_ytd_vs_target_pct": {
-    "name": "% Desviación Kms Acumulado",
+  "pct_desviacion_kilometros_acumulado": {
+    "name": "% Desviación Kms Real Acumulado",
     "type": "derived",
-    "formula": "(kilometers_ytd - kilometers_target_ytd) / kilometers_target_ytd",
+    "formula": "(kilometros_acumulado - meta_kilometros_acumulado) / meta_kilometros_acumulado",
     "format": "percent"
   },
-
-  "trip_costs": {
+  "costo_viaje": {
     "name": "Costo Viaje Total",
     "recipe": {
       "table": "h_viajes_gastos_liquidacion",
@@ -213,23 +224,7 @@
       "format": "currency"
     }
   },
-  "settlement_costs": {
-    "name": "Costo Liquidación",
-    "recipe": {
-      "table": "h_viajes_gastos_liquidacion",
-      "column": "monto_concepto",
-      "aggregation": "SUM",
-      "format": "currency"
-    }
-  },
-  "total_trip_costs": {
-    "name": "Costo Viaje Total",
-    "type": "derived",
-    "formula": "settlement_costs",
-    "format": "currency",
-    "description": "Base para cálculo de utilidad"
-  },
-  "freight": {
+  "flete": {
     "name": "Flete",
     "recipe": {
       "table": "h_viaje",
@@ -238,7 +233,7 @@
       "format": "currency"
     }
   },
-  "other_costs": {
+  "otros_costos": {
     "name": "Otros Costos",
     "recipe": {
       "table": "h_viaje",
@@ -247,22 +242,23 @@
       "format": "currency"
     }
   },
-  "trip_km": {
+  "kms_viaje": {
     "name": "Kms Viaje",
     "recipe": {
       "table": "d_viaje",
       "column": "kms_viaje",
       "aggregation": "SUM",
       "format": "integer"
-    }
+    },
+    "description": "Justificación KB: d_viaje[kms_viaje] (cite: 140)"
   },
-  "other_revenue": {
+  "otros_ingresos": {
     "name": "Otros Ingresos",
     "type": "derived",
-    "formula": "trip_revenue - freight",
+    "formula": "ingreso_viaje - flete",
     "format": "currency"
   },
-  "driver_salary": {
+  "sueldo_operador": {
     "name": "Sueldo Operador",
     "recipe": {
       "table": "d_viaje",
@@ -271,38 +267,53 @@
       "format": "currency"
     }
   },
-  "revenue_per_km": {
+  "costo_liquidacion": {
+    "name": "Costo Liquidación",
+    "recipe": {
+      "table": "h_viajes_gastos_liquidacion",
+      "column": "monto_concepto",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "ingreso_x_km": {
     "name": "Ingreso x Km",
     "type": "derived",
-    "formula": "trip_revenue / kilometers if kilometers else 0",
+    "formula": "ingreso_viaje / kms_viaje if kms_viaje else 0",
     "format": "currency"
   },
-  "revenue_per_trip": {
+  "ingreso_x_viaje": {
     "name": "Ingreso x Viaje",
     "type": "derived",
-    "formula": "trip_revenue / trips if trips else 0",
+    "formula": "ingreso_viaje / viajes if viajes else 0",
     "format": "currency"
   },
-  "net_profit": {
+  "costo_viaje_total": {
+    "name": "Costo Viaje Total",
+    "type": "derived",
+    "formula": "costo_liquidacion",
+    "format": "currency",
+    "description": "Base para cálculo de utilidad"
+  },
+  "utilidad": {
     "name": "Monto Utilidad",
     "type": "derived",
-    "formula": "trip_revenue - total_trip_costs",
+    "formula": "ingreso_viaje - costo_viaje_total",
     "format": "currency"
   },
-  "profit_margin": {
+  "margen_utilidad": {
     "name": "% Margen Utilidad Viaje",
     "type": "derived",
-    "formula": "(trip_revenue - total_trip_costs) / trip_revenue if trip_revenue else 0",
+    "formula": "(ingreso_viaje - costo_viaje_total) / ingreso_viaje if ingreso_viaje else 0",
     "format": "percent"
   },
-  "cost_per_km": {
+  "costo_x_km": {
     "name": "Costo Viaje x Km",
     "type": "derived",
-    "formula": "total_trip_costs / kilometers if kilometers else 0",
+    "formula": "costo_viaje_total / kms_viaje if kms_viaje else 0",
     "format": "currency"
   },
-
-  "fuel": {
+  "combustible": {
     "name": "Combustible",
     "recipe": {
       "table": "h_viajes_gastos_liquidacion",
@@ -311,7 +322,7 @@
       "format": "currency"
     }
   },
-  "toll_iave": {
+  "caseta_iave": {
     "name": "Caseta IAVE",
     "recipe": {
       "table": "h_viajes_gastos_liquidacion",
@@ -320,7 +331,7 @@
       "format": "currency"
     }
   },
-  "toll_cash": {
+  "caseta_efectivo": {
     "name": "Caseta Efectivo",
     "recipe": {
       "table": "h_viajes_gastos_liquidacion",
@@ -329,8 +340,7 @@
       "format": "currency"
     }
   },
-
-  "units_used": {
+  "unidades_utilizadas": {
     "name": "Unidades Utilizadas",
     "recipe": {
       "table": "d_viaje",
@@ -339,7 +349,7 @@
     },
     "format": "integer"
   },
-  "units_used_previous_year": {
+  "unidades_utilizadas_anterior": {
     "name": "Unidades Utilizadas Año Anterior",
     "recipe": {
       "table": "d_viaje",
@@ -349,26 +359,31 @@
     },
     "format": "integer"
   },
-  "units_vs_previous_year_pct": {
-    "name": "% Desviación Unidades vs Anterior",
+  "pct_desviacion_unidades_vs_anterior": {
+    "name": "% Desviación Unidades Utilizadas vs Anterior",
     "type": "derived",
-    "formula": "(units_used - units_used_previous_year) / units_used_previous_year",
+    "formula": "(unidades_utilizadas - unidades_utilizadas_anterior) / unidades_utilizadas_anterior",
     "format": "percent"
   },
-  "revenue_per_unit": {
+  "ingreso_unit": {
     "name": "Ingreso por Tractocamión",
     "type": "derived",
-    "formula": "trip_revenue / units_used if units_used else 0",
+    "formula": "ingreso_viaje / unidades_utilizadas",
     "format": "currency"
   },
-  "revenue_per_unit_previous_year": {
+  "ingreso_unit_anterior": {
     "name": "Ingreso por Unidad Año Anterior",
     "type": "derived",
-    "formula": "trip_revenue_previous_year / units_used_previous_year if units_used_previous_year else 0",
+    "formula": "ingreso_viaje_anterior / unidades_utilizadas_anterior",
     "format": "currency"
   },
-
-  "clients_served": {
+  "pct_desviacion_ingreso_unit_anterior": {
+    "name": "% Desviación Ingreso x Unidad vs Anterior",
+    "type": "derived",
+    "formula": "(ingreso_unit - ingreso_unit_anterior) / ingreso_unit_anterior",
+    "format": "percent"
+  },
+  "clientes_servidos": {
     "name": "Clientes Servidos",
     "recipe": {
       "table": "d_trafico_guia",
@@ -377,7 +392,7 @@
     },
     "format": "integer"
   },
-  "clients_served_previous_year": {
+  "clientes_servidos_anterior": {
     "name": "Clientes Servidos Año Anterior",
     "recipe": {
       "table": "d_trafico_guia",
@@ -387,14 +402,13 @@
     },
     "format": "integer"
   },
-  "clients_vs_previous_year_pct": {
+  "pct_desviacion_clientes_vs_anterior": {
     "name": "% Desviación Clientes vs Anterior",
     "type": "derived",
-    "formula": "(clients_served - clients_served_previous_year) / clients_served_previous_year",
+    "formula": "(clientes_servidos - clientes_servidos_anterior) / clientes_servidos_anterior",
     "format": "percent"
   },
-
-  "loaded_trips": {
+  "viajes_cargados": {
     "name": "Viajes con Carga",
     "recipe": {
       "table": "d_viaje",
@@ -403,247 +417,16 @@
     },
     "format": "integer"
   },
-  "fleet_utilization": {
+  "utilizacion_flota": {
     "name": "Porcentaje de Carga",
     "type": "derived",
-    "formula": "loaded_trips / trips if trips else 0",
+    "formula": "(viajes_cargados / viajes) * 100",
     "format": "percent"
   },
-
-  "fuel_yield": {
-    "name": "Rendimiento Combustible",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "decimal",
-    "description": "Pendiente: requiere tabla de combustible"
-  },
-  "fuel_yield_previous_year": {
-    "name": "Rendimiento Combustible Año Anterior",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "decimal"
-  },
-  "total_liters": {
-    "name": "Litros Totales",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "integer",
-    "description": "Pendiente: requiere tabla de combustible"
-  },
-
-  "bank_balance": {
-    "name": "Saldo Bancos",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency",
-    "description": "Pendiente: requiere tabla de bancos/tesorería"
-  },
-  "income_month": {
-    "name": "Ingresos del Mes",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency",
-    "description": "Pendiente: requiere tabla de tesorería"
-  },
-  "expenses_month": {
-    "name": "Egresos del Mes",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency",
-    "description": "Pendiente: requiere tabla de tesorería"
-  },
-  "cash_flow": {
-    "name": "Flujo de Caja",
-    "type": "placeholder",
-    "default_value": 0,
+  "ingreso_x_viaje_anterior": {
+    "name": "Ingreso x Viaje Anterior",
+    "type": "derived",
+    "formula": "ingreso_viaje_anterior / viajes_anterior if viajes_anterior else 0",
     "format": "currency"
-  },
-  "accounts_receivable": {
-    "name": "Cuentas por Cobrar",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency",
-    "description": "Pendiente: requiere tabla de cartera"
-  },
-  "accounts_payable": {
-    "name": "Cuentas por Pagar",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency",
-    "description": "Pendiente: requiere tabla de proveedores"
-  },
-  "collection_efficiency": {
-    "name": "Eficiencia de Cobranza",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "percent"
-  },
-  "avg_collection_days": {
-    "name": "Días Promedio de Cobro",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "integer"
-  },
-  "liquidity_ratio": {
-    "name": "Ratio de Liquidez",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "decimal"
-  },
-  "working_capital": {
-    "name": "Capital de Trabajo",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-
-  "internal_cost": {
-    "name": "Costo Mtto Interno",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency",
-    "description": "Pendiente: requiere tabla de órdenes de servicio"
-  },
-  "external_cost": {
-    "name": "Costo Mtto Externo",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-  "tire_cost": {
-    "name": "Costo Llantas",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-  "total_maintenance": {
-    "name": "Gasto Mtto Total",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-  "maintenance_cost_per_km": {
-    "name": "Costo Mtto x Km",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-  "availability_percent": {
-    "name": "% Disponibilidad",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "percent"
-  },
-  "workshop_entries": {
-    "name": "Entradas a Taller",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "integer"
-  },
-  "corrective_cost": {
-    "name": "Costo Correctivo",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-  "preventive_cost": {
-    "name": "Costo Preventivo",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-  "avg_repair_time": {
-    "name": "Tiempo Promedio Reparación",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "decimal"
-  },
-  "units_in_workshop": {
-    "name": "Unidades en Taller",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "integer"
-  },
-  "pending_orders": {
-    "name": "Órdenes Pendientes",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "integer"
-  },
-  "mtto_interno": {
-    "name": "Mtto Interno",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-  "mtto_externo": {
-    "name": "Mtto Externo",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-  "mtto_llantas": {
-    "name": "Mtto Llantas",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-
-  "total_purchases": {
-    "name": "Compras Totales",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency",
-    "description": "Pendiente: requiere tabla de compras"
-  },
-  "fuel_purchases": {
-    "name": "Compras Combustible",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-  "parts_purchases": {
-    "name": "Compras Refacciones",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-  "tire_purchases": {
-    "name": "Compras Llantas",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-
-  "initial_inventory": {
-    "name": "Inventario Inicial",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency",
-    "description": "Pendiente: requiere tabla de inventario"
-  },
-  "current_valuation": {
-    "name": "Valorización Actual",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "currency"
-  },
-  "compliance_level": {
-    "name": "Nivel de Cumplimiento",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "percent"
-  },
-  "items_with_stock": {
-    "name": "Artículos con Stock",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "integer"
-  },
-  "items_without_stock": {
-    "name": "Artículos sin Stock",
-    "type": "placeholder",
-    "default_value": 0,
-    "format": "integer"
   }
 }
