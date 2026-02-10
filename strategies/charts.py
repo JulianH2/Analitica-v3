@@ -8,8 +8,8 @@ def get_current_month():
     return datetime.now().month
 
 class MainTrendChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-area-line", layout_config=None):
-        super().__init__(title=title, icon=icon, has_detail=True, layout_config=layout_config)
+    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-area-line", has_detail=True, layout_config=None):
+        super().__init__(title=title, icon=icon, has_detail=has_detail, layout_config=layout_config)
         self.screen_id = screen_id
         self.chart_key = chart_key
 
@@ -46,7 +46,8 @@ class MainTrendChartStrategy(KPIStrategy):
                 fig.add_trace(go.Scatter(
                     x=categories, y=s_data, name=s_name,
                     mode='lines+markers',
-                    line=dict(color=s_color, width=3, dash='dot' if "Meta" in s_name else 'solid')
+                    line=dict(color=s_color, width=3, dash='dot' if "Meta" in s_name else 'solid'),
+                    marker=dict(size=6)
                 ))
             else:
                 fig.add_trace(go.Bar(
@@ -54,25 +55,48 @@ class MainTrendChartStrategy(KPIStrategy):
                     marker_color=s_color
                 ))
 
+        height_val = self.layout.get("height", 350)
+        plotly_height = height_val if isinstance(height_val, int) else None
+        
         fig.update_layout(
             paper_bgcolor=DesignSystem.TRANSPARENT,
             plot_bgcolor=DesignSystem.TRANSPARENT,
-            margin=dict(t=20, b=20, l=40, r=20),
-            height=300,
+            margin=dict(t=30, b=40, l=50, r=30),
+            height=plotly_height,
+            autosize=True,
             showlegend=True,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            barmode='group'
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                font=dict(size=11)
+            ),
+            barmode='group',
+            hovermode='x unified',
+            xaxis=dict(
+                tickangle=-45,
+                tickfont=dict(size=10)
+            ),
+            yaxis=dict(
+                tickfont=dict(size=10),
+                gridcolor=DesignSystem.SLATE[2]
+            )
         )
         return fig
 
 class TableChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:table", layout_config=None):
-        super().__init__(title=title, icon=icon, layout_config=layout_config)
+    def __init__(self, screen_id, chart_key, title, icon="tabler:table", has_detail=False, layout_config=None):
+        super().__init__(title=title, icon=icon, has_detail=has_detail, layout_config=layout_config)
         self.screen_id = screen_id
         self.chart_key = chart_key
 
     def get_card_config(self, data_context):
         return {"title": self.title, "icon": self.icon}
+
+    def render_detail(self, data_context):
+        return None
 
     def get_figure(self, data_context):
         node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)

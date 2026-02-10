@@ -10,17 +10,28 @@ class TableWidget:
         table_component = self.strategy.render(data_context, **kwargs)
         
         return dmc.Paper(
-            p="md", radius="md", withBorder=True, shadow="sm", mt="xl",
+            p=8,  # Reducido de "md"
+            radius="md",
+            withBorder=True,
+            shadow="sm",
+            mt="lg",  # Reducido de "xl"
             children=[
-                dmc.Group(justify="space-between", mb="md", children=[
-                    dmc.Group([
-                        DashIconify(icon="tabler:list-details", width=24, color=DesignSystem.BRAND[5]),
-                        dmc.Text(title, fw="bold", size="lg") 
-                    ]),
-                    dmc.Badge("Vista Completa", variant="light", color="gray")
-                ]),
-                dmc.ScrollArea(
-                    h="auto", mah=500, offsetScrollbars="present",
+                dmc.Group(
+                    justify="space-between",
+                    mb="sm",  # Reducido de "md"
+                    children=[
+                        dmc.Group(
+                            gap=5,  # Reducido
+                            children=[
+                                DashIconify(icon="tabler:list-details", width=22, color=DesignSystem.BRAND[5]),  # Reducido de 24
+                                dmc.Text(title, fw="bold", size="lg") 
+                            ]
+                        ),
+                        dmc.Badge("Vista Completa", variant="light", color="gray", size="sm")
+                    ]
+                ),
+                html.Div(
+                    style={"height": "auto", "maxHeight": "480px", "overflowY": "auto"},  # Altura fija sin ScrollArea
                     children=table_component
                 )
             ]

@@ -1,4 +1,3 @@
-from components.skeleton import get_skeleton
 from flask import session
 import dash
 from dash import html
@@ -28,8 +27,7 @@ w_interno = SmartWidget(
         kpi_key="internal_cost",
         title="Costo Interno",
         icon="tabler:tools",
-        color="indigo",
-        layout_config={"height": 160}
+        color="indigo"
     )
 )
 
@@ -40,8 +38,7 @@ w_externo = SmartWidget(
         kpi_key="external_cost",
         title="Costo Externo",
         icon="tabler:truck-delivery",
-        color="yellow",
-        layout_config={"height": 160}
+        color="yellow"
     )
 )
 
@@ -52,8 +49,7 @@ w_llantas = SmartWidget(
         kpi_key="tire_cost",
         title="Costo Llantas",
         icon="tabler:tire",
-        color="red",
-        layout_config={"height": 160}
+        color="red"
     )
 )
 
@@ -64,8 +60,7 @@ w_total = SmartWidget(
         kpi_key="total_maintenance",
         title="Total Mant.",
         icon="tabler:sum",
-        color="green",
-        layout_config={"height": 160}
+        color="green"
     )
 )
 
@@ -77,8 +72,7 @@ w_disp = SmartWidget(
         title="% Disponibilidad",
         icon="tabler:gauge",
         color="green",
-        use_needle=True,
-        layout_config={"height": 180}
+        use_needle=True
     )
 )
 
@@ -90,8 +84,7 @@ w_ckm = SmartWidget(
         title="Costo por Km",
         icon="tabler:route",
         color="indigo",
-        use_needle=False,
-        layout_config={"height": 180}
+        use_needle=False
     )
 )
 
@@ -100,8 +93,7 @@ chart_taller_trend = ChartWidget(
     WorkshopTrendChartStrategy(
         screen_id=SCREEN_ID,
         chart_key="maintenance_costs_trend",
-        title="Costo Mantenimiento 2025 vs 2024",
-        layout_config={"height": 400}
+        title="Costo Mantenimiento 2025 vs 2024"
     )
 )
 
@@ -110,8 +102,7 @@ chart_taller_type = ChartWidget(
     WorkshopDonutChartStrategy(
         screen_id=SCREEN_ID,
         chart_key="maintenance_by_type",
-        title="Mantenimiento por Tipo",
-        layout_config={"height": 400}
+        title="Mantenimiento por Tipo"
     )
 )
 
@@ -120,8 +111,7 @@ chart_taller_fam = ChartWidget(
     WorkshopHorizontalBarStrategy(
         screen_id=SCREEN_ID,
         chart_key="maintenance_by_family",
-        title="Costo por Familia",
-        layout_config={"height": 380}
+        title="Costo por Familia"
     )
 )
 
@@ -130,8 +120,7 @@ chart_taller_flota = ChartWidget(
     WorkshopHorizontalBarStrategy(
         screen_id=SCREEN_ID,
         chart_key="maintenance_by_fleet",
-        title="Costo por Flota",
-        layout_config={"height": 380}
+        title="Costo por Flota"
     )
 )
 
@@ -140,8 +129,7 @@ chart_taller_donut = ChartWidget(
     WorkshopDonutChartStrategy(
         screen_id=SCREEN_ID,
         chart_key="maintenance_by_operation",
-        title="Costo por Tipo Operación",
-        layout_config={"height": 380}
+        title="Costo por Tipo Operación"
     )
 )
 
@@ -151,8 +139,7 @@ chart_taller_unit = ChartWidget(
         screen_id=SCREEN_ID,
         chart_key="cost_per_km_by_unit",
         title="Costo x Km por Unidad",
-        color="red",
-        layout_config={"height": 380}
+        color="red"
     )
 )
 
@@ -162,8 +149,7 @@ chart_taller_marca = ChartWidget(
         screen_id=SCREEN_ID,
         chart_key="cost_per_km_by_brand",
         title="Costo x Km por Marca",
-        color="yellow",
-        layout_config={"height": 380}
+        color="yellow"
     )
 )
 
@@ -173,8 +159,7 @@ chart_taller_entry = ChartWidget(
         screen_id=SCREEN_ID,
         chart_key="workshop_entries_by_unit",
         title="Entradas a Taller por Unidad",
-        color="indigo",
-        layout_config={"height": 380}
+        color="indigo"
     )
 )
 
@@ -190,7 +175,7 @@ WIDGET_REGISTRY = {
 def _render_taller_dashboard_body(ctx):
     return html.Div([
         dmc.SimpleGrid(
-            cols={"base": 2, "md": 4}, # type: ignore
+            cols={"base": 1, "md": 2},
             spacing="md",
             mb="md",
             children=[
@@ -201,9 +186,9 @@ def _render_taller_dashboard_body(ctx):
             ]
         ),
         dmc.SimpleGrid(
-            cols={"base": 1, "md": 2}, # type: ignore
+            cols={"base": 1, "md": 2},
             spacing="md",
-            mb="lg",
+            mb="xl",
             children=[
                 w_disp.render(ctx, mode="combined"),
                 w_ckm.render(ctx, mode="combined")
@@ -211,38 +196,38 @@ def _render_taller_dashboard_body(ctx):
         ),
         dmc.Grid(
             gutter="md",
-            mb="lg",
-            align="stretch",
+            mb="xl",
             children=[
-                dmc.GridCol(span={"base": 12, "lg": 7}, children=[chart_taller_trend.render(ctx, h=400)]), # type: ignore
-                dmc.GridCol(span={"base": 12, "lg": 5}, children=[chart_taller_type.render(ctx, h=400)]) # type: ignore
+                dmc.GridCol(span={"base": 12, "lg": 7}, children=[chart_taller_trend.render(ctx, h=420)]),
+                dmc.GridCol(span={"base": 12, "lg": 5}, children=[chart_taller_type.render(ctx, h=420)])
             ]
         ),
         dmc.SimpleGrid(
-            cols={"base": 1, "md": 3}, # type: ignore
+            cols={"base": 1, "md": 3},
             spacing="md",
-            mb="lg",
+            mb="xl",
             children=[
-                chart_taller_fam.render(ctx, h=380),
-                chart_taller_flota.render(ctx, h=380),
-                chart_taller_donut.render(ctx, h=380)
+                chart_taller_fam.render(ctx, h=420),
+                chart_taller_flota.render(ctx, h=420),
+                chart_taller_donut.render(ctx, h=420)
             ]
         ),
         dmc.SimpleGrid(
-            cols={"base": 1, "md": 3}, # type: ignore
+            cols={"base": 1, "md": 3},
             spacing="md",
             children=[
-                chart_taller_unit.render(ctx, h=380),
-                chart_taller_marca.render(ctx, h=380),
-                chart_taller_entry.render(ctx, h=380)
+                chart_taller_unit.render(ctx, h=420),
+                chart_taller_marca.render(ctx, h=420),
+                chart_taller_entry.render(ctx, h=420)
             ]
         ),
-        dmc.Space(h=30)
+        dmc.Space(h=50)
     ])
 
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
+    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     refresh_components, _ = data_manager.dash_refresh_components(
         SCREEN_ID,
         interval_ms=800,
@@ -254,7 +239,7 @@ def layout():
             create_smart_modal("taller-modal"),
             *refresh_components,
             create_workshop_filters(prefix="taller"),
-            html.Div(id="taller-dashboard-body", children=get_skeleton(SCREEN_ID))
+            html.Div(id="taller-dashboard-body", children=_render_taller_dashboard_body(ctx))
         ]
     )
 

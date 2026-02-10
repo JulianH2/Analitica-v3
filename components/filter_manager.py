@@ -6,8 +6,8 @@ def create_filter_section(
     year_id: str,
     month_id: str,
     year_options=None,
-    default_year="2025",
-    default_month="septiembre",
+    default_year="2026",
+    default_month="enero",
     additional_filters=None
 ):
     if year_options is None:

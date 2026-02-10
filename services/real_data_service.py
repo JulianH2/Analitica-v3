@@ -379,14 +379,13 @@ class RealDataService:
             current_value=0.1,
             kpi_type="percent"
         )
-        
         operational["kpis"]["revenue_per_trip"] = KPICalculator.calculate_kpi(
             title="Ingreso x Viaje",
             current_value=1,
             previous_value=1,
-            target_value=1,
-            current_ytd_value=1,
-            previous_ytd_value=1,
+            target_value=None,
+            current_ytd_value=None,
+            previous_ytd_value=None,
             kpi_type="currency",
             unit="MXN"
         )
@@ -395,18 +394,17 @@ class RealDataService:
             title="Ingreso x Unidad",
             current_value=1,
             previous_value=1,
-            target_value=1,
-            current_ytd_value=1,
-            previous_ytd_value=1,
+            target_value=None,
+            current_ytd_value=None,
+            previous_ytd_value=None,
             kpi_type="currency",
             unit="MXN"
         )
-        
         operational["kpis"]["units_used"] = KPICalculator.calculate_kpi(
             title="Unidades Usadas",
             current_value=1,
             previous_value=1,
-            target_value=1,
+            target_value=None,
             kpi_type="number",
             unit="uds",
             inverse=False
@@ -416,7 +414,7 @@ class RealDataService:
             title="Clientes Atendidos",
             current_value=1,
             previous_value=1,
-            target_value=1,
+            target_value=None,
             kpi_type="number",
             unit="cli",
             inverse=False
@@ -839,6 +837,89 @@ class RealDataService:
             ],
             "summary": {
                 "total_routes": 1,
+                "total_trips": 1,
+                "total_revenue": "$1",
+                "total_cost": "$1",
+                "total_profit": "$1",
+                "avg_margin": "0.1%"
+            }
+        }
+        
+        operational["tables"]["margin_by_unit"] = {
+            "type": "table",
+            "title": "Margen por Unidad",
+            "headers": ["Unidad", "Viajes", "Ingreso", "Costo", "Utilidad", "Margen %"],
+            "rows": [
+                ["001", "1", "$1", "$1", "$1", "0.1%"],
+                ["002", "1", "$1", "$1", "$1", "0.1%"],
+                ["003", "1", "$1", "$1", "$1", "0.1%"],
+                ["004", "1", "$1", "$1", "$1", "0.1%"],
+                ["005", "1", "$1", "$1", "$1", "0.1%"]
+            ],
+            "summary": {
+                "total_units": 1,
+                "total_trips": 1,
+                "total_revenue": "$1",
+                "total_cost": "$1",
+                "total_profit": "$1",
+                "avg_margin": "0.1%"
+            }
+        }
+        
+        operational["tables"]["margin_by_operator"] = {
+            "type": "table",
+            "title": "Margen por Operador",
+            "headers": ["Operador", "Viajes", "Ingreso", "Costo", "Utilidad", "Margen %"],
+            "rows": [
+                ["Op-001", "1", "$1", "$1", "$1", "0.1%"],
+                ["Op-002", "1", "$1", "$1", "$1", "0.1%"],
+                ["Op-003", "1", "$1", "$1", "$1", "0.1%"],
+                ["Op-004", "1", "$1", "$1", "$1", "0.1%"],
+                ["Op-005", "1", "$1", "$1", "$1", "0.1%"]
+            ],
+            "summary": {
+                "total_operators": 1,
+                "total_trips": 1,
+                "total_revenue": "$1",
+                "total_cost": "$1",
+                "total_profit": "$1",
+                "avg_margin": "0.1%"
+            }
+        }
+        
+        operational["tables"]["margin_by_trip"] = {
+            "type": "table",
+            "title": "Margen por Viaje",
+            "headers": ["Folio", "Fecha", "Ruta", "Ingreso", "Costo", "Utilidad", "Margen %"],
+            "rows": [
+                ["V-00001", "01/01/2025", "RUTA A", "$1", "$1", "$1", "0.1%"],
+                ["V-00002", "01/01/2025", "RUTA B", "$1", "$1", "$1", "0.1%"],
+                ["V-00003", "02/01/2025", "RUTA C", "$1", "$1", "$1", "0.1%"],
+                ["V-00004", "02/01/2025", "RUTA D", "$1", "$1", "$1", "0.1%"],
+                ["V-00005", "03/01/2025", "RUTA E", "$1", "$1", "$1", "0.1%"]
+            ],
+            "summary": {
+                "total_trips": 1,
+                "total_revenue": "$1",
+                "total_cost": "$1",
+                "total_profit": "$1",
+                "avg_margin": "0.1%"
+            }
+        }
+        
+        operational["tables"]["margin_by_client"] = {
+            "type": "table",
+            "title": "Margen por Cliente",
+            "headers": ["Cliente", "Viajes", "Ingreso", "Costo", "Utilidad", "Margen %"],
+            "rows": [
+                ["CLIENTE A", "1", "$1", "$1", "$1", "0.1%"],
+                ["CLIENTE B", "1", "$1", "$1", "$1", "0.1%"],
+                ["CLIENTE C", "1", "$1", "$1", "$1", "0.1%"],
+                ["CLIENTE D", "1", "$1", "$1", "$1", "0.1%"],
+                ["CLIENTE E", "1", "$1", "$1", "$1", "0.1%"]
+            ],
+            "summary": {
+                "total_clients": 1,
                 "total_trips": 1,
                 "total_revenue": "$1",
                 "total_cost": "$1",

@@ -428,5 +428,185 @@
     "type": "derived",
     "formula": "ingreso_viaje_anterior / viajes_anterior if viajes_anterior else 0",
     "format": "currency"
+  },
+  "kms_real": {
+    "name": "Kms Reales",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "kms_real",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+  "litros_real": {
+    "name": "Litros Reales",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "lts_real",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+  "kms_anterior": {
+    "name": "Kms Año Anterior",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "kms_real",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    }
+  },
+  "litros_anterior": {
+    "name": "Litros Año Anterior",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "lts_real",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    }
+  },
+  "kms_acumulado": {
+    "name": "Kms Acumulado YTD",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "kms_real",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    }
+  },
+  "litros_acumulado": {
+    "name": "Litros Acumulado YTD",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "lts_real",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    }
+  },
+  "meta_kms": {
+    "name": "Meta Kms",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_kms_recorridos",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+  "meta_rendimiento_real": {
+    "name": "Meta Rendimiento Real",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_rendimiento_combustible",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+  "meta_kms_acumulado": {
+    "name": "Meta Kms YTD",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_kms_recorridos",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    }
+  },
+  "meta_litros_acumulado": {
+    "name": "Meta Litros YTD",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_litros_combustible",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    }
+  },
+  "viajes_real": {
+    "name": "Cantidad Viajes",
+    "recipe": { "table": "d_viaje", "column": "no_viaje", "aggregation": "COUNT", "format": "integer" }
+  },
+  "litros_viaje": {
+    "name": "Litros Viaje",
+    "recipe": { "table": "d_viaje", "column": "lts_viaje", "aggregation": "SUM", "format": "integer" }
+  },
+  "meta_litros": {
+    "name": "Meta Litros Total",
+    "recipe": { "table": "d_meta_tiempo", "column": "meta_litros_combustible", "aggregation": "SUM", "format": "integer" }
+  },
+  "litros_real_anterior": {
+    "name": "Litros Real Año Anterior",
+    "recipe": { "table": "d_viaje", "column": "lts_real", "aggregation": "SUM", "time_modifier": "previous_year", "format": "integer" }
+  },
+  "litros_viaje_anterior": {
+    "name": "Litros Viaje Año Anterior",
+    "recipe": { "table": "d_viaje", "column": "lts_viaje", "aggregation": "SUM", "time_modifier": "previous_year", "format": "integer" }
+  },
+  "litros_real_acumulado": {
+    "name": "Litros Real Acumulado",
+    "recipe": { "table": "d_viaje", "column": "lts_real", "aggregation": "SUM", "time_modifier": "ytd", "format": "integer" }
+  },
+  "litros_viaje_acumulado": {
+    "name": "Litros Viaje Acumulado",
+    "recipe": { "table": "d_viaje", "column": "lts_viaje", "aggregation": "SUM", "time_modifier": "ytd", "format": "integer" }
+  },
+  "meta_ingreso": {
+    "name": "Meta Ingreso",
+    "recipe": { "table": "d_meta_tiempo", "column": "meta_ingreso_viaje", "aggregation": "SUM", "format": "currency" }
+  },
+  "meta_costo": {
+    "name": "Meta Costo",
+    "recipe": { "table": "d_meta_tiempo", "column": "meta_costos_viaje", "aggregation": "SUM", "format": "currency" }
+  },
+  "meta_ingreso_acumulado": {
+    "name": "Meta Ingreso YTD",
+    "recipe": { "table": "d_meta_tiempo", "column": "meta_ingreso_viaje", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+  },
+  "meta_costo_acumulado": {
+    "name": "Meta Costo YTD",
+    "recipe": { "table": "d_meta_tiempo", "column": "meta_costos_viaje", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+  },
+  "costo_anterior": {
+    "name": "Costo Año Anterior",
+    "recipe": {
+      "table": "h_viajes_gastos_liquidacion",
+      "column": "monto_concepto",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    }
+  },
+  "costo_acumulado": {
+    "name": "Costo Acumulado YTD",
+    "recipe": {
+      "table": "h_viajes_gastos_liquidacion",
+      "column": "monto_concepto",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    }
+  },
+  "meta_utilidad_acumulada": {
+    "name": "Meta Utilidad YTD",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_utilidad",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    }
+  },
+  "sueldo_operador_anterior": {
+    "name": "Sueldo Operador Año Anterior",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "sueldo_operador",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    }
   }
 }

@@ -1,4 +1,3 @@
-from components.skeleton import get_skeleton
 from flask import session
 import dash
 from dash import html
@@ -18,51 +17,52 @@ from strategies.administration import (
 dash.register_page(__name__, path="/admin-collection", title="Cobranza")
 
 SCREEN_ID = "administration-receivables"
+
 kpi_billing = SmartWidget(
     "ka_billing",
-    AdminKPIStrategy(SCREEN_ID, "billed_amount", "Facturado", "tabler:file-invoice", "indigo", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "billed_amount", "Facturado", "tabler:file-invoice", "indigo")
 )
 kpi_credit = SmartWidget(
     "ka_credit",
-    AdminKPIStrategy(SCREEN_ID, "credit_notes", "Notas Crédito", "tabler:file-minus", "red", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "credit_notes", "Notas Crédito", "tabler:file-minus", "red")
 )
 kpi_debit = SmartWidget(
     "ka_debit",
-    AdminKPIStrategy(SCREEN_ID, "debit_notes", "Notas Cargo", "tabler:file-plus", "gray", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "debit_notes", "Notas Cargo", "tabler:file-plus", "gray")
 )
 kpi_payments = SmartWidget(
     "ka_payments",
-    AdminKPIStrategy(SCREEN_ID, "collected_amount", "Cobrado", "tabler:cash", "green", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "collected_amount", "Cobrado", "tabler:cash", "green")
 )
 kpi_portfolio = SmartWidget(
     "ka_portfolio",
-    AdminKPIStrategy(SCREEN_ID, "accounts_receivable", "Cartera", "tabler:users", "yellow", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "accounts_receivable", "Cartera", "tabler:users", "yellow")
 )
 kpi_balance = SmartWidget(
     "ka_balance",
-    AdminKPIStrategy(SCREEN_ID, "net_balance", "Saldo Neto", "tabler:calculator", "indigo", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "net_balance", "Saldo Neto", "tabler:calculator", "indigo")
 )
 
 w_gauge_eff = SmartWidget(
     "gc_billing",
-    AdminGaugeStrategy(SCREEN_ID, "collection_efficiency", "Eficiencia Cobro", "indigo", icon="tabler:target", layout_config={"height": 180})
+    AdminGaugeStrategy(SCREEN_ID, "collection_efficiency", "Eficiencia Cobro", "indigo", icon="tabler:target")
 )
 w_gauge_days = SmartWidget(
     "gc_days",
-    AdminGaugeStrategy(SCREEN_ID, "average_collection_days", "Días Cartera", "yellow", icon="tabler:calendar", layout_config={"height": 180})
+    AdminGaugeStrategy(SCREEN_ID, "average_collection_days", "Días Cartera", "yellow", icon="tabler:calendar")
 )
 
 chart_mix = ChartWidget(
     "cc_mix",
-    AdminDonutChartStrategy(SCREEN_ID, "receivables_by_status", "Distribución de Cartera", layout_config={"height": 360})
+    AdminDonutChartStrategy(SCREEN_ID, "receivables_by_status", "Distribución de Cartera")
 )
 chart_stack = ChartWidget(
     "cc_stack",
-    AdminStackedBarStrategy(SCREEN_ID, "debtors_by_range", "Deudores por Rango", layout_config={"height": 440})
+    AdminStackedBarStrategy(SCREEN_ID, "debtors_by_range", "Deudores por Rango")
 )
 chart_comp = ChartWidget(
     "cc_comp",
-    AdminTrendChartStrategy(SCREEN_ID, "collection_trends", "Facturado vs Cobrado (Comparativo)", layout_config={"height": 360})
+    AdminTrendChartStrategy(SCREEN_ID, "collection_trends", "Facturado vs Cobrado (Comparativo)")
 )
 
 WIDGET_REGISTRY = {
@@ -73,10 +73,12 @@ WIDGET_REGISTRY = {
 
 def _render_collection_body(ctx):
     return html.Div([
+        dmc.Title("Administración - Cobranza", order=3, mb="lg", c="dimmed"),
+
         dmc.SimpleGrid(
-            cols={"base": 2, "sm": 3, "lg": 6}, # type: ignore
+            cols={"base": 2, "sm": 3, "lg": 6},
             spacing="sm",
-            mb="lg",
+            mb="xl",
             children=[
                 kpi_billing.render(ctx),
                 kpi_credit.render(ctx),
@@ -89,11 +91,10 @@ def _render_collection_body(ctx):
         
         dmc.Grid(
             gutter="md",
-            mb="lg",
-            align="stretch",
+            mb="xl",
             children=[
                 dmc.GridCol(
-                    span={"base": 12, "md": 6}, # type: ignore
+                    span={"base": 12, "md": 6},
                     children=[
                         dmc.SimpleGrid(cols=2, spacing="md", children=[
                             w_gauge_eff.render(ctx, mode="combined"),
@@ -102,29 +103,27 @@ def _render_collection_body(ctx):
                     ]
                 ),
                 dmc.GridCol(
-                    span={"base": 12, "md": 6}, # type: ignore
+                    span={"base": 12, "md": 6},
                     children=[chart_mix.render(ctx, h=360)]
                 )
             ]
         ),
         
         dmc.Grid(
-            gutter="md",
-            mb="lg",
-            align="stretch",
+            gutter="lg",
+            mb="xl",
             children=[
                 dmc.GridCol(
-                    span={"base": 12, "lg": 7}, # type: ignore
+                    span={"base": 12, "lg": 7},
                     children=[
                         dmc.Paper(
                             p="md",
                             withBorder=True,
                             shadow="sm",
-                            h=440,
                             children=[
-                                dmc.Text("ANTIGÜEDAD DE SALDOS POR CLIENTE", fw="bold", size="xs", c="dimmed", mb="md"), # type: ignore
+                                dmc.Text("ANTIGÜEDAD DE SALDOS POR CLIENTE", fw="bold", size="xs", c="dimmed", mb="md"),
                                 dmc.ScrollArea(
-                                    h=380,
+                                    h=440,
                                     children=[AdminTableStrategy(SCREEN_ID, "aging_by_client").render(ctx)]
                                 )
                             ]
@@ -132,19 +131,23 @@ def _render_collection_body(ctx):
                     ]
                 ),
                 dmc.GridCol(
-                    span={"base": 12, "lg": 5}, # type: ignore
-                    children=[chart_stack.render(ctx, h=440)]
+                    span={"base": 12, "lg": 5},
+                    children=[chart_stack.render(ctx, h=480)]
                 )
             ]
         ),
         
-        chart_comp.render(ctx, h=360),
+        dmc.Paper(
+            p="md", withBorder=True, mb="xl", shadow="sm",
+            children=[chart_comp.render(ctx, h=400)]
+        ),
         
-        dmc.Space(h=30)
+        dmc.Space(h=60)
     ])
 
 def layout():
     if not session.get("user"): return dmc.Text("No autorizado...")
+    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     refresh, _ = data_manager.dash_refresh_components(SCREEN_ID, interval_ms=800, max_intervals=1)
     
     filters = create_filter_section(
@@ -162,7 +165,7 @@ def layout():
             create_smart_modal("col-modal"),
             *refresh,
             filters,
-            html.Div(id="admin-collection-body", children=get_skeleton(SCREEN_ID))
+            html.Div(id="admin-collection-body", children=_render_collection_body(ctx))
         ]
     )
 

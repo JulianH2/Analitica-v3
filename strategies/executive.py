@@ -22,6 +22,15 @@ class ExecutiveKPIStrategy(KPIStrategy):
         else:
             node = raw_node
 
+        if not node:
+            return {
+                "title": self.title,
+                "main_value": "---",
+                "icon": self.icon,
+                "color": self.color,
+                "raw_data": []
+            }
+
         config = node.copy()
 
         val = config.get("value")
@@ -30,13 +39,13 @@ class ExecutiveKPIStrategy(KPIStrategy):
 
         if "value_formatted" not in config:
             fmt = self.layout.get("value_format", "abbreviated")
-            config["value_formatted"] = f"{val:,.2f}%" if self.is_pct else format_value(val, "$", format_type=fmt) # type: ignore
+            config["value_formatted"] = f"{val:,.2f}%" if self.is_pct else format_value(val, "$", format_type=fmt)
 
         meta = config.get("target") or config.get("target_value") or config.get("meta", 0)
         trend = config.get("trend_percent")
-        if trend is None and meta and meta > 0: # type: ignore
-             trend = ((val - meta) / meta) * 100 # type: ignore
-             config["trend"] = trend # type: ignore
+        if trend is None and meta and meta > 0:
+             trend = ((val - meta) / meta) * 100
+             config["trend"] = trend
 
         config.update({
             "title": self.title,
@@ -46,12 +55,12 @@ class ExecutiveKPIStrategy(KPIStrategy):
             "value": config.get("value_formatted", "---"),
             "main_value": config.get("value_formatted", "---"),
             "status_color": config.get("status_color") or self.color
-        }) # type: ignore
+        })
 
         return config
 
     def render_detail(self, data_context):
-        return dmc.Text("Detalle no disponible", c="dimmed") # type: ignore
+        return dmc.Text("Detalle no disponible", c="dimmed")
 
 class ExecutiveMiniKPIStrategy(KPIStrategy):
     def __init__(self, screen_id, kpi_key, title, color, icon, layout_config=None):
@@ -69,11 +78,19 @@ class ExecutiveMiniKPIStrategy(KPIStrategy):
         else:
             node = raw_node
 
+        if not node:
+            return {
+                "title": self.title,
+                "value": "---",
+                "icon": self.icon,
+                "color": self.color
+            }
+
         val = node.get("value") or node.get("current_value") or node.get("valor", 0)
         formatted = node.get("value_formatted")
 
         if not formatted:
-             formatted = format_value(val, "$", format_type="abbreviated") # type: ignore
+             formatted = format_value(val, "$", format_type="abbreviated")
 
         return {
             "title": self.title,
@@ -111,28 +128,52 @@ class ExecutiveDonutStrategy(KPIStrategy):
         
         if not colors:
             colors = [DesignSystem.COLOR_MAP.get(self.color_map.get(l, "gray"), DesignSystem.SLATE[5]) for l in labels]
-            
+        
+        fig_height = self.layout.get("height", 260)
+        
         fig = go.Figure(data=[go.Pie(
             labels=labels, 
             values=values, 
-            hole=.7, 
-            marker=dict(colors=colors), 
-            textinfo='percent', 
-            textposition='inside'
+            hole=.65,
+            marker=dict(colors=colors, line=dict(color='white', width=2)), 
+            textinfo='percent',
+            textposition='auto',
+            textfont=dict(size=11, color='white'),
+            hovertemplate='<b>%{label}</b><br>%{percent}<br>%{value}<extra></extra>'
         )])
 
         if total:
+            font_size = 16 if fig_height > 240 else 14 if fig_height > 200 else 12
             fig.add_annotation(
-                text=total, x=0.5, y=0.5, showarrow=False,
-                font=dict(size=14, weight="bold", color=DesignSystem.SLATE[7])
+                text=total,
+                x=0.5,
+                y=0.5,
+                showarrow=False,
+                font=dict(size=font_size, color=DesignSystem.SLATE[7]),
+                xref="paper",
+                yref="paper"
             )
 
+        legend_y_pos = 0.5
+        legend_x_pos = 1.05
+        
         fig.update_layout(
             paper_bgcolor=DesignSystem.TRANSPARENT, 
             plot_bgcolor=DesignSystem.TRANSPARENT, 
-            height=210, 
-            margin=dict(t=20, b=20, l=20, r=20), 
-            showlegend=True, 
-            legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.0)
+            height=fig_height - 40,
+            margin=dict(t=10, b=10, l=10, r=80),
+            showlegend=True,
+            legend=dict(
+                orientation="v",
+                yanchor="middle",
+                y=legend_y_pos,
+                xanchor="left",
+                x=legend_x_pos,
+                font=dict(size=10),
+                bgcolor="rgba(255,255,255,0.8)",
+                bordercolor=DesignSystem.SLATE[2],
+                borderwidth=1
+            ),
+            autosize=True
         )
         return fig

@@ -31,29 +31,35 @@ class KPIStrategy(ABC):
         return None
 
     def _resolve_kpi_data(self, data_context: Dict[str, Any], screen_id: str, kpi_key: str) -> Optional[Dict]:
-        from services.data_manager import data_manager
-        
-        screen_config = data_manager.SCREEN_MAP.get(screen_id, {}) # type: ignore
-        inject_paths = screen_config.get("inject_paths", {})
-        
-        path = inject_paths.get(kpi_key)
-        if not path:
+        try:
+            from services.data_manager import data_manager
+            
+            screen_config = data_manager.SCREEN_MAP.get(screen_id, {})
+            inject_paths = screen_config.get("inject_paths", {})
+            
+            path = inject_paths.get(kpi_key)
+            if not path:
+                return None
+            return safe_get(data_context, path)
+        except Exception as e:
+            print(f"⚠️ Error en _resolve_kpi_data para {kpi_key}: {e}")
             return None
-        # Resolver al objeto KPI completo (padre del leaf) para que la estrategia tenga value, target, value_formatted, etc.
-        parent_path = path[:-1] if len(path) > 1 else path
-        return safe_get(data_context, parent_path)
     
     def _resolve_chart_data(self, data_context: Dict[str, Any], screen_id: str, chart_key: str) -> Optional[Dict]:
-        from services.data_manager import data_manager
-        
-        screen_config = data_manager.SCREEN_MAP.get(screen_id, {}) # type: ignore
-        inject_paths = screen_config.get("inject_paths", {})
-        
-        path = inject_paths.get(chart_key)
-        if not path:
-            return None
+        try:
+            from services.data_manager import data_manager
             
-        return safe_get(data_context, path)
+            screen_config = data_manager.SCREEN_MAP.get(screen_id, {})
+            inject_paths = screen_config.get("inject_paths", {})
+            
+            path = inject_paths.get(chart_key)
+            if not path:
+                return None
+                
+            return safe_get(data_context, path)
+        except Exception as e:
+            print(f"⚠️ Error en _resolve_chart_data para {chart_key}: {e}")
+            return None
     
     def _create_empty_figure(self, message: str = "Sin datos"):
         import plotly.graph_objects as go

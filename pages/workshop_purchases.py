@@ -1,4 +1,3 @@
-from components.skeleton import get_skeleton
 from flask import session
 import dash
 from dash import html
@@ -23,36 +22,36 @@ SCREEN_ID = "workshop-purchases"
 
 w_total = SmartWidget(
     "wp_total",
-    WorkshopKPIStrategy(SCREEN_ID, "total_purchases", "Total Compras", "tabler:shopping-cart", "indigo", layout_config={"height": 160})
+    WorkshopKPIStrategy(SCREEN_ID, "total_purchases", "Total Compras", "tabler:shopping-cart", "indigo")
 )
 w_diesel = SmartWidget(
     "wp_diesel",
-    WorkshopKPIStrategy(SCREEN_ID, "fuel_purchases", "Compras Combustible", "tabler:gas-station", "green", layout_config={"height": 160})
+    WorkshopKPIStrategy(SCREEN_ID, "fuel_purchases", "Compras Combustible", "tabler:gas-station", "green")
 )
 w_parts = SmartWidget(
     "wp_parts",
-    WorkshopKPIStrategy(SCREEN_ID, "parts_purchases", "Refacciones/Insumos", "tabler:box", "orange", layout_config={"height": 160})
+    WorkshopKPIStrategy(SCREEN_ID, "parts_purchases", "Refacciones/Insumos", "tabler:box", "orange")
 )
 w_tires = SmartWidget(
     "wp_tires",
-    WorkshopKPIStrategy(SCREEN_ID, "tire_purchases", "Llantas", "tabler:tire", "red", layout_config={"height": 160})
+    WorkshopKPIStrategy(SCREEN_ID, "tire_purchases", "Llantas", "tabler:tire", "red")
 )
 
 chart_trend = ChartWidget(
     "cp_trend",
-    WorkshopTrendChartStrategy(SCREEN_ID, "purchases_trend", "Tendencia de Compras", layout_config={"height": 380})
+    WorkshopTrendChartStrategy(SCREEN_ID, "purchases_trend", "Tendencia de Compras")
 )
 chart_area = ChartWidget(
     "cp_area",
-    WorkshopHorizontalBarStrategy(SCREEN_ID, "purchases_by_area", "Compras por Área", layout_config={"height": 380})
+    WorkshopHorizontalBarStrategy(SCREEN_ID, "purchases_by_area", "Compras por Área")
 )
 chart_type = ChartWidget(
     "cp_type",
-    WorkshopDonutChartStrategy(SCREEN_ID, "purchases_by_type", "Distribución por Tipo", layout_config={"height": 380})
+    WorkshopDonutChartStrategy(SCREEN_ID, "purchases_by_type", "Distribución por Tipo")
 )
 chart_top_prov = ChartWidget(
     "cp_prov",
-    WorkshopHorizontalBarStrategy(SCREEN_ID, "top_suppliers_chart", "Top Proveedores", layout_config={"height": 380})
+    WorkshopHorizontalBarStrategy(SCREEN_ID, "top_suppliers_chart", "Top Proveedores")
 )
 
 WIDGET_REGISTRY = {
@@ -65,9 +64,9 @@ WIDGET_REGISTRY = {
 def _render_taller_purchases_body(ctx):
     return html.Div([
         dmc.SimpleGrid(
-            cols={"base": 2, "lg": 4},
+            cols={"base": 1, "sm": 2, "lg": 4},
             spacing="md",
-            mb="lg",
+            mb="xl",
             children=[
                 w_total.render(ctx, mode="combined"),
                 w_diesel.render(ctx, mode="combined"),
@@ -77,20 +76,18 @@ def _render_taller_purchases_body(ctx):
         ),
         dmc.Grid(
             gutter="md",
-            mb="lg",
-            align="stretch",
+            mb="xl",
             children=[
-                dmc.GridCol(span={"base": 12, "lg": 8}, children=[chart_trend.render(ctx, h=380)]),
-                dmc.GridCol(span={"base": 12, "lg": 4}, children=[chart_type.render(ctx, h=380)])
+                dmc.GridCol(span={"base": 12, "lg": 8}, children=[chart_trend.render(ctx, h=400)]),
+                dmc.GridCol(span={"base": 12, "lg": 4}, children=[chart_type.render(ctx, h=400)])
             ]
         ),
         dmc.Grid(
             gutter="md",
-            mb="lg",
-            align="stretch",
+            mb="xl",
             children=[
-                dmc.GridCol(span={"base": 12, "lg": 6}, children=[chart_area.render(ctx, h=380)]),
-                dmc.GridCol(span={"base": 12, "lg": 6}, children=[chart_top_prov.render(ctx, h=380)])
+                dmc.GridCol(span={"base": 12, "lg": 6}, children=[chart_area.render(ctx, h=400)]),
+                dmc.GridCol(span={"base": 12, "lg": 6}, children=[chart_top_prov.render(ctx, h=400)])
             ]
         ),
         dmc.Paper(
@@ -108,7 +105,7 @@ def _render_taller_purchases_body(ctx):
                         ]),
                         dmc.TabsPanel(
                             dmc.ScrollArea(
-                                h=350,
+                                h=400,
                                 pt="md",
                                 children=[WorkshopTableStrategy(SCREEN_ID, "purchase_orders_detail").render(ctx)]
                             ),
@@ -116,7 +113,7 @@ def _render_taller_purchases_body(ctx):
                         ),
                         dmc.TabsPanel(
                             dmc.ScrollArea(
-                                h=350,
+                                h=400,
                                 pt="md",
                                 children=[WorkshopTableStrategy(SCREEN_ID, "inventory_detail").render(ctx)]
                             ),
@@ -124,7 +121,7 @@ def _render_taller_purchases_body(ctx):
                         ),
                         dmc.TabsPanel(
                             dmc.ScrollArea(
-                                h=350,
+                                h=400,
                                 pt="md",
                                 children=[WorkshopTableStrategy(SCREEN_ID, "top_suppliers").render(ctx)]
                             ),
@@ -134,12 +131,13 @@ def _render_taller_purchases_body(ctx):
                 )
             ]
         ),
-        dmc.Space(h=30)
+        dmc.Space(h=50)
     ])
 
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
+    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     refresh, _ = data_manager.dash_refresh_components(
         SCREEN_ID,
         interval_ms=800,
@@ -151,7 +149,7 @@ def layout():
             create_smart_modal("pur-modal"),
             *refresh,
             create_workshop_filters(prefix="pur"),
-            html.Div(id="taller-purchases-body", children=get_skeleton(SCREEN_ID))
+            html.Div(id="taller-purchases-body", children=_render_taller_purchases_body(ctx))
         ]
     )
 

@@ -15,6 +15,8 @@ class ChartWidget:
         config_data = self.strategy.get_card_config(data_context)
         layout = getattr(self.strategy, 'layout', {})
         fig_height = h if h else layout.get("height", 280)
+        
+        height_style = f"{fig_height}px" if isinstance(fig_height, int) else fig_height
 
         valid_fig = False
         if fig and hasattr(fig, 'data') and len(fig.data) > 0:
@@ -42,13 +44,20 @@ class ChartWidget:
                 
                 if has_valid_points:
                     valid_fig = True
-                    # Mejorar layout para responsividad
+                    
+                    plotly_height = None if height_style == "100%" else (fig_height if isinstance(fig_height, int) else None)
+                    
+                    # FIX CRÍTICO 1: Separación entre barras (25% - muy clara)
+                    # FIX CRÍTICO 2: Overflow controlado con cliponaxis
                     fig.update_layout(
                         paper_bgcolor="rgba(0,0,0,0)",
                         plot_bgcolor="rgba(0,0,0,0)",
                         autosize=True,
+                        height=plotly_height,
                         margin=dict(t=25, b=30, l=40, r=15),
                         font=dict(size=10),
+                        bargap=0.25,  # 25% de separación - MUY VISIBLE
+                        bargroupgap=0.18,  # 18% entre grupos
                         legend=dict(
                             orientation="h",
                             yanchor="bottom",
@@ -66,6 +75,11 @@ class ChartWidget:
                             title_font=dict(size=10)
                         )
                     )
+                    
+                    # FIX CRÍTICO 3: Evitar que las barras se salgan del contenedor
+                    fig.update_xaxes(fixedrange=True)
+                    fig.update_yaxes(fixedrange=True)
+                    
             except Exception:
                 valid_fig = False
 
@@ -94,58 +108,77 @@ class ChartWidget:
                 style={"height": "100%", "opacity": 0.7}
             )
 
+        # SIN CAMBIOS en estructura - solo contenido interior optimizado
         return dmc.Paper(
             p="xs",
-            radius=layout.get("radius", "md"), 
-            withBorder=True, 
+            radius=layout.get("radius", "md"),
+            withBorder=True,
             shadow="xs",
             style={
-                "height": fig_height, 
-                "display": "flex", 
-                "flexDirection": "column", 
-                "backgroundColor": "transparent", 
-                "overflow": "hidden"
+                "height": height_style,
+                "display": "flex",
+                "flexDirection": "column",
+                "backgroundColor": "transparent",
+                "overflow": "hidden"  # FIX: Evitar desbordamiento
             },
             children=[
                 dmc.Group(
-                    justify="space-between", 
+                    justify="space-between",
                     mb=4,
                     wrap="nowrap",
                     gap="xs",
                     children=[
                         dmc.Group(
-                            gap=4, 
+                            gap=4,
                             wrap="nowrap",
                             style={"flex": 1, "overflow": "hidden"},
                             children=[
                                 DashIconify(
-                                    icon=config_data.get("icon", getattr(self.strategy, 'icon', "tabler:chart-bar")), 
-                                    color=icon_color, 
+                                    icon=config_data.get("icon", getattr(self.strategy, "icon", "tabler:chart-bar")),
+                                    color=icon_color,
                                     width=14,
                                     style={"flexShrink": 0}
                                 ),
                                 dmc.Text(
-                                    config_data.get("title", getattr(self.strategy, 'title', "Grafica")), 
-                                    fw=600, 
-                                    size="xs", 
-                                    c="dimmed", 
+                                    config_data.get("title", getattr(self.strategy, "title", "Gráfica")),
+                                    fw=600,
+                                    size="xs",
+                                    c="dimmed",
                                     tt="uppercase",
-                                    style={"whiteSpace": "nowrap", "overflow": "hidden", "textOverflow": "ellipsis"}
+                                    style={
+                                        "whiteSpace": "nowrap",
+                                        "overflow": "hidden",
+                                        "textOverflow": "ellipsis"
+                                    }
                                 ),
                             ]
                         ),
-                        dmc.ActionIcon(
-                            DashIconify(icon="tabler:maximize", width=14), 
-                            variant="subtle", 
-                            color="gray", 
-                            size="xs",
-                            id={"type": "open-smart-detail", "index": self.widget_id},
-                            style={"flexShrink": 0}
-                        ) if getattr(self.strategy, 'has_detail', False) else html.Div()
+
+                        dmc.Group(
+                            gap=2,
+                            wrap="nowrap",
+                            style={"flexShrink": 0},
+                            children=[
+                                dmc.ActionIcon(
+                                    DashIconify(icon="tabler:layers-linked", width=14),
+                                    variant="subtle",
+                                    color="gray",
+                                    size="xs",
+                                    id={"type": "open-smart-drawer", "index": self.widget_id},
+                                    style={"flexShrink": 0}
+                                ) if getattr(self.strategy, "has_detail", False) else html.Div()
+                            ]
+                        ) if getattr(self.strategy, "has_detail", False) else html.Div()
                     ]
                 ),
+
                 html.Div(
-                    style={"flex": 1, "minHeight": 0, "width": "100%", "overflow": "hidden"},
+                    style={
+                        "flex": 1,
+                        "minHeight": 0,
+                        "width": "100%",
+                        "overflow": "hidden"  # FIX: Contener gráfica dentro del widget
+                    },
                     children=graph_content
                 )
             ]

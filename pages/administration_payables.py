@@ -1,4 +1,3 @@
-from components.skeleton import get_skeleton
 from flask import session
 import dash
 from dash import html, dcc, callback, Input, Output
@@ -18,51 +17,52 @@ from strategies.administration import (
 dash.register_page(__name__, path="/admin-payables", title="Cuentas por Pagar")
 
 SCREEN_ID = "administration-payables"
+
 kpi_pay_initial = SmartWidget(
     "kp_initial",
-    AdminKPIStrategy(SCREEN_ID, "initial_balance", "Saldo Inicial", "tabler:database-import", "indigo", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "initial_balance", "Saldo Inicial", "tabler:database-import", "indigo")
 )
 kpi_pay_cxp = SmartWidget(
     "kp_cxp",
-    AdminKPIStrategy(SCREEN_ID, "accounts_payable", "CxP Mes", "tabler:file-invoice", "indigo", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "accounts_payable", "CxP Mes", "tabler:file-invoice", "indigo")
 )
 kpi_pay_credit = SmartWidget(
     "kp_credit",
-    AdminKPIStrategy(SCREEN_ID, "credit_notes", "Notas Crédito", "tabler:file-minus", "red", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "credit_notes", "Notas Crédito", "tabler:file-minus", "red")
 )
 kpi_pay_advances = SmartWidget(
     "kp_advances",
-    AdminKPIStrategy(SCREEN_ID, "advances", "Anticipos", "tabler:receipt-2", "green", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "advances", "Anticipos", "tabler:receipt-2", "green")
 )
 kpi_pay_payments = SmartWidget(
     "kp_payments",
-    AdminKPIStrategy(SCREEN_ID, "supplier_payments", "Pagos", "tabler:truck-delivery", "green", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "supplier_payments", "Pagos", "tabler:truck-delivery", "green")
 )
 kpi_pay_balance = SmartWidget(
     "kp_balance",
-    AdminKPIStrategy(SCREEN_ID, "final_balance", "Saldo Final", "tabler:wallet", "yellow", layout_config={"height": 115})
+    AdminKPIStrategy(SCREEN_ID, "final_balance", "Saldo Final", "tabler:wallet", "yellow")
 )
 
 gauge_pay_eff = SmartWidget(
     "gp_eff",
-    AdminGaugeStrategy(SCREEN_ID, "payment_efficiency", "CXP vs Pagado", "red", icon="tabler:target", layout_config={"height": 180})
+    AdminGaugeStrategy(SCREEN_ID, "payment_efficiency", "CXP vs Pagado", "red", icon="tabler:target")
 )
 gauge_pay_days = SmartWidget(
     "gp_days",
-    AdminGaugeStrategy(SCREEN_ID, "average_payment_days", "Días Pago", "yellow", icon="tabler:calendar", layout_config={"height": 180})
+    AdminGaugeStrategy(SCREEN_ID, "average_payment_days", "Días Pago", "yellow", icon="tabler:calendar")
 )
 
 chart_pay_mix = ChartWidget(
     "cp_mix",
-    AdminDonutChartStrategy(SCREEN_ID, "payables_by_status", "Distribución CxP", layout_config={"height": 360})
+    AdminDonutChartStrategy(SCREEN_ID, "payables_by_status", "Distribución CxP")
 )
 chart_pay_stack = ChartWidget(
     "cp_stack",
-    AdminStackedBarStrategy(SCREEN_ID, "suppliers_by_range", "Proveedores por Rango", layout_config={"height": 440})
+    AdminStackedBarStrategy(SCREEN_ID, "suppliers_by_range", "Proveedores por Rango")
 )
 chart_pay_comp = ChartWidget(
     "cp_comp",
-    AdminTrendChartStrategy(SCREEN_ID, "payables_trends", "Tendencia CxP", color="red", layout_config={"height": 360})
+    AdminTrendChartStrategy(SCREEN_ID, "payables_trends", "Tendencia CxP", color="red")
 )
 
 WIDGET_REGISTRY = {
@@ -78,10 +78,11 @@ WIDGET_REGISTRY = {
 
 def _render_payables_body(ctx):
     return html.Div([
+        dmc.Title("Administración - Cuentas por Pagar", order=3, mb="lg", c="dimmed"),
         dmc.SimpleGrid(
-            cols={"base": 2, "sm": 3, "lg": 6}, # type: ignore
+            cols={"base": 2, "sm": 3, "lg": 6},
             spacing="sm",
-            mb="lg",
+            mb="xl",
             children=[
                 kpi_pay_initial.render(ctx),
                 kpi_pay_cxp.render(ctx),
@@ -93,11 +94,10 @@ def _render_payables_body(ctx):
         ),
         dmc.Grid(
             gutter="md",
-            mb="lg",
-            align="stretch",
+            mb="xl",
             children=[
                 dmc.GridCol(
-                    span={"base": 12, "md": 6}, # type: ignore
+                    span={"base": 12, "md": 6},
                     children=[
                         dmc.SimpleGrid(
                             cols=2,
@@ -110,34 +110,32 @@ def _render_payables_body(ctx):
                     ]
                 ),
                 dmc.GridCol(
-                    span={"base": 12, "md": 6}, # type: ignore
+                    span={"base": 12, "md": 6},
                     children=[chart_pay_mix.render(ctx, h=360)]
                 )
             ]
         ),
         dmc.Grid(
-            gutter="md",
-            mb="lg",
-            align="stretch",
+            gutter="lg",
+            mb="xl",
             children=[
                 dmc.GridCol(
-                    span={"base": 12, "lg": 6}, # type: ignore
+                    span={"base": 12, "lg": 6},
                     children=[
                         dmc.Paper(
                             p="md",
                             withBorder=True,
                             shadow="sm",
-                            h=440,
                             children=[
                                 dmc.Text(
                                     "ANTIGÜEDAD DE SALDOS POR PROVEEDOR",
                                     fw="bold",
                                     size="xs",
-                                    c="dimmed", # type: ignore
+                                    c="dimmed",
                                     mb="md"
                                 ),
                                 dmc.ScrollArea(
-                                    h=380,
+                                    h=460,
                                     children=[
                                         AdminTableStrategy(
                                             SCREEN_ID,
@@ -150,8 +148,8 @@ def _render_payables_body(ctx):
                     ]
                 ),
                 dmc.GridCol(
-                    span={"base": 12, "lg": 6}, # type: ignore
-                    children=[chart_pay_stack.render(ctx, h=440)]
+                    span={"base": 12, "lg": 6},
+                    children=[chart_pay_stack.render(ctx, h=500)]
                 )
             ]
         ),
@@ -168,7 +166,7 @@ def _render_payables_body(ctx):
                             "CUENTAS POR PAGAR (COMPARATIVO)",
                             fw="bold",
                             size="xs",
-                            c="dimmed" # type: ignore
+                            c="dimmed"
                         ),
                         dmc.SegmentedControl(
                             id="pay-comp-selector",
@@ -176,7 +174,7 @@ def _render_payables_body(ctx):
                                 {"label": "Vista Mensual", "value": "monthly"},
                                 {"label": "Vista Acumulada", "value": "cumulative"},
                                 {"label": "Vista Comparativa", "value": "comparison"}
-                            ], # type: ignore
+                            ],
                             value="monthly",
                             size="xs",
                             color="red"
@@ -185,16 +183,17 @@ def _render_payables_body(ctx):
                 ),
                 html.Div(
                     id="pay-comp-dynamic-container",
-                    children=[chart_pay_comp.render(ctx, h=360)]
+                    children=[chart_pay_comp.render(ctx, h=400)]
                 )
             ]
         ),
-        dmc.Space(h=30)
+        dmc.Space(h=60)
     ])
 
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
+    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     refresh, _ = data_manager.dash_refresh_components(
         SCREEN_ID,
         interval_ms=800,
@@ -215,7 +214,10 @@ def layout():
             create_smart_modal("pay-modal"),
             *refresh,
             filters,
-            html.Div(id="admin-payables-body", children=get_skeleton(SCREEN_ID))
+            html.Div(
+                id="admin-payables-body",
+                children=_render_payables_body(ctx)
+            )
         ]
     )
 
@@ -241,5 +243,5 @@ def update_pay_comparison_chart(selected_view):
     return dcc.Graph(
         figure=fig,
         config={"displayModeBar": False},
-        style={"height": "360px"}
+        style={"height": "400px"}
     )

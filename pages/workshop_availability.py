@@ -1,4 +1,3 @@
-from components.skeleton import get_skeleton
 from flask import session
 import dash
 from dash import html
@@ -29,8 +28,7 @@ w_disp = SmartWidget(
         title="% Disponibilidad",
         icon="tabler:gauge",
         color="green",
-        use_needle=True,
-        layout_config={"height": 180}
+        use_needle=True
     )
 )
 
@@ -41,8 +39,7 @@ w_entries = SmartWidget(
         kpi_key="workshop_entries",
         title="Entradas a Taller",
         icon="tabler:truck-entry",
-        color="indigo",
-        layout_config={"height": 180}
+        color="indigo"
     )
 )
 
@@ -52,8 +49,7 @@ chart_trend = ChartWidget(
         screen_id=SCREEN_ID,
         chart_key="availability_trends",
         title="Disponibilidad Mensual 2025 vs 2024",
-        icon="tabler:calendar-stats",
-        layout_config={"height": 380}
+        icon="tabler:calendar-stats"
     )
 )
 
@@ -63,8 +59,7 @@ chart_combo = ChartWidget(
         screen_id=SCREEN_ID,
         chart_key="entries_and_km_by_unit",
         title="Entradas vs Kilómetros Recorridos",
-        icon="tabler:chart-arrows-vertical",
-        layout_config={"height": 380}
+        icon="tabler:chart-arrows-vertical"
     )
 )
 
@@ -78,7 +73,7 @@ def _render_taller_availability_body(ctx):
         dmc.SimpleGrid(
             cols={"base": 1, "md": 2},
             spacing="md",
-            mb="lg",
+            mb="xl",
             children=[
                 w_disp.render(ctx, mode="combined"),
                 w_entries.render(ctx, mode="combined")
@@ -87,10 +82,10 @@ def _render_taller_availability_body(ctx):
         dmc.SimpleGrid(
             cols={"base": 1, "md": 2},
             spacing="md",
-            mb="lg",
+            mb="xl",
             children=[
-                chart_trend.render(ctx, h=380),
-                chart_combo.render(ctx, h=380)
+                chart_trend.render(ctx, h=420),
+                chart_combo.render(ctx, h=420)
             ]
         ),
         dmc.Paper(
@@ -106,19 +101,20 @@ def _render_taller_availability_body(ctx):
                     c="dimmed"
                 ),
                 dmc.ScrollArea(
-                    h=400,
+                    h=450,
                     children=[
                         WorkshopTableStrategy(SCREEN_ID, "availability_detail").render(ctx)
                     ]
                 )
             ]
         ),
-        dmc.Space(h=30)
+        dmc.Space(h=50)
     ])
 
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
+    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
     refresh_components, _ = data_manager.dash_refresh_components(
         SCREEN_ID,
         interval_ms=800,
@@ -130,7 +126,7 @@ def layout():
             create_smart_modal("avail-modal"),
             *refresh_components,
             create_workshop_filters(prefix="avail"),
-            html.Div(id="taller-avail-body", children=get_skeleton(SCREEN_ID))
+            html.Div(id="taller-avail-body", children=_render_taller_availability_body(ctx))
         ]
     )
 

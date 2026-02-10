@@ -1,5 +1,5 @@
 from utils.helpers import format_value
-from settings.theme import SemanticColors
+from design_system import SemanticColors
 import datetime
 from services.time_service import TimeService
 
@@ -66,13 +66,13 @@ class KPICalculator:
                 
                 if diff >= 0: 
                     status = "positive"
-                    status_color = SemanticColors.SUCCESS  # type: ignore
+                    status_color = SemanticColors.SUCCESS
                 elif diff >= -0.10: 
                     status = "warning"
-                    status_color = SemanticColors.WARNING  # type: ignore
+                    status_color = SemanticColors.WARNING
                 else:
                     status = "negative"
-                    status_color = SemanticColors.DANGER  # type: ignore
+                    status_color = SemanticColors.DANGER
             except: pass
 
         ytd_fmt = "---"

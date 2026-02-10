@@ -40,49 +40,204 @@
     },
     "table_roadmap": {
       "top_clients": {
-        "dimensions": ["d_trafico_cliente.nombre_cliente"],
-        "metrics": ["trip_revenue", "trips"],
+        "dimensions": [
+          "d_trafico_cliente.nombre_cliente"
+        ],
+        "metrics": [
+          "trip_revenue",
+          "trips"
+        ],
         "columns": [
-          {"key": "d_trafico_cliente.nombre_cliente", "label": "Cliente", "format": "text"},
-          {"key": "trip_revenue", "label": "Ingresos", "format": "currency"},
-          {"key": "trips", "label": "Viajes", "format": "integer"},
-          {"key": "pct_total", "label": "% Total", "format": "percent", "is_total_ratio": true, "numerator_key": "trip_revenue"}
+          {
+            "key": "d_trafico_cliente.nombre_cliente",
+            "label": "Cliente",
+            "format": "text"
+          },
+          {
+            "key": "trip_revenue",
+            "label": "Ingresos",
+            "format": "currency"
+          },
+          {
+            "key": "trips",
+            "label": "Viajes",
+            "format": "integer"
+          },
+          {
+            "key": "pct_total",
+            "label": "% Total",
+            "format": "percent",
+            "is_total_ratio": true,
+            "numerator_key": "trip_revenue"
+          }
         ]
       },
       "top_routes": {
-        "dimensions": ["d_ruta.ruta"],
-        "metrics": ["trips", "kilometers", "trip_revenue"],
+        "dimensions": [
+          "d_ruta.ruta"
+        ],
+        "metrics": [
+          "trips",
+          "kilometers",
+          "trip_revenue"
+        ],
         "columns": [
-          {"key": "d_ruta.ruta", "label": "Ruta", "format": "text"},
-          {"key": "trips", "label": "Viajes", "format": "integer"},
-          {"key": "kilometers", "label": "Kms", "format": "integer"},
-          {"key": "trip_revenue", "label": "Ingresos", "format": "currency"}
+          {
+            "key": "d_ruta.ruta",
+            "label": "Ruta",
+            "format": "text"
+          },
+          {
+            "key": "trips",
+            "label": "Viajes",
+            "format": "integer"
+          },
+          {
+            "key": "kilometers",
+            "label": "Kms",
+            "format": "integer"
+          },
+          {
+            "key": "trip_revenue",
+            "label": "Ingresos",
+            "format": "currency"
+          }
         ]
       }
     },
     "inject_paths": {
-      "trip_revenue": ["main", "dashboard", "kpis", "trip_revenue"],
-      "trip_costs": ["main", "dashboard", "kpis", "trip_costs"],
-      "net_profit": ["main", "dashboard", "kpis", "net_profit"],
-      "profit_margin": ["main", "dashboard", "kpis", "profit_margin"],
-      "trips": ["main", "dashboard", "kpis", "trips"],
-      "units_used": ["main", "dashboard", "kpis", "units_used"],
-      "customers_served": ["main", "dashboard", "kpis", "customers_served"],
-      "revenue_per_km": ["main", "dashboard", "kpis", "revenue_per_km"],
-      "fuel_yield": ["main", "dashboard", "kpis", "fuel_yield"],
-      "total_km": ["main", "dashboard", "kpis", "total_km"],
-      "total_liters": ["main", "dashboard", "kpis", "total_liters"],
-      "maintenance_cost_per_km": ["main", "dashboard", "kpis", "maintenance_cost_per_km"],
-      "total_maintenance": ["main", "dashboard", "kpis", "total_maintenance"],
-      "bank_balance": ["main", "dashboard", "kpis", "bank_balance"],
-      "mtto_interno": ["main", "dashboard", "kpis", "mtto_interno"],
-      "mtto_externo": ["main", "dashboard", "kpis", "mtto_externo"],
-      "mtto_llantas": ["main", "dashboard", "kpis", "mtto_llantas"],
-      "main_indicators": ["main", "dashboard", "charts", "main_indicators"],
-      "client_portfolio": ["main", "dashboard", "charts", "client_portfolio"],
-      "supplier_balance": ["main", "dashboard", "charts", "supplier_balance"],
-      "top_routes": ["main", "dashboard", "tables", "top_routes"],
-      "top_clients": ["main", "dashboard", "tables", "top_clients"]
+      "trip_revenue": [
+        "main",
+        "dashboard",
+        "kpis",
+        "trip_revenue"
+      ],
+      "trip_costs": [
+        "main",
+        "dashboard",
+        "kpis",
+        "trip_costs"
+      ],
+      "net_profit": [
+        "main",
+        "dashboard",
+        "kpis",
+        "net_profit"
+      ],
+      "profit_margin": [
+        "main",
+        "dashboard",
+        "kpis",
+        "profit_margin"
+      ],
+      "trips": [
+        "main",
+        "dashboard",
+        "kpis",
+        "trips"
+      ],
+      "units_used": [
+        "main",
+        "dashboard",
+        "kpis",
+        "units_used"
+      ],
+      "customers_served": [
+        "main",
+        "dashboard",
+        "kpis",
+        "customers_served"
+      ],
+      "revenue_per_km": [
+        "main",
+        "dashboard",
+        "kpis",
+        "revenue_per_km"
+      ],
+      "fuel_yield": [
+        "main",
+        "dashboard",
+        "kpis",
+        "fuel_yield"
+      ],
+      "total_km": [
+        "main",
+        "dashboard",
+        "kpis",
+        "total_km"
+      ],
+      "total_liters": [
+        "main",
+        "dashboard",
+        "kpis",
+        "total_liters"
+      ],
+      "maintenance_cost_per_km": [
+        "main",
+        "dashboard",
+        "kpis",
+        "maintenance_cost_per_km"
+      ],
+      "total_maintenance": [
+        "main",
+        "dashboard",
+        "kpis",
+        "total_maintenance"
+      ],
+      "bank_balance": [
+        "main",
+        "dashboard",
+        "kpis",
+        "bank_balance"
+      ],
+      "mtto_interno": [
+        "main",
+        "dashboard",
+        "kpis",
+        "mtto_interno"
+      ],
+      "mtto_externo": [
+        "main",
+        "dashboard",
+        "kpis",
+        "mtto_externo"
+      ],
+      "mtto_llantas": [
+        "main",
+        "dashboard",
+        "kpis",
+        "mtto_llantas"
+      ],
+      "main_indicators": [
+        "main",
+        "dashboard",
+        "charts",
+        "main_indicators"
+      ],
+      "client_portfolio": [
+        "main",
+        "dashboard",
+        "charts",
+        "client_portfolio"
+      ],
+      "supplier_balance": [
+        "main",
+        "dashboard",
+        "charts",
+        "supplier_balance"
+      ],
+      "top_routes": [
+        "main",
+        "dashboard",
+        "tables",
+        "top_routes"
+      ],
+      "top_clients": [
+        "main",
+        "dashboard",
+        "tables",
+        "top_clients"
+      ]
     }
   },
   "operational-dashboard": {
@@ -90,133 +245,355 @@
     "ttl_seconds": 3600,
     "kpi_roadmap": {
       "revenue_total": {
-          "dimensions": [],
-          "metrics": [["ingreso_viaje"], ["ingreso_viaje_anterior"], ["ingreso_viaje_acumulado"], ["meta_ingreso_viaje"], ["meta_ingreso_viaje_acumulado"]],
-          "columns": [
-              {"key": "ingreso_viaje", "target": "revenue_total"},
-              {"key": "meta_ingreso_viaje", "target": "revenue_meta"},
-              {"key": "ingreso_viaje_anterior", "target": "revenue_previous"},
-              {"key": "ingreso_viaje_acumulado", "target": "revenue_ytd"},
-              {"target": "revenue_variance", "formula": "lambda r: (r['ingreso_viaje'] - r['ingreso_viaje_anterior']) / r['ingreso_viaje_anterior'] if r.get('ingreso_viaje_anterior') else 0"},
-              {"target": "revenue_ytd_variance", "formula": "lambda r: (r['ingreso_viaje_acumulado'] - r['meta_ingreso_viaje_acumulado']) / r['meta_ingreso_viaje_acumulado'] if r.get('meta_ingreso_viaje_acumulado') else 0"}
+        "dimensions": [],
+        "metrics": [
+          [
+            "ingreso_viaje"
+          ],
+          [
+            "ingreso_viaje_anterior"
+          ],
+          [
+            "ingreso_viaje_acumulado"
+          ],
+          [
+            "meta_ingreso_viaje"
+          ],
+          [
+            "meta_ingreso_viaje_acumulado"
           ]
+        ],
+        "columns": [
+          {
+            "key": "ingreso_viaje",
+            "target": "revenue_total"
+          },
+          {
+            "key": "meta_ingreso_viaje",
+            "target": "revenue_meta"
+          },
+          {
+            "key": "ingreso_viaje_anterior",
+            "target": "revenue_previous"
+          },
+          {
+            "key": "ingreso_viaje_acumulado",
+            "target": "revenue_ytd"
+          },
+          {
+            "target": "revenue_variance",
+            "formula": "lambda r: (r['ingreso_viaje'] - r['ingreso_viaje_anterior']) / r['ingreso_viaje_anterior'] if r.get('ingreso_viaje_anterior') else 0"
+          },
+          {
+            "target": "revenue_ytd_variance",
+            "formula": "lambda r: (r['ingreso_viaje_acumulado'] - r['meta_ingreso_viaje_acumulado']) / r['meta_ingreso_viaje_acumulado'] if r.get('meta_ingreso_viaje_acumulado') else 0"
+          }
+        ]
       },
-
       "total_trips": {
-          "dimensions": [],
-          "metrics": [["viajes"], ["viajes_anterior"], ["viajes_acumulado"], ["meta_viajes"], ["meta_viajes_acumulado"]],
-          "columns": [
-              {"key": "viajes", "target": "total_trips"},
-              {"key": "meta_viajes", "target": "trips_meta"},
-              {"key": "viajes_anterior", "target": "trips_previous"},
-              {"key": "viajes_acumulado", "target": "trips_ytd"},
-              {"target": "trips_variance", "formula": "lambda r: (r['viajes'] - r['viajes_anterior']) / r['viajes_anterior'] if r.get('viajes_anterior') else 0"},
-              {"target": "trips_ytd_variance", "formula": "lambda r: (r['viajes_acumulado'] - r['meta_viajes_acumulado']) / r['meta_viajes_acumulado'] if r.get('meta_viajes_acumulado') else 0"}
+        "dimensions": [],
+        "metrics": [
+          [
+            "viajes"
+          ],
+          [
+            "viajes_anterior"
+          ],
+          [
+            "viajes_acumulado"
+          ],
+          [
+            "meta_viajes"
+          ],
+          [
+            "meta_viajes_acumulado"
           ]
+        ],
+        "columns": [
+          {
+            "key": "viajes",
+            "target": "total_trips"
+          },
+          {
+            "key": "meta_viajes",
+            "target": "trips_meta"
+          },
+          {
+            "key": "viajes_anterior",
+            "target": "trips_previous"
+          },
+          {
+            "key": "viajes_acumulado",
+            "target": "trips_ytd"
+          },
+          {
+            "target": "trips_variance",
+            "formula": "lambda r: (r['viajes'] - r['viajes_anterior']) / r['viajes_anterior'] if r.get('viajes_anterior') else 0"
+          },
+          {
+            "target": "trips_ytd_variance",
+            "formula": "lambda r: (r['viajes_acumulado'] - r['meta_viajes_acumulado']) / r['meta_viajes_acumulado'] if r.get('meta_viajes_acumulado') else 0"
+          }
+        ]
       },
-
       "total_kilometers": {
-          "dimensions": [],
-          "metrics": [["kilometros"], ["kilometros_anterior"], ["kilometros_acumulado"], ["meta_kilometros"], ["meta_kilometros_acumulado"]],
-          "columns": [
-              {"key": "kilometros", "target": "total_kilometers"},
-              {"key": "meta_kilometros", "target": "kilometers_meta"},
-              {"key": "kilometros_anterior", "target": "kilometers_previous"},
-              {"key": "kilometros_acumulado", "target": "kilometers_ytd"},
-              {"target": "kilometers_variance", "formula": "lambda r: (r['kilometros'] - r['kilometros_anterior']) / r['kilometros_anterior'] if r.get('kilometros_anterior') else 0"},
-              {"target": "kilometers_ytd_variance", "formula": "lambda r: (r['kilometros_acumulado'] - r['meta_kilometros_acumulado']) / r['meta_kilometros_acumulado'] if r.get('meta_kilometros_acumulado') else 0"}
+        "dimensions": [],
+        "metrics": [
+          [
+            "kilometros"
+          ],
+          [
+            "kilometros_anterior"
+          ],
+          [
+            "kilometros_acumulado"
+          ],
+          [
+            "meta_kilometros"
+          ],
+          [
+            "meta_kilometros_acumulado"
           ]
+        ],
+        "columns": [
+          {
+            "key": "kilometros",
+            "target": "total_kilometers"
+          },
+          {
+            "key": "meta_kilometros",
+            "target": "kilometers_meta"
+          },
+          {
+            "key": "kilometros_anterior",
+            "target": "kilometers_previous"
+          },
+          {
+            "key": "kilometros_acumulado",
+            "target": "kilometers_ytd"
+          },
+          {
+            "target": "kilometers_variance",
+            "formula": "lambda r: (r['kilometros'] - r['kilometros_anterior']) / r['kilometros_anterior'] if r.get('kilometros_anterior') else 0"
+          },
+          {
+            "target": "kilometers_ytd_variance",
+            "formula": "lambda r: (r['kilometros_acumulado'] - r['meta_kilometros_acumulado']) / r['meta_kilometros_acumulado'] if r.get('meta_kilometros_acumulado') else 0"
+          }
+        ]
       },
-
       "revenue_per_trip": {
-          "dimensions": [],
-          "metrics": [["ingreso_viaje", "viajes"], ["ingreso_viaje_anterior", "viajes_anterior"]],
-          "columns": [
-              { "target": "ingreso_x_viaje_val", "formula": "lambda r: r['ingreso_viaje'] / r['viajes'] if r.get('viajes') else 0" },
-              { "target": "ingreso_x_viaje_prev", "formula": "lambda r: r['ingreso_viaje_anterior'] / r['viajes_anterior'] if r.get('viajes_anterior') else 0" },
-              { "target": "ingreso_x_viaje_delta", "formula": "lambda r: ((r['ingreso_viaje'] / r['viajes'] if r.get('viajes') else 0) - (r['ingreso_viaje_anterior'] / r['viajes_anterior'] if r.get('viajes_anterior') else 0)) / (r['ingreso_viaje_anterior'] / r['viajes_anterior']) if (r.get('ingreso_viaje_anterior') and r.get('viajes_anterior')) else 0"
-              }
+        "dimensions": [],
+        "metrics": [
+          [
+            "ingreso_viaje",
+            "viajes"
+          ],
+          [
+            "ingreso_viaje_anterior",
+            "viajes_anterior"
           ]
+        ],
+        "columns": [
+          {
+            "target": "ingreso_x_viaje_val",
+            "formula": "lambda r: r['ingreso_viaje'] / r['viajes'] if r.get('viajes') else 0"
+          },
+          {
+            "target": "ingreso_x_viaje_prev",
+            "formula": "lambda r: r['ingreso_viaje_anterior'] / r['viajes_anterior'] if r.get('viajes_anterior') else 0"
+          },
+          {
+            "target": "ingreso_x_viaje_delta",
+            "formula": "lambda r: ((r['ingreso_viaje'] / r['viajes'] if r.get('viajes') else 0) - (r['ingreso_viaje_anterior'] / r['viajes_anterior'] if r.get('viajes_anterior') else 0)) / (r['ingreso_viaje_anterior'] / r['viajes_anterior']) if (r.get('ingreso_viaje_anterior') and r.get('viajes_anterior')) else 0"
+          }
+        ]
       },
-
       "revenue_per_unit": {
-          "dimensions": [],
-          "metrics": [["ingreso_viaje", "unidades_utilizadas"], ["ingreso_viaje_anterior", "unidades_utilizadas_anterior"]],
-          "columns": [
-              {"target": "ingreso_unit_val", "formula": "lambda r: r['ingreso_viaje'] / r['unidades_utilizadas'] if r.get('unidades_utilizadas') else 0"},
-              {"target": "ingreso_unit_prev", "formula": "lambda r: r['ingreso_viaje_anterior'] / r['unidades_utilizadas_anterior'] if r.get('unidades_utilizadas_anterior') else 0"},
-              {"target": "ingreso_unit_delta", "formula": "lambda r: ((r['ingreso_viaje'] / r['unidades_utilizadas']) - (r['ingreso_viaje_anterior'] / r['unidades_utilizadas_anterior'])) / (r['ingreso_viaje_anterior'] / r['unidades_utilizadas_anterior']) if r.get('unidades_utilizadas') and r.get('unidades_utilizadas_anterior') and r.get('ingreso_viaje_anterior') else 0"
-              }
+        "dimensions": [],
+        "metrics": [
+          [
+            "ingreso_viaje",
+            "unidades_utilizadas"
+          ],
+          [
+            "ingreso_viaje_anterior",
+            "unidades_utilizadas_anterior"
           ]
+        ],
+        "columns": [
+          {
+            "target": "ingreso_unit_val",
+            "formula": "lambda r: r['ingreso_viaje'] / r['unidades_utilizadas'] if r.get('unidades_utilizadas') else 0"
+          },
+          {
+            "target": "ingreso_unit_prev",
+            "formula": "lambda r: r['ingreso_viaje_anterior'] / r['unidades_utilizadas_anterior'] if r.get('unidades_utilizadas_anterior') else 0"
+          },
+          {
+            "target": "ingreso_unit_delta",
+            "formula": "lambda r: ((r['ingreso_viaje'] / r['unidades_utilizadas']) - (r['ingreso_viaje_anterior'] / r['unidades_utilizadas_anterior'])) / (r['ingreso_viaje_anterior'] / r['unidades_utilizadas_anterior']) if r.get('unidades_utilizadas') and r.get('unidades_utilizadas_anterior') and r.get('ingreso_viaje_anterior') else 0"
+          }
+        ]
       },
-
       "units_qty": {
-          "dimensions": [],
-          "metrics": [["unidades_utilizadas"], ["unidades_utilizadas_anterior"]],
-          "columns": [
-              {"key": "unidades_utilizadas", "target": "units_qty_val"},
-              {"key": "unidades_utilizadas_anterior", "target": "units_qty_prev"},
-              {"target": "units_qty_delta", "formula": "lambda r: (r['unidades_utilizadas'] - r['unidades_utilizadas_anterior']) / r['unidades_utilizadas_anterior'] if r.get('unidades_utilizadas_anterior') else 0"}
+        "dimensions": [],
+        "metrics": [
+          [
+            "unidades_utilizadas"
+          ],
+          [
+            "unidades_utilizadas_anterior"
           ]
+        ],
+        "columns": [
+          {
+            "key": "unidades_utilizadas",
+            "target": "units_qty_val"
+          },
+          {
+            "key": "unidades_utilizadas_anterior",
+            "target": "units_qty_prev"
+          },
+          {
+            "target": "units_qty_delta",
+            "formula": "lambda r: (r['unidades_utilizadas'] - r['unidades_utilizadas_anterior']) / r['unidades_utilizadas_anterior'] if r.get('unidades_utilizadas_anterior') else 0"
+          }
+        ]
       },
-      
       "customers": {
-          "dimensions": [],
-          "metrics": [["clientes_servidos"], ["clientes_servidos_anterior"]],
-          "columns": [
-              {"key": "clientes_servidos", "target": "clientes_val"},
-              {"key": "clientes_servidos_anterior", "target": "clientes_prev"},
-              {"target": "clientes_delta", "formula": "lambda r: (r['clientes_servidos'] - r['clientes_servidos_anterior']) / r['clientes_servidos_anterior'] if r.get('clientes_servidos_anterior') else 0"}
+        "dimensions": [],
+        "metrics": [
+          [
+            "clientes_servidos"
+          ],
+          [
+            "clientes_servidos_anterior"
           ]
+        ],
+        "columns": [
+          {
+            "key": "clientes_servidos",
+            "target": "clientes_val"
+          },
+          {
+            "key": "clientes_servidos_anterior",
+            "target": "clientes_prev"
+          },
+          {
+            "target": "clientes_delta",
+            "formula": "lambda r: (r['clientes_servidos'] - r['clientes_servidos_anterior']) / r['clientes_servidos_anterior'] if r.get('clientes_servidos_anterior') else 0"
+          }
+        ]
       },
-
       "utilizacion_flota": {
-          "dimensions": [],
-          "metrics": [["viajes", "viajes_cargados"]],
-          "columns": [
-              {
-                  "target": "utilizacion_val", 
-                  "formula": "lambda r: (r['viajes_cargados'] / r['viajes'] * 100) if r.get('viajes') else 0"
-              }
+        "dimensions": [],
+        "metrics": [
+          [
+            "viajes",
+            "viajes_cargados"
           ]
+        ],
+        "columns": [
+          {
+            "target": "utilizacion_val",
+            "formula": "lambda r: (r['viajes_cargados'] / r['viajes'] * 100) if r.get('viajes') else 0"
+          }
+        ]
       }
     },
     "chart_roadmap": {
       "revenue_trends": {
-        "metrics": [["ingreso_viaje"], ["meta_ingreso_viaje"], ["ingreso_viaje_anterior"]],
+        "metrics": [
+          [
+            "ingreso_viaje"
+          ],
+          [
+            "meta_ingreso_viaje"
+          ],
+          [
+            "ingreso_viaje_anterior"
+          ]
+        ],
         "columns": [
-            {"key": "ingreso_viaje", "series": "actual"},
-            {"key": "ingreso_viaje_anterior", "series": "anterior"},
-            {"key": "meta_ingreso_viaje", "series": "meta"}
+          {
+            "key": "ingreso_viaje",
+            "series": "actual"
+          },
+          {
+            "key": "ingreso_viaje_anterior",
+            "series": "anterior"
+          },
+          {
+            "key": "meta_ingreso_viaje",
+            "series": "meta"
+          }
         ]
       },
       "trips_trends": {
-        "metrics": [["viajes"], ["meta_viajes"],["viajes_anterior"]],
+        "metrics": [
+          [
+            "viajes"
+          ],
+          [
+            "meta_viajes"
+          ],
+          [
+            "viajes_anterior"
+          ]
+        ],
         "columns": [
-            {"key": "viajes", "series": "actual"},
-            {"key": "viajes_anterior", "series": "anterior"},
-            {"key": "meta_viajes", "series": "meta"}
+          {
+            "key": "viajes",
+            "series": "actual"
+          },
+          {
+            "key": "viajes_anterior",
+            "series": "anterior"
+          },
+          {
+            "key": "meta_viajes",
+            "series": "meta"
+          }
         ]
       }
     },
     "categorical_roadmap": {
       "revenue_by_operation_type": {
-        "dimensions": ["d_tipo_operacion.tipo_operacion"],
-        "metrics": ["ingreso_viaje"],
+        "dimensions": [
+          "d_tipo_operacion.tipo_operacion"
+        ],
+        "metrics": [
+          "ingreso_viaje"
+        ],
         "columns": [
-            {"key": "d_tipo_operacion.tipo_operacion", "role": "label"},
-            {"key": "ingreso_viaje", "role": "value"}
+          {
+            "key": "d_tipo_operacion.tipo_operacion",
+            "role": "label"
+          },
+          {
+            "key": "ingreso_viaje",
+            "role": "value"
+          }
         ]
       },
       "revenue_by_unit": {
-        "dimensions": ["d_unidad.id_unidad"],
-        "metrics": ["ingreso_viaje", "kms_viaje"],
+        "dimensions": [
+          "d_unidad.id_unidad"
+        ],
+        "metrics": [
+          "ingreso_viaje",
+          "kms_viaje"
+        ],
         "columns": [
-            {"key": "d_unidad.id_unidad", "role": "label"},
-            {
-                "role": "value", 
-                "formula": "lambda r: (r.get('ingreso_viaje', 0) / r['kms_viaje']) if r.get('kms_viaje') else 0"
-            }
+          {
+            "key": "d_unidad.id_unidad",
+            "role": "label"
+          },
+          {
+            "role": "value",
+            "formula": "lambda r: (r.get('ingreso_viaje', 0) / r['kms_viaje']) if r.get('kms_viaje') else 0"
+          }
         ]
       },
       "main_routes": {
@@ -226,370 +603,1924 @@
     },
     "table_roadmap": {
       "routes_empty": {
-        "dimensions": ["d_ruta.id_ruta", "d_ruta.ruta"],
-        "metrics": ["viajes", "kms_viaje", "costo_liquidacion", "sueldo_operador"],
-        "fixed_filters": {"d_viaje.ind_cargado": 0}, 
+        "dimensions": [
+          "d_ruta.id_ruta",
+          "d_ruta.ruta"
+        ],
+        "metrics": [
+          "viajes",
+          "kms_viaje",
+          "costo_liquidacion",
+          "sueldo_operador"
+        ],
+        "fixed_filters": {
+          "d_viaje.ind_cargado": 0
+        },
         "columns": [
-            {"key": "d_ruta.id_ruta", "label": "No."},
-            {"key": "d_ruta.ruta", "label": "Ruta"},
-            {"key": "viajes", "label": "Viajes"},
-            {"key": "kms_viaje", "label": "Kms Viaje", "format": "integer"},
-            {"key": "costo_x_km", "label": "Costo x Km", "format": "currency", "formula": "lambda r: (r['costo_liquidacion'] + r['sueldo_operador']) / r['kms_viaje'] if r['kms_viaje'] else 0"},
-            {"key": "costo_liquidacion", "label": "Costo Viaje", "format": "currency"},
-            {"key": "sueldo_operador", "label": "Sueldo Operador", "format": "currency"},
-            {"key": "costo_total", "label": "Costo Viaje Total", "format": "currency", "formula": "lambda r: r['costo_liquidacion'] + r['sueldo_operador']"},
-            {"key": "pct_costo", "label": "% Costo Viaje Total", "format": "percent", "is_total_ratio": true}
+          {
+            "key": "d_ruta.id_ruta",
+            "label": "No."
+          },
+          {
+            "key": "d_ruta.ruta",
+            "label": "Ruta"
+          },
+          {
+            "key": "viajes",
+            "label": "Viajes"
+          },
+          {
+            "key": "kms_viaje",
+            "label": "Kms Viaje",
+            "format": "integer"
+          },
+          {
+            "key": "costo_x_km",
+            "label": "Costo x Km",
+            "format": "currency",
+            "formula": "lambda r: (r['costo_liquidacion'] + r['sueldo_operador']) / r['kms_viaje'] if r['kms_viaje'] else 0"
+          },
+          {
+            "key": "costo_liquidacion",
+            "label": "Costo Viaje",
+            "format": "currency"
+          },
+          {
+            "key": "sueldo_operador",
+            "label": "Sueldo Operador",
+            "format": "currency"
+          },
+          {
+            "key": "costo_total",
+            "label": "Costo Viaje Total",
+            "format": "currency",
+            "formula": "lambda r: r['costo_liquidacion'] + r['sueldo_operador']"
+          },
+          {
+            "key": "pct_costo",
+            "label": "% Costo Viaje Total",
+            "format": "percent",
+            "is_total_ratio": true
+          }
         ]
       },
       "routes_loaded": {
-        "dimensions": ["d_ruta.id_ruta", "d_ruta.ruta"],
-        "metrics": [
-            "ingreso_viaje",
-            "viajes",
-            "kms_viaje",
-            "flete",
-            "otros_costos",
-            "costo_liquidacion",
-            "sueldo_operador"
+        "dimensions": [
+          "d_ruta.id_ruta",
+          "d_ruta.ruta"
         ],
-        "fixed_filters": {"d_viaje.ind_cargado": 1},
+        "metrics": [
+          "ingreso_viaje",
+          "viajes",
+          "kms_viaje",
+          "flete",
+          "otros_costos",
+          "costo_liquidacion",
+          "sueldo_operador"
+        ],
+        "fixed_filters": {
+          "d_viaje.ind_cargado": 1
+        },
         "columns": [
-            {"key": "d_ruta.id_ruta", "label": "No."},
-            {"key": "d_ruta.ruta", "label": "Ruta"},
-            {"key": "ingreso_viaje", "label": "Ingreso Viaje", "format": "currency"},
-            {"key": "pct_ingreso", "label": "% Ingresos", "format": "percent", "is_total_ratio": true, "numerator_key": "ingreso_viaje"},
-            {"key": "utilidad", "label": "Utilidad", "format": "currency", 
-                "formula": "lambda r: r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])"},
-            {"key": "pct_utilidad", "label": "% Utilidad", "format": "percent", 
-                "formula": "lambda r: (r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])) / r['ingreso_viaje'] if r['ingreso_viaje'] else 0"},
-            {"key": "costo_total", "label": "Costo Total", "format": "currency", 
-                "formula": "lambda r: r['costo_liquidacion'] + r['sueldo_operador']"},
-            {"key": "pct_costo", "label": "% Costo Total", "format": "percent", "is_total_ratio": true, "numerator_key": "costo_total"},
-            {"key": "viajes", "label": "Viajes"},
-            {"key": "kms_viaje", "label": "Kms Viaje", "format": "integer"},
-            {"key": "costo_x_km", "label": "Costo x Km", "format": "currency", 
-                "formula": "lambda r: (r['costo_liquidacion'] + r['sueldo_operador']) / r['kms_viaje'] if r['kms_viaje'] else 0"},
-            {"key": "ingreso_x_km", "label": "Ingreso x Km", "format": "currency", 
-                "formula": "lambda r: r['ingreso_viaje'] / r['kms_viaje'] if r['kms_viaje'] else 0"},
-            {"key": "ingreso_x_viaje", "label": "Ingreso x Viaje", "format": "currency", 
-                "formula": "lambda r: r['ingreso_viaje'] / r['viajes'] if r['viajes'] else 0"},
-            {"key": "flete", "label": "Flete", "format": "currency"},
-            {"key": "otros_costos", "label": "Otros", "format": "currency"},
-            {"key": "costo_liquidacion", "label": "Costo Liquidación", "format": "currency"},
-            {"key": "sueldo_operador", "label": "Sueldo Operador", "format": "currency"}
+          {
+            "key": "d_ruta.id_ruta",
+            "label": "No."
+          },
+          {
+            "key": "d_ruta.ruta",
+            "label": "Ruta"
+          },
+          {
+            "key": "ingreso_viaje",
+            "label": "Ingreso Viaje",
+            "format": "currency"
+          },
+          {
+            "key": "pct_ingreso",
+            "label": "% Ingresos",
+            "format": "percent",
+            "is_total_ratio": true,
+            "numerator_key": "ingreso_viaje"
+          },
+          {
+            "key": "utilidad",
+            "label": "Utilidad",
+            "format": "currency",
+            "formula": "lambda r: r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])"
+          },
+          {
+            "key": "pct_utilidad",
+            "label": "% Utilidad",
+            "format": "percent",
+            "formula": "lambda r: (r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])) / r['ingreso_viaje'] if r['ingreso_viaje'] else 0"
+          },
+          {
+            "key": "costo_total",
+            "label": "Costo Total",
+            "format": "currency",
+            "formula": "lambda r: r['costo_liquidacion'] + r['sueldo_operador']"
+          },
+          {
+            "key": "pct_costo",
+            "label": "% Costo Total",
+            "format": "percent",
+            "is_total_ratio": true,
+            "numerator_key": "costo_total"
+          },
+          {
+            "key": "viajes",
+            "label": "Viajes"
+          },
+          {
+            "key": "kms_viaje",
+            "label": "Kms Viaje",
+            "format": "integer"
+          },
+          {
+            "key": "costo_x_km",
+            "label": "Costo x Km",
+            "format": "currency",
+            "formula": "lambda r: (r['costo_liquidacion'] + r['sueldo_operador']) / r['kms_viaje'] if r['kms_viaje'] else 0"
+          },
+          {
+            "key": "ingreso_x_km",
+            "label": "Ingreso x Km",
+            "format": "currency",
+            "formula": "lambda r: r['ingreso_viaje'] / r['kms_viaje'] if r['kms_viaje'] else 0"
+          },
+          {
+            "key": "ingreso_x_viaje",
+            "label": "Ingreso x Viaje",
+            "format": "currency",
+            "formula": "lambda r: r['ingreso_viaje'] / r['viajes'] if r['viajes'] else 0"
+          },
+          {
+            "key": "flete",
+            "label": "Flete",
+            "format": "currency"
+          },
+          {
+            "key": "otros_costos",
+            "label": "Otros",
+            "format": "currency"
+          },
+          {
+            "key": "costo_liquidacion",
+            "label": "Costo Liquidación",
+            "format": "currency"
+          },
+          {
+            "key": "sueldo_operador",
+            "label": "Sueldo Operador",
+            "format": "currency"
+          }
         ]
       },
       "top_clients": {
-        "dimensions": ["d_trafico_cliente.id_cliente", "d_trafico_cliente.nombre_cliente"],
-        "metrics": [
-            "ingreso_viaje", 
-            "flete", 
-            "otros_costos",
-            "kms_viaje", 
-            "viajes", 
-            "combustible", 
-            "caseta_iave", 
-            "caseta_efectivo",
-            "sueldo_operador", 
-            "costo_liquidacion"
+        "dimensions": [
+          "d_trafico_cliente.id_cliente",
+          "d_trafico_cliente.nombre_cliente"
         ],
-        "fixed_filters": {"d_viaje.ind_cargado": 1},
+        "metrics": [
+          "ingreso_viaje",
+          "flete",
+          "otros_costos",
+          "kms_viaje",
+          "viajes",
+          "combustible",
+          "caseta_iave",
+          "caseta_efectivo",
+          "sueldo_operador",
+          "costo_liquidacion"
+        ],
+        "fixed_filters": {
+          "d_viaje.ind_cargado": 1
+        },
         "columns": [
-            {"key": "d_trafico_cliente.id_cliente", "label": "No."},
-            {"key": "d_trafico_cliente.nombre_cliente", "label": "Cliente"},
-            {"key": "flete", "label": "Flete", "format": "currency"},
-            {"key": "otros_costos", "label": "Otros", "format": "currency"},
-            {"key": "ingreso_viaje", "label": "Ingreso Viaje", "format": "currency"},
-            {"key": "pct_ingreso", "label": "% Ingresos", "format": "percent", "is_total_ratio": true, "numerator_key": "ingreso_viaje"},
-            {"key": "kms_viaje", "label": "Kms Viaje", "format": "integer"},
-            {"key": "viajes", "label": "Cant. Viajes"},
-            {"key": "combustible", "label": "Combustible", "format": "currency"},
-            {"key": "caseta_iave", "label": "Caseta IAVE", "format": "currency"},
-            {"key": "caseta_efectivo", "label": "Caseta Efectivo", "format": "currency"},
-            {"key": "sueldo_operador", "label": "Sueldo Operador", "format": "currency"},
-            {"key": "costo_liquidacion", "label": "Costo Liquidación", "format": "currency"},
-            {"key": "costo_total", "label": "Costo Viaje Total", "format": "currency", 
-              "formula": "lambda r: r['costo_liquidacion'] + r['sueldo_operador']"},
-            {"key": "pct_costo", "label": "% Costo Viaje Total", "format": "percent", "is_total_ratio": true, "numerator_key": "costo_total"},
-            {"key": "utilidad", "label": "Utilidad", "format": "currency", 
-              "formula": "lambda r: r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])"},
-            {"key": "pct_utilidad", "label": "% Utilidad", "format": "percent", 
-              "formula": "lambda r: (r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])) / r['ingreso_viaje'] if r['ingreso_viaje'] else 0"},
-            {"key": "ingreso_x_km", "label": "Ingreso x Km", "format": "currency", 
-              "formula": "lambda r: r['ingreso_viaje'] / r['kms_viaje'] if r['kms_viaje'] else 0"},
-            {"key": "ingreso_x_viaje", "label": "Ingreso x Viaje", "format": "currency", 
-              "formula": "lambda r: r['ingreso_viaje'] / r['viajes'] if r['viajes'] else 0"},
-            {"key": "costo_x_km", "label": "Costo x Km", "format": "currency", 
-              "formula": "lambda r: (r['costo_liquidacion'] + r['sueldo_operador']) / r['kms_viaje'] if r['kms_viaje'] else 0"}
+          {
+            "key": "d_trafico_cliente.id_cliente",
+            "label": "No."
+          },
+          {
+            "key": "d_trafico_cliente.nombre_cliente",
+            "label": "Cliente"
+          },
+          {
+            "key": "flete",
+            "label": "Flete",
+            "format": "currency"
+          },
+          {
+            "key": "otros_costos",
+            "label": "Otros",
+            "format": "currency"
+          },
+          {
+            "key": "ingreso_viaje",
+            "label": "Ingreso Viaje",
+            "format": "currency"
+          },
+          {
+            "key": "pct_ingreso",
+            "label": "% Ingresos",
+            "format": "percent",
+            "is_total_ratio": true,
+            "numerator_key": "ingreso_viaje"
+          },
+          {
+            "key": "kms_viaje",
+            "label": "Kms Viaje",
+            "format": "integer"
+          },
+          {
+            "key": "viajes",
+            "label": "Cant. Viajes"
+          },
+          {
+            "key": "combustible",
+            "label": "Combustible",
+            "format": "currency"
+          },
+          {
+            "key": "caseta_iave",
+            "label": "Caseta IAVE",
+            "format": "currency"
+          },
+          {
+            "key": "caseta_efectivo",
+            "label": "Caseta Efectivo",
+            "format": "currency"
+          },
+          {
+            "key": "sueldo_operador",
+            "label": "Sueldo Operador",
+            "format": "currency"
+          },
+          {
+            "key": "costo_liquidacion",
+            "label": "Costo Liquidación",
+            "format": "currency"
+          },
+          {
+            "key": "costo_total",
+            "label": "Costo Viaje Total",
+            "format": "currency",
+            "formula": "lambda r: r['costo_liquidacion'] + r['sueldo_operador']"
+          },
+          {
+            "key": "pct_costo",
+            "label": "% Costo Viaje Total",
+            "format": "percent",
+            "is_total_ratio": true,
+            "numerator_key": "costo_total"
+          },
+          {
+            "key": "utilidad",
+            "label": "Utilidad",
+            "format": "currency",
+            "formula": "lambda r: r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])"
+          },
+          {
+            "key": "pct_utilidad",
+            "label": "% Utilidad",
+            "format": "percent",
+            "formula": "lambda r: (r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])) / r['ingreso_viaje'] if r['ingreso_viaje'] else 0"
+          },
+          {
+            "key": "ingreso_x_km",
+            "label": "Ingreso x Km",
+            "format": "currency",
+            "formula": "lambda r: r['ingreso_viaje'] / r['kms_viaje'] if r['kms_viaje'] else 0"
+          },
+          {
+            "key": "ingreso_x_viaje",
+            "label": "Ingreso x Viaje",
+            "format": "currency",
+            "formula": "lambda r: r['ingreso_viaje'] / r['viajes'] if r['viajes'] else 0"
+          },
+          {
+            "key": "costo_x_km",
+            "label": "Costo x Km",
+            "format": "currency",
+            "formula": "lambda r: (r['costo_liquidacion'] + r['sueldo_operador']) / r['kms_viaje'] if r['kms_viaje'] else 0"
+          }
         ]
       },
       "income_by_operator_report": {
-        "dimensions": ["d_personal.id_personal", "d_personal.nombre"],
-        "metrics": [
-            "ingreso_viaje", 
-            "flete", 
-            "otros_costos",
-            "kms_viaje", 
-            "viajes", 
-            "combustible", 
-            "caseta_iave", 
-            "caseta_efectivo",
-            "sueldo_operador", 
-            "costo_liquidacion"
+        "dimensions": [
+          "d_personal.id_personal",
+          "d_personal.nombre"
         ],
-        "fixed_filters": {"d_viaje.ind_cargado": 1},
+        "metrics": [
+          "ingreso_viaje",
+          "flete",
+          "otros_costos",
+          "kms_viaje",
+          "viajes",
+          "combustible",
+          "caseta_iave",
+          "caseta_efectivo",
+          "sueldo_operador",
+          "costo_liquidacion"
+        ],
+        "fixed_filters": {
+          "d_viaje.ind_cargado": 1
+        },
         "columns": [
-            {"key": "d_personal.id_personal", "label": "No."},
-            {"key": "d_personal.nombre", "label": "Nombre"},
-            {"key": "flete", "label": "Flete", "format": "currency"},
-            {"key": "otros_costos", "label": "Otros", "format": "currency"},
-            {"key": "ingreso_viaje", "label": "Ingreso Viaje", "format": "currency"},
-            {"key": "pct_ingreso", "label": "% Ingreso", "format": "percent", "is_total_ratio": true, "numerator_key": "ingreso_viaje"},
-            {"key": "kms_viaje", "label": "Kms Viaje", "format": "integer"},
-            {"key": "viajes", "label": "Cant. Viajes"},
-            {"key": "combustible", "label": "Combustible", "format": "currency"},
-            {"key": "caseta_iave", "label": "Caseta IAVE", "format": "currency"},
-            {"key": "caseta_efectivo", "label": "Caseta Efectivo", "format": "currency"},
-            {"key": "sueldo_operador", "label": "Sueldo Operador", "format": "currency"},
-            {"key": "costo_liquidacion", "label": "Costo Liquidación", "format": "currency"},
-            {"key": "costo_total", "label": "Costo Viaje Total", "format": "currency", 
-              "formula": "lambda r: r['costo_liquidacion'] + r['sueldo_operador']"},
-            {"key": "pct_costo", "label": "% Costo Viaje Total", "format": "percent", "is_total_ratio": true, "numerator_key": "costo_total"},
-            {"key": "utilidad", "label": "Utilidad", "format": "currency", 
-              "formula": "lambda r: r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])"},
-            {"key": "pct_utilidad", "label": "% Utilidad", "format": "percent", 
-              "formula": "lambda r: (r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])) / r['ingreso_viaje'] if r['ingreso_viaje'] else 0"},
-            {"key": "ingreso_x_km", "label": "Ingreso x Km", "format": "currency", 
-              "formula": "lambda r: r['ingreso_viaje'] / r['kms_viaje'] if r['kms_viaje'] else 0"},
-            {"key": "costo_x_km", "label": "Costo x Km", "format": "currency", 
-              "formula": "lambda r: (r['costo_liquidacion'] + r['sueldo_operador']) / r['kms_viaje'] if r['kms_viaje'] else 0"}
+          {
+            "key": "d_personal.id_personal",
+            "label": "No."
+          },
+          {
+            "key": "d_personal.nombre",
+            "label": "Nombre"
+          },
+          {
+            "key": "flete",
+            "label": "Flete",
+            "format": "currency"
+          },
+          {
+            "key": "otros_costos",
+            "label": "Otros",
+            "format": "currency"
+          },
+          {
+            "key": "ingreso_viaje",
+            "label": "Ingreso Viaje",
+            "format": "currency"
+          },
+          {
+            "key": "pct_ingreso",
+            "label": "% Ingreso",
+            "format": "percent",
+            "is_total_ratio": true,
+            "numerator_key": "ingreso_viaje"
+          },
+          {
+            "key": "kms_viaje",
+            "label": "Kms Viaje",
+            "format": "integer"
+          },
+          {
+            "key": "viajes",
+            "label": "Cant. Viajes"
+          },
+          {
+            "key": "combustible",
+            "label": "Combustible",
+            "format": "currency"
+          },
+          {
+            "key": "caseta_iave",
+            "label": "Caseta IAVE",
+            "format": "currency"
+          },
+          {
+            "key": "caseta_efectivo",
+            "label": "Caseta Efectivo",
+            "format": "currency"
+          },
+          {
+            "key": "sueldo_operador",
+            "label": "Sueldo Operador",
+            "format": "currency"
+          },
+          {
+            "key": "costo_liquidacion",
+            "label": "Costo Liquidación",
+            "format": "currency"
+          },
+          {
+            "key": "costo_total",
+            "label": "Costo Viaje Total",
+            "format": "currency",
+            "formula": "lambda r: r['costo_liquidacion'] + r['sueldo_operador']"
+          },
+          {
+            "key": "pct_costo",
+            "label": "% Costo Viaje Total",
+            "format": "percent",
+            "is_total_ratio": true,
+            "numerator_key": "costo_total"
+          },
+          {
+            "key": "utilidad",
+            "label": "Utilidad",
+            "format": "currency",
+            "formula": "lambda r: r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])"
+          },
+          {
+            "key": "pct_utilidad",
+            "label": "% Utilidad",
+            "format": "percent",
+            "formula": "lambda r: (r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])) / r['ingreso_viaje'] if r['ingreso_viaje'] else 0"
+          },
+          {
+            "key": "ingreso_x_km",
+            "label": "Ingreso x Km",
+            "format": "currency",
+            "formula": "lambda r: r['ingreso_viaje'] / r['kms_viaje'] if r['kms_viaje'] else 0"
+          },
+          {
+            "key": "costo_x_km",
+            "label": "Costo x Km",
+            "format": "currency",
+            "formula": "lambda r: (r['costo_liquidacion'] + r['sueldo_operador']) / r['kms_viaje'] if r['kms_viaje'] else 0"
+          }
         ]
       },
       "income_by_unit_report": {
-        "dimensions": ["d_unidad.id_unidad"],
-        "metrics": [
-            "ingreso_viaje", 
-            "flete", 
-            "otros_costos",
-            "kms_viaje", 
-            "viajes", 
-            "combustible", 
-            "caseta_iave", 
-            "caseta_efectivo",
-            "sueldo_operador", 
-            "costo_liquidacion"
+        "dimensions": [
+          "d_unidad.id_unidad"
         ],
-        "fixed_filters": {"d_viaje.ind_cargado": 1},
+        "metrics": [
+          "ingreso_viaje",
+          "flete",
+          "otros_costos",
+          "kms_viaje",
+          "viajes",
+          "combustible",
+          "caseta_iave",
+          "caseta_efectivo",
+          "sueldo_operador",
+          "costo_liquidacion"
+        ],
+        "fixed_filters": {
+          "d_viaje.ind_cargado": 1
+        },
         "columns": [
-            {"key": "d_unidad.id_unidad", "label": "Unidad"},
-            {"key": "flete", "label": "Flete", "format": "currency"},
-            {"key": "otros_costos", "label": "Otros", "format": "currency"},
-            {"key": "ingreso_viaje", "label": "Ingreso Viaje", "format": "currency"},
-            {"key": "pct_ingreso", "label": "% Ingresos", "format": "percent", "is_total_ratio": true, "numerator_key": "ingreso_viaje"},
-            {"key": "kms_viaje", "label": "Kms Viaje", "format": "integer"},
-            {"key": "viajes", "label": "Cant. Viajes"},
-            {"key": "combustible", "label": "Combustible", "format": "currency"},
-            {"key": "caseta_iave", "label": "Caseta IAVE", "format": "currency"},
-            {"key": "caseta_efectivo", "label": "Caseta Efectivo", "format": "currency"},
-            {"key": "sueldo_operador", "label": "Sueldo Operador", "format": "currency"},
-            {"key": "costo_liquidacion", "label": "Costo Liquidación Viaje", "format": "currency"},
-            {"key": "costo_total", "label": "Costo Viaje Total", "format": "currency", 
-              "formula": "lambda r: r['costo_liquidacion'] + r['sueldo_operador']"},
-            {"key": "pct_costo", "label": "% Costo Viaje Total", "format": "percent", "is_total_ratio": true, "numerator_key": "costo_total"},
-            {"key": "utilidad", "label": "Utilidad", "format": "currency", 
-              "formula": "lambda r: r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])"},
-            {"key": "pct_utilidad", "label": "% Utilidad", "format": "percent", 
-              "formula": "lambda r: (r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])) / r['ingreso_viaje'] if r['ingreso_viaje'] else 0"},
-            {"key": "ingreso_x_km", "label": "Ingreso x Km", "format": "currency", 
-              "formula": "lambda r: r['ingreso_viaje'] / r['kms_viaje'] if r['kms_viaje'] else 0"},
-            {"key": "ingreso_x_viaje", "label": "Ingreso x Viaje", "format": "currency", 
-              "formula": "lambda r: r['ingreso_viaje'] / r['viajes'] if r['viajes'] else 0"},
-            {"key": "costo_x_km", "label": "Costo x Km", "format": "currency", 
-              "formula": "lambda r: (r['costo_liquidacion'] + r['sueldo_operador']) / r['kms_viaje'] if r['kms_viaje'] else 0"}
+          {
+            "key": "d_unidad.id_unidad",
+            "label": "Unidad"
+          },
+          {
+            "key": "flete",
+            "label": "Flete",
+            "format": "currency"
+          },
+          {
+            "key": "otros_costos",
+            "label": "Otros",
+            "format": "currency"
+          },
+          {
+            "key": "ingreso_viaje",
+            "label": "Ingreso Viaje",
+            "format": "currency"
+          },
+          {
+            "key": "pct_ingreso",
+            "label": "% Ingresos",
+            "format": "percent",
+            "is_total_ratio": true,
+            "numerator_key": "ingreso_viaje"
+          },
+          {
+            "key": "kms_viaje",
+            "label": "Kms Viaje",
+            "format": "integer"
+          },
+          {
+            "key": "viajes",
+            "label": "Cant. Viajes"
+          },
+          {
+            "key": "combustible",
+            "label": "Combustible",
+            "format": "currency"
+          },
+          {
+            "key": "caseta_iave",
+            "label": "Caseta IAVE",
+            "format": "currency"
+          },
+          {
+            "key": "caseta_efectivo",
+            "label": "Caseta Efectivo",
+            "format": "currency"
+          },
+          {
+            "key": "sueldo_operador",
+            "label": "Sueldo Operador",
+            "format": "currency"
+          },
+          {
+            "key": "costo_liquidacion",
+            "label": "Costo Liquidación Viaje",
+            "format": "currency"
+          },
+          {
+            "key": "costo_total",
+            "label": "Costo Viaje Total",
+            "format": "currency",
+            "formula": "lambda r: r['costo_liquidacion'] + r['sueldo_operador']"
+          },
+          {
+            "key": "pct_costo",
+            "label": "% Costo Viaje Total",
+            "format": "percent",
+            "is_total_ratio": true,
+            "numerator_key": "costo_total"
+          },
+          {
+            "key": "utilidad",
+            "label": "Utilidad",
+            "format": "currency",
+            "formula": "lambda r: r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])"
+          },
+          {
+            "key": "pct_utilidad",
+            "label": "% Utilidad",
+            "format": "percent",
+            "formula": "lambda r: (r['ingreso_viaje'] - (r['costo_liquidacion'] + r['sueldo_operador'])) / r['ingreso_viaje'] if r['ingreso_viaje'] else 0"
+          },
+          {
+            "key": "ingreso_x_km",
+            "label": "Ingreso x Km",
+            "format": "currency",
+            "formula": "lambda r: r['ingreso_viaje'] / r['kms_viaje'] if r['kms_viaje'] else 0"
+          },
+          {
+            "key": "ingreso_x_viaje",
+            "label": "Ingreso x Viaje",
+            "format": "currency",
+            "formula": "lambda r: r['ingreso_viaje'] / r['viajes'] if r['viajes'] else 0"
+          },
+          {
+            "key": "costo_x_km",
+            "label": "Costo x Km",
+            "format": "currency",
+            "formula": "lambda r: (r['costo_liquidacion'] + r['sueldo_operador']) / r['kms_viaje'] if r['kms_viaje'] else 0"
+          }
         ]
       }
     },
     "inject_paths": {
-      "revenue_total": ["operational", "dashboard", "kpis", "revenue_total", "value"],
-      "revenue_meta": ["operational", "dashboard", "kpis", "revenue_total", "target"],
-      "revenue_previous": ["operational", "dashboard", "kpis", "revenue_total", "vs_last_year_value"],
-      "revenue_ytd": ["operational", "dashboard", "kpis", "revenue_total", "ytd_value"],
-      "revenue_variance": ["operational", "dashboard", "kpis", "revenue_total", "vs_last_year_delta"],
-      "revenue_ytd_variance": ["operational", "dashboard", "kpis", "revenue_total", "ytd_delta"],
-
-      "total_trips": ["operational", "dashboard", "kpis", "total_trips", "value"],
-      "trips_meta": ["operational", "dashboard", "kpis", "total_trips", "target"],
-      "trips_previous": ["operational", "dashboard", "kpis", "total_trips", "vs_last_year_value"],
-      "trips_ytd": ["operational", "dashboard", "kpis", "total_trips", "ytd_value"],
-      "trips_variance": ["operational", "dashboard", "kpis", "total_trips", "vs_last_year_delta"],
-      "trips_ytd_variance": ["operational", "dashboard", "kpis", "total_trips", "ytd_delta"],
-
-      "total_kilometers": ["operational", "dashboard", "kpis", "total_kilometers", "value"],
-      "kilometers_meta": ["operational", "dashboard", "kpis", "total_kilometers", "target"],
-      "kilometers_previous": ["operational", "dashboard", "kpis", "total_kilometers", "vs_last_year_value"],
-      "kilometers_ytd": ["operational", "dashboard", "kpis", "total_kilometers", "ytd_value"],
-      "kilometers_variance": ["operational", "dashboard", "kpis", "total_kilometers", "vs_last_year_delta"],
-      "kilometers_ytd_variance": ["operational", "dashboard", "kpis", "total_kilometers", "ytd_delta"],
-
-      "revenue_per_trip": ["operational", "dashboard", "kpis", "revenue_per_trip", "value"],
-      "ingreso_x_viaje_val": ["operational", "dashboard", "kpis", "revenue_per_trip", "value"],
-      "ingreso_x_viaje_prev": ["operational", "dashboard", "kpis", "revenue_per_trip", "vs_last_year_value"],
-      "ingreso_x_viaje_delta": ["operational", "dashboard", "kpis", "revenue_per_trip", "vs_last_year_delta"],
-      
-      "revenue_per_unit": ["operational", "dashboard", "kpis", "revenue_per_unit", "value"],
-      "ingreso_unit_val": ["operational", "dashboard", "kpis", "revenue_per_unit", "value"],
-      "ingreso_unit_prev": ["operational", "dashboard", "kpis", "revenue_per_unit", "vs_last_year_value"],
-      "ingreso_unit_delta": ["operational", "dashboard", "kpis", "revenue_per_unit", "vs_last_year_delta"],
-      
-      "units_used": ["operational", "dashboard", "kpis", "units_used", "value"],
-      "units_qty_val": ["operational", "dashboard", "kpis", "units_used", "value"],
-      "units_qty_prev": ["operational", "dashboard", "kpis", "units_used", "vs_last_year_value"],
-      "units_qty_delta": ["operational", "dashboard", "kpis", "units_used", "vs_last_year_delta"],
-      
-      "customers_served": ["operational", "dashboard", "kpis", "customers_served", "value"],
-      "clientes_val": ["operational", "dashboard", "kpis", "customers_served", "value"],
-      "clientes_prev": ["operational", "dashboard", "kpis", "customers_served", "vs_last_year_value"],
-      "clientes_delta": ["operational", "dashboard", "kpis", "customers_served", "vs_last_year_delta"],
-      "load_status": ["operational", "dashboard", "kpis", "load_status", "value"],
-      
-      "utilizacion_val": ["operational", "dashboard", "kpis", "load_status", "value"],
-
-      "revenue_trends": ["operational", "dashboard", "charts", "revenue_trends"],
-      "trips_trends": ["operational", "dashboard", "charts", "trips_trends"],
-      "revenue_by_operation_type": ["operational", "dashboard", "charts", "revenue_by_operation_type"],
-      "revenue_by_unit": ["operational", "dashboard", "charts", "revenue_by_unit"],
-      "main_routes": ["operational", "dashboard", "tables", "main_routes"],
-      "routes_empty": ["operational", "dashboard", "tables", "routes_empty"],
-      "routes_loaded": ["operational", "dashboard", "tables", "routes_loaded"],
-      "top_clients": ["operational", "dashboard", "tables", "top_clients"],
-      "income_by_operator_report": ["operational", "dashboard", "tables", "income_by_operator_report"],
-      "income_by_unit_report": ["operational", "dashboard", "tables", "income_by_unit_report"]
+      "revenue_total": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_total"
+      ],
+      "revenue_total.revenue_total": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_total",
+        "value"
+      ],
+      "revenue_total.revenue_meta": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_total",
+        "target"
+      ],
+      "revenue_total.revenue_previous": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_total",
+        "vs_last_year_value"
+      ],
+      "revenue_total.revenue_ytd": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_total",
+        "ytd_value"
+      ],
+      "revenue_total.revenue_variance": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_total",
+        "vs_last_year_delta"
+      ],
+      "revenue_total.revenue_ytd_variance": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_total",
+        "ytd_delta"
+      ],
+      "total_trips": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trips"
+      ],
+      "total_trips.total_trips": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trips",
+        "value"
+      ],
+      "total_trips.trips_meta": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trips",
+        "target"
+      ],
+      "total_trips.trips_previous": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trips",
+        "vs_last_year_value"
+      ],
+      "total_trips.trips_ytd": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trips",
+        "ytd_value"
+      ],
+      "total_trips.trips_variance": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trips",
+        "vs_last_year_delta"
+      ],
+      "total_trips.trips_ytd_variance": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trips",
+        "ytd_delta"
+      ],
+      "total_kilometers": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_kilometers"
+      ],
+      "total_kilometers.total_kilometers": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_kilometers",
+        "value"
+      ],
+      "total_kilometers.kilometers_meta": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_kilometers",
+        "target"
+      ],
+      "total_kilometers.kilometers_previous": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_kilometers",
+        "vs_last_year_value"
+      ],
+      "total_kilometers.kilometers_ytd": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_kilometers",
+        "ytd_value"
+      ],
+      "total_kilometers.kilometers_variance": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_kilometers",
+        "vs_last_year_delta"
+      ],
+      "total_kilometers.kilometers_ytd_variance": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_kilometers",
+        "ytd_delta"
+      ],
+      "revenue_per_trip": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_per_trip"
+      ],
+      "revenue_per_trip.ingreso_x_viaje_val": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_per_trip",
+        "value"
+      ],
+      "revenue_per_trip.ingreso_x_viaje_prev": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_per_trip",
+        "vs_last_year_value"
+      ],
+      "revenue_per_trip.ingreso_x_viaje_delta": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_per_trip",
+        "vs_last_year_delta"
+      ],
+      "revenue_per_unit": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_per_unit"
+      ],
+      "revenue_per_unit.ingreso_unit_val": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_per_unit",
+        "value"
+      ],
+      "revenue_per_unit.ingreso_unit_prev": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_per_unit",
+        "vs_last_year_value"
+      ],
+      "revenue_per_unit.ingreso_unit_delta": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "revenue_per_unit",
+        "vs_last_year_delta"
+      ],
+      "units_used": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "units_used"
+      ],
+      "units_qty.units_qty_val": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "units_used",
+        "value"
+      ],
+      "units_qty.units_qty_prev": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "units_used",
+        "vs_last_year_value"
+      ],
+      "units_qty.units_qty_delta": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "units_used",
+        "vs_last_year_delta"
+      ],
+      "customers_served": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "customers_served"
+      ],
+      "customers.clientes_val": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "customers_served",
+        "value"
+      ],
+      "customers.clientes_prev": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "customers_served",
+        "vs_last_year_value"
+      ],
+      "customers.clientes_delta": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "customers_served",
+        "vs_last_year_delta"
+      ],
+      "load_status": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "load_status"
+      ],
+      "utilizacion_flota.utilizacion_val": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "load_status",
+        "value"
+      ],
+      "revenue_trends": [
+        "operational",
+        "dashboard",
+        "charts",
+        "revenue_trends"
+      ],
+      "trips_trends": [
+        "operational",
+        "dashboard",
+        "charts",
+        "trips_trends"
+      ],
+      "revenue_by_operation_type": [
+        "operational",
+        "dashboard",
+        "charts",
+        "revenue_by_operation_type"
+      ],
+      "revenue_by_unit": [
+        "operational",
+        "dashboard",
+        "charts",
+        "revenue_by_unit"
+      ],
+      "main_routes": [
+        "operational",
+        "dashboard",
+        "tables",
+        "main_routes"
+      ],
+      "routes_empty": [
+        "operational",
+        "dashboard",
+        "tables",
+        "routes_empty"
+      ],
+      "routes_loaded": [
+        "operational",
+        "dashboard",
+        "tables",
+        "routes_loaded"
+      ],
+      "top_clients": [
+        "operational",
+        "dashboard",
+        "tables",
+        "top_clients"
+      ],
+      "income_by_operator_report": [
+        "operational",
+        "dashboard",
+        "tables",
+        "income_by_operator_report"
+      ],
+      "income_by_unit_report": [
+        "operational",
+        "dashboard",
+        "tables",
+        "income_by_unit_report"
+      ]
     }
   },
   "operational-costs": {
     "section_key": "operational",
     "ttl_seconds": 3600,
     "kpi_roadmap": {
-      "total_trip_cost": "total_trip_costs",
-      "net_profit": "net_profit",
-      "profit_margin": "profit_margin",
-      "cost_per_km": "cost_per_km",
-      "fuel_cost": "fuel",
-      "toll_cost_iave": "toll_iave",
-      "toll_cost_cash": "toll_cash",
-      "driver_salary": "driver_salary"
+      "kc_utility": {
+        "dimensions": [],
+        "metrics": [
+          ["ingreso_viaje", "costo_viaje"],
+          ["meta_ingreso", "meta_costo"],
+          ["ingreso_viaje_anterior", "costo_anterior"],
+          ["ingreso_viaje_acumulado", "costo_acumulado"],
+          ["meta_ingreso_acumulado", "meta_costo_acumulado"]
+        ],
+        "columns": [
+          { 
+            "target": "current_value", 
+            "formula": "lambda r: (r.get('ingreso_viaje', 0) or 0) - (r.get('costo_viaje', 0) or 0)" 
+          },
+          { 
+            "target": "target_value", 
+            "formula": "lambda r: (r.get('meta_ingreso', 0) or 0) - (r.get('meta_costo', 0) or 0)" 
+          },
+          { 
+            "target": "previous_value", 
+            "formula": "lambda r: (r.get('ingreso_viaje_anterior', 0) or 0) - (r.get('costo_anterior', 0) or 0)" 
+          },
+          { 
+            "target": "current_ytd_value", 
+            "formula": "lambda r: (r.get('ingreso_viaje_acumulado', 0) or 0) - (r.get('costo_acumulado', 0) or 0)" 
+          },
+          { 
+            "target": "value_secondary", 
+            "formula": "lambda r: ((r.get('ingreso_viaje', 0) or 0) - (r.get('costo_viaje', 0) or 0)) / r['ingreso_viaje'] if r.get('ingreso_viaje') else 0"
+          },
+          {
+            "target": "deviation_vs_previous",
+            "formula": "lambda r: (((r.get('ingreso_viaje', 0) or 0) - (r.get('costo_viaje', 0) or 0)) - ((r.get('ingreso_viaje_anterior', 0) or 0) - (r.get('costo_anterior', 0) or 0))) / abs((r.get('ingreso_viaje_anterior', 0) or 0) - (r.get('costo_anterior', 0) or 0)) if ((r.get('ingreso_viaje_anterior', 0) or 0) - (r.get('costo_anterior', 0) or 0)) != 0 else 0"
+          },
+          { 
+            "target": "deviation_accumulated", 
+            "formula": "lambda r: (((r.get('ingreso_viaje_acumulado', 0) or 0) - (r.get('costo_acumulado', 0) or 0)) - ((r.get('meta_ingreso_acumulado', 0) or 0) - (r.get('meta_costo_acumulado', 0) or 0))) / ((r.get('meta_ingreso_acumulado', 0) or 0) - (r.get('meta_costo_acumulado', 0) or 0)) if ((r.get('meta_ingreso_acumulado', 0) or 0) - (r.get('meta_costo_acumulado', 0) or 0)) != 0 else 0" 
+          }
+        ]
+      },
+      "kc_total":{
+        "dimensions": [],
+        "metrics": [
+          ["costo_viaje"],
+          ["meta_costo"],
+          ["costo_anterior"],
+          ["costo_acumulado"],
+          ["meta_costo_acumulado"]
+        ],
+        "columns": [
+          { 
+            "target": "current_value", 
+            "key": "costo_viaje" 
+          },
+          { 
+            "target": "target_value", 
+            "key": "meta_costo" 
+          },
+          { 
+            "target": "previous_value", 
+            "key": "costo_anterior" 
+          },
+          { 
+            "target": "current_ytd_value", 
+            "key": "costo_acumulado" 
+          },
+          { 
+            "target": "deviation_vs_previous", 
+            "formula": "lambda r: (r.get('costo_viaje', 0) - r.get('costo_anterior', 0)) / r['costo_anterior'] if r.get('costo_anterior') else 0" 
+          },
+          { 
+            "target": "deviation_accumulated", 
+            "formula": "lambda r: (r.get('costo_acumulado', 0) - r.get('meta_costo_acumulado', 0)) / r['meta_costo_acumulado'] if r.get('meta_costo_acumulado') else 0" 
+          }
+        ]
+      }
     },
     "chart_roadmap": {
       "cost_and_profit_trends": {
-        "ingresos": "trip_revenue",
-        "costos": "total_trip_costs",
-        "utilidad": "net_profit"
+        "dimensions": [],
+        "metrics": [
+          ["ingreso_viaje", "costo_viaje", "sueldo_operador"]
+        ],
+        "columns": [
+          {
+            "series": "Costo Viaje Total",
+            "formula": "lambda r: (r.get('costo_viaje', 0) or 0) + (r.get('sueldo_operador', 0) or 0)"
+          },
+          {
+            "series": "Utilidad",
+            "formula": "lambda r: (r.get('ingreso_viaje', 0) or 0) - ((r.get('costo_viaje', 0) or 0) + (r.get('sueldo_operador', 0) or 0))"
+          },
+          {
+            "series": "% Utilidad",
+            "formula": "lambda r: ((r.get('ingreso_viaje', 0) or 0) - ((r.get('costo_viaje', 0) or 0) + (r.get('sueldo_operador', 0) or 0))) / r['ingreso_viaje'] if r.get('ingreso_viaje') else 0"
+          },
+          {
+            "series": "% Gasto",
+            "formula": "lambda r: ((r.get('costo_viaje', 0) or 0) + (r.get('sueldo_operador', 0) or 0)) / r['ingreso_viaje'] if r.get('ingreso_viaje') else 0"
+          }
+        ]
+      },
+      "cost_breakdown": {
+        "dimensions": [],
+        "metrics": [
+          ["costo_viaje", "sueldo_operador"],
+          ["costo_anterior", "sueldo_operador_anterior"],
+          ["meta_costo"]
+        ],
+        "columns": [
+          {
+            "series": "Costo Total Actual",
+            "type": "column",
+            "formula": "lambda r: (r.get('costo_viaje', 0) or 0) + (r.get('sueldo_operador', 0) or 0)"
+          },
+          {
+            "series": "Costo Total Año Anterior",
+            "type": "column",
+            "formula": "lambda r: (r.get('costo_anterior', 0) or 0) + (r.get('sueldo_operador_anterior', 0) or 0)"
+          },
+          {
+            "key": "meta_costo",
+            "series": "Meta Costo",
+            "type": "line"
+          }
+        ]
       }
     },
     "categorical_roadmap": {
       "cost_by_concept": {
-        "kpi": "settlement_costs",
-        "dimension": "d_trafico_concepto"
+        "dimensions": [
+          "d_trafico_concepto_clasificacion.nombre",
+          "d_trafico_concepto.concepto"
+        ],
+        "metrics": [
+          ["costo_viaje"]
+        ],
+        "columns": [
+          {
+            "key": "d_trafico_concepto_clasificacion.nombre",
+            "label": "Clasificación",
+            "role": "label"
+          },
+          {
+            "key": "d_trafico_concepto.concepto",
+            "label": "Concepto"
+          },
+          {
+            "key": "costo_viaje",
+            "label": "Costo (Sin Sueldo)",
+            "role": "value"
+          }
+        ]
       }
     },
     "table_roadmap": {
       "margin_by_route": {
-        "dimensions": ["d_ruta.ruta"],
-        "metrics": ["trip_revenue", "settlement_costs", "trips"],
+        "dimensions": [
+          "d_ruta.id_ruta",
+          "d_ruta.ruta"
+        ],
+        "metrics": [
+          "ingreso_viaje",
+          "flete",
+          "otros_costos",
+          "viajes",
+          "kms_viaje",
+          "costo_liquidacion",
+          "combustible",
+          "caseta_iave",
+          "caseta_efectivo",
+          "sueldo_operador"
+        ],
         "columns": [
-          {"key": "d_ruta.ruta", "label": "Ruta", "format": "text"},
-          {"key": "trip_revenue", "label": "Ingresos", "format": "currency"},
-          {"key": "settlement_costs", "label": "Costos", "format": "currency"},
-          {"key": "utilidad_calc", "label": "Utilidad", "format": "currency", "formula": "trip_revenue - settlement_costs"},
-          {"key": "margen_calc", "label": "Margen %", "format": "percent", "formula": "(trip_revenue - settlement_costs) / trip_revenue if trip_revenue else 0"},
-          {"key": "trips", "label": "Viajes", "format": "integer"}
+          { "key": "d_ruta.id_ruta", "label": "No.", "format": "integer" },
+          { "key": "d_ruta.ruta", "label": "Ruta", "format": "text" },
+          { "key": "flete", "label": "Flete", "format": "currency" },
+          { "key": "otros_costos", "label": "Otros", "format": "currency" },
+          { "key": "ingreso_viaje", "label": "Ingreso Viaje", "format": "currency" },
+          { "key": "pct_ingreso_viaje", "label": "% Ingreso Viaje", "format": "percent", "is_total_ratio": true, "numerator_key": "ingreso_viaje" },
+          { "key": "kms_viaje", "label": "Kms Viaje", "format": "integer" },
+          { "key": "viajes", "label": "Cant. Viajes", "format": "integer" },
+          { "key": "costo_liquidacion", "label": "Costo Liquidación", "format": "currency" },
+          { "key": "combustible", "label": "Combustible", "format": "currency" },
+          { "key": "caseta_iave", "label": "Caseta IAVE", "format": "currency" },
+          { "key": "caseta_efectivo", "label": "Caseta Efectivo", "format": "currency" },
+          { "key": "sueldo_operador", "label": "Sueldo Operador", "format": "currency" },
+          { "key": "costo_viaje_total_calc", "label": "Costo Viaje Total", "format": "currency", "formula": "(costo_liquidacion or 0) + (sueldo_operador or 0)" },
+          { "key": "pct_costo_viaje_total", "label": "% Costo Viaje Total", "format": "percent", "is_total_ratio": true, "numerator_key": "costo_viaje_total_calc" },
+          { "key": "utilidad_calc", "label": "Utilidad", "format": "currency", "formula": "(ingreso_viaje or 0) - (costo_viaje_total_calc or 0)" },
+          { "key": "pct_utilidad_calc", "label": "% Utilidad", "format": "percent", "formula": "((ingreso_viaje or 0) - (costo_viaje_total_calc or 0)) / (ingreso_viaje or 1) if ingreso_viaje else 0" },
+          { "key": "ingreso_x_km_calc", "label": "Ingreso x Km", "format": "currency", "formula": "(ingreso_viaje or 0) / (kms_viaje or 1) if kms_viaje else 0" },
+          { "key": "ingreso_x_viaje_calc", "label": "Ingreso x Viaje", "format": "currency", "formula": "(ingreso_viaje or 0) / (viajes or 1) if viajes else 0" },
+          { "key": "costo_x_km_calc", "label": "Costo x Km", "format": "currency", "formula": "(costo_viaje_total_calc or 0) / (kms_viaje or 1) if kms_viaje else 0" }
+        ]
+      },
+      "margin_by_unit": {
+        "dimensions": [
+          "d_unidad.id_unidad"
+        ],
+        "metrics": [
+          "ingreso_viaje",
+          "flete",
+          "otros_costos",
+          "viajes",
+          "kms_viaje",
+          "costo_liquidacion",
+          "combustible",
+          "caseta_iave",
+          "caseta_efectivo",
+          "sueldo_operador"
+        ],
+        "columns": [
+          { "key": "d_unidad.id_unidad", "label": "Unidad", "format": "text" },
+          { "key": "flete", "label": "Flete", "format": "currency" },
+          { "key": "otros_costos", "label": "Otros", "format": "currency" },
+          { "key": "ingreso_viaje", "label": "Ingreso Viaje", "format": "currency" },
+          { "key": "pct_ingreso_viaje", "label": "% Ingreso Viaje", "format": "percent", "is_total_ratio": true, "numerator_key": "ingreso_viaje" },
+          { "key": "kms_viaje", "label": "Kms Viaje", "format": "integer" },
+          { "key": "viajes", "label": "Cant. Viajes", "format": "integer" },
+          { "key": "costo_liquidacion", "label": "Costo Liquidación", "format": "currency" },
+          { "key": "combustible", "label": "Combustible", "format": "currency" },
+          { "key": "caseta_iave", "label": "Caseta IAVE", "format": "currency" },
+          { "key": "caseta_efectivo", "label": "Caseta Efectivo", "format": "currency" },
+          { "key": "sueldo_operador", "label": "Sueldo Operador", "format": "currency" },
+          { "key": "costo_viaje_total_calc", "label": "Costo Viaje Total", "format": "currency", "formula": "(costo_liquidacion or 0) + (sueldo_operador or 0)" },
+          { "key": "pct_costo_viaje_total", "label": "% Costo Viaje Total", "format": "percent", "is_total_ratio": true, "numerator_key": "costo_viaje_total_calc" },
+          { "key": "utilidad_calc", "label": "Utilidad", "format": "currency", "formula": "(ingreso_viaje or 0) - (costo_viaje_total_calc or 0)" },
+          { "key": "pct_utilidad_calc", "label": "% Utilidad", "format": "percent", "formula": "((ingreso_viaje or 0) - (costo_viaje_total_calc or 0)) / (ingreso_viaje or 1) if ingreso_viaje else 0" },
+          { "key": "ingreso_x_km_calc", "label": "Ingreso x Km", "format": "currency", "formula": "(ingreso_viaje or 0) / (kms_viaje or 1) if kms_viaje else 0" },
+          { "key": "ingreso_x_viaje_calc", "label": "Ingreso x Viaje", "format": "currency", "formula": "(ingreso_viaje or 0) / (viajes or 1) if viajes else 0" },
+          { "key": "costo_x_km_calc", "label": "Costo x Km", "format": "currency", "formula": "(costo_viaje_total_calc or 0) / (kms_viaje or 1) if kms_viaje else 0" }
+        ]
+      },
+      "margin_by_operator": {
+        "dimensions": [
+          "d_personal.id_personal",
+          "d_personal.nombre"
+        ],
+        "metrics": [
+          "ingreso_viaje",
+          "flete",
+          "otros_costos",
+          "viajes",
+          "kms_viaje",
+          "costo_liquidacion",
+          "combustible",
+          "caseta_iave",
+          "caseta_efectivo",
+          "sueldo_operador"
+        ],
+        "columns": [
+          { "key": "d_personal.id_personal", "label": "No.", "format": "integer" },
+          { "key": "d_personal.nombre", "label": "Nombre", "format": "text" },
+          { "key": "flete", "label": "Flete", "format": "currency" },
+          { "key": "otros_costos", "label": "Otros", "format": "currency" },
+          { "key": "ingreso_viaje", "label": "Ingreso Viaje", "format": "currency" },
+          { "key": "pct_ingreso_viaje", "label": "% Ingreso Viaje", "format": "percent", "is_total_ratio": true, "numerator_key": "ingreso_viaje" },
+          { "key": "kms_viaje", "label": "Kms Viaje", "format": "integer" },
+          { "key": "viajes", "label": "Cant. Viajes", "format": "integer" },
+          { "key": "costo_liquidacion", "label": "Costo Liquidación", "format": "currency" },
+          { "key": "combustible", "label": "Combustible", "format": "currency" },
+          { "key": "caseta_iave", "label": "Caseta IAVE", "format": "currency" },
+          { "key": "caseta_efectivo", "label": "Caseta Efectivo", "format": "currency" },
+          { "key": "sueldo_operador", "label": "Sueldo Operador", "format": "currency" },
+          { "key": "costo_viaje_total_calc", "label": "Costo Viaje Total", "format": "currency", "formula": "(costo_liquidacion or 0) + (sueldo_operador or 0)" },
+          { "key": "pct_costo_viaje_total", "label": "% Costo Viaje Total", "format": "percent", "is_total_ratio": true, "numerator_key": "costo_viaje_total_calc" },
+          { "key": "utilidad_calc", "label": "Utilidad", "format": "currency", "formula": "(ingreso_viaje or 0) - (costo_viaje_total_calc or 0)" },
+          { "key": "pct_utilidad_calc", "label": "% Utilidad", "format": "percent", "formula": "((ingreso_viaje or 0) - (costo_viaje_total_calc or 0)) / (ingreso_viaje or 1) if ingreso_viaje else 0" },
+          { "key": "ingreso_x_km_calc", "label": "Ingreso x Km", "format": "currency", "formula": "(ingreso_viaje or 0) / (kms_viaje or 1) if kms_viaje else 0" },
+          { "key": "costo_x_km_calc", "label": "Costo x Km", "format": "currency", "formula": "(costo_viaje_total_calc or 0) / (kms_viaje or 1) if kms_viaje else 0" }
+        ]
+      },
+      "margin_by_trip": {
+        "dimensions": [
+          "d_viaje.id_area",
+          "d_viaje.no_viaje",
+          "d_viaje.ind_cargado"
+        ],
+        "metrics": [
+          "ingreso_viaje",
+          "flete",
+          "otros_costos",
+          "viajes",
+          "kms_viaje",
+          "costo_liquidacion",
+          "combustible",
+          "caseta_iave",
+          "caseta_efectivo",
+          "sueldo_operador"
+        ],
+        "columns": [
+          { "key": "d_viaje.no_viaje", "label": "No. Viaje", "format": "integer" },
+          { "key": "cargado_vacio_calc", "label": "Cargado/Vacío", "format": "text", "formula": "lambda r: \"Cargado\" if r.get('d_viaje.ind_cargado') == 1 else \"Vacío\"" },
+          { "key": "flete", "label": "Flete", "format": "currency" },
+          { "key": "otros_costos", "label": "Otros", "format": "currency" },
+          { "key": "ingreso_viaje", "label": "Ingreso Viaje", "format": "currency" },
+          { "key": "pct_ingreso_viaje", "label": "% Ingreso Viaje", "format": "percent", "is_total_ratio": true, "numerator_key": "ingreso_viaje" },
+          { "key": "kms_viaje", "label": "Kms Viaje", "format": "integer" },
+          { "key": "costo_liquidacion", "label": "Costo Liquidación", "format": "currency" },
+          { "key": "combustible", "label": "Combustible", "format": "currency" },
+          { "key": "caseta_iave", "label": "Caseta IAVE", "format": "currency" },
+          { "key": "caseta_efectivo", "label": "Caseta Efectivo", "format": "currency" },
+          { "key": "sueldo_operador", "label": "Sueldo Operador", "format": "currency" },
+          { "key": "costo_viaje_total_calc", "label": "Costo Viaje Total", "format": "currency", "formula": "(costo_liquidacion or 0) + (sueldo_operador or 0)" },
+          { "key": "pct_costo_viaje_total", "label": "% Costo Viaje Total", "format": "percent", "is_total_ratio": true, "numerator_key": "costo_viaje_total_calc" },
+          { "key": "utilidad_calc", "label": "Utilidad", "format": "currency", "formula": "(ingreso_viaje or 0) - (costo_viaje_total_calc or 0)" },
+          { "key": "pct_utilidad_calc", "label": "% Utilidad", "format": "percent", "formula": "((ingreso_viaje or 0) - (costo_viaje_total_calc or 0)) / (ingreso_viaje or 1) if ingreso_viaje else 0" },
+          { "key": "ingreso_x_km_calc", "label": "Ingreso x Km", "format": "currency", "formula": "(ingreso_viaje or 0) / (kms_viaje or 1) if kms_viaje else 0" },
+          { "key": "ingreso_x_viaje_calc", "label": "Ingreso x Viaje", "format": "currency", "formula": "(ingreso_viaje or 0) / (viajes or 1) if viajes else 0" },
+          { "key": "costo_x_km_calc", "label": "Costo x Km", "format": "currency", "formula": "(costo_viaje_total_calc or 0) / (kms_viaje or 1) if kms_viaje else 0" }
+        ]
+      },
+      "margin_by_client": {
+        "dimensions": [
+          "d_trafico_cliente.id_cliente",
+          "d_trafico_cliente.nombre_cliente"
+        ],
+        "metrics": [
+          "ingreso_viaje",
+          "flete",
+          "otros_costos",
+          "viajes",
+          "kms_viaje",
+          "costo_liquidacion",
+          "combustible",
+          "caseta_iave",
+          "caseta_efectivo",
+          "sueldo_operador"
+        ],
+        "columns": [
+          { "key": "d_trafico_cliente.id_cliente", "label": "No.", "format": "integer" },
+          { "key": "d_trafico_cliente.nombre_cliente", "label": "Cliente", "format": "text" },
+          { "key": "flete", "label": "Flete", "format": "currency" },
+          { "key": "otros_costos", "label": "Otros", "format": "currency" },
+          { "key": "ingreso_viaje", "label": "Ingreso Viaje", "format": "currency" },
+          { "key": "pct_ingreso_viaje", "label": "% Ingreso Viaje", "format": "percent", "is_total_ratio": true, "numerator_key": "ingreso_viaje" },
+          { "key": "kms_viaje", "label": "Kms Viaje", "format": "integer" },
+          { "key": "viajes", "label": "Cant. Viajes", "format": "integer" },
+          { "key": "costo_liquidacion", "label": "Costo Liquidación", "format": "currency" },
+          { "key": "combustible", "label": "Combustible", "format": "currency" },
+          { "key": "caseta_iave", "label": "Caseta IAVE", "format": "currency" },
+          { "key": "caseta_efectivo", "label": "Caseta Efectivo", "format": "currency" },
+          { "key": "sueldo_operador", "label": "Sueldo Operador", "format": "currency" },
+          { "key": "costo_viaje_total_calc", "label": "Costo Viaje Total", "format": "currency", "formula": "(costo_liquidacion or 0) + (sueldo_operador or 0)" },
+          { "key": "pct_costo_viaje_total", "label": "% Costo Viaje Total", "format": "percent", "is_total_ratio": true, "numerator_key": "costo_viaje_total_calc" },
+          { "key": "utilidad_calc", "label": "Utilidad", "format": "currency", "formula": "(ingreso_viaje or 0) - (costo_viaje_total_calc or 0)" },
+          { "key": "pct_utilidad_calc", "label": "% Utilidad", "format": "percent", "formula": "((ingreso_viaje or 0) - (costo_viaje_total_calc or 0)) / (ingreso_viaje or 1) if ingreso_viaje else 0" },
+          { "key": "ingreso_x_km_calc", "label": "Ingreso x Km", "format": "currency", "formula": "(ingreso_viaje or 0) / (kms_viaje or 1) if kms_viaje else 0" },
+          { "key": "ingreso_x_viaje_calc", "label": "Ingreso x Viaje", "format": "currency", "formula": "(ingreso_viaje or 0) / (viajes or 1) if viajes else 0" },
+          { "key": "costo_x_km_calc", "label": "Costo x Km", "format": "currency", "formula": "(costo_viaje_total_calc or 0) / (kms_viaje or 1) if kms_viaje else 0" }
         ]
       },
       "income_by_unit_report": {
-        "dimensions": ["d_unidad.id_unidad"],
-        "metrics": ["trip_revenue", "settlement_costs", "kilometers"],
+        "dimensions": [
+          "d_unidad.id_unidad"
+        ],
+        "metrics": [
+          "trip_revenue",
+          "settlement_costs",
+          "kilometers"
+        ],
         "columns": [
-          {"key": "d_unidad.id_unidad", "label": "Unidad", "format": "text"},
-          {"key": "trip_revenue", "label": "Ingresos", "format": "currency"},
-          {"key": "settlement_costs", "label": "Costos", "format": "currency"},
-          {"key": "utilidad_calc", "label": "Utilidad", "format": "currency", "formula": "trip_revenue - settlement_costs"},
-          {"key": "costo_km_calc", "label": "Costo/Km", "format": "currency", "formula": "settlement_costs / kilometers if kilometers else 0"}
+          {
+            "key": "d_unidad.id_unidad",
+            "label": "Unidad",
+            "format": "text"
+          },
+          {
+            "key": "trip_revenue",
+            "label": "Ingresos",
+            "format": "currency"
+          },
+          {
+            "key": "settlement_costs",
+            "label": "Costos",
+            "format": "currency"
+          },
+          {
+            "key": "utilidad_calc",
+            "label": "Utilidad",
+            "format": "currency",
+            "formula": "trip_revenue - settlement_costs"
+          },
+          {
+            "key": "costo_km_calc",
+            "label": "Costo/Km",
+            "format": "currency",
+            "formula": "settlement_costs / kilometers if kilometers else 0"
+          }
         ]
       }
     },
     "inject_paths": {
-      "profit_per_trip": ["operational", "dashboard", "kpis", "profit_per_trip"],
-      "total_trip_cost": ["operational", "dashboard", "kpis", "total_trip_cost"],
-      "net_profit": ["operational", "dashboard", "kpis", "net_profit"],
-      "profit_margin": ["operational", "dashboard", "kpis", "profit_margin"],
-      "cost_per_km": ["operational", "dashboard", "kpis", "cost_per_km"],
-      "fuel_cost": ["operational", "dashboard", "kpis", "fuel_cost"],
-      "toll_cost_iave": ["operational", "dashboard", "kpis", "toll_cost_iave"],
-      "toll_cost_cash": ["operational", "dashboard", "kpis", "toll_cost_cash"],
-      "driver_salary": ["operational", "dashboard", "kpis", "driver_salary"],
-      "cost_and_profit_trends": ["operational", "dashboard", "charts", "cost_and_profit_trends"],
-      "cost_by_concept": ["operational", "dashboard", "charts", "cost_by_concept"],
-      "cost_breakdown": ["operational", "dashboard", "charts", "cost_breakdown"],
-      "margin_by_route": ["operational", "dashboard", "tables", "margin_by_route"],
-      "income_by_unit_report": ["operational", "dashboard", "tables", "income_by_unit_report"]
+      "profit_per_trip": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "profit_per_trip"
+      ],
+      "kc_utility.current_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "profit_per_trip",
+        "value"
+      ],
+      "kc_utility.target_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "profit_per_trip",
+        "target"
+      ],
+      "kc_utility.previous_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "profit_per_trip",
+        "vs_last_year_value"
+      ],
+      "kc_utility.current_ytd_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "profit_per_trip",
+        "ytd_value"
+      ],
+      "kc_utility.value_secondary": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "profit_per_trip",
+        "value_secondary"
+      ],
+      "kc_utility.deviation_vs_previous": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "profit_per_trip",
+        "vs_last_year_delta"
+      ],
+      "kc_utility.deviation_accumulated": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "profit_per_trip",
+        "ytd_delta"
+      ],
+      "kc_total.current_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trip_cost",
+        "value"
+      ],
+      "kc_total.target_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trip_cost",
+        "target"
+      ],
+      "kc_total.previous_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trip_cost",
+        "vs_last_year_value"
+      ],
+      "kc_total.current_ytd_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trip_cost",
+        "ytd_value"
+      ],
+      "kc_total.deviation_vs_previous": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trip_cost",
+        "vs_last_year_delta"
+      ],
+      "kc_total.deviation_accumulated": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trip_cost",
+        "ytd_delta"
+      ],
+      "total_trip_cost": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "total_trip_cost"
+      ],
+      "net_profit": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "net_profit"
+      ],
+      "profit_margin": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "profit_margin"
+      ],
+      "cost_per_km": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "cost_per_km"
+      ],
+      "fuel_cost": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "fuel_cost"
+      ],
+      "toll_cost_iave": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "toll_cost_iave"
+      ],
+      "toll_cost_cash": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "toll_cost_cash"
+      ],
+      "driver_salary": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "driver_salary"
+      ],
+      "cost_and_profit_trends": [
+        "operational",
+        "dashboard",
+        "charts",
+        "cost_and_profit_trends"
+      ],
+      "cost_by_concept": [
+        "operational",
+        "dashboard",
+        "charts",
+        "cost_by_concept"
+      ],
+      "cost_breakdown": [
+        "operational",
+        "dashboard",
+        "charts",
+        "cost_breakdown"
+      ],
+      "margin_by_route": [
+        "operational",
+        "dashboard",
+        "tables",
+        "margin_by_route"
+      ],
+      "margin_by_unit": [
+        "operational",
+        "dashboard",
+        "tables",
+        "margin_by_unit"
+      ],
+      "margin_by_operator": [
+        "operational",
+        "dashboard",
+        "tables",
+        "margin_by_operator"
+      ],
+      "margin_by_trip": [
+        "operational",
+        "dashboard",
+        "tables",
+        "margin_by_trip"
+      ],
+      "margin_by_client": [
+        "operational",
+        "dashboard",
+        "tables",
+        "margin_by_client"
+      ]
     }
   },
   "operational-performance": {
     "section_key": "operational",
     "ttl_seconds": 3600,
     "kpi_roadmap": {
-      "real_yield": "fuel_yield",
-      "real_kilometers": "kilometers",
-      "liters_consumed": "total_liters",
-      "loaded_trips": "loaded_trips",
-      "fleet_utilization": "fleet_utilization"
+      "rp_kms_lt": {
+        "metrics": [
+          [
+            "kms_real",
+            "litros_real"
+          ],
+          [
+            "meta_kms",
+            "meta_rendimiento_real"
+          ],
+          [
+            "kms_anterior",
+            "litros_anterior"
+          ],
+          [
+            "kms_acumulado",
+            "litros_acumulado"
+          ],
+          [
+            "meta_kms_acumulado",
+            "meta_litros_acumulado"
+          ]
+        ],
+        "columns": [
+          {
+            "target": "current_value",
+            "formula": "lambda r: r['kms_real'] / r['litros_real'] if r.get('litros_real') else 0"
+          },
+          {
+            "key": "meta_rendimiento_real",
+            "target": "target_value"
+          },
+          {
+            "target": "previous_value",
+            "formula": "lambda r: r['kms_anterior'] / r['litros_anterior'] if r.get('litros_anterior') else 0"
+          },
+          {
+            "target": "current_ytd_value",
+            "formula": "lambda r: r['kms_acumulado'] / r['litros_acumulado'] if r.get('litros_acumulado') else 0"
+          },
+          {
+            "target": "deviation_vs_previous",
+            "formula": "lambda r: ((r['kms_real']/r['litros_real'] if r.get('litros_real') else 0) - (r['kms_anterior']/r['litros_anterior'] if r.get('litros_anterior') else 0)) / (r['kms_anterior']/r['litros_anterior']) if r.get('litros_anterior') and (r['kms_anterior']/r['litros_anterior']) != 0 else 0"
+          },
+          {
+            "target": "deviation_accumulated",
+            "formula": "lambda r: ((r['kms_acumulado']/r['litros_acumulado'] if r.get('litros_acumulado') else 0) - (r['meta_kms_acumulado']/r['meta_litros_acumulado'] if r.get('meta_litros_acumulado') else 0)) / (r['meta_kms_acumulado']/r['meta_litros_acumulado']) if r.get('meta_litros_acumulado') and (r['meta_kms_acumulado']/r['meta_litros_acumulado']) != 0 else 0"
+          }
+        ]
+      },
+      "rp_kms_tot": {
+        "dimensions": [],
+        "metrics": [
+          ["kms_real", "viajes_real"],
+          ["meta_kms"],
+          ["kms_anterior"],
+          ["kms_acumulado"],
+          ["meta_kms_acumulado"]
+        ],
+        "columns": [
+          {
+            "key": "kms_real",
+            "target": "current_value"
+          },
+          { 
+            "key": "meta_kms",
+            "target": "target_value"
+          },
+          { 
+            "key": "kms_anterior",
+            "target": "previous_value"
+          },
+          { 
+            "key": "kms_acumulado",
+            "target": "current_ytd_value"
+          },
+          { 
+            "target": "value_per_trip", 
+            "formula": "lambda r: r['kms_real'] / r['viajes_real'] if r.get('viajes_real') else 0" 
+          },
+          { 
+            "target": "deviation_vs_previous", 
+            "formula": "lambda r: (r['kms_real'] - r['kms_anterior']) / r['kms_anterior'] if r.get('kms_anterior') else 0" 
+          },
+          { 
+            "target": "deviation_accumulated", 
+            "formula": "lambda r: (r['kms_acumulado'] - r['meta_kms_acumulado']) / r['meta_kms_acumulado'] if r.get('meta_kms_acumulado') else 0" 
+          }
+        ]
+      },
+      "rp_litros": {
+        "dimensions": [],
+        "metrics": [
+          ["litros_real", "litros_viaje", "viajes_real"],
+          ["meta_litros"],
+          ["litros_real_anterior", "litros_viaje_anterior"],
+          ["litros_real_acumulado", "litros_viaje_acumulado"],
+          ["meta_litros_acumulado"]
+        ],
+        "columns": [
+          { 
+            "target": "current_value", 
+            "formula": "lambda r: (r.get('litros_real', 0) or 0) + (r.get('litros_viaje', 0) or 0)"
+          },
+          { 
+            "key": "meta_litros",
+            "target": "target_value" 
+          },
+          { 
+            "target": "previous_value", 
+            "formula": "lambda r: (r.get('litros_real_anterior', 0) or 0) + (r.get('litros_viaje_anterior', 0) or 0)" 
+          },
+          { 
+            "target": "current_ytd_value", 
+            "formula": "lambda r: (r.get('litros_real_acumulado', 0) or 0) + (r.get('litros_viaje_acumulado', 0) or 0)" 
+          },
+          { 
+            "target": "value_per_trip", 
+            "formula": "lambda r: ((r.get('litros_real', 0) or 0) + (r.get('litros_viaje', 0) or 0)) / r['viajes_real'] if r.get('viajes_real') else 0" 
+          },
+          { 
+            "target": "deviation_vs_previous", 
+            "formula": "lambda r: (((r.get('litros_real', 0) + r.get('litros_viaje', 0)) - (r.get('litros_real_anterior', 0) + r.get('litros_viaje_anterior', 0))) / (r.get('litros_real_anterior', 0) + r.get('litros_viaje_anterior', 0))) if (r.get('litros_real_anterior', 0) + r.get('litros_viaje_anterior', 0)) != 0 else 0" 
+          },
+          { 
+            "target": "deviation_accumulated", 
+            "formula": "lambda r: (((r.get('litros_real_acumulado', 0) + r.get('litros_viaje_acumulado', 0)) - r.get('meta_litros_acumulado', 0)) / r.get('meta_litros_acumulado', 0)) if r.get('meta_litros_acumulado') else 0" 
+          }
+        ]
+      }
     },
     "chart_roadmap": {
       "yield_trends": {
-        "actual": "fuel_yield",
-        "anterior": "fuel_yield_previous_year"
+        "metrics": [
+          ["kms_real", "litros_real", "litros_viaje"],
+          ["kms_anterior", "litros_real_anterior", "litros_viaje_anterior"],
+          ["meta_rendimiento_real"]
+        ],
+        "columns": [
+          {
+            "series": "Rendimiento Real",
+            "formula": "lambda r: r['kms_real'] / (r['litros_real'] + r['litros_viaje']) if (r.get('litros_real', 0) + r.get('litros_viaje', 0)) > 0 else 0"
+          },
+          {
+            "series": "Año Anterior",
+            "formula": "lambda r: r['kms_anterior'] / (r['litros_real_anterior'] + r['litros_viaje_anterior']) if (r.get('litros_real_anterior', 0) + r.get('litros_viaje_anterior', 0)) > 0 else 0"
+          },
+          {
+            "key": "meta_rendimiento_real",
+            "series": "Meta"
+          },
+          {
+            "series": "Kms Real Calc",
+            "formula": "lambda r: r.get('kms_real', 0)"
+          },
+          {
+            "series": "Litros Total Calc",
+            "formula": "lambda r: r.get('litros_real', 0) + r.get('litros_viaje', 0)"
+          }
+        ]
       }
     },
     "categorical_roadmap": {
       "yield_by_operation": {
-        "kpi": "kilometers",
-        "dimension": "d_tipo_operacion"
+        "dimensions": [
+          "d_tipo_operacion.tipo_operacion"
+        ],
+        "metrics": [
+          ["kms_real", "litros_real", "litros_viaje"]
+        ],
+        "columns": [
+          {
+            "key": "d_tipo_operacion.tipo_operacion",
+            "role": "label"
+          },
+          {
+            "series": "Rendimiento",
+            "role": "value",
+            "formula": "lambda r: r['kms_real'] / (r.get('litros_real', 0) + r.get('litros_viaje', 0)) if (r.get('litros_real', 0) + r.get('litros_viaje', 0)) > 0 else 0"
+          }
+        ]
       }
     },
     "table_roadmap": {
       "operator_performance": {
-        "dimensions": ["d_personal.nombre"],
-        "metrics": ["trips", "kilometers", "loaded_trips"],
+        "dimensions": [
+          "d_personal.nombre"
+        ],
+        "metrics": [
+          ["viajes", "kms_viaje", "kms_real", "litros_real", "litros_viaje"]
+        ],
         "columns": [
-          {"key": "d_personal.nombre", "label": "Operador", "format": "text"},
-          {"key": "trips", "label": "Viajes", "format": "integer"},
-          {"key": "kilometers", "label": "Kms", "format": "integer"},
-          {"key": "loaded_trips", "label": "Con Carga", "format": "integer"},
-          {"key": "utilizacion_calc", "label": "% Carga", "format": "percent", "formula": "loaded_trips / trips if trips else 0"}
+          {
+            "key": "d_personal.nombre",
+            "label": "Operador"
+          },
+          {
+            "key": "viajes",
+            "label": "Viajes"
+          },
+          {
+            "key": "kms_viaje",
+            "label": "Kms Viaje"
+          },
+          {
+            "key": "kms_real",
+            "label": "Kms Real"
+          },
+          {
+            "label": "Litros Total",
+            "formula": "lambda r: (r.get('litros_real', 0) or 0) + (r.get('litros_viaje', 0) or 0)"
+          },
+          {
+            "label": "Rend. Viaje",
+            "formula": "lambda r: r['kms_viaje'] / ((r.get('litros_real', 0) or 0) + (r.get('litros_viaje', 0) or 0)) if ((r.get('litros_real', 0) or 0) + (r.get('litros_viaje', 0) or 0)) > 0 else 0"
+          },
+          {
+            "label": "Rend. Real",
+            "formula": "lambda r: r['kms_real'] / ((r.get('litros_real', 0) or 0) + (r.get('litros_viaje', 0) or 0)) if ((r.get('litros_real', 0) or 0) + (r.get('litros_viaje', 0) or 0)) > 0 else 0"
+          }
         ]
       },
       "performance_by_unit": {
-        "dimensions": ["d_unidad.id_unidad"],
-        "metrics": ["trips", "kilometers", "loaded_trips"],
+        "dimensions": [
+          "d_unidad.id_unidad"
+        ],
+        "metrics": [
+          ["viajes", "kms_real", "litros_real", "litros_viaje"]
+        ],
         "columns": [
-          {"key": "d_unidad.id_unidad", "label": "Unidad", "format": "text"},
-          {"key": "trips", "label": "Viajes", "format": "integer"},
-          {"key": "kilometers", "label": "Kms", "format": "integer"},
-          {"key": "loaded_trips", "label": "Con Carga", "format": "integer"},
-          {"key": "utilizacion_calc", "label": "% Carga", "format": "percent", "formula": "loaded_trips / trips if trips else 0"}
+          {
+            "key": "d_unidad.id_unidad",
+            "label": "Unidad"
+          },
+          {
+            "label": "Rend. Real",
+            "formula": "lambda r: r['kms_real'] / ((r.get('litros_real', 0) or 0) + (r.get('litros_viaje', 0) or 0)) if ((r.get('litros_real', 0) or 0) + (r.get('litros_viaje', 0) or 0)) > 0 else 0"
+          },
+          {
+            "key": "viajes",
+            "label": "Viajes"
+          }
         ]
       }
     },
     "inject_paths": {
-      "real_yield": ["operational", "dashboard", "kpis", "real_yield"],
-      "real_kilometers": ["operational", "dashboard", "kpis", "real_kilometers"],
-      "liters_consumed": ["operational", "dashboard", "kpis", "liters_consumed"],
-      "loaded_trips": ["operational", "dashboard", "kpis", "loaded_trips"],
-      "fleet_utilization": ["operational", "dashboard", "kpis", "fleet_utilization"],
-      "yield_trends": ["operational", "dashboard", "charts", "yield_trends"],
-      "yield_by_operation": ["operational", "dashboard", "charts", "yield_by_operation"],
-      "operator_performance": ["operational", "dashboard", "tables", "operator_performance"],
-      "performance_by_unit": ["operational", "dashboard", "tables", "performance_by_unit"]
+      "real_yield": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_yield"
+      ],
+      "current_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_yield",
+        "value"
+      ],
+      "target_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_yield",
+        "target"
+      ],
+      "previous_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_yield",
+        "vs_last_year_value"
+      ],
+      "current_ytd_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_yield",
+        "ytd_value"
+      ],
+      "deviation_vs_previous": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_yield",
+        "vs_last_year_delta"
+      ],
+      "deviation_accumulated": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_yield",
+        "ytd_delta"
+      ],
+      "real_kilometers": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_kilometers"
+      ],
+      "rp_kms_tot.current_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_kilometers",
+        "value"
+      ],
+      "rp_kms_tot.target_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_kilometers",
+        "target"
+      ],
+      "rp_kms_tot.previous_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_kilometers",
+        "vs_last_year_value"
+      ],
+      "rp_kms_tot.current_ytd_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_kilometers",
+        "ytd_value"
+      ],
+      "rp_kms_tot.value_per_trip": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_kilometers",
+        "value_per_trip"
+      ],
+      "rp_kms_tot.deviation_vs_previous": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_kilometers",
+        "vs_last_year_delta"
+      ],
+      "rp_kms_tot.deviation_accumulated": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "real_kilometers",
+        "ytd_delta"
+      ],
+      "liters_consumed": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "liters_consumed"
+      ],
+      "rp_litros.current_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "liters_consumed",
+        "value"
+      ],
+      "rp_litros.target_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "liters_consumed",
+        "target"
+      ],
+      "rp_litros.previous_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "liters_consumed",
+        "vs_last_year_value"
+      ],
+      "rp_litros.current_ytd_value": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "liters_consumed",
+        "ytd_value"
+      ],
+      "rp_litros.value_per_trip": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "liters_consumed",
+        "value_per_trip"
+      ],
+      "rp_litros.deviation_vs_previous": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "liters_consumed",
+        "vs_last_year_delta"
+      ],
+      "rp_litros.deviation_accumulated": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "liters_consumed",
+        "ytd_delta"
+      ],
+      "loaded_trips": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "loaded_trips"
+      ],
+      "fleet_utilization": [
+        "operational",
+        "dashboard",
+        "kpis",
+        "fleet_utilization"
+      ],
+      "yield_trends": [
+        "operational",
+        "dashboard",
+        "charts",
+        "yield_trends"
+      ],
+      "yield_by_operation": [
+        "operational",
+        "dashboard",
+        "charts",
+        "yield_by_operation"
+      ],
+      "operator_performance": [
+        "operational",
+        "dashboard",
+        "tables",
+        "operator_performance"
+      ],
+      "performance_by_unit": [
+        "operational",
+        "dashboard",
+        "tables",
+        "performance_by_unit"
+      ]
     }
   },
   "operational-routes": {
@@ -603,21 +2534,63 @@
     },
     "table_roadmap": {
       "main_routes": {
-        "dimensions": ["d_ruta.ruta", "d_ruta.origen", "d_ruta.destino"],
-        "metrics": ["trips", "kilometers", "trip_revenue"],
+        "dimensions": [
+          "d_ruta.ruta",
+          "d_ruta.origen",
+          "d_ruta.destino"
+        ],
+        "metrics": [
+          "trips",
+          "kilometers",
+          "trip_revenue"
+        ],
         "columns": [
-          {"key": "d_ruta.ruta", "label": "Ruta", "format": "text"},
-          {"key": "d_ruta.origen", "label": "Origen", "format": "text"},
-          {"key": "d_ruta.destino", "label": "Destino", "format": "text"},
-          {"key": "trips", "label": "Viajes", "format": "integer"},
-          {"key": "kilometers", "label": "Kms", "format": "integer"},
-          {"key": "trip_revenue", "label": "Ingresos", "format": "currency"}
+          {
+            "key": "d_ruta.ruta",
+            "label": "Ruta",
+            "format": "text"
+          },
+          {
+            "key": "d_ruta.origen",
+            "label": "Origen",
+            "format": "text"
+          },
+          {
+            "key": "d_ruta.destino",
+            "label": "Destino",
+            "format": "text"
+          },
+          {
+            "key": "trips",
+            "label": "Viajes",
+            "format": "integer"
+          },
+          {
+            "key": "kilometers",
+            "label": "Kms",
+            "format": "integer"
+          },
+          {
+            "key": "trip_revenue",
+            "label": "Ingresos",
+            "format": "currency"
+          }
         ]
       }
     },
     "inject_paths": {
-      "routes_map": ["operational", "dashboard", "charts", "routes_map"],
-      "main_routes": ["operational", "dashboard", "tables", "main_routes"]
+      "routes_map": [
+        "operational",
+        "dashboard",
+        "charts",
+        "routes_map"
+      ],
+      "main_routes": [
+        "operational",
+        "dashboard",
+        "tables",
+        "main_routes"
+      ]
     }
   },
   "administration-banks": {
@@ -637,14 +2610,54 @@
       }
     },
     "inject_paths": {
-      "initial_balance": ["administration", "dashboard", "kpis", "initial_balance"],
-      "total_income": ["administration", "dashboard", "kpis", "total_income"],
-      "total_expenses": ["administration", "dashboard", "kpis", "total_expenses"],
-      "final_balance": ["administration", "dashboard", "kpis", "final_balance"],
-      "cash_flow": ["administration", "dashboard", "kpis", "cash_flow"],
-      "daily_cash_flow": ["administration", "dashboard", "charts", "daily_cash_flow"],
-      "balance_by_bank": ["administration", "dashboard", "charts", "balance_by_bank"],
-      "income_expense_concepts": ["administration", "dashboard", "tables", "income_expense_concepts"]
+      "initial_balance": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "initial_balance"
+      ],
+      "total_income": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "total_income"
+      ],
+      "total_expenses": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "total_expenses"
+      ],
+      "final_balance": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "final_balance"
+      ],
+      "cash_flow": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "cash_flow"
+      ],
+      "daily_cash_flow": [
+        "administration",
+        "dashboard",
+        "charts",
+        "daily_cash_flow"
+      ],
+      "balance_by_bank": [
+        "administration",
+        "dashboard",
+        "charts",
+        "balance_by_bank"
+      ],
+      "income_expense_concepts": [
+        "administration",
+        "dashboard",
+        "tables",
+        "income_expense_concepts"
+      ]
     }
   },
   "administration-receivables": {
@@ -675,27 +2688,99 @@
     },
     "table_roadmap": {
       "aging_by_client": {
-        "dimensions": ["d_trafico_cliente.nombre_cliente"],
-        "metrics": ["accounts_receivable"],
+        "dimensions": [
+          "d_trafico_cliente.nombre_cliente"
+        ],
+        "metrics": [
+          "accounts_receivable"
+        ],
         "columns": [
-          {"key": "d_trafico_cliente.nombre_cliente", "label": "Cliente", "format": "text"},
-          {"key": "accounts_receivable", "label": "Saldo", "format": "currency"}
+          {
+            "key": "d_trafico_cliente.nombre_cliente",
+            "label": "Cliente",
+            "format": "text"
+          },
+          {
+            "key": "accounts_receivable",
+            "label": "Saldo",
+            "format": "currency"
+          }
         ]
       }
     },
     "inject_paths": {
-      "billed_amount": ["administration", "dashboard", "kpis", "billed_amount"],
-      "credit_notes": ["administration", "dashboard", "kpis", "credit_notes"],
-      "debit_notes": ["administration", "dashboard", "kpis", "debit_notes"],
-      "collected_amount": ["administration", "dashboard", "kpis", "collected_amount"],
-      "accounts_receivable": ["administration", "dashboard", "kpis", "accounts_receivable"],
-      "net_balance": ["administration", "dashboard", "kpis", "net_balance"],
-      "collection_efficiency": ["administration", "dashboard", "kpis", "collection_efficiency"],
-      "average_collection_days": ["administration", "dashboard", "kpis", "avg_collection_days"],
-      "receivables_by_status": ["administration", "dashboard", "charts", "receivables_by_status"],
-      "debtors_by_range": ["administration", "dashboard", "charts", "debtors_by_range"],
-      "collection_trends": ["administration", "dashboard", "charts", "collection_trends"],
-      "aging_by_client": ["administration", "dashboard", "tables", "aging_by_client"]
+      "billed_amount": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "billed_amount"
+      ],
+      "credit_notes": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "credit_notes"
+      ],
+      "debit_notes": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "debit_notes"
+      ],
+      "collected_amount": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "collected_amount"
+      ],
+      "accounts_receivable": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "accounts_receivable"
+      ],
+      "net_balance": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "net_balance"
+      ],
+      "collection_efficiency": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "collection_efficiency"
+      ],
+      "average_collection_days": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "avg_collection_days"
+      ],
+      "receivables_by_status": [
+        "administration",
+        "dashboard",
+        "charts",
+        "receivables_by_status"
+      ],
+      "debtors_by_range": [
+        "administration",
+        "dashboard",
+        "charts",
+        "debtors_by_range"
+      ],
+      "collection_trends": [
+        "administration",
+        "dashboard",
+        "charts",
+        "collection_trends"
+      ],
+      "aging_by_client": [
+        "administration",
+        "dashboard",
+        "tables",
+        "aging_by_client"
+      ]
     }
   },
   "administration-payables": {
@@ -724,18 +2809,78 @@
       }
     },
     "inject_paths": {
-      "initial_balance": ["administration", "dashboard", "kpis", "payables_initial_balance"],
-      "accounts_payable": ["administration", "dashboard", "kpis", "accounts_payable"],
-      "credit_notes": ["administration", "dashboard", "kpis", "payables_credit_notes"],
-      "advances": ["administration", "dashboard", "kpis", "advances"],
-      "supplier_payments": ["administration", "dashboard", "kpis", "supplier_payments"],
-      "final_balance": ["administration", "dashboard", "kpis", "payables_final_balance"],
-      "payment_efficiency": ["administration", "dashboard", "kpis", "payment_efficiency"],
-      "average_payment_days": ["administration", "dashboard", "kpis", "average_payment_days"],
-      "payables_by_status": ["administration", "dashboard", "charts", "payables_by_status"],
-      "suppliers_by_range": ["administration", "dashboard", "charts", "suppliers_by_range"],
-      "payables_trends": ["administration", "dashboard", "charts", "payables_trends"],
-      "aging_by_supplier": ["administration", "dashboard", "tables", "aging_by_supplier"]
+      "initial_balance": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payables_initial_balance"
+      ],
+      "accounts_payable": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "accounts_payable"
+      ],
+      "credit_notes": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payables_credit_notes"
+      ],
+      "advances": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "advances"
+      ],
+      "supplier_payments": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "supplier_payments"
+      ],
+      "final_balance": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payables_final_balance"
+      ],
+      "payment_efficiency": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payment_efficiency"
+      ],
+      "average_payment_days": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "average_payment_days"
+      ],
+      "payables_by_status": [
+        "administration",
+        "dashboard",
+        "charts",
+        "payables_by_status"
+      ],
+      "suppliers_by_range": [
+        "administration",
+        "dashboard",
+        "charts",
+        "suppliers_by_range"
+      ],
+      "payables_trends": [
+        "administration",
+        "dashboard",
+        "charts",
+        "payables_trends"
+      ],
+      "aging_by_supplier": [
+        "administration",
+        "dashboard",
+        "tables",
+        "aging_by_supplier"
+      ]
     }
   },
   "workshop-dashboard": {
@@ -782,38 +2927,165 @@
     },
     "table_roadmap": {
       "expenses_by_unit": {
-        "dimensions": ["d_unidad.id_unidad"],
-        "metrics": ["total_maintenance", "kilometers"],
+        "dimensions": [
+          "d_unidad.id_unidad"
+        ],
+        "metrics": [
+          "total_maintenance",
+          "kilometers"
+        ],
         "columns": [
-          {"key": "d_unidad.id_unidad", "label": "Unidad", "format": "text"},
-          {"key": "total_maintenance", "label": "Costo Mtto", "format": "currency"},
-          {"key": "kilometers", "label": "Kms", "format": "integer"},
-          {"key": "costo_km_calc", "label": "Costo/Km", "format": "currency", "formula": "total_maintenance / kilometers if kilometers else 0"}
+          {
+            "key": "d_unidad.id_unidad",
+            "label": "Unidad",
+            "format": "text"
+          },
+          {
+            "key": "total_maintenance",
+            "label": "Costo Mtto",
+            "format": "currency"
+          },
+          {
+            "key": "kilometers",
+            "label": "Kms",
+            "format": "integer"
+          },
+          {
+            "key": "costo_km_calc",
+            "label": "Costo/Km",
+            "format": "currency",
+            "formula": "total_maintenance / kilometers if kilometers else 0"
+          }
         ]
       }
     },
     "inject_paths": {
-      "internal_cost": ["workshop", "dashboard", "kpis", "internal_cost"],
-      "external_cost": ["workshop", "dashboard", "kpis", "external_cost"],
-      "tire_cost": ["workshop", "dashboard", "kpis", "tire_cost"],
-      "total_maintenance": ["workshop", "dashboard", "kpis", "total_maintenance"],
-      "availability_percent": ["workshop", "dashboard", "kpis", "availability_percent"],
-      "cost_per_km": ["workshop", "dashboard", "kpis", "cost_per_km"],
-      "workshop_entries": ["workshop", "dashboard", "kpis", "workshop_entries"],
-      "corrective_cost": ["workshop", "dashboard", "kpis", "corrective_cost"],
-      "preventive_cost": ["workshop", "dashboard", "kpis", "preventive_cost"],
-      "avg_repair_time": ["workshop", "dashboard", "kpis", "avg_repair_time"],
-      "units_in_workshop": ["workshop", "dashboard", "kpis", "units_in_workshop"],
-      "pending_orders": ["workshop", "dashboard", "kpis", "pending_orders"],
-      "maintenance_costs_trend": ["workshop", "dashboard", "charts", "maintenance_costs_trend"],
-      "maintenance_by_type": ["workshop", "dashboard", "charts", "maintenance_by_type"],
-      "maintenance_by_family": ["workshop", "dashboard", "charts", "maintenance_by_family"],
-      "maintenance_by_fleet": ["workshop", "dashboard", "charts", "maintenance_by_fleet"],
-      "maintenance_by_operation": ["workshop", "dashboard", "charts", "maintenance_by_operation"],
-      "cost_per_km_by_unit": ["workshop", "dashboard", "charts", "cost_per_km_by_unit"],
-      "cost_per_km_by_brand": ["workshop", "dashboard", "charts", "cost_per_km_by_brand"],
-      "workshop_entries_by_unit": ["workshop", "dashboard", "charts", "workshop_entries_by_unit"],
-      "expenses_by_unit": ["workshop", "dashboard", "tables", "expenses_by_unit"]
+      "internal_cost": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "internal_cost"
+      ],
+      "external_cost": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "external_cost"
+      ],
+      "tire_cost": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "tire_cost"
+      ],
+      "total_maintenance": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "total_maintenance"
+      ],
+      "availability_percent": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "availability_percent"
+      ],
+      "cost_per_km": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "cost_per_km"
+      ],
+      "workshop_entries": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "workshop_entries"
+      ],
+      "corrective_cost": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "corrective_cost"
+      ],
+      "preventive_cost": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "preventive_cost"
+      ],
+      "avg_repair_time": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "avg_repair_time"
+      ],
+      "units_in_workshop": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "units_in_workshop"
+      ],
+      "pending_orders": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "pending_orders"
+      ],
+      "maintenance_costs_trend": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "maintenance_costs_trend"
+      ],
+      "maintenance_by_type": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "maintenance_by_type"
+      ],
+      "maintenance_by_family": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "maintenance_by_family"
+      ],
+      "maintenance_by_fleet": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "maintenance_by_fleet"
+      ],
+      "maintenance_by_operation": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "maintenance_by_operation"
+      ],
+      "cost_per_km_by_unit": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "cost_per_km_by_unit"
+      ],
+      "cost_per_km_by_brand": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "cost_per_km_by_brand"
+      ],
+      "workshop_entries_by_unit": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "workshop_entries_by_unit"
+      ],
+      "expenses_by_unit": [
+        "workshop",
+        "dashboard",
+        "tables",
+        "expenses_by_unit"
+      ]
     }
   },
   "workshop-availability": {
@@ -836,12 +3108,42 @@
       }
     },
     "inject_paths": {
-      "availability_percent": ["workshop", "dashboard", "kpis", "availability_percent"],
-      "workshop_entries": ["workshop", "dashboard", "kpis", "workshop_entries"],
-      "units_in_workshop": ["workshop", "dashboard", "kpis", "units_in_workshop"],
-      "availability_trends": ["workshop", "dashboard", "charts", "availability_trends"],
-      "entries_and_km_by_unit": ["workshop", "dashboard", "charts", "entries_and_km_by_unit"],
-      "availability_detail": ["workshop", "dashboard", "tables", "availability_detail"]
+      "availability_percent": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "availability_percent"
+      ],
+      "workshop_entries": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "workshop_entries"
+      ],
+      "units_in_workshop": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "units_in_workshop"
+      ],
+      "availability_trends": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "availability_trends"
+      ],
+      "entries_and_km_by_unit": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "entries_and_km_by_unit"
+      ],
+      "availability_detail": [
+        "workshop",
+        "dashboard",
+        "tables",
+        "availability_detail"
+      ]
     }
   },
   "workshop-purchases": {
@@ -873,17 +3175,72 @@
       }
     },
     "inject_paths": {
-      "total_purchases": ["workshop", "dashboard", "kpis", "total_purchases"],
-      "fuel_purchases": ["workshop", "dashboard", "kpis", "fuel_purchases"],
-      "parts_purchases": ["workshop", "dashboard", "kpis", "parts_purchases"],
-      "tire_purchases": ["workshop", "dashboard", "kpis", "tire_purchases"],
-      "purchases_trend": ["workshop", "dashboard", "charts", "purchases_trend"],
-      "purchases_by_area": ["workshop", "dashboard", "charts", "purchases_by_area"],
-      "purchases_by_type": ["workshop", "dashboard", "charts", "purchases_by_type"],
-      "top_suppliers_chart": ["workshop", "dashboard", "charts", "top_suppliers_chart"],
-      "purchase_orders_detail": ["workshop", "dashboard", "tables", "purchase_orders_detail"],
-      "inventory_detail": ["workshop", "dashboard", "tables", "inventory_detail"],
-      "top_suppliers": ["workshop", "dashboard", "tables", "top_suppliers"]
+      "total_purchases": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "total_purchases"
+      ],
+      "fuel_purchases": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "fuel_purchases"
+      ],
+      "parts_purchases": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "parts_purchases"
+      ],
+      "tire_purchases": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "tire_purchases"
+      ],
+      "purchases_trend": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "purchases_trend"
+      ],
+      "purchases_by_area": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "purchases_by_area"
+      ],
+      "purchases_by_type": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "purchases_by_type"
+      ],
+      "top_suppliers_chart": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "top_suppliers_chart"
+      ],
+      "purchase_orders_detail": [
+        "workshop",
+        "dashboard",
+        "tables",
+        "purchase_orders_detail"
+      ],
+      "inventory_detail": [
+        "workshop",
+        "dashboard",
+        "tables",
+        "inventory_detail"
+      ],
+      "top_suppliers": [
+        "workshop",
+        "dashboard",
+        "tables",
+        "top_suppliers"
+      ]
     }
   },
   "workshop-inventory": {
@@ -908,19 +3265,84 @@
       }
     },
     "inject_paths": {
-      "initial_inventory": ["workshop", "dashboard", "kpis", "initial_inventory"],
-      "entries": ["workshop", "dashboard", "kpis", "inventory_entries"],
-      "outputs": ["workshop", "dashboard", "kpis", "inventory_outputs"],
-      "historical_valuation": ["workshop", "dashboard", "kpis", "historical_valuation"],
-      "current_valuation": ["workshop", "dashboard", "kpis", "current_valuation"],
-      "compliance_level": ["workshop", "dashboard", "kpis", "compliance_level"],
-      "items_registered": ["workshop", "dashboard", "kpis", "items_registered"],
-      "with_stock": ["workshop", "dashboard", "kpis", "items_with_stock"],
-      "without_stock": ["workshop", "dashboard", "kpis", "items_without_stock"],
-      "valuation_trends": ["workshop", "dashboard", "charts", "valuation_trends"],
-      "valuation_by_area": ["workshop", "dashboard", "charts", "valuation_by_area"],
-      "valuation_by_family": ["workshop", "dashboard", "tables", "valuation_by_family"],
-      "inventory_history": ["workshop", "dashboard", "tables", "inventory_history"]
+      "initial_inventory": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "initial_inventory"
+      ],
+      "entries": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "inventory_entries"
+      ],
+      "outputs": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "inventory_outputs"
+      ],
+      "historical_valuation": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "historical_valuation"
+      ],
+      "current_valuation": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "current_valuation"
+      ],
+      "compliance_level": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "compliance_level"
+      ],
+      "items_registered": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "items_registered"
+      ],
+      "with_stock": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "items_with_stock"
+      ],
+      "without_stock": [
+        "workshop",
+        "dashboard",
+        "kpis",
+        "items_without_stock"
+      ],
+      "valuation_trends": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "valuation_trends"
+      ],
+      "valuation_by_area": [
+        "workshop",
+        "dashboard",
+        "charts",
+        "valuation_by_area"
+      ],
+      "valuation_by_family": [
+        "workshop",
+        "dashboard",
+        "tables",
+        "valuation_by_family"
+      ],
+      "inventory_history": [
+        "workshop",
+        "dashboard",
+        "tables",
+        "inventory_history"
+      ]
     }
   }
 }

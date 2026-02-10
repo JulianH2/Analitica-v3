@@ -8,14 +8,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, Callable
 
-from dash import no_update, html
 from flask import session
 
 from dashboard_core.query_builder import SmartQueryBuilder
 from dashboard_core.db_helper import execute_dynamic_query
 from services.real_data_service import RealDataService
 from utils.helpers import format_value
+from dash import no_update, html
 from components.skeleton import get_skeleton
+import asyncio
 
 Json = Union[Dict[str, Any], List[Any]]
 PathList = List[Union[str, int]]
@@ -60,20 +61,20 @@ class DataManager:
                     break
             
             if config_path:
-                print(f"âœ… ConfiguraciÃ³n cargada desde: {config_path}")
+                print(f"✅ Configuración cargada desde: {config_path}")
                 with open(config_path, 'r', encoding='utf-8') as f:
                     self.SCREEN_MAP = json.load(f)
                 self._validate_and_normalize_configs()
             else:
-                print(f"âš ï¸ NO SE ENCONTRÃ“ screens.json.")
+                print(f"⚠️ NO SE ENCONTRÓ screens.json.")
                 self.SCREEN_MAP = self._get_minimal_config()
                 
         except Exception as e:
-            print(f"âŒ Error cargando configuraciÃ³n: {str(e)}")
+            print(f"❌ Error cargando configuración: {str(e)}")
             self.SCREEN_MAP = self._get_minimal_config()
     
     def _validate_and_normalize_configs(self) -> None:
-        for screen_id, config in self.SCREEN_MAP.items(): # type: ignore
+        for screen_id, config in self.SCREEN_MAP.items():
             defaults = {
                 "section_key": None,
                 "section_keys": None,
@@ -84,7 +85,7 @@ class DataManager:
                 "table_roadmap": {},
                 "inject_paths": {}
             }
-            self.SCREEN_MAP[screen_id] = {**defaults, **config} # type: ignore
+            self.SCREEN_MAP[screen_id] = {**defaults, **config}
     
     def _get_minimal_config(self) -> Dict[str, Dict[str, Any]]:
         return {
@@ -165,6 +166,8 @@ class DataManager:
                 return f"{val * 100:.1f}%"
             if fmt == "integer":
                 return f"{int(val):,}"
+            if fmt == "decimal":
+                return f"{val:,.2f}"
             return f"{val:,.2f}"
         except Exception:
             return "---"
@@ -208,56 +211,6 @@ class DataManager:
         
         return sliced
 
-    async def _resolve_any_kpi(self, db_config, kpi_id: str, filters: Dict, session_results: Dict) -> float:
-        if kpi_id in session_results:
-            return self._clean_val(session_results[kpi_id])
-        
-        try:
-            build = self.qb.build_kpi_query(kpi_id, filters=filters)
-        except Exception:
-            session_results[kpi_id] = 0.0
-            return 0.0
-        
-        if not build or build.get("error"):
-            session_results[kpi_id] = 0.0
-            return 0.0
-        
-        result = 0.0
-        
-        if build.get("type") == "placeholder":
-            result = self._clean_val(build.get("default_value", 0))
-            session_results[kpi_id] = result
-            return result
-        
-        if build.get("type") == "sql":
-            try:
-                rows = await execute_dynamic_query(db_config, build["query"])
-                if rows:
-                    v = list(rows[0].values())[0]
-                    result = self._clean_val(v)
-            except Exception:
-                result = 0.0
-        
-        elif build.get("type") == "derived":
-            formula = build.get("formula", "")
-            if formula:
-                try:
-                    tokens = re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', formula)
-                    tokens = sorted(list(set(tokens)), key=len, reverse=True)
-                    
-                    for token in tokens:
-                        if token in ["if", "else", "or", "and"]:
-                            continue
-                        sub_val = await self._resolve_any_kpi(db_config, token, filters, session_results)
-                        formula = re.sub(rf'\b{token}\b', str(sub_val), formula)
-                    
-                    result = self._clean_val(eval(formula))
-                except Exception:
-                    result = 0.0
-        
-        session_results[kpi_id] = result
-        return result
-
     def _safe_eval_formula(self, formula: str, row_dict: Dict[str, Any]) -> float:
         try:
             safe_dict = {k: self._clean_val(v) for k, v in row_dict.items()}
@@ -277,7 +230,6 @@ class DataManager:
             entry = self.cache[cache_key]
             if self._is_fresh(entry, int(cfg.get("ttl_seconds") or 30)):
                 return entry.data
-        
         base = self.base_service.get_full_dashboard_data()
         keys = cfg.get("section_keys") or [cfg.get("section_key")]
         data = {k: base.get(k, {}) for k in keys if k}
@@ -288,146 +240,262 @@ class DataManager:
                 self.cache[cache_key] = CacheEntry(data=data, ts=time.time())
             return data
         
-        kpi_roadmap = cfg.get("kpi_roadmap", {})
         inject_paths = cfg.get("inject_paths", {})
-        session_results = {}
-        connection_failed = False
 
-        for ui_key, kpi_id in kpi_roadmap.items():
-            if connection_failed:
-                break
-            try:
-                await self._resolve_any_kpi(db_config, kpi_id, filters, session_results) # type: ignore
-                base_kpi = kpi_id.replace("_previous_year", "").replace("_ytd", "").replace("_target", "")
-                for suffix in ["_previous_year", "_target", "_ytd", "_target_ytd"]:
-                    dep_kpi = f"{base_kpi}{suffix}"
-                    if dep_kpi in self.qb.metrics and dep_kpi not in session_results:
-                        await self._resolve_any_kpi(db_config, dep_kpi, filters, session_results) # type: ignore
-            except Exception as e:
-                if "Login failed" in str(e) or "28000" in str(e):
-                    connection_failed = True
-                    break
 
-        for ui_key, kpi_id in kpi_roadmap.items():
-            path = inject_paths.get(ui_key)
-            if not path:
-                continue
+        kpi_roadmap = cfg.get("kpi_roadmap", {})
+        
+        for group_key, spec in kpi_roadmap.items():
+            if not isinstance(spec, dict): continue 
             
-            val = self._clean_val(session_results.get(kpi_id, 0))
-            if val == 0:
-                continue
-            
-            metric_def = self.qb.metrics.get(kpi_id, {})
-            fmt = metric_def.get("format") or metric_def.get("recipe", {}).get("format", "number")
-            
-            base_kpi = kpi_id.replace("_previous_year", "").replace("_ytd", "").replace("_target", "")
-            prev_val = self._clean_val(session_results.get(f"{base_kpi}_previous_year", 0))
-            target_val = self._clean_val(session_results.get(f"{base_kpi}_target", 0))
-            ytd_val = self._clean_val(session_results.get(f"{base_kpi}_ytd", 0))
-            target_ytd = self._clean_val(session_results.get(f"{base_kpi}_target_ytd", 0))
-            
-            vs_prev_delta = self._safe_divide(val - prev_val, prev_val)
-            target_delta = self._safe_divide(val - target_val, target_val)
-            ytd_delta = self._safe_divide(ytd_val - target_ytd, target_ytd) if ytd_val else 0
-            
-            from datetime import date
-            prev_year_num = date.today().year - 1
-            
-            kpi_object = {
-                "title": metric_def.get("name", ui_key),
-                "value": val,
-                "value_formatted": self._format_val(val, fmt),
-                "format": fmt,
-                "vs_last_year_value": prev_val,
-                "vs_last_year_formatted": self._format_val(prev_val, fmt) if prev_val else "---",
-                "vs_last_year_delta": vs_prev_delta,
-                "vs_last_year_delta_formatted": self._format_delta(vs_prev_delta, prev_val > 0),
-                "label_prev_year": f"Vs {prev_year_num}",
-                "target": target_val,
-                "target_formatted": self._format_val(target_val, fmt) if target_val else "---",
-                "target_delta": target_delta,
-                "target_delta_formatted": self._format_delta(target_delta, target_val > 0),
-                "ytd_value": ytd_val,
-                "ytd_formatted": self._format_val(ytd_val, fmt) if ytd_val else "---",
-                "ytd_delta": ytd_delta,
-                "ytd_delta_formatted": self._format_delta(ytd_delta, target_ytd > 0),
-                "trend": vs_prev_delta * 100,
-                "trend_direction": "up" if vs_prev_delta > 0 else "down" if vs_prev_delta < 0 else "neutral",
-                "status": "success" if target_delta >= 0 else "warning"
-            }
-            self._set_path(data, path, kpi_object)
-
-        for chart_key, series_map in cfg.get("chart_roadmap", {}).items():
-            path = inject_paths.get(chart_key)
-            if not path or connection_failed:
-                continue
-            
-            chart_data = {"months": ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"], "series": []}
-            has_valid_data = False
-            
-            for series_name, kpi_id in series_map.items():
-                try:
-                    build = self.qb.build_series_query(kpi_id, filters=filters)
-                    values = [None] * 12
-                    if build and "query" in build:
-                        rows = await execute_dynamic_query(db_config, build["query"])
-                        if rows:
-                            has_valid_data = True
-                            for r in rows:
-                                p = r.get('period')
-                                if isinstance(p, int) and 1 <= p <= 12:
-                                    values[p-1] = self._clean_val(r.get('value')) # type: ignore
-                except Exception:
-                    pass
-                chart_data["series"].append({"name": series_name.capitalize(), "data": values}) # type: ignore
-            
-            if has_valid_data:
-                self._set_path(data, path, {"data": chart_data})
-
-        for chart_key, spec in cfg.get("categorical_roadmap", {}).items():
-            path = inject_paths.get(chart_key)
-            if not path or connection_failed:
-                continue
-            try:
-                build = self.qb.build_categorical_query(spec.get("kpi"), spec.get("dimension"), filters=filters)
-                chart_data = {"labels": [], "values": [], "categories": [], "series": [{"name": "Valor", "data": []}]}
-                has_valid_data = False
-                if build and "query" in build:
-                    rows = await execute_dynamic_query(db_config, build["query"])
-                    if rows:
-                        has_valid_data = True
-                        for r in rows:
-                            lbl = r.get("label", "N/A")
-                            val = self._clean_val(r.get("value"))
-                            chart_data["labels"].append(lbl)
-                            chart_data["values"].append(val)
-                            chart_data["categories"].append(lbl)
-                            chart_data["series"][0]["data"].append(val)
-                if has_valid_data:
-                    self._set_path(data, path, {"data": chart_data})
-            except Exception:
-                pass
-            
-        for table_key, spec in cfg.get("table_roadmap", {}).items():
-            path = inject_paths.get(table_key)
-            if not path or connection_failed:
-                continue
             dims = spec.get("dimensions", [])
-            mets = spec.get("metrics", [])
+            raw_metrics = spec.get("metrics", [])
+            metric_batches = []
+            if raw_metrics and isinstance(raw_metrics[0], list):
+                metric_batches = raw_metrics
+            else:
+                metric_batches = [raw_metrics] if raw_metrics else []
+            
             combined_filters = (filters or {}).copy()
             combined_filters.update(spec.get("fixed_filters", {}))
 
+            row_context = {}
+            tasks = []
+
+            for batch in metric_batches:
+                if not batch:
+                    continue
+                
+                try:
+                    build = self.qb.get_dataframe_query(batch, dims, filters=combined_filters)
+                    if build and "query" in build:
+                        tasks.append(execute_dynamic_query(db_config, build["query"]))
+                except Exception:
+                    continue
+            if tasks:
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+
+                for rows in results:
+                    if isinstance(rows, Exception):
+                        continue
+                    if rows and len(rows) > 0:
+                        for k, v in rows[0].items():
+                            row_context[k] = self._clean_val(v)
+            for col_def in spec.get("columns", []):
+                target_key = col_def.get("target")
+                path = inject_paths.get(f"{group_key}.{target_key}") or inject_paths.get(target_key)
+
+                if not path: continue
+
+                val = 0.0
+                if "formula" in col_def:
+                    f_str = col_def["formula"]
+                    try:
+                        if "lambda" in f_str:
+                            calc_func = eval(f_str, {"__builtins__": {}})
+                            val = calc_func(row_context)
+                        else:
+                            val = eval(f_str, {"__builtins__": {}}, row_context)
+                    except Exception:
+                        val = 0.0
+                else:
+                    data_key = col_def.get("key")
+                    val = row_context.get(data_key, 0.0)
+                clean_val = self._clean_val(val)
+                self._set_path(data, path, clean_val)
+                if path and len(path) > 1:
+                    leaf = path[-1]
+                    parent_path = path[:-1]
+                    kpi_key = path[-2] if len(path) >= 2 else ""
+                    is_count_kpi = kpi_key in ("total_trips", "total_kilometers", "units_used", "customers_served", "real_kilometers")
+                    is_decimal_kpi = kpi_key in ("real_yield", "liters_consumed")
+                    fmt = "integer" if is_count_kpi else ("decimal" if is_decimal_kpi else "currency")
+                    if leaf == "value":
+                        self._set_path(data, parent_path + ["value_formatted"], self._format_val(clean_val, fmt))
+                    elif leaf == "target":
+                        self._set_path(data, parent_path + ["target_formatted"], self._format_val(clean_val, fmt))
+                    elif leaf == "vs_last_year_value":
+                        self._set_path(data, parent_path + ["vs_last_year_formatted"], self._format_val(clean_val, fmt))
+                    elif leaf == "ytd_value":
+                        self._set_path(data, parent_path + ["ytd_formatted"], self._format_val(clean_val, fmt))
+                    elif leaf in ("trips_meta", "trips_previous", "trips_ytd", "kms_meta", "kms_anterior", "kms_ytd", "kms_valor"):
+                        fmt_leaf = "integer" if "trips" in leaf or "kms" in leaf else "currency"
+                        self._set_path(data, parent_path + [leaf + "_formatted"], self._format_val(clean_val, fmt_leaf))
+                    elif "delta" in leaf or "variance" in leaf:
+                        self._set_path(data, parent_path + [leaf + "_formatted"], self._format_delta(clean_val))
+
+
+
+        if use_cache:
+            self.cache[cache_key] = CacheEntry(data=data, ts=time.time())
+
+
+        chart_roadmap = cfg.get("chart_roadmap", {})
+        for chart_key, spec in chart_roadmap.items():
+            path = inject_paths.get(chart_key)
+            if not path: continue
+            chart_batches = []
+            if isinstance(spec, dict) and "metrics" in spec: 
+                raw_c = spec["metrics"]
+                chart_batches = raw_c if (raw_c and isinstance(raw_c[0], list)) else [raw_c]
+                series_defs = spec.get("columns", [])
+            else: 
+                chart_batches = [list(spec.values())] if isinstance(spec, dict) else []
+                series_defs = [{"key": v, "series": k} for k, v in spec.items()]
+
+            temp_results = {i: {} for i in range(1, 13)}
+            for batch in chart_batches:
+                try:
+                    build = self.qb.get_dataframe_query(batch, ["__month__"], filters=filters)
+                    if build and "query" in build:
+                        rows = await execute_dynamic_query(db_config, build["query"])
+                        if rows:
+                            for r in rows:
+                                p_val = r.get('__month__') or r.get('month') or r.get('period')
+                                try:
+                                    if p_val is None:
+                                        p_int = 0
+                                    else:
+                                        p_int = int(p_val)
+                                except Exception:
+                                    p_int = 0
+                                
+                                if 1 <= p_int <= 12:
+                                    for k, v in r.items():
+                                        if k not in ["period", "month", "__month__"]:
+                                            temp_results[p_int][k] = self._clean_val(v)
+                except Exception: pass
+
+            chart_data = {"months": ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"], "series": []}
+            has_valid = False
+            for s_def in series_defs:
+                key = s_def.get("key")
+                s_name = s_def.get("series", "Serie")
+                formula_str = s_def.get("formula")
+                if formula_str:
+                    try:
+                        calc_func = eval(formula_str, {"__builtins__": {}}) if "lambda" in formula_str else None
+                        vals = []
+                        for m in range(1, 13):
+                            row = temp_results.get(m, {})
+                            try:
+                                v = calc_func(row) if calc_func else 0.0
+                            except Exception:
+                                v = 0.0
+                            vals.append(self._clean_val(v))
+                    except Exception:
+                        vals = [0.0] * 12
+                else:
+                    vals = [temp_results[m].get(key, 0.0) for m in range(1, 13)]
+                if any(v != 0 for v in vals): has_valid = True
+                chart_data["series"].append({"name": s_name.capitalize(), "data": vals})
+            
+            if has_valid:
+                target_path = path + ["data"]
+                self._set_path(data, target_path, chart_data)
+
+        if use_cache:
+            self.cache[cache_key] = CacheEntry(data=data, ts=time.time())
+
+
+
+
+        for chart_key, spec in cfg.get("categorical_roadmap", {}).items():
+            path = inject_paths.get(chart_key)
+            if not path: continue
+            if not isinstance(spec, dict): continue
+
+            try:
+                dims = [spec.get("dimension")] if isinstance(spec.get("dimension"), str) else spec.get("dimensions", [])
+                raw_mets = spec.get("metrics", [])
+                mets = raw_mets[0] if raw_mets and isinstance(raw_mets[0], list) else (raw_mets if isinstance(raw_mets, list) else [spec.get("kpi")] if spec.get("kpi") else [])
+
+                chart_data = {"labels": [], "values": [], "categories": [], "series": [{"name": "Valor", "data": []}]}
+                has_data = False
+
+                if spec.get("columns"):
+                    label_col = next((c for c in spec["columns"] if c.get("role") == "label"), None)
+                    value_col = next((c for c in spec["columns"] if c.get("role") == "value"), None)
+                    label_key = label_col.get("key") if label_col else None
+                    series_name = (value_col.get("series") or "Valor") if value_col else "Valor"
+                    formula_str = value_col.get("formula") if value_col else None
+                    value_key = value_col.get("key") if value_col else None
+                    calc_func = eval(formula_str, {"__builtins__": {}}) if formula_str and "lambda" in formula_str else None
+
+                    if not mets or not dims:
+                        pass
+                    else:
+                        build = self.qb.get_dataframe_query(mets, dims, filters=filters)
+                        if build and "query" in build:
+                            rows = await execute_dynamic_query(db_config, build["query"])
+                            if rows:
+                                has_data = True
+                                for r in rows[:15]:
+                                    lbl = str(r.get(label_key, "N/A")) if label_key else "N/A"
+                                    if calc_func:
+                                        try:
+                                            val = self._clean_val(calc_func(r))
+                                        except Exception:
+                                            val = 0.0
+                                    else:
+                                        val = self._clean_val(r.get(value_key, 0))
+                                    chart_data["labels"].append(lbl)
+                                    chart_data["values"].append(val)
+                                    chart_data["categories"].append(lbl)
+                                    chart_data["series"][0]["name"] = series_name
+                                    chart_data["series"][0]["data"].append(val)
+                                sorted_tuples = sorted(
+                                    zip(chart_data["values"], chart_data["labels"], chart_data["categories"]),
+                                    key=lambda t: -(t[0] if isinstance(t[0], (int, float)) else 0)
+                                )
+                                chart_data["values"] = [t[0] for t in sorted_tuples]
+                                chart_data["labels"] = [t[1] for t in sorted_tuples]
+                                chart_data["categories"] = [t[2] for t in sorted_tuples]
+                                chart_data["series"][0]["data"] = chart_data["values"]
+                else:
+                    mets = [spec.get("kpi")] if isinstance(spec.get("kpi"), str) else mets
+                    build = self.qb.get_dataframe_query(mets, dims, filters=filters)
+                    if build and "query" in build:
+                        rows = await execute_dynamic_query(db_config, build["query"])
+                        if rows:
+                            has_data = True
+                            val_key = mets[0] if mets else "value"
+                            rows.sort(key=lambda x: self._clean_val(x.get(val_key, 0)), reverse=True)
+                            for r in rows[:15]:
+                                lbl = "N/A"
+                                for k in r.keys():
+                                    if k not in (mets if isinstance(mets[0], str) else []):
+                                        lbl = str(r[k])
+                                        break
+                                val = self._clean_val(r.get(val_key, 0))
+                                chart_data["labels"].append(lbl)
+                                chart_data["values"].append(val)
+                                chart_data["categories"].append(lbl)
+                                chart_data["series"][0]["data"].append(val)
+
+                if has_data:
+                    self._set_path(data, path, {"data": chart_data})
+            except Exception:
+                pass
+        for table_key, spec in cfg.get("table_roadmap", {}).items():
+            path = inject_paths.get(table_key)
+            if not path: continue
+
+            dims = spec.get("dimensions", [])
+            raw_mets = spec.get("metrics", [])
+            mets = raw_mets[0] if raw_mets and isinstance(raw_mets[0], list) else (raw_mets if isinstance(raw_mets, list) else [])
+            combined_filters = (filters or {}).copy()
+            combined_filters.update(spec.get("fixed_filters", {}))
             metrics_by_fact = {}
             for m_key in mets:
                 m_def = self.qb.metrics.get(m_key)
-                if not m_def or m_def.get("type") == "derived":
-                    continue
+                if not m_def or m_def.get("type") == "derived": continue
                 tbl = m_def.get("recipe", {}).get("table")
-                if tbl:
-                    metrics_by_fact.setdefault(tbl, []).append(m_key)
+                if tbl: metrics_by_fact.setdefault(tbl, []).append(m_key)
 
             results_map = {}
             has_data = False
+            
             for fact_tbl, grp_mets in metrics_by_fact.items():
                 try:
                     build = self.qb.get_dataframe_query(grp_mets, dims, filters=combined_filters)
@@ -441,46 +509,67 @@ class DataManager:
                 except Exception:
                     pass
 
-            if not has_data:
-                continue
-
+            if not has_data: continue
             col_totals = {}
             temp_rows = []
+            
             for row in results_map.values():
                 for m in mets:
-                    row[m] = self._clean_val(row.get(m))
+                    val = self._clean_val(row.get(m))
+                    row[m] = val
+                    if isinstance(val, (int, float)):
+                        col_totals[m] = col_totals.get(m, 0) + val
                 for col in spec.get("columns", []):
-                    if col.get("formula"):
-                        row[col["key"]] = self._safe_eval_formula(col["formula"], row)
-                for k, v in row.items():
-                    if isinstance(v, (int, float)):
-                        col_totals[k] = col_totals.get(k, 0) + v
-                temp_rows.append(row)
+                    if "formula" in col:
+                        f_str = col["formula"]
+                        col_key = col.get("key") or (col.get("label") or "").strip().replace(" ", "_").replace(".", "_").lower() or ""
+                        if not col_key:
+                            continue
+                        try:
+                            if "lambda" in f_str:
+                                calc_func = eval(f_str, {"__builtins__": {}})
+                                row[col_key] = self._clean_val(calc_func(row))
+                            else:
+                                row[col_key] = self._clean_val(eval(f_str, {"__builtins__": {}}, row))
+                        except Exception:
+                            row[col_key] = 0.0
 
-            headers = [c["label"] for c in spec.get("columns", [])]
-            final_rows = []
+                temp_rows.append(row)
             for row in temp_rows:
+                for col in spec.get("columns", []):
+                    if "formula" in col:
+                        col_key = col.get("key") or (col.get("label") or "").strip().replace(" ", "_").replace(".", "_").lower() or ""
+                        if col_key:
+                            v = self._clean_val(row.get(col_key))
+                            if isinstance(v, (int, float)):
+                                col_totals[col_key] = col_totals.get(col_key, 0) + v
+            headers = [c.get("label", "") for c in spec.get("columns", [])]
+            final_rows = []
+
+            for idx, row in enumerate(temp_rows):
                 disp = []
                 for col in spec.get("columns", []):
-                    ck = col["key"]
+                    if col.get("role") == "row_number":
+                        disp.append(str(idx + 1))
+                        continue
+                    ck = col.get("key") or (col.get("label") or "").strip().replace(" ", "_").replace(".", "_").lower() or ""
                     val = row.get(ck)
                     if col.get("is_total_ratio"):
                         nk = col.get("numerator_key", ck)
                         val = self._safe_divide(row.get(nk, 0), col_totals.get(nk, 0))
                     f = col.get("format")
-                    if f == "currency":
-                        disp.append(self._format_val(val, "currency"))
-                    elif f == "percent":
-                        disp.append(f"{self._clean_val(val):.2%}")
-                    elif f == "integer":
-                        disp.append(f"{int(self._clean_val(val)):,}")
-                    else:
-                        disp.append(str(val) if val else "")
+                    if f == "currency": disp.append(self._format_val(val, "currency"))
+                    elif f == "percent": disp.append(f"{self._clean_val(val):.2%}")
+                    elif f == "integer": disp.append(f"{int(self._clean_val(val)):,}")
+                    else: disp.append(str(val) if val else "")
+                
                 final_rows.append(disp)
+                
             self._set_path(data, path, {"headers": headers, "rows": final_rows})
 
         if use_cache:
             self.cache[cache_key] = CacheEntry(data=data, ts=time.time())
+        
         return data
 
     def _set_path(self, data: Dict, path: PathList, value: Any) -> None:
@@ -502,14 +591,32 @@ class DataManager:
 
     def dash_ids(self, screen_id, prefix=None):
         base = f"{prefix}__{screen_id}" if prefix else screen_id
-        return {"token_store": f"{base}__tok", "auto_interval": f"{base}__int"}
-
+        cfg = self.SCREEN_MAP.get(screen_id, {}) if self.SCREEN_MAP else {}
+        
+        return {
+            "token_store": f"{base}__tok", 
+            "auto_interval": f"{base}__int",
+            "kpi_store": cfg.get("kpi_store", f"{base}__kpi_st"),
+            "chart_store": cfg.get("chart_store", f"{base}__cha_st"),
+            "table_store": cfg.get("table_store", f"{base}__tab_st"),
+            "body": f"{base}__body"
+        }
+        
     def dash_refresh_components(self, screen_id, interval_ms=800, max_intervals=1, prefix=None):
         from dash import dcc
         ids = self.dash_ids(screen_id, prefix)
+        
         return [
+            dcc.Store(id=ids["kpi_store"], data=0),
+            dcc.Store(id=ids["chart_store"], data=0),
+            dcc.Store(id=ids["table_store"], data=0),
             dcc.Store(id=ids["token_store"], data=0),
-            dcc.Interval(id=ids["auto_interval"], interval=interval_ms, max_intervals=max_intervals)
+
+            dcc.Interval(
+                id=ids["auto_interval"],
+                interval=interval_ms,
+                max_intervals=max_intervals
+            )
         ], ids
 
     def register_dash_refresh_callbacks(self, *, screen_id: str, body_output_id: str, render_body: Callable[[Json], Any], prefix: Optional[str] = None, filter_ids: Optional[List[str]] = None) -> Dict[str, str]:
@@ -526,35 +633,33 @@ class DataManager:
                     if val:
                         filters[key] = val
             await self.refresh_screen(screen_id, filters=filters, use_cache=True)
-            return json.dumps({"filters": filters, "loaded": True, "ts": time.time()})
+            return json.dumps(filters)
 
         @callback(Output(body_output_id, "children"), Input(ids["token_store"], "data"))
         def _rerender(token_data):
+        
             if token_data is None or token_data == 0:
                 return get_skeleton(screen_id)
-            
             current_filters = {}
-            is_loaded = False
-            
             try:
                 if isinstance(token_data, str):
-                    parsed = json.loads(token_data)
-                    if isinstance(parsed, dict):
-                        current_filters = parsed.get("filters", {})
-                        is_loaded = parsed.get("loaded", False)
-                    else:
-                        current_filters = parsed
+                    current_filters = json.loads(token_data)
                 elif isinstance(token_data, dict):
-                    current_filters = token_data.get("filters", token_data)
-                    is_loaded = token_data.get("loaded", False)
+                    current_filters = token_data
             except:
-                pass
-            
-            if not is_loaded:
                 return get_skeleton(screen_id)
-            
-            content = render_body(self.get_screen(screen_id, use_cache=True, allow_stale=True, filters=current_filters))
+
+            screen_data = self.get_screen(
+                screen_id,
+                use_cache=True,
+                allow_stale=True,
+                filters=current_filters
+            )
+
+            content = render_body(screen_data)
+        
             return html.Div(content, className="page-content-loaded")
+
 
         return ids
 

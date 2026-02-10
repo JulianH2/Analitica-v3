@@ -4,6 +4,19 @@
     "type": "fact",
     "pk": "no_viaje",
     "date_column": "fecha_real_viaje",
+    "fields": {
+      "subtotal": "decimal",
+      "no_viaje": "integer", 
+      "id_area": "integer",
+      "id_tipo_operacion": "integer",
+      "flete": "decimal",
+      "otros": "decimal",
+      "autopistas": "decimal",
+      "maniobras": "decimal",
+      "seguro": "decimal",
+      "monto_retencion": "decimal",
+      "iva_guia": "decimal"
+    },
     "joins": {
       "viaje_operativo": {
         "target_table": "d_viaje",
@@ -26,9 +39,19 @@
     "table_name": "d_viaje",
     "type": "dim",
     "pk": "no_viaje",
+    "date_column": "fecha_liquidacion",
     "description": "Tabla operativa de viajes con detalles de ruta y kilometraje",
     "fields": {
-      "ind_cargado": "integer"
+      "no_viaje": "integer",
+      "ind_cargado": "integer",
+      "kms_real": "decimal",
+      "kms_viaje": "decimal",
+      "lts_real": "decimal",
+      "lts_viaje": "decimal",
+      "sueldo_operador": "decimal",
+      "id_unidad": "string",
+      "fecha_liquidacion": "date",
+      "id_area": "integer"
     },
     "joins": {
       "ruta": {
@@ -50,6 +73,16 @@
         "target_table": "h_relacion_viaje_cp",
         "type": "INNER",
         "on": "d_viaje.id_area = h_relacion_viaje_cp.id_area AND d_viaje.no_viaje = h_relacion_viaje_cp.no_viaje"
+      },
+      "viaje_historico": {
+        "target_table": "h_viaje",
+        "type": "INNER",
+        "on": "d_viaje.id_area = h_viaje.id_area AND d_viaje.no_viaje = h_viaje.no_viaje"
+      },
+      "gastos": {
+        "target_table": "h_viajes_gastos_liquidacion",
+        "type": "INNER",
+        "on": "d_viaje.id_area = h_viajes_gastos_liquidacion.id_area_viaje AND d_viaje.no_viaje = h_viajes_gastos_liquidacion.no_viaje"
       }
     }
   },
@@ -67,7 +100,22 @@
   "h_viajes_gastos_liquidacion": {
     "table_name": "h_viajes_gastos_liquidacion",
     "type": "fact",
-    "pk": "id_gasto",
+    "pk": "id_comp", 
+    "fields": {
+      "id_comp": "integer",
+      "monto_concepto": "decimal",
+      "monto_combustible": "decimal",
+      "monto_caseta_iave": "decimal",
+      "monto_caseta_efectivo": "decimal",
+      "iva_concepto": "decimal",
+      "cantidad": "decimal",
+      "id_area_viaje": "integer",
+      "no_viaje": "integer",
+      "id_area_liq": "integer",
+      "no_liquidacion": "integer",
+      "id_concepto": "integer",
+      "id_gpogasto": "integer"
+    },
     "joins": {
       "liquidacion": {
         "target_table": "d_liquidacion",
@@ -96,7 +144,17 @@
     "type": "dim",
     "pk": "id_unidad",
     "label_column": "id_unidad",
+    "fields": {
+      "modelo": "string",
+      "id_unidad": "string",
+      "id_marca": "integer"
+    },
     "joins": {
+      "marca_unidad": {
+        "target_table": "d_marca_unidad",
+        "type": "INNER",
+        "on": "d_unidad.id_marca = d_marca_unidad.id_marca_unidad"
+      },
       "tipo_unidad": {
         "target_table": "d_tipo_unidad",
         "type": "INNER",
@@ -164,14 +222,42 @@
     "table_name": "d_trafico_concepto",
     "type": "dim",
     "pk": "id_concepto",
-    "label_column": "descripcion_concepto"
+    "label_column": "descripcion_concepto",
+    "fields": {
+      "concepto": "string",
+      "id_concepto": "integer",
+      "id_clasificacion": "integer"
+    },
+    "joins": {
+      "clasificacion": {
+        "target_table": "d_trafico_concepto_clasificacion",
+        "type": "INNER",
+        "on": "d_trafico_concepto.id_clasificacion = d_trafico_concepto_clasificacion.id_clasificacion"
+      }
+    }
+  },
+  "d_trafico_concepto_clasificacion": {
+    "table_name": "d_trafico_concepto_clasificacion",
+    "type": "dim",
+    "pk": "id_clasificacion",
+    "columns": {
+      "nombre": "string",
+      "id_clasificacion": "integer"
+    }
   },
   "d_meta_tiempo": {
     "table_name": "d_meta_tiempo",
+    "description": "Tabla de presupuestos y metas diarias/mensuales",
     "type": "fact",
     "pk": "fecha",
     "date_column": "fecha",
-    "description": "Tabla de presupuestos y metas diarias/mensuales"
+    "fields": {
+      "meta_ingreso_viaje": "decimal",
+      "meta_costos_viaje": "decimal",
+      "meta_kms_recorridos": "decimal",
+      "meta_litros_combustible": "decimal",
+      "fecha": "date"
+    }
   },
   "d_area": {
     "table_name": "d_area",
@@ -185,6 +271,10 @@
     "description": "Giro del servicio (ej. Refinados, Contenedor, Carga General)",
     "type": "dim",
     "pk": "id_tipo_operacion",
+    "fields": {
+      "tipo_operacion": "string",
+      "id_tipo_operacion": "integer"
+    },
     "label_column": "tipo_operacion"
   },
   "d_liquidacion": {
@@ -215,5 +305,14 @@
     "table_name": "d_guia_proceso_cancelasat",
     "type": "dim",
     "pk": "factura"
+  },
+  "d_marca_unidad": {
+    "table_name": "d_marca_unidad",
+    "type": "dim",
+    "pk": "id_marca_unidad",
+    "fields": {
+      "marca_unidad": "string",
+      "id_marca_unidad": "integer"
+    }
   }
 }

@@ -1,12 +1,12 @@
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from dash import html
-from settings.theme import DesignSystem
+from design_system import DesignSystem
 
 def get_login_layout():
     return dmc.MantineProvider(
         forceColorScheme="light",
-        theme=DesignSystem.get_mantine_theme(), # type: ignore
+        theme=DesignSystem.get_mantine_theme(),
         children=dmc.Box(
             style={"backgroundColor": "#f8fafc", "minHeight": "100vh"},
             children=[
@@ -94,7 +94,7 @@ def get_login_layout():
 def get_error_layout(error_message="Ocurrió un error inesperado."):
     return dmc.MantineProvider(
         forceColorScheme="light",
-        theme=DesignSystem.get_mantine_theme(), # type: ignore
+        theme=DesignSystem.get_mantine_theme(),
         children=dmc.Container(
             style={"height": "100vh", "display": "flex", "alignItems": "center", "justifyContent": "center"},
             children=dmc.Paper(
