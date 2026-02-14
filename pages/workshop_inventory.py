@@ -15,7 +15,6 @@ from strategies.workshop import (
     WorkshopHorizontalBarStrategy,
     WorkshopTableStrategy
 )
-from flask import session
 
 dash.register_page(__name__, path="/taller-inventory", title="Inventarios Almacén")
 
@@ -81,8 +80,6 @@ WIDGET_REGISTRY = {
 }
 
 def _render_taller_inventory_body(ctx):
-    theme = session.get("theme", "dark")
-
     return html.Div([
         dmc.Paper(
             p="md",
@@ -90,16 +87,16 @@ def _render_taller_inventory_body(ctx):
             mb="xl",
             shadow="sm",
             children=[
-                dmc.Text("ECUACIÓN DE VALORIZACIÓN", size="xs", fw=700, c="dimmed", mb="sm"),
+                dmc.Text("ECUACIÓN DE VALORIZACIÓN", size="xs", fw=700, c="dimmed", mb="sm"), # type: ignore
                 dmc.SimpleGrid(
-                    cols={"base": 1, "md": 2, "lg": 5},
+                    cols={"base": 1, "md": 2, "lg": 5}, # type: ignore
                     spacing="xs",
                     children=[
-                        w_ini.render(ctx, theme=theme),
-                        w_ent.render(ctx, theme=theme),
-                        w_sal.render(ctx, theme=theme),
-                        w_his.render(ctx, theme=theme),
-                        w_act.render(ctx, theme=theme)
+                        w_ini.render(ctx),
+                        w_ent.render(ctx),
+                        w_sal.render(ctx),
+                        w_his.render(ctx),
+                        w_act.render(ctx)
                     ]
                 )
             ]
@@ -107,30 +104,30 @@ def _render_taller_inventory_body(ctx):
         chart_trend.render(ctx, h=380),
         dmc.Space(h="xl"),
         dmc.SimpleGrid(
-            cols={"base": 2, "md": 4},
+            cols={"base": 2, "md": 4}, # type: ignore
             spacing="md",
             mb="xl",
             children=[
-                w_cumpl.render(ctx, theme=theme),
-                w_reg.render(ctx, theme=theme),
-                w_con.render(ctx, theme=theme),
-                w_sin.render(ctx, theme=theme)
+                w_cumpl.render(ctx),
+                w_reg.render(ctx),
+                w_con.render(ctx),
+                w_sin.render(ctx)
             ]
         ),
         dmc.Grid(
             gutter="md",
             children=[
                 dmc.GridCol(
-                    span={"base": 12, "lg": 5},
+                    span={"base": 12, "lg": 5}, # type: ignore
                     children=[chart_area.render(ctx, h=450)]
                 ),
                 dmc.GridCol(
-                    span={"base": 12, "lg": 7},
+                    span={"base": 12, "lg": 7}, # type: ignore
                     children=[
                         dmc.Paper(
                             p="md",
                             withBorder=True,
-                            style={"height": "100%", "backgroundColor": "transparent"},
+                            style={"height": "100%"},
                             children=[
                                 dmc.Tabs(
                                     value="fam",
@@ -142,7 +139,7 @@ def _render_taller_inventory_body(ctx):
                                         dmc.TabsPanel(
                                             dmc.ScrollArea(
                                                 h=390,
-                                                children=[WorkshopTableStrategy(SCREEN_ID, "valuation_by_family").render(ctx, theme=theme)]
+                                                children=[WorkshopTableStrategy(SCREEN_ID, "valuation_by_family").render(ctx)]
                                             ),
                                             value="fam",
                                             pt="xs"
@@ -150,7 +147,7 @@ def _render_taller_inventory_body(ctx):
                                         dmc.TabsPanel(
                                             dmc.ScrollArea(
                                                 h=390,
-                                                children=[WorkshopTableStrategy(SCREEN_ID, "inventory_history").render(ctx, theme=theme)]
+                                                children=[WorkshopTableStrategy(SCREEN_ID, "inventory_history").render(ctx)]
                                             ),
                                             value="hist",
                                             pt="xs"

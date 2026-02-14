@@ -93,8 +93,94 @@
     "label_column": "ruta",
     "fields": {
       "kms_ruta": "decimal",
-      "origen": "varchar",
-      "destino": "varchar"
+      "ruta": "string",
+      "id_ruta": "integer",
+      "id_origen": "integer",
+      "id_destino": "integer"
+    },
+    "joins": {
+      "origen": {
+        "target_table": "d_plaza_origen",
+        "type": "INNER",
+        "on": "d_ruta.id_origen = d_plaza_origen.id_plaza"
+      },
+      "destino": {
+        "target_table": "d_plaza_destino",
+        "type": "INNER",
+        "on": "d_ruta.id_destino = d_plaza_destino.id_plaza"
+      }
+    }
+  },
+  "d_plaza_origen": {
+    "table_name": "d_plaza",
+    "type": "dim",
+    "pk": "id_plaza",
+    "columns": { "plaza": "string", "id_plaza": "integer" },
+    "joins": {
+      "geo_origen": {
+        "target_table": "d_plaza_georeferencia_origen",
+        "type": "INNER",
+        "on": "d_plaza_origen.id_plaza = d_plaza_georeferencia_origen.id_plaza"
+      }
+    }
+  },
+  "d_plaza_destino": {
+    "table_name": "d_plaza",
+    "type": "dim",
+    "pk": "id_plaza",
+    "columns": { "plaza": "string", "id_plaza": "integer" },
+    "joins": {
+      "geo_destino": {
+        "target_table": "d_plaza_georeferencia_destino",
+        "type": "INNER",
+        "on": "d_plaza_destino.id_plaza = d_plaza_georeferencia_destino.id_plaza"
+      }
+    }
+  },
+  "d_plaza": {
+    "table_name": "d_plaza",
+    "type": "dim",
+    "pk": "id_plaza",
+    "columns": {
+      "plaza": "string",
+      "id_plaza": "integer"
+    },
+    "joins": {
+      "plaza_georeferencia":{
+        "target_table": "d_plaza_georeferencia",
+        "type": "LEFT",
+        "on": "d_plaza.id_plaza = d_plaza_georeferencia.id_plaza"
+      }
+    }
+  },
+  "d_plaza_georeferencia": {
+    "table_name": "d_plaza_georeferencia",
+    "type": "dim",
+    "pk": "id_plaza",
+    "columns": {
+      "id_plaza": "integer",
+      "latpos": "string",
+      "lonpos": "string"
+    }
+  },
+  "d_plaza_georeferencia_origen": {
+    "table_name": "d_plaza_georeferencia",
+    "type": "dim",
+    "pk": "id_plaza",
+    "columns": {
+      "id_plaza": "integer",
+      "latpos": "string",
+      "lonpos": "string"
+    }
+  },
+  "d_plaza_georeferencia_destino": {
+    "table_name": "d_plaza_georeferencia",
+    "type": "dim",
+    "pk": "id_plaza",
+    "columns": {
+      "id_plaza": "integer",
+      "latpos": "string",
+      "lonpos": "string"
     }
   },
   "h_viajes_gastos_liquidacion": {
@@ -177,7 +263,27 @@
     "table_name": "d_trafico_cliente",
     "type": "dim",
     "pk": "id_cliente",
-    "label_column": "nombre_cliente"
+    "label_column": "nombre_cliente",
+    "fields": {
+      "id_cliente": "integer",
+      "nombre_cliente": "string"
+    }
+  },
+  "d_factura": {
+    "table_name": "d_factura",
+    "type": "dim",
+    "pk": "pk_pbi_trafico_guia",
+    "fields": {
+      "pk_pbi_trafico_guia": "integer",
+      "id_cliente": "integer"
+    },
+    "joins": {
+      "cliente": {
+        "target_table": "d_trafico_cliente",
+        "type": "INNER",
+        "on": "d_factura.id_cliente = d_trafico_cliente.id_cliente"
+      }
+    }
   },
   "d_trafico_guia": {
     "table_name": "d_trafico_guia",
@@ -256,6 +362,8 @@
       "meta_costos_viaje": "decimal",
       "meta_kms_recorridos": "decimal",
       "meta_litros_combustible": "decimal",
+      "meta_promedio_dias_cartera": "decimal",
+      "meta_promedio_dias_pago": "decimal",
       "fecha": "date"
     }
   },
@@ -264,7 +372,11 @@
     "description": "Sucursales o bases operativas (ej. Base Veracruz, Base México)",
     "type": "dim",
     "pk": "id_area",
-    "label_column": "no_area"
+    "label_column": "no_area",
+    "fields": {
+      "id_area": "integer",
+      "no_abrev_area": "string"
+    }
   },
   "d_tipo_operacion": {
     "table_name": "d_tipo_operacion",
@@ -313,6 +425,116 @@
     "fields": {
       "marca_unidad": "string",
       "id_marca_unidad": "integer"
+    }
+  },
+  "h_factura_saldo": {
+    "table_name": "h_factura_saldo",
+    "type": "fact",
+    "pk": "fk_factura", 
+    "date_column": "fecha_factura",
+    "description": "Histórico de saldos y montos facturados",
+    "fields": {
+      "fk_factura": "integer",
+      "id_area": "integer",
+      "id_rango_vencimiento": "integer",
+      "monto_facturado_mx": "decimal",
+      "monto_ncred_acum_mx": "decimal",
+      "monto_ncred_mx": "decimal",
+      "monto_ncargo_mx": "decimal",
+      "monto_ncargo_acum_mx": "decimal",
+      "monto_cobrado_mx": "decimal", 
+      "monto_cobrado_acum_mx": "decimal", 
+      "monto_saldo_acum_mx": "decimal",
+      "orden": "integer",
+      "fecha_factura": "date",
+      "fecha_vencimiento": "date"
+    },
+    "joins": {
+      "area": {
+        "target_table": "d_area",
+        "type": "INNER",
+        "on": "h_factura_saldo.id_area = d_area.id_area"
+      },
+      "factura": {
+        "target_table": "d_factura",
+        "type": "INNER",
+        "on": "h_factura_saldo.fk_factura = d_factura.pk_pbi_trafico_guia"
+      },
+      "rango_vencimiento": {
+        "target_table": "d_cxc_rango_vencimiento",
+        "type": "INNER",
+        "on": "h_factura_saldo.id_rango_vencimiento = d_cxc_rango_vencimiento.id_rango_vencimiento"
+      }
+    }
+  },
+  "d_nota_credito": {
+    "table_name": "d_nota_credito",
+    "type": "dim",
+    "pk": "num_ncredito",
+    "date_column": "fecha",
+    "fields": {
+      "num_ncredito": "integer",
+      "monto_credito": "decimal",
+      "monto_retencion": "decimal",
+      "estatus": "string",
+      "fecha": "date"
+    }
+  },
+  "d_nota_cargo": {
+    "table_name": "d_nota_cargo",
+    "type": "dim",
+    "pk": "num_ncargo",
+    "date_column": "fecha",
+    "fields": {
+      "num_ncargo": "integer",
+      "monto_cargo": "decimal",
+      "monto_retencion": "decimal",
+      "estatus": "string",
+      "fecha": "date"
+    }
+  },
+  "h_factura_cobrado": {
+    "table_name": "h_factura_cobrado",
+    "type": "fact",
+    "pk": "id_cobro", 
+    "date_column": "fecha_consulta",
+    "fields": {
+      "monto_cobrado": "decimal",
+      "fecha_consulta": "date",
+      "fk_factura": "integer"
+    }
+  },
+  "d_cxc_rango_vencimiento": {
+    "table_name": "d_cxc_rango_vencimiento",
+    "type": "dim",
+    "pk": "id_rango_vencimiento",
+    "fields": {
+      "id_rango_vencimiento": "integer",
+      "desc_rango_vencimiento": "string",
+      "clasificacion": "string"
+    }
+  },
+  "h_proveedores": {
+    "table_name": "h_proveedores",
+    "type": "fact",
+    "pk": "id",
+    "date_column": "fecha_consulta",
+    "fields": {
+      "saldo_inicial": "decimal",
+      "cxp": "decimal",
+      "notas_cargo": "decimal",
+      "notas_credito": "decimal",
+      "monto_anticipo": "decimal",
+      "cxp_total": "decimal",
+      "pago_proveedores": "decimal",
+      "saldo_final": "decimal",
+      "fecha_consulta": "date",
+      "fecha_ini": "date",
+      "fecha_pago": "date"
+    },
+    "joins": {
+      "area": { "target_table": "d_area", "type": "INNER", "on": "h_proveedores.id_area = d_area.id_area" },
+      "proveedor": { "target_table": "d_proveedor", "type": "INNER", "on": "h_proveedores.id_proveedor = d_proveedor.id_proveedor" }
     }
   }
 }

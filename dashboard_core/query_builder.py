@@ -1,8 +1,26 @@
 from .metadata_engine import MetadataEngine
 import datetime
+import re
 
 class SmartQueryBuilder:
-        
+    # Identifiers that must not be qualified when parsing SQL expressions (functions, keywords)
+    _SQL_EXPRESSION_SKIP = frozenset(
+        s.upper() for s in (
+            "day", "month", "year", "getdate", "datediff", "sum", "avg", "count",
+            "min", "max", "null", "getutcdate", "sysdatetime", "current_timestamp",
+            "week", "quarter", "isnull", "coalesce", "abs", "round", "cast", "convert"
+        )
+    )
+
+    def _qualify_expression(self, expression: str, table_alias: str) -> str:
+        """Qualify bare column names in a SQL expression with table_alias (e.g. fecha_factura -> t.fecha_factura)."""
+        def repl(m):
+            word = m.group(0)
+            if word.upper() in self._SQL_EXPRESSION_SKIP:
+                return word
+            return f"{table_alias}.{word}"
+        return re.sub(r"\b([a-zA-Z_][a-zA-Z0-9_]*)\b", repl, expression)
+
     MONTH_MAP = {
         "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
         "julio": 7, "agosto": 8, "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
@@ -104,9 +122,14 @@ class SmartQueryBuilder:
             m_table = recipe.get('table')
             col = recipe.get('column')
             agg = recipe.get('aggregation', 'SUM')
-            
-            # Función auxiliar para formatear la agregación
+            is_expression = isinstance(col, str) and "(" in col
+
             def get_agg_expr(table_alias, column_name, aggregation_type):
+                if is_expression:
+                    inner = self._qualify_expression(column_name, table_alias)
+                    if aggregation_type == "DISTINCTCOUNT":
+                        return f"COUNT(DISTINCT {inner})"
+                    return f"{aggregation_type}({inner})"
                 if aggregation_type == "DISTINCTCOUNT":
                     return f"COUNT(DISTINCT {table_alias}.{column_name})"
                 return f"{aggregation_type}({table_alias}.{column_name})"
@@ -117,14 +140,11 @@ class SmartQueryBuilder:
                 if path:
                     for neighbor, _ in path:
                         joins_needed.add(neighbor)
-                    
-                    # Usamos la nueva lógica de formateo
                     expr = get_agg_expr(m_table, col, agg)
                     selects.append(f"{expr} as {m_key}")
                 else:
                     print(f"WARNING: No join path found from {fact_alias} to {m_table} for metric {m_key}")
             else:
-                # Usamos la nueva lógica de formateo
                 expr = get_agg_expr(fact_alias, col, agg)
                 selects.append(f"{expr} as {m_key}")
 

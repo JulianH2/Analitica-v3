@@ -15,7 +15,6 @@ from strategies.workshop import (
     WorkshopComboChartStrategy,
     WorkshopTableStrategy
 )
-from flask import session
 
 dash.register_page(__name__, path="/taller-availability", title="Disponibilidad")
 
@@ -70,11 +69,9 @@ WIDGET_REGISTRY = {
 }
 
 def _render_taller_availability_body(ctx):
-    theme = session.get("theme", "dark")
-
     return html.Div([
         dmc.SimpleGrid(
-            cols={"base": 1, "md": 2},
+            cols={"base": 1, "md": 2}, # type: ignore
             spacing="md",
             mb="xl",
             children=[
@@ -83,7 +80,7 @@ def _render_taller_availability_body(ctx):
             ]
         ),
         dmc.SimpleGrid(
-            cols={"base": 1, "md": 2},
+            cols={"base": 1, "md": 2}, # type: ignore
             spacing="md",
             mb="xl",
             children=[
@@ -101,12 +98,12 @@ def _render_taller_availability_body(ctx):
                     fw="bold",
                     mb="md",
                     size="xs",
-                    c="dimmed"
+                    c="dimmed" # type: ignore
                 ),
                 dmc.ScrollArea(
                     h=450,
                     children=[
-                        WorkshopTableStrategy(SCREEN_ID, "availability_detail").render(ctx, theme=theme)
+                        WorkshopTableStrategy(SCREEN_ID, "availability_detail").render(ctx)
                     ]
                 )
             ]

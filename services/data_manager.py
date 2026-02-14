@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, Callable
 
+from dash import no_update
 from flask import session
 
 from dashboard_core.query_builder import SmartQueryBuilder
@@ -74,7 +75,7 @@ class DataManager:
             self.SCREEN_MAP = self._get_minimal_config()
     
     def _validate_and_normalize_configs(self) -> None:
-        for screen_id, config in self.SCREEN_MAP.items():
+        for screen_id, config in self.SCREEN_MAP.items(): # type: ignore
             defaults = {
                 "section_key": None,
                 "section_keys": None,
@@ -85,7 +86,7 @@ class DataManager:
                 "table_roadmap": {},
                 "inject_paths": {}
             }
-            self.SCREEN_MAP[screen_id] = {**defaults, **config}
+            self.SCREEN_MAP[screen_id] = {**defaults, **config} # type: ignore
     
     def _get_minimal_config(self) -> Dict[str, Dict[str, Any]]:
         return {
@@ -230,6 +231,8 @@ class DataManager:
             entry = self.cache[cache_key]
             if self._is_fresh(entry, int(cfg.get("ttl_seconds") or 30)):
                 return entry.data
+        
+        # Estructura Base
         base = self.base_service.get_full_dashboard_data()
         keys = cfg.get("section_keys") or [cfg.get("section_key")]
         data = {k: base.get(k, {}) for k in keys if k}
@@ -241,84 +244,102 @@ class DataManager:
             return data
         
         inject_paths = cfg.get("inject_paths", {})
-
-
+        
+        # ---------------------------------------------------------
+        # 1. RESOLVER KPI ROADMAP (Batching + Lambdas)
+        # ---------------------------------------------------------
         kpi_roadmap = cfg.get("kpi_roadmap", {})
         
         for group_key, spec in kpi_roadmap.items():
-            if not isinstance(spec, dict): continue 
-            
             dims = spec.get("dimensions", [])
             raw_metrics = spec.get("metrics", [])
+            
+            # Detectar si son batches separados (lista de listas) o una lista plana
             metric_batches = []
             if raw_metrics and isinstance(raw_metrics[0], list):
                 metric_batches = raw_metrics
             else:
                 metric_batches = [raw_metrics] if raw_metrics else []
             
-            combined_filters = (filters or {}).copy()
-            combined_filters.update(spec.get("fixed_filters", {}))
+            fixed_filters_raw = spec.get("fixed_filters", {})
+            fixed_filters_per_batch = isinstance(fixed_filters_raw, list)
 
             row_context = {}
-            tasks = []
 
-            for batch in metric_batches:
-                if not batch:
-                    continue
-                
+            # Ejecutar Queries por Batch (Evita errores de JOIN)
+            for batch_idx, batch in enumerate(metric_batches):
+                if not batch: continue
+                combined_filters = (filters or {}).copy()
+                if fixed_filters_per_batch:
+                    if batch_idx < len(fixed_filters_raw):
+                        ff = fixed_filters_raw[batch_idx]
+                        if isinstance(ff, dict):
+                            combined_filters.update(ff)
+                        elif isinstance(ff, list):
+                            for f in ff:
+                                if isinstance(f, dict):
+                                    combined_filters.update(f)
+                elif isinstance(fixed_filters_raw, dict):
+                    combined_filters.update(fixed_filters_raw)
                 try:
                     build = self.qb.get_dataframe_query(batch, dims, filters=combined_filters)
                     if build and "query" in build:
-                        tasks.append(execute_dynamic_query(db_config, build["query"]))
+                        rows = await execute_dynamic_query(db_config, build["query"])
+                        if rows:
+                            # Aplanamos resultados en memoria
+                            for k, v in rows[0].items():
+                                row_context[k] = self._clean_val(v)
                 except Exception:
-                    continue
-            if tasks:
-                results = await asyncio.gather(*tasks, return_exceptions=True)
+                    pass
 
-                if all(isinstance(r, Exception) or r == [] for r in results):
-                    print("🚫 Todas las queries fallaron. Cancelando refresh.")
-                    return data
-                
-
-                for rows in results:
-                    if isinstance(rows, Exception):
-                        continue
-                    if rows and len(rows) > 0:
-                        for k, v in rows[0].items():
-                            row_context[k] = self._clean_val(v)
+            # Procesar Columnas (Fórmulas e Inyección)
             for col_def in spec.get("columns", []):
                 target_key = col_def.get("target")
+                # Clave compuesta por grupo para no pisar entre widgets (rp_kms_lt vs rp_kms_tot)
                 path = inject_paths.get(f"{group_key}.{target_key}") or inject_paths.get(target_key)
 
                 if not path: continue
 
                 val = 0.0
+                
+                # Caso Fórmula (String lambda)
                 if "formula" in col_def:
                     f_str = col_def["formula"]
                     try:
                         if "lambda" in f_str:
+                            # Evaluamos el string para obtener la función lambda y la ejecutamos
                             calc_func = eval(f_str, {"__builtins__": {}})
                             val = calc_func(row_context)
                         else:
                             val = eval(f_str, {"__builtins__": {}}, row_context)
                     except Exception:
                         val = 0.0
+                # Caso Directo
                 else:
                     data_key = col_def.get("key")
                     val = row_context.get(data_key, 0.0)
+
+                # Inyectamos solo el valor limpio
                 clean_val = self._clean_val(val)
                 self._set_path(data, path, clean_val)
+                # Formatear hermanos para que la estrategia muestre value_formatted, target_formatted, etc.
                 if path and len(path) > 1:
                     leaf = path[-1]
                     parent_path = path[:-1]
                     kpi_key = path[-2] if len(path) >= 2 else ""
+                    # KPIs de conteo: entero sin $ ni decimales
                     is_count_kpi = kpi_key in ("total_trips", "total_kilometers", "units_used", "customers_served", "real_kilometers")
-                    is_decimal_kpi = kpi_key in ("real_yield", "liters_consumed")
+                    # Rendimiento / ratios o días: double con 2 decimales, sin $
+                    is_decimal_kpi = kpi_key in ("real_yield", "liters_consumed", "avg_collection_days", "average_payment_days")
                     fmt = "integer" if is_count_kpi else ("decimal" if is_decimal_kpi else "currency")
-                    if leaf == "value":
+                    if leaf == "value" or leaf == "current_value":
                         self._set_path(data, parent_path + ["value_formatted"], self._format_val(clean_val, fmt))
                     elif leaf == "target":
                         self._set_path(data, parent_path + ["target_formatted"], self._format_val(clean_val, fmt))
+                    # Días cartera/pago: no mostrar comparativo vs año anterior
+                    if kpi_key in ("avg_collection_days", "average_payment_days"):
+                        self._set_path(data, parent_path + ["vs_last_year_formatted"], "none")
+                        self._set_path(data, parent_path + ["label_prev_year"], "Vs 2025")
                     elif leaf == "vs_last_year_value":
                         self._set_path(data, parent_path + ["vs_last_year_formatted"], self._format_val(clean_val, fmt))
                     elif leaf == "ytd_value":
@@ -329,16 +350,15 @@ class DataManager:
                     elif "delta" in leaf or "variance" in leaf:
                         self._set_path(data, parent_path + [leaf + "_formatted"], self._format_delta(clean_val))
 
-
-
-        if use_cache:
-            self.cache[cache_key] = CacheEntry(data=data, ts=time.time())
-
-
+        # ---------------------------------------------------------
+        # 2. RESOLVER CHART ROADMAP (Batching por Gráfica)
+        # ---------------------------------------------------------
         chart_roadmap = cfg.get("chart_roadmap", {})
         for chart_key, spec in chart_roadmap.items():
             path = inject_paths.get(chart_key)
             if not path: continue
+
+            # Normalizar batches
             chart_batches = []
             if isinstance(spec, dict) and "metrics" in spec: 
                 raw_c = spec["metrics"]
@@ -356,6 +376,7 @@ class DataManager:
                         rows = await execute_dynamic_query(db_config, build["query"])
                         if rows:
                             for r in rows:
+                                # CORRECCIÓN 1: Buscar explícitamente __month__
                                 p_val = r.get('__month__') or r.get('month') or r.get('period')
                                 try:
                                     if p_val is None:
@@ -393,18 +414,22 @@ class DataManager:
                 else:
                     vals = [temp_results[m].get(key, 0.0) for m in range(1, 13)]
                 if any(v != 0 for v in vals): has_valid = True
-                chart_data["series"].append({"name": s_name.capitalize(), "data": vals})
+                serie_entry = {"name": s_name.capitalize(), "data": vals}
+                if "type" in s_def:
+                    serie_entry["type"] = s_def["type"]
+                chart_data["series"].append(serie_entry)
             
-            if has_valid:
+            if has_valid: 
+                # CORRECCIÓN 2: Inyectar DENTRO de 'data' para no borrar título/tipo
                 target_path = path + ["data"]
                 self._set_path(data, target_path, chart_data)
 
-        if use_cache:
-            self.cache[cache_key] = CacheEntry(data=data, ts=time.time())
-
-
-
-
+        # ---------------------------------------------------------
+        # 3. RESOLVER CATEGORICAL Y TABLAS (Ya usaban get_dataframe_query)
+        # ---------------------------------------------------------
+        # (Mantengo tu lógica existente pero asegurando que use la misma función)
+        
+        # Categorical
         for chart_key, spec in cfg.get("categorical_roadmap", {}).items():
             path = inject_paths.get(chart_key)
             if not path: continue
@@ -413,12 +438,14 @@ class DataManager:
             try:
                 dims = [spec.get("dimension")] if isinstance(spec.get("dimension"), str) else spec.get("dimensions", [])
                 raw_mets = spec.get("metrics", [])
+                # Métricas: lista plana o lista de batches (tomar primer batch)
                 mets = raw_mets[0] if raw_mets and isinstance(raw_mets[0], list) else (raw_mets if isinstance(raw_mets, list) else [spec.get("kpi")] if spec.get("kpi") else [])
 
                 chart_data = {"labels": [], "values": [], "categories": [], "series": [{"name": "Valor", "data": []}]}
                 has_data = False
 
                 if spec.get("columns"):
+                    # Estructura con columns: role label + value (key o formula)
                     label_col = next((c for c in spec["columns"] if c.get("role") == "label"), None)
                     value_col = next((c for c in spec["columns"] if c.get("role") == "value"), None)
                     label_key = label_col.get("key") if label_col else None
@@ -449,6 +476,7 @@ class DataManager:
                                     chart_data["categories"].append(lbl)
                                     chart_data["series"][0]["name"] = series_name
                                     chart_data["series"][0]["data"].append(val)
+                                # Ordenar por valor descendente manteniendo labels/values/data alineados
                                 sorted_tuples = sorted(
                                     zip(chart_data["values"], chart_data["labels"], chart_data["categories"]),
                                     key=lambda t: -(t[0] if isinstance(t[0], (int, float)) else 0)
@@ -458,6 +486,7 @@ class DataManager:
                                 chart_data["categories"] = [t[2] for t in sorted_tuples]
                                 chart_data["series"][0]["data"] = chart_data["values"]
                 else:
+                    # Estructura legacy: kpi + dimension
                     mets = [spec.get("kpi")] if isinstance(spec.get("kpi"), str) else mets
                     build = self.qb.get_dataframe_query(mets, dims, filters=filters)
                     if build and "query" in build:
@@ -482,15 +511,20 @@ class DataManager:
                     self._set_path(data, path, {"data": chart_data})
             except Exception:
                 pass
+
+        # Tables
         for table_key, spec in cfg.get("table_roadmap", {}).items():
             path = inject_paths.get(table_key)
             if not path: continue
 
             dims = spec.get("dimensions", [])
             raw_mets = spec.get("metrics", [])
+            # Métricas: lista plana o lista de batches (tomar primer batch)
             mets = raw_mets[0] if raw_mets and isinstance(raw_mets[0], list) else (raw_mets if isinstance(raw_mets, list) else [])
             combined_filters = (filters or {}).copy()
             combined_filters.update(spec.get("fixed_filters", {}))
+
+            # Agrupar por tabla origen (Optimización)
             metrics_by_fact = {}
             for m_key in mets:
                 m_def = self.qb.metrics.get(m_key)
@@ -509,21 +543,27 @@ class DataManager:
                         if rows:
                             has_data = True
                             for r in rows:
+                                # Llave compuesta para merge
                                 rk = tuple(r.get(d) for d in dims) if len(dims) > 1 else list(r.values())[0]
                                 results_map.setdefault(rk, {}).update(r)
                 except Exception:
                     pass
 
             if not has_data: continue
+
+            # Procesar filas y calcular totales
             col_totals = {}
             temp_rows = []
             
             for row in results_map.values():
+                # Limpieza y Totales
                 for m in mets:
                     val = self._clean_val(row.get(m))
                     row[m] = val
                     if isinstance(val, (int, float)):
                         col_totals[m] = col_totals.get(m, 0) + val
+                
+                # Fórmulas de línea
                 for col in spec.get("columns", []):
                     if "formula" in col:
                         f_str = col["formula"]
@@ -531,23 +571,52 @@ class DataManager:
                         if not col_key:
                             continue
                         try:
+                            # 1. EVALUAR: Obtenemos el resultado crudo (puede ser string, lista, etc.)
+                            raw_val = None
                             if "lambda" in f_str:
                                 calc_func = eval(f_str, {"__builtins__": {}})
-                                row[col_key] = self._clean_val(calc_func(row))
+                                raw_val = calc_func(row)
                             else:
-                                row[col_key] = self._clean_val(eval(f_str, {"__builtins__": {}}, row))
+                                raw_val = eval(f_str, {"__builtins__": {}}, row)
+
+                            # 2. DECIDIR: ¿Respetar texto o limpiar número?
+                            
+                            # Si el formato es explícitamente texto, lo guardamos como string
+                            if col.get("format") == "text":
+                                row[col_key] = str(raw_val) if raw_val is not None else ""
+                            
+                            # Si es un string, verificamos si es un "número disfrazado"
+                            elif isinstance(raw_val, str):
+                                try:
+                                    clean_test = raw_val.replace('%', '').replace('+', '').replace(',', '').replace('$', '').strip()
+                                    if not clean_test: raise ValueError()
+                                    float(clean_test)
+                                    # Es número -> Limpiar
+                                    row[col_key] = self._clean_val(raw_val)
+                                except ValueError:
+                                    # Es texto real -> Respetar
+                                    row[col_key] = raw_val
+                            
+                            # Si ya es otro tipo, limpiar
+                            else:
+                                row[col_key] = self._clean_val(raw_val)
+
                         except Exception:
-                            row[col_key] = 0.0
+                            row[col_key] = "" if col.get("format") == "text" else 0.0
 
                 temp_rows.append(row)
+
+            # Acumular totales de columnas calculadas (para is_total_ratio)
             for row in temp_rows:
                 for col in spec.get("columns", []):
                     if "formula" in col:
                         col_key = col.get("key") or (col.get("label") or "").strip().replace(" ", "_").replace(".", "_").lower() or ""
                         if col_key:
-                            v = self._clean_val(row.get(col_key))
+                            v = row.get(col_key)
                             if isinstance(v, (int, float)):
                                 col_totals[col_key] = col_totals.get(col_key, 0) + v
+
+            # Formateo Final
             headers = [c.get("label", "") for c in spec.get("columns", [])]
             final_rows = []
 
@@ -559,14 +628,18 @@ class DataManager:
                         continue
                     ck = col.get("key") or (col.get("label") or "").strip().replace(" ", "_").replace(".", "_").lower() or ""
                     val = row.get(ck)
+                    
+                    # Ratios contra total
                     if col.get("is_total_ratio"):
                         nk = col.get("numerator_key", ck)
                         val = self._safe_divide(row.get(nk, 0), col_totals.get(nk, 0))
+                    
+                    # Formatos
                     f = col.get("format")
                     if f == "currency": disp.append(self._format_val(val, "currency"))
                     elif f == "percent": disp.append(f"{self._clean_val(val):.2%}")
                     elif f == "integer": disp.append(f"{int(self._clean_val(val)):,}")
-                    else: disp.append(str(val) if val else "")
+                    else: disp.append(str(val) if val is not None else "")
                 
                 final_rows.append(disp)
                 
@@ -635,6 +708,7 @@ class DataManager:
                 for i, fid in enumerate(filter_ids):
                     val = filter_values[i]
                     key = fid.split("-")[-1] if "-" in fid else fid
+                    key = key.replace("__", ".")
                     if val:
                         filters[key] = val
             await self.refresh_screen(screen_id, filters=filters, use_cache=True)

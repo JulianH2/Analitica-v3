@@ -10,10 +10,9 @@ from components.modal_manager import create_smart_modal, register_modal_callback
 from components.filter_manager import create_filter_section
 from strategies.administration import (
     AdminKPIStrategy, AdminGaugeStrategy,
-    AdminTrendChartStrategy, AdminDonutChartStrategy,
-    AdminStackedBarStrategy, AdminTableStrategy
+    AdminTrendChartStrategy, AdminHistoricalForecastLineStrategy,
+    AdminDonutChartStrategy, AdminStackedBarStrategy, AdminTableStrategy
 )
-from flask import session
 
 dash.register_page(__name__, path="/admin-payables", title="Cuentas por Pagar")
 
@@ -25,23 +24,31 @@ kpi_pay_initial = SmartWidget(
 )
 kpi_pay_cxp = SmartWidget(
     "kp_cxp",
-    AdminKPIStrategy(SCREEN_ID, "accounts_payable", "CxP Mes", "tabler:file-invoice", "indigo")
+    AdminKPIStrategy(SCREEN_ID, "accounts_payable", "CxP", "tabler:file-invoice", "blue")
+)
+kpi_pay_notas_cargo = SmartWidget(
+    "kp_notas_cargo",
+    AdminKPIStrategy(SCREEN_ID, "debit_notes", "Notas Cargo", "tabler:receipt", "orange")
 )
 kpi_pay_credit = SmartWidget(
     "kp_credit",
-    AdminKPIStrategy(SCREEN_ID, "credit_notes", "Notas Crédito", "tabler:file-minus", "red")
+    AdminKPIStrategy(SCREEN_ID, "credit_notes", "Notas Crédito", "tabler:file-minus", "teal")
 )
 kpi_pay_advances = SmartWidget(
     "kp_advances",
-    AdminKPIStrategy(SCREEN_ID, "advances", "Anticipos", "tabler:receipt-2", "green")
+    AdminKPIStrategy(SCREEN_ID, "advances", "Anticipo", "tabler:receipt-2", "green")
+)
+kpi_pay_cxp_total = SmartWidget(
+    "kp_cxp_total",
+    AdminKPIStrategy(SCREEN_ID, "payables_total", "CxP Total", "tabler:sum", "violet")
 )
 kpi_pay_payments = SmartWidget(
     "kp_payments",
-    AdminKPIStrategy(SCREEN_ID, "supplier_payments", "Pagos", "tabler:truck-delivery", "green")
+    AdminKPIStrategy(SCREEN_ID, "supplier_payments", "Pago Proveedores", "tabler:truck-delivery", "red")
 )
 kpi_pay_balance = SmartWidget(
     "kp_balance",
-    AdminKPIStrategy(SCREEN_ID, "final_balance", "Saldo Final", "tabler:wallet", "yellow")
+    AdminKPIStrategy(SCREEN_ID, "final_balance", "Saldo", "tabler:wallet", "yellow")
 )
 
 gauge_pay_eff = SmartWidget(
@@ -55,22 +62,32 @@ gauge_pay_days = SmartWidget(
 
 chart_pay_mix = ChartWidget(
     "cp_mix",
-    AdminDonutChartStrategy(SCREEN_ID, "payables_by_status", "Distribución CxP")
+    AdminDonutChartStrategy(SCREEN_ID, "payables_by_status", "DistribuciónSaldo por Clasificación")
 )
 chart_pay_stack = ChartWidget(
     "cp_stack",
-    AdminStackedBarStrategy(SCREEN_ID, "suppliers_by_range", "Proveedores por Rango")
+    AdminStackedBarStrategy(SCREEN_ID, "suppliers_by_range", "Saldo por Proveedor")
 )
 chart_pay_comp = ChartWidget(
     "cp_comp",
-    AdminTrendChartStrategy(SCREEN_ID, "payables_trends", "Tendencia CxP", color="red")
+    AdminTrendChartStrategy(SCREEN_ID, "payables_trends", "Cuentas x Pagar 2025 vs. 2024", color="red")
+)
+chart_pago_proveedores = ChartWidget(
+    "cp_pago_prov",
+    AdminTrendChartStrategy(SCREEN_ID, "pago_proveedores_trends", "Pago Proveedores 2025 vs. 2024", color="red")
+)
+chart_pronostico_pago_prov = ChartWidget(
+    "cp_pronostico_pago",
+    AdminHistoricalForecastLineStrategy(SCREEN_ID, "pronostico_pago_proveedores", "Pago Proveedores Histórica vs Pronóstico", color="red")
 )
 
 WIDGET_REGISTRY = {
     "kp_initial": kpi_pay_initial,
     "kp_cxp": kpi_pay_cxp,
+    "kp_notas_cargo": kpi_pay_notas_cargo,
     "kp_credit": kpi_pay_credit,
     "kp_advances": kpi_pay_advances,
+    "kp_cxp_total": kpi_pay_cxp_total,
     "kp_payments": kpi_pay_payments,
     "kp_balance": kpi_pay_balance,
     "gp_eff": gauge_pay_eff,
@@ -79,18 +96,20 @@ WIDGET_REGISTRY = {
 
 def _render_payables_body(ctx):
     return html.Div([
-        dmc.Title("Administración - Cuentas por Pagar", order=3, mb="lg", c="dimmed"),
+        dmc.Title("Administración - Cuentas por Pagar", order=3, mb="lg", c="dimmed"), # type: ignore
         dmc.SimpleGrid(
-            cols={"base": 2, "sm": 3, "lg": 6},
+            cols={"base": 2, "sm": 3, "lg": 4}, # type: ignore
             spacing="sm",
             mb="xl",
             children=[
-                kpi_pay_initial.render(ctx, theme=theme),
-                kpi_pay_cxp.render(ctx, theme=theme),
-                kpi_pay_credit.render(ctx, theme=theme),
-                kpi_pay_advances.render(ctx, theme=theme),
-                kpi_pay_payments.render(ctx, theme=theme),
-                kpi_pay_balance.render(ctx, theme=theme)
+                kpi_pay_initial.render(ctx),
+                kpi_pay_cxp.render(ctx),
+                kpi_pay_notas_cargo.render(ctx),
+                kpi_pay_credit.render(ctx),
+                kpi_pay_advances.render(ctx),
+                kpi_pay_cxp_total.render(ctx),
+                kpi_pay_payments.render(ctx),
+                kpi_pay_balance.render(ctx)
             ]
         ),
         dmc.Grid(
@@ -98,7 +117,7 @@ def _render_payables_body(ctx):
             mb="xl",
             children=[
                 dmc.GridCol(
-                    span={"base": 12, "md": 6},
+                    span={"base": 12, "md": 6}, # type: ignore
                     children=[
                         dmc.SimpleGrid(
                             cols=2,
@@ -111,7 +130,7 @@ def _render_payables_body(ctx):
                     ]
                 ),
                 dmc.GridCol(
-                    span={"base": 12, "md": 6},
+                    span={"base": 12, "md": 6}, # type: ignore
                     children=[chart_pay_mix.render(ctx, h=360)]
                 )
             ]
@@ -121,7 +140,7 @@ def _render_payables_body(ctx):
             mb="xl",
             children=[
                 dmc.GridCol(
-                    span={"base": 12, "lg": 6},
+                    span={"base": 12, "lg": 6}, # type: ignore
                     children=[
                         dmc.Paper(
                             p="md",
@@ -129,10 +148,10 @@ def _render_payables_body(ctx):
                             shadow="sm",
                             children=[
                                 dmc.Text(
-                                    "ANTIGÜEDAD DE SALDOS POR PROVEEDOR",
+                                    "ANTIGÜEDAD DE SALDOS",
                                     fw="bold",
                                     size="xs",
-                                    c="dimmed",
+                                    c="dimmed", # type: ignore
                                     mb="md"
                                 ),
                                 dmc.ScrollArea(
@@ -141,7 +160,7 @@ def _render_payables_body(ctx):
                                         AdminTableStrategy(
                                             SCREEN_ID,
                                             "aging_by_supplier"
-                                        ).render(ctx, theme=theme)
+                                        ).render(ctx)
                                     ]
                                 )
                             ]
@@ -149,7 +168,7 @@ def _render_payables_body(ctx):
                     ]
                 ),
                 dmc.GridCol(
-                    span={"base": 12, "lg": 6},
+                    span={"base": 12, "lg": 6}, # type: ignore
                     children=[chart_pay_stack.render(ctx, h=500)]
                 )
             ]
@@ -159,32 +178,27 @@ def _render_payables_body(ctx):
             withBorder=True,
             shadow="sm",
             children=[
-                dmc.Group(
-                    justify="space-between",
-                    mb="md",
+                dmc.Tabs(
+                    value="cuentas_x_pagar",
                     children=[
-                        dmc.Text(
-                            "CUENTAS POR PAGAR (COMPARATIVO)",
-                            fw="bold",
-                            size="xs",
-                            c="dimmed"
+                        dmc.TabsList([
+                            dmc.TabsTab("Cuentas x Pagar", value="cuentas_x_pagar"),
+                            dmc.TabsTab("Pago Proveedores", value="pago_proveedores"),
+                            dmc.TabsTab("Pronóstico Pago Prov", value="pronostico_pago_prov")
+                        ]),
+                        dmc.TabsPanel(
+                            dmc.Box(chart_pay_comp.render(ctx, h=400), pt="md"),
+                            value="cuentas_x_pagar"
                         ),
-                        dmc.SegmentedControl(
-                            id="pay-comp-selector",
-                            data=[
-                                {"label": "Vista Mensual", "value": "monthly"},
-                                {"label": "Vista Acumulada", "value": "cumulative"},
-                                {"label": "Vista Comparativa", "value": "comparison"}
-                            ],
-                            value="monthly",
-                            size="xs",
-                            color="red"
+                        dmc.TabsPanel(
+                            dmc.Box(chart_pago_proveedores.render(ctx, h=400), pt="md"),
+                            value="pago_proveedores"
+                        ),
+                        dmc.TabsPanel(
+                            dmc.Box(chart_pronostico_pago_prov.render(ctx, h=400), pt="md"),
+                            value="pronostico_pago_prov"
                         )
                     ]
-                ),
-                html.Div(
-                    id="pay-comp-dynamic-container",
-                    children=[chart_pay_comp.render(ctx, h=400)]
                 )
             ]
         ),
@@ -233,16 +247,3 @@ data_manager.register_dash_refresh_callbacks(
 
 register_modal_callback("pay-modal", WIDGET_REGISTRY, SCREEN_ID)
 
-@callback(
-    Output("pay-comp-dynamic-container", "children"),
-    Input("pay-comp-selector", "value"),
-    prevent_initial_call=True
-)
-def update_pay_comparison_chart(selected_view):
-    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True)
-    fig = chart_pay_comp.strategy.get_figure(ctx)
-    return dcc.Graph(
-        figure=fig,
-        config={"displayModeBar": False},
-        style={"height": "400px"}
-    )

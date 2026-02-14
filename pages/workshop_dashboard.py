@@ -15,7 +15,6 @@ from strategies.workshop import (
     WorkshopDonutChartStrategy,
     WorkshopHorizontalBarStrategy
 )
-from flask import session
 
 dash.register_page(__name__, path="/taller-dashboard", title="Mantenimiento")
 
@@ -176,7 +175,7 @@ WIDGET_REGISTRY = {
 def _render_taller_dashboard_body(ctx):
     return html.Div([
         dmc.SimpleGrid(
-            cols={"base": 1, "md": 2},
+            cols={"base": 1, "md": 2}, # type: ignore
             spacing="md",
             mb="md",
             children=[
@@ -187,7 +186,7 @@ def _render_taller_dashboard_body(ctx):
             ]
         ),
         dmc.SimpleGrid(
-            cols={"base": 1, "md": 2},
+            cols={"base": 1, "md": 2}, # type: ignore
             spacing="md",
             mb="xl",
             children=[
@@ -199,12 +198,12 @@ def _render_taller_dashboard_body(ctx):
             gutter="md",
             mb="xl",
             children=[
-                dmc.GridCol(span={"base": 12, "lg": 7}, children=[chart_taller_trend.render(ctx, h=420)]),
-                dmc.GridCol(span={"base": 12, "lg": 5}, children=[chart_taller_type.render(ctx, h=420)])
+                dmc.GridCol(span={"base": 12, "lg": 7}, children=[chart_taller_trend.render(ctx, h=420)]), # type: ignore
+                dmc.GridCol(span={"base": 12, "lg": 5}, children=[chart_taller_type.render(ctx, h=420)]) # type: ignore
             ]
         ),
         dmc.SimpleGrid(
-            cols={"base": 1, "md": 3},
+            cols={"base": 1, "md": 3}, # type: ignore
             spacing="md",
             mb="xl",
             children=[
@@ -214,7 +213,7 @@ def _render_taller_dashboard_body(ctx):
             ]
         ),
         dmc.SimpleGrid(
-            cols={"base": 1, "md": 3},
+            cols={"base": 1, "md": 3}, # type: ignore
             spacing="md",
             children=[
                 chart_taller_unit.render(ctx, h=420),

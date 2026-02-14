@@ -291,7 +291,7 @@
   "costo_viaje_total": {
     "name": "Costo Viaje Total",
     "type": "derived",
-    "formula": "costo_liquidacion",
+    "formula": "costo_liquidacion + sueldo_operador",
     "format": "currency",
     "description": "Base para cálculo de utilidad"
   },
@@ -607,6 +607,287 @@
       "aggregation": "SUM",
       "time_modifier": "previous_year",
       "format": "currency"
+    }
+  },
+  "facturado_mes": {
+    "name": "Facturado Mes",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_facturado_mx",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "facturado_acumulado": {
+    "name": "Facturado Acumulado",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_facturado_mx",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "notas_credito_mes": {
+    "name": "Notas Crédito mes",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_ncred_mx",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "notas_credito_acumulado": {
+    "name": "Notas Crédito Acumulado",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_ncred_acum_mx",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    }
+  },
+  "notas_cargo_mes": {
+    "name": "Notas Cargo Mes",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_ncargo_mx",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "notas_cargo_acumulado": {
+    "name": "Notas Cargo Acumulado",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_ncargo_acum_mx",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "cobrado_mes": {
+    "name": "Cobrado Mes",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_cobrado_mx",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "cobrado_acumulado": {
+    "name": "Cobrado Acumulado",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_cobrado_acum_mx",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "cartera_clientes": {
+    "name": "Cartera de Clientes",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_saldo_acum_mx",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "nc_monto": {
+    "name": "Monto Nota Crédito",
+    "recipe": {
+      "table": "d_nota_credito",
+      "column": "monto_credito",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "nc_retencion": {
+    "name": "Retención Nota Crédito",
+    "recipe": {
+      "table": "d_nota_credito",
+      "column": "monto_retencion",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "nca_monto": {
+    "name": "Monto Nota Cargo",
+    "recipe": {
+      "table": "d_nota_cargo",
+      "column": "monto_cargo",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "nca_retencion": {
+    "name": "Retención Nota Cargo",
+    "recipe": {
+      "table": "d_nota_cargo",
+      "column": "monto_retencion",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "monto_cobrado_directo": {
+    "name": "Monto Cobrado Directo",
+    "recipe": {
+      "table": "h_factura_cobrado",
+      "column": "monto_cobrado",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "dias_cartera_promedio": {
+    "name": "Promedio Días Cartera",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "DATEDIFF(day, fecha_factura, GETDATE())",
+      "aggregation": "AVG",
+      "format": "decimal"
+    }
+  },
+  "dias_cartera_anterior": {
+    "name": "Días Cartera Año Anterior",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "DATEDIFF(day, fecha_factura, GETDATE())",
+      "aggregation": "AVG",
+      "time_modifier": "previous_year",
+      "format": "decimal"
+    }
+  },
+  "meta_dias_cartera": {
+    "name": "Meta Días Cartera",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_promedio_dias_cartera",
+      "aggregation": "SUM",
+      "format": "decimal"
+    }
+  },
+  "cartera_vencida": {
+    "name": "Cartera Vencida",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_saldo_acum_mx",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "facturado_mes_anterior": {
+    "name": "Facturado Mes Año Anterior",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_facturado_mx",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    }
+  },
+  "monto_cobrado": {
+    "name": "Monto Cobrado Real",
+    "description": "Suma del monto cobrado acumulado por factura",
+    "recipe": {
+      "table": "h_factura_saldo",
+      "column": "monto_cobrado_acum_mx",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "saldo_inicial_proveedores": {
+    "name": "Saldo Inicial Proveedores",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "saldo_inicial",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "cxp_proveedores": {
+    "name": "CxP del Periodo",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "cxp",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "notas_cargo_proveedores": {
+    "name": "Notas de Cargo Proveedores",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "notas_cargo",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "notas_credito_proveedores": {
+    "name": "Notas de Crédito Proveedores",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "notas_credito",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "anticipos_proveedores": {
+    "name": "Anticipos a Proveedores",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "monto_anticipo",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "cxp_total_proveedores": {
+    "name": "CxP Total",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "cxp_total",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "pago_proveedores": {
+    "name": "Pago a Proveedores",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "pago_proveedores",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "saldo_final_proveedores": {
+    "name": "Saldo Final Proveedores",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "saldo_final",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "porcentaje_pagado_proveedores": {
+    "name": "% Pagado a Proveedores",
+    "type": "derived",
+    "formula": "pago_proveedores / cxp_total_proveedores",
+    "format": "percent"
+  },
+  "promedio_dias_pago": {
+    "name": "Promedio Días Pago",
+    "description": "Promedio de días transcurridos desde fecha_ini hasta fecha_pago",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "DATEDIFF(day, fecha_ini, fecha_pago)",
+      "aggregation": "AVG",
+      "format": "integer"
+    }
+  },
+  "meta_promedio_dias_pago": {
+    "name": "Meta Promedio Días Pago",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_promedio_dias_pago",
+      "aggregation": "SUM",
+      "format": "integer"
     }
   }
 }

@@ -15,7 +15,6 @@ from strategies.workshop import (
     WorkshopDonutChartStrategy,
     WorkshopTableStrategy
 )
-from flask import session
 
 dash.register_page(__name__, path="/taller-purchases", title="Compras Taller")
 
@@ -63,11 +62,9 @@ WIDGET_REGISTRY = {
 }
 
 def _render_taller_purchases_body(ctx):
-    theme = session.get("theme", "dark")
-
     return html.Div([
         dmc.SimpleGrid(
-            cols={"base": 1, "sm": 2, "lg": 4},
+            cols={"base": 1, "sm": 2, "lg": 4}, # type: ignore
             spacing="md",
             mb="xl",
             children=[
@@ -81,16 +78,16 @@ def _render_taller_purchases_body(ctx):
             gutter="md",
             mb="xl",
             children=[
-                dmc.GridCol(span={"base": 12, "lg": 8}, children=[chart_trend.render(ctx, h=400)]),
-                dmc.GridCol(span={"base": 12, "lg": 4}, children=[chart_type.render(ctx, h=400)])
+                dmc.GridCol(span={"base": 12, "lg": 8}, children=[chart_trend.render(ctx, h=400)]), # type: ignore
+                dmc.GridCol(span={"base": 12, "lg": 4}, children=[chart_type.render(ctx, h=400)]) # type: ignore
             ]
         ),
         dmc.Grid(
             gutter="md",
             mb="xl",
             children=[
-                dmc.GridCol(span={"base": 12, "lg": 6}, children=[chart_area.render(ctx, h=400)]),
-                dmc.GridCol(span={"base": 12, "lg": 6}, children=[chart_top_prov.render(ctx, h=400)])
+                dmc.GridCol(span={"base": 12, "lg": 6}, children=[chart_area.render(ctx, h=400)]), # type: ignore
+                dmc.GridCol(span={"base": 12, "lg": 6}, children=[chart_top_prov.render(ctx, h=400)]) # type: ignore
             ]
         ),
         dmc.Paper(
@@ -110,7 +107,7 @@ def _render_taller_purchases_body(ctx):
                             dmc.ScrollArea(
                                 h=400,
                                 pt="md",
-                                children=[WorkshopTableStrategy(SCREEN_ID, "purchase_orders_detail").render(ctx, theme=theme)]
+                                children=[WorkshopTableStrategy(SCREEN_ID, "purchase_orders_detail").render(ctx)]
                             ),
                             value="ordenes"
                         ),
@@ -118,7 +115,7 @@ def _render_taller_purchases_body(ctx):
                             dmc.ScrollArea(
                                 h=400,
                                 pt="md",
-                                children=[WorkshopTableStrategy(SCREEN_ID, "inventory_detail").render(ctx, theme=theme)]
+                                children=[WorkshopTableStrategy(SCREEN_ID, "inventory_detail").render(ctx)]
                             ),
                             value="insumos"
                         ),
@@ -126,7 +123,7 @@ def _render_taller_purchases_body(ctx):
                             dmc.ScrollArea(
                                 h=400,
                                 pt="md",
-                                children=[WorkshopTableStrategy(SCREEN_ID, "top_suppliers").render(ctx, theme=theme)]
+                                children=[WorkshopTableStrategy(SCREEN_ID, "top_suppliers").render(ctx)]
                             ),
                             value="prov"
                         )

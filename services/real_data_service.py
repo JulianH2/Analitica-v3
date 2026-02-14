@@ -379,6 +379,8 @@ class RealDataService:
             current_value=0.1,
             kpi_type="percent"
         )
+        
+        # Sin meta ni YTD: el kpi_roadmap solo inyecta value y vs_last_year
         operational["kpis"]["revenue_per_trip"] = KPICalculator.calculate_kpi(
             title="Ingreso x Viaje",
             current_value=1,
@@ -400,6 +402,8 @@ class RealDataService:
             kpi_type="currency",
             unit="MXN"
         )
+        
+        # Sin meta: el kpi_roadmap solo inyecta value y vs_last_year
         operational["kpis"]["units_used"] = KPICalculator.calculate_kpi(
             title="Unidades Usadas",
             current_value=1,
@@ -1038,8 +1042,8 @@ class RealDataService:
         administration["kpis"]["accounts_receivable"] = KPICalculator.calculate_kpi(
             title="Cartera Total",
             current_value=1,
-            previous_value=1,
-            target_value=1,
+            previous_value=None,
+            target_value=None,
             kpi_type="currency",
             unit="MXN",
             inverse=True
@@ -1140,19 +1144,19 @@ class RealDataService:
         )
         
         administration["kpis"]["collection_efficiency"] = KPICalculator.calculate_kpi(
-            title="Eficiencia Cobranza",
+            title="Facturado vs Cobrado",
             current_value=0.1,
-            previous_value=0.1,
-            target_value=0.1,
+            previous_value=None,
+            target_value=1,
             kpi_type="percent"
         )
         
         administration["kpis"]["avg_collection_days"] = KPICalculator.calculate_kpi(
             title="Días Promedio Cobro",
             current_value=1,
-            previous_value=1,
+            previous_value=None,
             target_value=1,
-            kpi_type="number",
+            kpi_type="decimal",
             unit="días",
             inverse=True
         )
@@ -1205,11 +1209,10 @@ class RealDataService:
         administration["kpis"]["total_expenses"] = KPICalculator.calculate_kpi(title="Egresos Totales", current_value=1, previous_value=1, kpi_type="currency", unit="MXN", inverse=True)
         administration["kpis"]["final_balance"] = KPICalculator.calculate_kpi(title="Saldo Final", current_value=1, kpi_type="currency", unit="MXN")
         
-        administration["kpis"]["billed_amount"] = KPICalculator.calculate_kpi(title="Facturado", current_value=1, previous_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["billed_amount"] = KPICalculator.calculate_kpi(title="Facturado", current_value=1, previous_value=None, kpi_type="currency", unit="MXN")
         administration["kpis"]["credit_notes"] = KPICalculator.calculate_kpi(title="Notas Crédito", current_value=1, kpi_type="currency", unit="MXN", inverse=True)
         administration["kpis"]["debit_notes"] = KPICalculator.calculate_kpi(title="Notas Cargo", current_value=1, kpi_type="currency", unit="MXN")
-        administration["kpis"]["collected_amount"] = KPICalculator.calculate_kpi(title="Cobrado", current_value=1, previous_value=1, kpi_type="currency", unit="MXN")
-        administration["kpis"]["net_balance"] = KPICalculator.calculate_kpi(title="Saldo Neto", current_value=1, kpi_type="currency", unit="MXN")
+        administration["kpis"]["collected_amount"] = KPICalculator.calculate_kpi(title="Cobrado", current_value=1, kpi_type="currency", unit="MXN")
         
         administration["kpis"]["payables_initial_balance"] = KPICalculator.calculate_kpi(title="Saldo Inicial CxP", current_value=1, kpi_type="currency", unit="MXN")
         administration["kpis"]["payables_credit_notes"] = KPICalculator.calculate_kpi(title="NC Proveedores", current_value=1, kpi_type="currency", unit="MXN")
@@ -1379,6 +1382,74 @@ class RealDataService:
             }
         }
 
+        administration["charts"]["collection_chart_facturado"] = {
+            "type": "line_chart",
+            "title": "Facturado",
+            "data": {
+                "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep"],
+                "series": [
+                    {"name": "Facturado", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#118AB2"}
+                ],
+                "y_axis_label": "MXN",
+                "x_axis_label": "Meses"
+            }
+        }
+
+        administration["charts"]["collection_chart_dias_cartera"] = {
+            "type": "line_chart",
+            "title": "Días Cartera",
+            "data": {
+                "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep"],
+                "series": [
+                    {"name": "Días Cartera", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#FFD166"}
+                ],
+                "y_axis_label": "Días",
+                "x_axis_label": "Meses"
+            }
+        }
+
+        administration["charts"]["collection_chart_pronostico_cobranza"] = {
+            "type": "line_chart",
+            "title": "Cobranza Histórica vs Pronóstico",
+            "data": {
+                "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep"],
+                "series": [
+                    {"name": "Cobranza Histórica", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#228be6", "type": "line"},
+                    #{"name": "Pronóstico", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#212529", "type": "line", "lower": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "upper": [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]}
+                ],
+                "y_axis_label": "MXN",
+                "y_axis_format": "millions",
+                "x_axis_label": "Meses"
+            }
+        }
+
+        administration["charts"]["collection_chart_pronostico_facturacion"] = {
+            "type": "line_chart",
+            "title": "Facturación Histórica vs Pronóstico",
+            "data": {
+                "months": ["ene 2024", "jul 2024", "ene 2025", "jul 2025", "ene 2026", "jul 2026"],
+                "series": [
+                    {
+                        "name": "Facturación Histórica",
+                        "data": [0.05, 0.12, 0.22, 0.26, 0.18, None],
+                        "color": "#228be6",
+                        "type": "line"
+                    },
+                    {
+                        "name": "Pronóstico",
+                        "data": [None, None, None, None, 0.17, 0.19],
+                        "color": "#212529",
+                        "type": "line",
+                        "lower": [None, None, None, None, 0.14, 0.15],
+                        "upper": [None, None, None, None, 0.20, 0.24]
+                    }
+                ],
+                "y_axis_label": "mil M",
+                "y_axis_format": "millions",
+                "x_axis_label": "Meses"
+            }
+        }
+
         administration["charts"]["payables_by_status"] = {
             "type": "donut_chart",
             "title": "CxP por Estatus",
@@ -1419,7 +1490,7 @@ class RealDataService:
 
         administration["tables"]["aging_by_client"] = {
             "type": "table",
-            "title": "Antigüedad de Saldos por Cliente",
+            "title": "Antigüedad de Saldos",
             "headers": ["Cliente", "0-30 días", "31-60 días", "61-90 días", "+90 días", "Total"],
             "rows": [["CLIENTE A", "$1", "$1", "$1", "$1", "$1"]]
         }

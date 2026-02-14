@@ -2526,54 +2526,41 @@
   "operational-routes": {
     "section_key": "operational",
     "ttl_seconds": 3600,
-    "categorical_roadmap": {
-      "routes_map": {
-        "kpi": "trip_revenue",
-        "dimension": "d_ruta"
-      }
-    },
     "table_roadmap": {
       "main_routes": {
         "dimensions": [
+          "d_ruta.id_ruta",
           "d_ruta.ruta",
-          "d_ruta.origen",
-          "d_ruta.destino"
+          "d_plaza_origen.plaza",
+          "d_plaza_destino.plaza",
+          "d_plaza_georeferencia_origen.latpos",
+          "d_plaza_georeferencia_origen.lonpos",
+          "d_plaza_georeferencia_destino.latpos",
+          "d_plaza_georeferencia_destino.lonpos"
         ],
         "metrics": [
-          "trips",
-          "kilometers",
-          "trip_revenue"
+          ["viajes_real", "kilometros", "costo_liquidacion", "sueldo_operador", "costo_viaje_total"]
         ],
+        "fixed_filters": {
+          "d_viaje.ind_cargado": 0
+        },
         "columns": [
-          {
-            "key": "d_ruta.ruta",
-            "label": "Ruta",
+          { "key": "d_ruta.id_ruta", "label": "No.", "format": "integer" },
+          { "key": "d_ruta.ruta", "label": "Ruta", "format": "text" },
+          { "key": "viajes_real", "label": "Viajes", "format": "integer" },
+          { "key": "kilometros", "label": "Kms Viaje", "format": "integer" },
+          { "key": "costo_viaje_total", "label": "Costo Total", "format": "currency", "formula": "lambda r: (r.get('costo_liquidacion', 0) or 0) + (r.get('sueldo_operador', 0) or 0)" },
+          { "key": "d_plaza_origen.plaza", "label": "Origen", "format": "text" },
+          { "key": "d_plaza_destino.plaza", "label": "Destino", "format": "text" },
+          { 
+            "label": "Pos. Origen", 
+            "formula": "lambda r: f\"{r.get('d_plaza_georeferencia_origen.latpos','')},{r.get('d_plaza_georeferencia_origen.lonpos','')}\"",
             "format": "text"
           },
-          {
-            "key": "d_ruta.origen",
-            "label": "Origen",
+          { 
+            "label": "Pos. Destino", 
+            "formula": "lambda r: f\"{r.get('d_plaza_georeferencia_destino.latpos','')},{r.get('d_plaza_georeferencia_destino.lonpos','')}\"",
             "format": "text"
-          },
-          {
-            "key": "d_ruta.destino",
-            "label": "Destino",
-            "format": "text"
-          },
-          {
-            "key": "trips",
-            "label": "Viajes",
-            "format": "integer"
-          },
-          {
-            "key": "kilometers",
-            "label": "Kms",
-            "format": "integer"
-          },
-          {
-            "key": "trip_revenue",
-            "label": "Ingresos",
-            "format": "currency"
           }
         ]
       }
@@ -2664,56 +2651,248 @@
     "section_key": "administration",
     "ttl_seconds": 3600,
     "kpi_roadmap": {
-      "billed_amount": "income_month",
-      "accounts_receivable": "accounts_receivable",
-      "collected_amount": "cash_flow",
-      "collection_efficiency": "collection_efficiency",
-      "average_collection_days": "avg_collection_days"
-    },
-    "categorical_roadmap": {
-      "receivables_by_status": {
-        "kpi": "accounts_receivable",
-        "dimension": "d_trafico_cliente"
-      },
-      "debtors_by_range": {
-        "kpi": "accounts_receivable",
-        "dimension": "d_trafico_cliente"
-      }
-    },
-    "chart_roadmap": {
-      "collection_trends": {
-        "facturado": "income_month",
-        "cobrado": "cash_flow"
-      }
-    },
-    "table_roadmap": {
-      "aging_by_client": {
-        "dimensions": [
-          "d_trafico_cliente.nombre_cliente"
-        ],
-        "metrics": [
-          "accounts_receivable"
-        ],
+      "ka_billing": {
+        "metrics": [["facturado_mes"], ["facturado_acumulado"]],
+        "fixed_filters": {
+          "h_factura_saldo.orden": 0
+        },
         "columns": [
           {
-            "key": "d_trafico_cliente.nombre_cliente",
-            "label": "Cliente",
-            "format": "text"
+            "target": "monthly_billing",
+            "key": "facturado_mes"
           },
           {
-            "key": "accounts_receivable",
-            "label": "Saldo",
-            "format": "currency"
+            "target": "ytd_billing",
+            "key": "facturado_acumulado"
+          }
+        ]
+      },
+      "ka_credit": {
+        "metrics": [["notas_credito_acumulado"], ["nc_monto", "nc_retencion"]],
+        "fixed_filters": [{}, {"d_nota_credito.estatus": "A"}],
+        "columns": [
+          {
+            "target": "monthly_billing",
+            "formula": "lambda r: (r.get('nc_monto', 0) or 0) - (r.get('nc_retencion', 0) or 0)"
+          },
+          {
+            "target": "ytd_billing",
+            "key": "notas_credito_acumulado"
+          }
+        ]
+      },
+      "ka_debit": {
+        "metrics": [["notas_cargo_acumulado"], ["nca_monto", "nca_retencion"]],
+        "fixed_filters": [{ }, { "d_nota_cargo.estatus": "A" }],
+        "columns": [
+          {
+            "target": "monthly_debit",
+            "formula": "lambda r: (r.get('nca_monto', 0) or 0) - (r.get('nca_retencion', 0) or 0)"
+          },
+          {
+            "target": "ytd_debit",
+            "key": "notas_cargo_acumulado"
+          }
+        ]
+      },
+      "ka_payments": {
+        "metrics": [["cobrado_acumulado"], ["monto_cobrado_directo"]],
+        "columns": [
+          {
+            "target": "monthly_collected",
+            "key": "monto_cobrado_directo"
+          },
+          {
+            "target": "ytd_collected",
+            "key": "cobrado_acumulado"
+          }
+        ]
+      },
+      "ka_portfolio": {
+        "metrics": ["cartera_clientes"],
+        "fixed_filters": {
+          "h_factura_saldo.orden": 0
+        },
+        "columns": [
+          {
+            "target": "customer_portfolio",
+            "key": "cartera_clientes"
+          }
+        ]
+      },
+      "gc_billing": {
+        "metrics": [["cobrado_acumulado", "facturado_acumulado"]],
+        "columns": [
+          {
+            "target": "gauge_value",
+            "key": "cobrado_acumulado"
+          },
+          {
+            "target": "gauge_target",
+            "key": "facturado_acumulado"
+          },
+          {
+            "target": "gauge_pct",
+            "formula": "lambda r: (r.get('cobrado_acumulado', 0) / r.get('facturado_acumulado', 1)) * 100 if r.get('facturado_acumulado', 0) > 0 else 0"
+          }
+        ]
+      },
+      "average_collection_days":{
+        "metrics": [["dias_cartera_promedio"], ["meta_dias_cartera"]],
+        "fixed_filters": [{ "h_factura_saldo.orden": 0 }, {}],
+        "columns": [
+          { "target": "days_value", "key": "dias_cartera_promedio" },
+          { "target": "days_target", "key": "meta_dias_cartera" },
+          {
+            "target": "days_pct",
+            "formula": "lambda r: (r.get('dias_cartera_promedio', 0) / r.get('meta_dias_cartera', 1)) * 100 if r.get('meta_dias_cartera', 0) > 0 else 0"
           }
         ]
       }
     },
+    "categorical_roadmap": {
+      "cc_mix": {
+        "dimension": "d_cxc_rango_vencimiento.clasificacion",
+        "metrics": ["cartera_vencida"],
+        "fixed_filters": {
+          "h_factura_saldo.orden": 0
+        }
+      },
+      "cc_stack": {
+        "dimensions": [
+          "d_trafico_cliente.nombre_cliente", 
+          "d_cxc_rango_vencimiento.clasificacion"
+        ],
+        "metrics": ["cartera_vencida"],
+        "fixed_filters": {
+          "h_factura_saldo.orden": 0
+        },
+        "columns": [
+          { "role": "label", "key": "d_trafico_cliente.nombre_cliente" },
+          { "role": "series", "key": "d_cxc_rango_vencimiento.clasificacion" },
+          { "role": "value", "key": "cartera_vencida" },
+          {
+            "label": "%TG Cartera Vencida",
+            "key": "pct_tg_cartera",
+            "numerator_key": "cartera_vencida",
+            "is_total_ratio": true,
+            "format": "percent"
+          }
+        ]
+      }
+    },
+    "chart_roadmap": {
+      "chart_facturado": {
+        "metrics": [["facturado_mes"], ["facturado_mes_anterior"]],
+        "fixed_filters": {
+          "h_factura_saldo.orden": 0
+        },
+        "columns": [
+          { "key": "facturado_mes", "series": "Año Actual" },
+          { "key": "facturado_mes_anterior", "series": "Año Anterior" }
+        ]
+      },
+      "collection_chart_dias_cartera": {
+        "metrics": [
+            ["dias_cartera_promedio"], ["dias_cartera_anterior"],
+            ["meta_dias_cartera"]
+        ],
+        "fixed_filters": [
+          {
+            "h_factura_saldo.monto_saldo_acum_mx": { "operator": ">", "value": 0 }
+          },{
+            "h_factura_saldo.monto_saldo_acum_mx": { "operator": ">", "value": 0 }
+          },
+          {}
+        ],
+        "columns": [
+            {
+                "key": "dias_cartera_promedio",
+                "series": "Año Actual",
+                "type": "column"
+            },
+            {
+                "key": "dias_cartera_anterior",
+                "series": "Año Anterior",
+                "type": "column"
+            },
+            {
+                "key": "meta_dias_cartera",
+                "series": "Meta",
+                "type": "line"
+            }
+        ]
+      },
+      "chart_pronostico_cobranza": {
+        "metrics": [
+            "monto_cobrado"
+        ],
+        "columns": [
+            {
+                "key": "monto_cobrado",
+                "series": "Cobrado Real",
+                "type": "line"
+            }
+        ]
+      },
+      "collection_chart_pronostico_facturacion": {
+        "metrics": [
+            "facturado_acumulado"
+        ],
+        "columns": [
+            {
+                "key": "facturado_acumulado",
+                "series": "Facturado Real"
+            }
+        ]
+    }
+    },
+    "table_roadmap": {
+      "aging_by_client": {
+        "dimensions": ["d_area.no_abrev_area", "d_cxc_rango_vencimiento.desc_rango_vencimiento"],
+        "metrics": ["cartera_vencida"],
+        "fixed_filters": { "h_factura_saldo.orden": 0 },
+        "columns": [
+          { "key": "d_area.no_abrev_area", "label": "Área" },
+          { "key": "d_cxc_rango_vencimiento.desc_rango_vencimiento", "label": "Rango Vencimiento" },
+          { "key": "cartera_vencida", "label": "Cartera Vencida", "format": "currency" }
+        ]
+      }
+    },
     "inject_paths": {
+      "ka_billing.monthly_billing": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "billed_amount",
+        "value"
+      ],
+      "ka_billing.ytd_billing": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "billed_amount",
+        "ytd_value"
+      ],
       "billed_amount": [
         "administration",
         "dashboard",
         "kpis",
         "billed_amount"
+      ],
+      "ka_credit.monthly_billing": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "credit_notes",
+        "value"
+      ],
+      "ka_credit.ytd_billing": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "credit_notes",
+        "ytd_value"
       ],
       "credit_notes": [
         "administration",
@@ -2721,17 +2900,52 @@
         "kpis",
         "credit_notes"
       ],
+      "ka_debit.monthly_debit": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "debit_notes",
+        "value"
+      ],
+      "ka_debit.ytd_debit": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "debit_notes",
+        "ytd_value"
+      ],
       "debit_notes": [
         "administration",
         "dashboard",
         "kpis",
         "debit_notes"
       ],
+      "ka_payments.monthly_collected": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "collected_amount",
+        "value"
+      ],
+      "ka_payments.ytd_collected": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "collected_amount",
+        "ytd_value"
+      ],
       "collected_amount": [
         "administration",
         "dashboard",
         "kpis",
         "collected_amount"
+      ],
+      "ka_portfolio.customer_portfolio": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "accounts_receivable",
+        "value"
       ],
       "accounts_receivable": [
         "administration",
@@ -2745,6 +2959,20 @@
         "kpis",
         "net_balance"
       ],
+      "gc_billing.gauge_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "collection_efficiency",
+        "value"
+      ],
+      "gc_billing.gauge_target": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "collection_efficiency",
+        "target"
+      ],
       "collection_efficiency": [
         "administration",
         "dashboard",
@@ -2757,11 +2985,37 @@
         "kpis",
         "avg_collection_days"
       ],
+      "average_collection_days.days_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "avg_collection_days",
+        "value"
+      ],
+      "average_collection_days.days_target": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "avg_collection_days",
+        "target"
+      ],
+      "cc_mix": [
+        "administration",
+        "dashboard",
+        "charts",
+        "receivables_by_status"
+      ],
       "receivables_by_status": [
         "administration",
         "dashboard",
         "charts",
         "receivables_by_status"
+      ],
+      "cc_stack": [
+        "administration",
+        "dashboard",
+        "charts",
+        "debtors_by_range"
       ],
       "debtors_by_range": [
         "administration",
@@ -2775,6 +3029,36 @@
         "charts",
         "collection_trends"
       ],
+      "chart_facturado": [
+        "administration",
+        "dashboard",
+        "charts",
+        "collection_chart_facturado"
+      ],
+      "collection_chart_facturado": [
+        "administration",
+        "dashboard",
+        "charts",
+        "collection_chart_facturado"
+      ],
+      "collection_chart_dias_cartera": [
+        "administration",
+        "dashboard",
+        "charts",
+        "collection_chart_dias_cartera"
+      ],
+      "collection_chart_pronostico_cobranza": [
+        "administration",
+        "dashboard",
+        "charts",
+        "collection_chart_pronostico_cobranza"
+      ],
+      "collection_chart_pronostico_facturacion": [
+        "administration",
+        "dashboard",
+        "charts",
+        "collection_chart_pronostico_facturacion"
+      ],
       "aging_by_client": [
         "administration",
         "dashboard",
@@ -2787,10 +3071,96 @@
     "section_key": "administration",
     "ttl_seconds": 3600,
     "kpi_roadmap": {
-      "accounts_payable": "accounts_payable",
-      "supplier_payments": "expenses_month",
-      "payment_efficiency": "liquidity_ratio",
-      "average_payment_days": "avg_collection_days"
+      "initial_balance": {
+        "metrics": [["saldo_inicial_proveedores"]],
+        "columns": [
+          { "target": "current_value", "key": "saldo_inicial_proveedores" }
+        ]
+      },
+      "accounts_payable": {
+        "metrics": [["cxp_proveedores"]],
+        "columns": [
+          { "target": "current_value", "key": "cxp_proveedores" }
+        ]
+      },
+      "debit_notes": {
+        "metrics": [["notas_cargo_proveedores"]],
+        "columns": [
+          { "target": "current_value", "key": "notas_cargo_proveedores" }
+        ]
+      },
+      "credit_notes": {
+        "metrics": [["notas_credito_proveedores"]],
+        "columns": [
+          { "target": "current_value", "key": "notas_credito_proveedores" }
+        ]
+      },
+      "advances": {
+        "metrics": [["anticipos_proveedores"]],
+        "columns": [
+          { "target": "current_value", "key": "anticipos_proveedores" }
+        ]
+      },
+      "payables_total": {
+        "metrics": [["cxp_total_proveedores"]],
+        "columns": [
+          { "target": "current_value", "key": "cxp_total_proveedores" }
+        ]
+      },
+      "supplier_payments": {
+        "metrics": [["pago_proveedores"]],
+        "columns": [
+          { "target": "current_value", "key": "pago_proveedores" }
+        ]
+      },
+      "final_balance": {
+        "metrics": [["saldo_final_proveedores"]],
+        "columns": [
+          { "target": "current_value", "key": "saldo_final_proveedores" }
+        ]
+      },
+      "payment_efficiency": {
+        "metrics": [
+          ["pago_proveedores", "cxp_total_proveedores"]
+        ],
+        "columns": [
+          {
+            "target": "gauge_value",
+            "key": "pago_proveedores"
+          },
+          {
+            "target": "gauge_target",
+            "key": "cxp_total_proveedores"
+          },
+          {
+            "target": "gauge_pct",
+            "formula": "lambda r: (r.get('pago_proveedores', 0) / r.get('cxp_total_proveedores', 1)) * 100 if r.get('cxp_total_proveedores', 0) > 0 else 0"
+          }
+        ]
+      },
+      "average_payment_days": {
+        "metrics": [
+          ["promedio_dias_pago"], ["meta_promedio_dias_pago"]
+        ],
+        "columns": [
+          {
+            "target": "gauge_value",
+            "key": "promedio_dias_pago"
+          },
+          {
+            "target": "gauge_target",
+            "key": "meta_promedio_dias_pago"
+          },
+          {
+            "target": "gauge_max",
+            "formula": "lambda r: max(r.get('promedio_dias_pago', 0) or 0, r.get('meta_promedio_dias_pago', 0) or 0)"
+          },
+          {
+            "target": "gauge_pct",
+            "formula": "lambda r: (r.get('promedio_dias_pago', 0) / r.get('meta_promedio_dias_pago', 1)) * 100 if r.get('meta_promedio_dias_pago', 0) > 0 else 0"
+          }
+        ]
+      }
     },
     "categorical_roadmap": {
       "payables_by_status": {
@@ -2815,11 +3185,25 @@
         "kpis",
         "payables_initial_balance"
       ],
+      "initial_balance.current_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payables_initial_balance",
+        "value"
+      ],
       "accounts_payable": [
         "administration",
         "dashboard",
         "kpis",
         "accounts_payable"
+      ],
+      "accounts_payable.current_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "accounts_payable",
+        "value"
       ],
       "credit_notes": [
         "administration",
@@ -2827,11 +3211,51 @@
         "kpis",
         "payables_credit_notes"
       ],
+      "credit_notes.current_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payables_credit_notes",
+        "value"
+      ],
+      "debit_notes": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "debit_notes"
+      ],
+      "debit_notes.current_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "debit_notes",
+        "value"
+      ],
       "advances": [
         "administration",
         "dashboard",
         "kpis",
         "advances"
+      ],
+      "advances.current_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "advances",
+        "value"
+      ],
+      "payables_total": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payables_total"
+      ],
+      "payables_total.current_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payables_total",
+        "value"
       ],
       "supplier_payments": [
         "administration",
@@ -2839,11 +3263,25 @@
         "kpis",
         "supplier_payments"
       ],
+      "supplier_payments.current_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "supplier_payments",
+        "value"
+      ],
       "final_balance": [
         "administration",
         "dashboard",
         "kpis",
         "payables_final_balance"
+      ],
+      "final_balance.current_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payables_final_balance",
+        "value"
       ],
       "payment_efficiency": [
         "administration",
@@ -2851,11 +3289,60 @@
         "kpis",
         "payment_efficiency"
       ],
+      "payment_efficiency.gauge_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payment_efficiency",
+        "value"
+      ],
+      "payment_efficiency.gauge_target": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payment_efficiency",
+        "target"
+      ],
+      "payment_efficiency.gauge_pct": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "payment_efficiency",
+        "gauge_pct"
+      ],
       "average_payment_days": [
         "administration",
         "dashboard",
         "kpis",
         "average_payment_days"
+      ],
+      "average_payment_days.gauge_value": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "average_payment_days",
+        "value"
+      ],
+      "average_payment_days.gauge_target": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "average_payment_days",
+        "target"
+      ],
+      "average_payment_days.gauge_max": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "average_payment_days",
+        "gauge_max"
+      ],
+      "average_payment_days.gauge_pct": [
+        "administration",
+        "dashboard",
+        "kpis",
+        "average_payment_days",
+        "gauge_pct"
       ],
       "payables_by_status": [
         "administration",
