@@ -3,6 +3,7 @@ import dash
 from dash import html, dcc, callback, Input, Output, no_update
 import dash_mantine_components as dmc
 
+from design_system import ComponentSizes
 from services.data_manager import data_manager
 from components.smart_widget import SmartWidget
 from components.visual_widget import ChartWidget
@@ -14,8 +15,10 @@ from strategies.operational import (
     OpsGaugeStrategy,
     OpsTrendChartStrategy,
     OpsHorizontalBarStrategy,
-    OpsTableStrategy
+    OpsTableStrategy,
+    TableWidget
 )
+from flask import session
 
 dash.register_page(__name__, path="/ops-costs", title="Costos Operaciones")
 
@@ -89,7 +92,17 @@ WIDGET_REGISTRY = {
     "cc_comp": chart_cost_yearly_comp
 }
 
+WIDGET_REGISTRY.update({
+    "operational-costs-margin_by_route": TableWidget("operational-costs-margin_by_route", OpsTableStrategy(SCREEN_ID, "margin_by_route", title="Margen por Ruta")),
+    "operational-costs-margin_by_unit": TableWidget("operational-costs-margin_by_unit", OpsTableStrategy(SCREEN_ID, "margin_by_unit", title="Margen por Unidad")),
+    "operational-costs-margin_by_operator": TableWidget("operational-costs-margin_by_operator", OpsTableStrategy(SCREEN_ID, "margin_by_operator", title="Margen por Operador")),
+    "operational-costs-margin_by_trip": TableWidget("operational-costs-margin_by_trip", OpsTableStrategy(SCREEN_ID, "margin_by_trip", title="Margen por Viaje")),
+    "operational-costs-margin_by_client": TableWidget("operational-costs-margin_by_client", OpsTableStrategy(SCREEN_ID, "margin_by_client", title="Margen por Cliente")),
+})
+
 def _render_cost_tabs(ctx):
+    theme = session.get("theme", "dark")
+
     return dmc.Paper(
         p=8,
         withBorder=True,
@@ -108,35 +121,35 @@ def _render_cost_tabs(ctx):
                     dmc.TabsPanel(
                         html.Div(
                             style={"height": "380px", "overflowY": "auto"},
-                            children=[OpsTableStrategy(SCREEN_ID, "margin_by_route").render(ctx)]
+                            children=[OpsTableStrategy(SCREEN_ID, "margin_by_route").render(ctx, theme=theme)]
                         ),
                         value="ruta"
                     ),
                     dmc.TabsPanel(
                         html.Div(
                             style={"height": "380px", "overflowY": "auto"},
-                            children=[OpsTableStrategy(SCREEN_ID, "margin_by_unit").render(ctx)]
+                            children=[OpsTableStrategy(SCREEN_ID, "margin_by_unit").render(ctx, theme=theme)]
                         ),
                         value="unidad"
                     ),
                     dmc.TabsPanel(
                         html.Div(
                             style={"height": "380px", "overflowY": "auto"},
-                            children=[OpsTableStrategy(SCREEN_ID, "margin_by_operator").render(ctx)]
+                            children=[OpsTableStrategy(SCREEN_ID, "margin_by_operator").render(ctx, theme=theme)]
                         ),
                         value="operador"
                     ),
                     dmc.TabsPanel(
                         html.Div(
                             style={"height": "380px", "overflowY": "auto"},
-                            children=[OpsTableStrategy(SCREEN_ID, "margin_by_trip").render(ctx)]
+                            children=[OpsTableStrategy(SCREEN_ID, "margin_by_trip").render(ctx, theme=theme)]
                         ),
                         value="viaje"
                     ),
                     dmc.TabsPanel(
                         html.Div(
                             style={"height": "380px", "overflowY": "auto"},
-                            children=[OpsTableStrategy(SCREEN_ID, "margin_by_client").render(ctx)]
+                            children=[OpsTableStrategy(SCREEN_ID, "margin_by_client").render(ctx, theme=theme)]
                         ),
                         value="cliente"
                     )
@@ -146,6 +159,20 @@ def _render_cost_tabs(ctx):
     )
 
 def _render_ops_costs_body(ctx):
+    theme = session.get("theme", "dark")
+
+    def _card(widget_content, h=None):
+    # Quitamos el padding (p=0) para que el widget interno use todo el espacio
+        style = {"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}
+        return dmc.Paper(
+            p=0, # 👈 Cambiado de "xs" a 0
+            radius="md", 
+            withBorder=True, 
+            shadow=None,
+            style=style,
+            children=widget_content
+        )
+
     return html.Div([
         dmc.Grid(
             gutter="md",
@@ -157,19 +184,19 @@ def _render_ops_costs_body(ctx):
                     children=[
                         html.Div(
                             style={"display": "grid", "gridTemplateRows": "1fr 1fr", "gap": "0.8rem", "height": "100%"},
-                            children=[w_utilidad.render(ctx), w_costo_total.render(ctx)]
+                            children=[_card(w_utilidad.render(ctx, theme=theme)), _card(w_costo_total.render(ctx, theme=theme))]
                         )
                     ]
                 ),
                 dmc.GridCol(
                     span={"base": 12, "lg": 8},
-                    children=[chart_cost_stack.render(ctx)]
+                    children=[_card(chart_cost_stack.render(ctx, theme=theme))]
                 )
             ]
         ),
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(350px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"},
-            children=[chart_cost_breakdown.render(ctx), chart_cost_yearly_comp.render(ctx)]
+            children=[_card(chart_cost_breakdown.render(ctx, theme=theme)), _card(chart_cost_yearly_comp.render(ctx, theme=theme))]
         ),
         dmc.Divider(
             my="lg",
@@ -222,8 +249,7 @@ def layout():
 )
 def trigger_costs_load(data):
     if data is None or not data.get("loaded"):
-        import time
-        time.sleep(0.8)
+
         return {"loaded": True}
     return no_update
 

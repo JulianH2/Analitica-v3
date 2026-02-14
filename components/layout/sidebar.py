@@ -13,6 +13,37 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
     theme_icon = "tabler:sun" if current_theme == "dark" else "tabler:moon"
     theme_color = "yellow" if current_theme == "dark" else "indigo"
 
+    # --- 1. LÓGICA DEL LOGO ---
+    # Asegúrate de guardar tu imagen en la carpeta 'assets' de tu proyecto
+    # --- 1. LÓGICA DEL LOGO ---
+    if not collapsed:
+        # Versión Expandida
+        logo_content = dmc.Group(
+            justify="center",
+            mb="md", 
+            mt="xl", # <--- AGREGADO: Margen superior grande (aprox 32px)
+            children=[
+                html.Img(
+                    src="/assets/AnaliticaGerencial-LOGO.svg", 
+                    style={"height": "80px", "width": "auto", "objectFit": "contain"}
+                )
+            ]
+        )
+    else:
+        # Versión Colapsada
+        logo_content = dmc.Stack(
+            align="center",
+            mb="md",
+            mt="xl", # <--- AGREGADO: El mismo margen aquí
+            children=[
+                html.Img(
+                    src="/assets/AnaliticaGerencial-LOGO.svg", 
+                    style={"height": "50px", "width": "auto"}
+                )
+            ]
+        )
+    # ---------------------------
+
     def get_section_styles(href, is_active):
         colors = {
             "/": {"main": "#94a3b8", "light": "rgba(148, 163, 184, 0.15)"},
@@ -28,7 +59,6 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
         
         config = colors.get(section, colors["/"])
         
-        # Estilos base para el botón de navegación
         base_style = {
             "textDecoration": "none",
             "padding": "10px 12px",
@@ -49,7 +79,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
             "borderLeft": f"5px solid {config['main']}",
             "background": f"linear-gradient(90deg, {config['light']} 0%, rgba(0,0,0,0) 100%)",
             "fontWeight": 700
-        }) # type: ignore
+        }) 
         return {"color": config["main"], "style": base_style, "bg": config["light"]}
 
     menu_structure = [
@@ -90,7 +120,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
             gap="sm",
             children=[
                 DashIconify(icon=item["icon"], width=20, color=cfg["color"] if is_active else "inherit"),
-                dmc.Text(item["label"], size="sm", fw=700 if is_active else 400) if not collapsed else None # type: ignore
+                dmc.Text(item["label"], size="sm", fw=700 if is_active else 400) if not collapsed else None 
             ]
         )
         
@@ -116,7 +146,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
                 gap="sm",
                 children=[
                     DashIconify(icon=child["icon"], width=18, color=child_cfg["color"] if is_child_active else "inherit"),
-                    dmc.Text(child["label"], size="sm", fw=700 if is_child_active else 400) # type: ignore
+                    dmc.Text(child["label"], size="sm", fw=700 if is_child_active else 400) 
                 ]
             )
             
@@ -135,7 +165,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
             opened=is_group_active and not collapsed,
             active="exact" if is_group_active else None,
             variant="light" if is_group_active else "subtle",
-            color=cfg["color"] if isinstance(cfg["color"], str) else "gray", # type: ignore
+            color=cfg["color"] if isinstance(cfg["color"], str) else "gray", 
         )
 
         if collapsed:
@@ -181,7 +211,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
 
     db_selector = dmc.Select(
         id="db-selector",
-        data=db_options, # type: ignore
+        data=db_options, 
         value=final_value,
         leftSection=DashIconify(icon="tabler:database", width=16),
         size="xs", radius="md", variant="filled",
@@ -191,7 +221,16 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
     return dmc.Stack(
         justify="space-between", h="100%", p="xs",
         children=[
-            dmc.ScrollArea(style={"flex": 1}, children=dmc.Stack(gap=0, children=content)),
+            # AQUI INSERTAMOS EL LOGO (está fijo arriba)
+            logo_content,
+
+            # AREA DE MENU SCROLEABLE
+            dmc.ScrollArea(
+                style={"flex": 1}, 
+                children=dmc.Stack(gap=0, children=content)
+            ),
+
+            # FOOTER (Usuario, toggle, DB)
             dmc.Stack(gap="xs", children=[
                 dmc.Divider(),
                 db_selector,

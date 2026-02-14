@@ -33,43 +33,52 @@ class KPIStrategy(ABC):
     def _resolve_kpi_data(self, data_context: Dict[str, Any], screen_id: str, kpi_key: str) -> Optional[Dict]:
         try:
             from services.data_manager import data_manager
-            
-            screen_config = data_manager.SCREEN_MAP.get(screen_id, {})
-            inject_paths = screen_config.get("inject_paths", {})
-            
+
+            screen_map = data_manager.SCREEN_MAP or {}
+            screen_config = screen_map.get(screen_id) or {}
+
+            inject_paths = screen_config.get("inject_paths") or {}
             path = inject_paths.get(kpi_key)
+
             if not path:
                 return None
+
             return safe_get(data_context, path)
+
         except Exception as e:
             print(f"⚠️ Error en _resolve_kpi_data para {kpi_key}: {e}")
             return None
+
     
     def _resolve_chart_data(self, data_context: Dict[str, Any], screen_id: str, chart_key: str) -> Optional[Dict]:
         try:
             from services.data_manager import data_manager
-            
-            screen_config = data_manager.SCREEN_MAP.get(screen_id, {})
-            inject_paths = screen_config.get("inject_paths", {})
-            
+
+            screen_map = data_manager.SCREEN_MAP or {}
+            screen_config = screen_map.get(screen_id) or {}
+
+            inject_paths = screen_config.get("inject_paths") or {}
             path = inject_paths.get(chart_key)
+
             if not path:
                 return None
-                
+
             return safe_get(data_context, path)
+
         except Exception as e:
             print(f"⚠️ Error en _resolve_chart_data para {chart_key}: {e}")
             return None
+
     
-    def _create_empty_figure(self, message: str = "Sin datos"):
+    
+    def _create_empty_figure(self, message: str = "Sin datos", theme="light"):
         import plotly.graph_objects as go
         
         fig = go.Figure()
         fig.update_layout(
+            template="zam_dark" if theme == "dark" else "zam_light", # ✅ USA EL TEMPLATE
             xaxis=dict(visible=False),
             yaxis=dict(visible=False),
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
             annotations=[dict(
                 text=message,
                 xref="paper", yref="paper",

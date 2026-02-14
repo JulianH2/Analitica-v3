@@ -15,6 +15,7 @@ from strategies.workshop import (
     WorkshopDonutChartStrategy,
     WorkshopTableStrategy
 )
+from flask import session
 
 dash.register_page(__name__, path="/taller-purchases", title="Compras Taller")
 
@@ -62,6 +63,8 @@ WIDGET_REGISTRY = {
 }
 
 def _render_taller_purchases_body(ctx):
+    theme = session.get("theme", "dark")
+
     return html.Div([
         dmc.SimpleGrid(
             cols={"base": 1, "sm": 2, "lg": 4},
@@ -107,7 +110,7 @@ def _render_taller_purchases_body(ctx):
                             dmc.ScrollArea(
                                 h=400,
                                 pt="md",
-                                children=[WorkshopTableStrategy(SCREEN_ID, "purchase_orders_detail").render(ctx)]
+                                children=[WorkshopTableStrategy(SCREEN_ID, "purchase_orders_detail").render(ctx, theme=theme)]
                             ),
                             value="ordenes"
                         ),
@@ -115,7 +118,7 @@ def _render_taller_purchases_body(ctx):
                             dmc.ScrollArea(
                                 h=400,
                                 pt="md",
-                                children=[WorkshopTableStrategy(SCREEN_ID, "inventory_detail").render(ctx)]
+                                children=[WorkshopTableStrategy(SCREEN_ID, "inventory_detail").render(ctx, theme=theme)]
                             ),
                             value="insumos"
                         ),
@@ -123,7 +126,7 @@ def _render_taller_purchases_body(ctx):
                             dmc.ScrollArea(
                                 h=400,
                                 pt="md",
-                                children=[WorkshopTableStrategy(SCREEN_ID, "top_suppliers").render(ctx)]
+                                children=[WorkshopTableStrategy(SCREEN_ID, "top_suppliers").render(ctx, theme=theme)]
                             ),
                             value="prov"
                         )

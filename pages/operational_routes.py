@@ -8,7 +8,8 @@ from components.visual_widget import ChartWidget
 from components.drawer_manager import create_smart_drawer, register_drawer_callback
 from components.skeleton import get_skeleton
 from components.filter_manager import create_filter_section
-from strategies.operational import OpsMapStrategy, OpsTableStrategy
+from strategies.operational import OpsMapStrategy, OpsTableStrategy, TableWidget
+from flask import session
 
 dash.register_page(__name__, path="/ops-routes", title="Análisis de Rutas")
 
@@ -30,7 +31,13 @@ WIDGET_REGISTRY = {
     "wr_map": chart_route_map
 }
 
+WIDGET_REGISTRY.update({
+    "operational-routes-main_routes": TableWidget("operational-routes-main_routes", OpsTableStrategy(SCREEN_ID, "main_routes", title="Detalle de Rutas")),
+})
+
 def _render_ops_routes_body(ctx):
+    
+    theme = session.get("theme", "dark")
     return html.Div([
         dmc.Title("Análisis de Rutas", order=3, mb="md"),
 
@@ -54,7 +61,7 @@ def _render_ops_routes_body(ctx):
                 dmc.Text("DETALLE DE RUTAS Y UTILIZACIÓN", fw="bold", size="xs", c="gray", mb="sm"),
                 html.Div(
                     style={"height": "480px", "overflowY": "auto"},
-                    children=[OpsTableStrategy(SCREEN_ID, "main_routes").render(ctx)]
+                    children=[OpsTableStrategy(SCREEN_ID, "main_routes").render(ctx, theme=theme)]
                 )
             ]
         ),
@@ -108,8 +115,7 @@ def layout():
 )
 def trigger_routes_load(data):
     if data is None or not data.get("loaded"):
-        import time
-        time.sleep(0.8)
+
         return {"loaded": True}
     return no_update
 

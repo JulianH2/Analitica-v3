@@ -13,6 +13,7 @@ from strategies.administration import (
     AdminTrendChartStrategy, AdminDonutChartStrategy,
     AdminStackedBarStrategy, AdminTableStrategy
 )
+from flask import session
 
 dash.register_page(__name__, path="/admin-payables", title="Cuentas por Pagar")
 
@@ -84,12 +85,12 @@ def _render_payables_body(ctx):
             spacing="sm",
             mb="xl",
             children=[
-                kpi_pay_initial.render(ctx),
-                kpi_pay_cxp.render(ctx),
-                kpi_pay_credit.render(ctx),
-                kpi_pay_advances.render(ctx),
-                kpi_pay_payments.render(ctx),
-                kpi_pay_balance.render(ctx)
+                kpi_pay_initial.render(ctx, theme=theme),
+                kpi_pay_cxp.render(ctx, theme=theme),
+                kpi_pay_credit.render(ctx, theme=theme),
+                kpi_pay_advances.render(ctx, theme=theme),
+                kpi_pay_payments.render(ctx, theme=theme),
+                kpi_pay_balance.render(ctx, theme=theme)
             ]
         ),
         dmc.Grid(
@@ -140,7 +141,7 @@ def _render_payables_body(ctx):
                                         AdminTableStrategy(
                                             SCREEN_ID,
                                             "aging_by_supplier"
-                                        ).render(ctx)
+                                        ).render(ctx, theme=theme)
                                     ]
                                 )
                             ]

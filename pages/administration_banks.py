@@ -12,6 +12,7 @@ from strategies.administration import (
     AdminKPIStrategy, AdminTrendChartStrategy,
     AdminDonutChartStrategy, AdminTableStrategy
 )
+from flask import session
 
 dash.register_page(__name__, path="/admin-banks", title="Bancos")
 
@@ -97,10 +98,10 @@ def _render_admin_banks_body(ctx):
             spacing="md",
             mb="xl",
             children=[
-                kpi_bank_initial.render(ctx),
-                kpi_bank_incomes.render(ctx),
-                kpi_bank_expenses.render(ctx),
-                kpi_bank_final.render(ctx)
+                kpi_bank_initial.render(ctx, theme=theme),
+                kpi_bank_incomes.render(ctx, theme=theme),
+                kpi_bank_expenses.render(ctx, theme=theme),
+                kpi_bank_final.render(ctx, theme=theme)
             ]
         ),
         
@@ -140,7 +141,7 @@ def _render_admin_banks_body(ctx):
                                         AdminTableStrategy(
                                             SCREEN_ID,
                                             "income_expense_concepts"
-                                        ).render(ctx)
+                                        ).render(ctx, theme=theme)
                                     ]
                                 )
                             ]

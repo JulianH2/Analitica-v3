@@ -158,6 +158,7 @@ class ExecutiveDonutStrategy(KPIStrategy):
         legend_x_pos = 1.05
         
         fig.update_layout(
+            template="zam_light",
             paper_bgcolor=DesignSystem.TRANSPARENT, 
             plot_bgcolor=DesignSystem.TRANSPARENT, 
             height=fig_height - 40,

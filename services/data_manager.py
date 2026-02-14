@@ -275,6 +275,11 @@ class DataManager:
             if tasks:
                 results = await asyncio.gather(*tasks, return_exceptions=True)
 
+                if all(isinstance(r, Exception) or r == [] for r in results):
+                    print("🚫 Todas las queries fallaron. Cancelando refresh.")
+                    return data
+                
+
                 for rows in results:
                     if isinstance(rows, Exception):
                         continue

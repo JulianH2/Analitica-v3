@@ -159,6 +159,7 @@ class WorkshopGaugeStrategy(KPIStrategy):
             )
         
         fig.update_layout(
+            template="zam_light",
             height=150,
             margin=dict(l=10, r=10, t=10, b=10),
             paper_bgcolor='rgba(0,0,0,0)'
@@ -204,6 +205,7 @@ class WorkshopGaugeStrategy(KPIStrategy):
         )
 
         fig.update_layout(
+            template="zam_light",
             height=160,
             margin=dict(l=25, r=25, t=40, b=5),
             paper_bgcolor='rgba(0,0,0,0)',
@@ -266,13 +268,11 @@ class WorkshopTrendChartStrategy(KPIStrategy):
                 ))
         
         fig.update_layout(
+            template="zam_light",
             barmode='group',
             height=350,
             margin=dict(t=40, b=50, l=40, r=20),
-            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            hovermode='x unified'
+            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),            hovermode='x unified'
         )
         
         return fig
@@ -323,12 +323,10 @@ class WorkshopDonutChartStrategy(KPIStrategy):
             )
         
         fig.update_layout(
+            template="zam_light",
             showlegend=True,
             legend=dict(orientation="h", y=-0.1, x=0.5, xanchor="center"),
-            margin=dict(t=20, b=40, l=10, r=10),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            height=300
+            margin=dict(t=20, b=40, l=10, r=10),            height=300
         )
         
         return fig
@@ -374,12 +372,10 @@ class WorkshopHorizontalBarStrategy(KPIStrategy):
             ))
         
         fig.update_layout(
+            template="zam_light",
             height=max(300, len(categories) * 35),
             margin=dict(l=140, r=60, t=30, b=40),
-            yaxis=dict(autorange="reversed"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            showlegend=len(series_list) > 1
+            yaxis=dict(autorange="reversed"),            showlegend=len(series_list) > 1
         )
         
         return fig
@@ -423,10 +419,8 @@ class WorkshopBarChartStrategy(KPIStrategy):
             ))
         
         fig.update_layout(
-            height=350, margin=dict(t=30, b=40, l=40, r=20),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            showlegend=len(series_list) > 1
+            template="zam_light",
+            height=350, margin=dict(t=30, b=40, l=40, r=20),            showlegend=len(series_list) > 1
         )
         
         return fig
@@ -480,11 +474,9 @@ class WorkshopComboChartStrategy(KPIStrategy):
                 ))
         
         fig.update_layout(
+            template="zam_light",
             height=350, margin=dict(t=30, b=40, l=40, r=40),
-            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            hovermode='x unified',
+            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),            hovermode='x unified',
             yaxis=dict(title=""),
             yaxis2=dict(title="", overlaying='y', side='right')
         )

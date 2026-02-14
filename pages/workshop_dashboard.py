@@ -15,6 +15,7 @@ from strategies.workshop import (
     WorkshopDonutChartStrategy,
     WorkshopHorizontalBarStrategy
 )
+from flask import session
 
 dash.register_page(__name__, path="/taller-dashboard", title="Mantenimiento")
 

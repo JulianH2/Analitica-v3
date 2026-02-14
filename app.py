@@ -1,10 +1,24 @@
 import os
 import django
 import logging
-from datetime import datetime
 from flask import Flask, redirect, request, session
 from werkzeug.middleware.proxy_fix import ProxyFix
-from dash import html, dcc
+
+import dash
+from dash import Input, Output, State, dcc, callback_context, ALL, ClientsideFunction
+import dash_mantine_components as dmc
+from dash_iconify import DashIconify
+
+from typing import Any, Dict, cast
+
+from config import Config
+from components.layout.sidebar import render_sidebar
+from components.ai_copilot_sidebar import render_ai_copilot_sidebar, get_ai_toggle_button
+from pages.auth import get_login_layout
+from services.auth_service import auth_service
+from design_system import DesignSystem
+from settings.plotly_config import PlotlyConfig
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -20,19 +34,7 @@ logger = logging.getLogger(__name__)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Analitica.settings")
 django.setup()
 
-import dash
-from dash import Input, Output, State, dcc, callback_context, ALL, ClientsideFunction
-import dash_mantine_components as dmc
-from dash_iconify import DashIconify
-
-from config import Config
-from components.layout.sidebar import render_sidebar
-from components.ai_copilot_sidebar import render_ai_copilot_sidebar, get_ai_toggle_button
-from pages.auth import get_login_layout
-from services.auth_service import auth_service
-from design_system import DesignSystem
-
-DesignSystem.setup_plotly_templates()
+PlotlyConfig.setup_templates()
 
 server = Flask(__name__)
 server.wsgi_app = ProxyFix(server.wsgi_app, x_proto=1, x_host=1)
@@ -80,70 +82,71 @@ def logout():
     return redirect("/")
 
 def get_app_shell():
+    theme = cast(Any, DesignSystem.get_mantine_theme())
+
+    header_config = cast(Any, {"height": {"base": 60, "sm": 0}})
+
+    navbar_config = cast(Any, {
+        "width": 260,
+        "breakpoint": "sm",
+        "collapsed": {"mobile": True},
+    })
+
+    pt_config = cast(Any, {"base": "md", "sm": 80})
+
     return dmc.MantineProvider(
+        
         id="mantine-provider",
-        theme=DesignSystem.get_mantine_theme(),
+        theme=theme,
         children=[
             dcc.Location(id="url", refresh=False),
             dcc.Store(id="theme-store", storage_type="local"),
             dcc.Store(id="sidebar-store", storage_type="local"),
             dcc.Store(id="selected-db-store", storage_type="local", data="db_1"),
             dcc.Store(id="ai-copilot-store", storage_type="local", data=False),
+
             dmc.AppShell(
                 id="app-shell",
-                header={"height": 60},
-                navbar={"width": 260, "breakpoint": "sm", "collapsed": {"mobile": True}},
+                header=header_config,
+                navbar=navbar_config,
                 padding="md",
                 children=[
                     dmc.AppShellHeader(
                         px="md",
+                        hiddenFrom="sm",
                         children=dmc.Group(
                             justify="space-between",
                             h="100%",
                             children=[
-                                dmc.Group(
-                                    [
-                                        dmc.Burger(
-                                            id="mobile-burger",
-                                            hiddenFrom="sm",
-                                            size="sm",
-                                        ),
-                                        html.Img(
-                                            src="/assets/logo.png",
-                                            style={
-                                                "height": "58px",
-                                                "width": "auto",
-                                                "padding": "5px",
-                                                "borderRadius": "12px",
-                                                "objectFit": "contain",
-                                            },
-                                        ),
-                                        dmc.Text(
-                                            "Analitica",
-                                            size="xl",
-                                            fw=800,
-                                        ),
-                                    ],
-                                    gap="sm",
-                                ),
-                                get_ai_toggle_button(),
+                                dmc.Burger(id="mobile-burger", size="sm"),
+                                dmc.Text("Analitica Mobile", size="md", fw="bold"),
                             ],
                         ),
                     ),
-                    dmc.AppShellNavbar(id="navbar", children=[]),
-                    dmc.AppShellMain(
-                        children=dash.page_container
+
+                    dmc.AppShellNavbar(
+                        id="navbar",
+                        children=[]
                     ),
-                    render_ai_copilot_sidebar(),
+
+                    dmc.AppShellMain(
+                        children=dash.page_container,
+                        pt=pt_config,
+                    ),
+
+                    get_ai_toggle_button(),
+                    render_ai_copilot_sidebar(is_open=False),
                 ],
             ),
         ],
     )
 
-
 app.layout = lambda: (
-    get_login_layout() if Config.ENABLE_LOGIN and not session.get("user") else get_app_shell()
+    get_login_layout()
+    if Config.ENABLE_LOGIN and not session.get("user")
+    else get_app_shell()
 )
+
 
 @app.callback(
     Output("theme-store", "data"),
@@ -166,7 +169,9 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
 
     if trigger_id == "theme-toggle":
         new_theme = "light" if (current_theme or "dark") == "dark" else "dark"
+        session["theme"] = new_theme
         return new_theme, dash.no_update, dash.no_update
+    
 
     if trigger_id == "btn-sidebar-toggle":
         return dash.no_update, not is_collapsed, dash.no_update
@@ -184,7 +189,7 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
             user_email,
             previous_db,
             db_value,
-            client_name
+            client_name,
         )
 
         session["current_db"] = db_value
@@ -210,38 +215,32 @@ def render_interface(theme, collapsed, selected_db, pathname):
     collapsed = collapsed if collapsed is not None else False
     selected_db = selected_db or "db_1"
 
-    navbar_config = {
-        "width": 80 if collapsed else 260,
-        "breakpoint": "sm",
-        "collapsed": {"mobile": True},
-    }
+    navbar_config = cast(
+        Dict[str, Any],
+        {
+            "width": 80 if collapsed else 260,
+            "breakpoint": "sm",
+            "collapsed": {"mobile": True},
+        },
+    )
 
     sidebar_ui = render_sidebar(
         collapsed=collapsed,
         current_theme=theme,
         current_db=selected_db,
-        active_path=pathname
+        active_path=pathname,
     )
 
     return theme, navbar_config, sidebar_ui
+
 @app.callback(
-    Output("ai-copilot-sidebar-container", "className"),
-    Output("ai-copilot-store", "data"),
+    Output("ai-copilot-drawer", "opened"),
     Input("ai-copilot-toggle", "n_clicks"),
-    Input("ai-copilot-close", "n_clicks"),
-    State("ai-copilot-store", "data"),
+    State("ai-copilot-drawer", "opened"),
     prevent_initial_call=True,
 )
-def toggle_ai_copilot(n_toggle, n_close, is_open):
-    ctx = callback_context
-    if not ctx.triggered:
-        return dash.no_update, dash.no_update
-    
-    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    new_state = not is_open if trigger_id == "ai-copilot-toggle" else False
-    css_class = "ai-copilot-sidebar ai-copilot-sidebar-open" if new_state else "ai-copilot-sidebar"
-    
-    return css_class, new_state
+def toggle_ai_copilot(n_clicks, is_open):
+    return not is_open
 
 app.clientside_callback(
     ClientsideFunction(namespace="clientside", function_name="switch_graph_theme"),
@@ -255,15 +254,35 @@ app.clientside_callback(
     Output("app-shell", "navbar", allow_duplicate=True),
     Input("mobile-burger", "opened"),
     State("sidebar-store", "data"),
-    prevent_initial_call=True
+    prevent_initial_call=True,
 )
 def toggle_mobile_navbar(opened, collapsed):
     collapsed = collapsed if collapsed is not None else False
-    return {
-        "width": 80 if collapsed else 260,
-        "breakpoint": "sm",
-        "collapsed": {"mobile": not opened if opened is not None else True},
+    return cast(
+        Dict[str, Any],
+        {
+            "width": 80 if collapsed else 260,
+            "breakpoint": "sm",
+            "collapsed": {"mobile": not opened if opened is not None else True},
+        },
+    )
+
+app.clientside_callback(
+    """
+    function(searchValues, currentOptions) {
+        if (!searchValues) return window.dash_clientside.no_update;
+        return searchValues.map(function(val, i) {
+            var opts = Object.assign({}, (currentOptions && currentOptions[i]) || {});
+            opts.quickFilterText = val || "";
+            return opts;
+        });
     }
+    """,
+    Output({"type": "ag-grid-dashboard", "index": ALL}, "dashGridOptions"),
+    Input({"type": "ag-quick-search", "index": ALL}, "value"),
+    State({"type": "ag-grid-dashboard", "index": ALL}, "dashGridOptions"),
+    prevent_initial_call=True,
+)
 
 if __name__ == "__main__":
     logger.info("Iniciando aplicacion Analitica en puerto 8000")
@@ -272,5 +291,6 @@ if __name__ == "__main__":
         port=8000,
         debug=True,
         dev_tools_ui=True,
-        dev_tools_props_check=True
+        dev_tools_props_check=True,
+        use_reloader=False
     )

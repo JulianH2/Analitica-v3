@@ -17,7 +17,8 @@ from strategies.operational import (
     OpsDonutChartStrategy,
     OpsHorizontalBarStrategy,
     OpsTableStrategy,
-    OpsGaugeStrategy
+    OpsGaugeStrategy,
+    TableWidget
 )
 from settings.theme import DesignSystem
 from utils.helpers import safe_get
@@ -195,6 +196,14 @@ WIDGET_REGISTRY = {
     "co_unit_bal": w_unit_bal
 }
 
+WIDGET_REGISTRY.update({
+    "operational-dashboard-routes_loaded": TableWidget("operational-dashboard-routes_loaded", OpsTableStrategy(SCREEN_ID, "routes_loaded", title="Rutas Cargado")),
+    "operational-dashboard-routes_empty": TableWidget("operational-dashboard-routes_empty", OpsTableStrategy(SCREEN_ID, "routes_empty", title="Rutas Vacío")),
+    "operational-dashboard-top_clients": TableWidget("operational-dashboard-top_clients", OpsTableStrategy(SCREEN_ID, "top_clients", title="Top Clientes")),
+    "operational-dashboard-income_by_operator_report": TableWidget("operational-dashboard-income_by_operator_report", OpsTableStrategy(SCREEN_ID, "income_by_operator_report", title="Ingreso por Operador")),
+    "operational-dashboard-income_by_unit_report": TableWidget("operational-dashboard-income_by_unit_report", OpsTableStrategy(SCREEN_ID, "income_by_unit_report", title="Ingreso por Unidad")),
+})
+
 def _render_fleet_status(ctx):
     load_data = safe_get(ctx, ["operational", "dashboard", "kpis", "load_status"], {})
     
@@ -222,7 +231,7 @@ def _render_fleet_status(ctx):
         p=10,
         withBorder=True,
         radius="md",
-        style={"height": "390px"},
+        style={"height": "390px", "backgroundColor": "transparent"},
         children=[
             dmc.Stack(
                 justify="center",
@@ -240,12 +249,13 @@ def _render_fleet_status(ctx):
         ]
     )
 
-def _render_routes_tabs(ctx):
+def _render_routes_tabs(ctx, theme):
+
     return dmc.Paper(
         p=8,
         withBorder=True,
         radius="md",
-        style={"height": "390px"},
+        style={"height": "390px", "backgroundColor": "transparent"},
         children=[
             dmc.Tabs(
                 value="rutas_cargado",
@@ -257,14 +267,14 @@ def _render_routes_tabs(ctx):
                     dmc.TabsPanel(
                         html.Div(
                             style={"height": "330px", "overflowY": "auto"},
-                            children=[OpsTableStrategy(SCREEN_ID, "routes_empty").render(ctx)]
+                            children=[OpsTableStrategy(SCREEN_ID, "routes_empty").render(ctx, theme=theme)]
                         ),
                         value="rutas_vacio"
                     ),
                     dmc.TabsPanel(
                         html.Div(
                             style={"height": "330px", "overflowY": "auto"},
-                            children=[OpsTableStrategy(SCREEN_ID, "routes_loaded").render(ctx)]
+                            children=[OpsTableStrategy(SCREEN_ID, "routes_loaded").render(ctx, theme=theme)]
                         ),
                         value="rutas_cargado"
                     )
@@ -273,7 +283,8 @@ def _render_routes_tabs(ctx):
         ]
     )
 
-def _render_income_tabs(ctx):
+def _render_income_tabs(ctx, theme):
+
     return dmc.Paper(
         p=8,
         withBorder=True,
@@ -289,21 +300,21 @@ def _render_income_tabs(ctx):
                     dmc.TabsPanel(
                         html.Div(
                             style={"height": "380px", "overflowY": "auto"},
-                            children=[OpsTableStrategy(SCREEN_ID, "top_clients").render(ctx)]
+                            children=[OpsTableStrategy(SCREEN_ID, "top_clients").render(ctx, theme=theme)]
                         ),
                         value="ingreso_cliente"
                     ),
                     dmc.TabsPanel(
                         html.Div(
                             style={"height": "380px", "overflowY": "auto"},
-                            children=[OpsTableStrategy(SCREEN_ID, "income_by_operator_report").render(ctx)]
+                            children=[OpsTableStrategy(SCREEN_ID, "income_by_operator_report").render(ctx, theme=theme)]
                         ),
                         value="ingreso_operador"
                     ),
                     dmc.TabsPanel(
                         html.Div(
                             style={"height": "380px", "overflowY": "auto"},
-                            children=[OpsTableStrategy(SCREEN_ID, "income_by_unit_report").render(ctx)]
+                            children=[OpsTableStrategy(SCREEN_ID, "income_by_unit_report").render(ctx, theme=theme)]
                         ),
                         value="ingreso_unidad"
                     )
@@ -313,32 +324,55 @@ def _render_income_tabs(ctx):
     )
 
 def _render_body(ctx):
+    theme = session.get("theme", "dark")
+    def _card(widget_content, h=None):
+        style = {"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}
+        return dmc.Paper(
+            p="xs", radius="md", withBorder=True, shadow=None,
+            style=style,
+            children=widget_content
+        )
     return html.Div([
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(250px, 1fr))", "gap": "0.8rem", "marginBottom": "1rem"},
-            children=[w_inc.render(ctx), w_tri.render(ctx), w_kms.render(ctx)]
+            children=[
+                _card(w_inc.render(ctx, theme=theme)),
+                _card(w_tri.render(ctx, theme=theme)),
+                _card(w_kms.render(ctx, theme=theme))
+            ]
+            
         ),
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "0.6rem", "marginBottom": "1rem"},
-            children=[w_avg_trip.render(ctx), w_avg_unit.render(ctx), w_units_qty.render(ctx), w_customers.render(ctx)]
+            children=[
+                _card(w_avg_trip.render(ctx, theme=theme)),
+                _card(w_avg_unit.render(ctx, theme=theme)),
+                _card(w_units_qty.render(ctx, theme=theme)),
+                _card(w_customers.render(ctx, theme=theme)),
+            ]
+            
         ),
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(400px, 1fr))", "gap": "0.8rem", "marginBottom": "1rem"},
-            children=[w_inc_comp.render(ctx), w_trips_comp.render(ctx)]
+            children=[
+                _card(w_inc_comp.render(ctx, theme=theme)),
+                _card(w_trips_comp.render(ctx, theme=theme))
+            ]
+
         ),
         dmc.Grid(
             gutter="md",
             mb="lg",
             children=[
                 dmc.GridCol(span={"base": 12, "lg": 4}, children=[_render_fleet_status(ctx)]),
-                dmc.GridCol(span={"base": 12, "lg": 8}, children=[_render_routes_tabs(ctx)])
+                dmc.GridCol(span={"base": 12, "lg": 8}, children=[_render_routes_tabs(ctx, theme),])
             ]
         ),
         dmc.Grid(
             gutter="md",
             mb="lg",
             children=[
-                dmc.GridCol(span={"base": 12, "md": 5}, children=[w_mix.render(ctx)]),
+                dmc.GridCol(span={"base": 12, "md": 5}, children=[_card(w_mix.render(ctx, theme=theme))]),
                 dmc.GridCol(
                     span={"base": 12, "md": 7},
                     children=[
@@ -346,11 +380,11 @@ def _render_body(ctx):
                             p=6,
                             withBorder=True,
                             radius="md",
-                            style={"height": "360px"},
+                            style={"height": "360px", "backgroundColor": "transparent"},
                             children=[
                                 html.Div(
                                     style={"height": "100%", "overflowY": "auto"},
-                                    children=[w_unit_bal.render(ctx)]
+                                    children=[w_unit_bal.render(ctx, theme=theme)]
                                 )
                             ]
                         )
@@ -358,7 +392,7 @@ def _render_body(ctx):
                 )
             ]
         ),
-        _render_income_tabs(ctx),
+        _render_income_tabs(ctx, theme),
         dmc.Space(h=30)
     ])
 
@@ -391,8 +425,7 @@ def layout():
 )
 def trigger_ops_load(data):
     if data is None or not data.get("loaded"):
-        import time
-        time.sleep(0.8)
+
         return {"loaded": True}
     return no_update
 

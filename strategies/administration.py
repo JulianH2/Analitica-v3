@@ -147,6 +147,7 @@ class AdminGaugeStrategy(KPIStrategy):
             )
         
         fig.update_layout(
+            template="zam_light",
             height=150,
             margin=dict(l=5, r=5, t=0, b=30),
             paper_bgcolor='rgba(0,0,0,0)',
@@ -202,11 +203,10 @@ class AdminDonutChartStrategy(KPIStrategy):
             )
         
         fig.update_layout(
+            template="zam_light",
             showlegend=True,
             legend=dict(orientation="v", y=0.5, x=1.1),
-            margin=dict(t=20, b=20, l=10, r=80),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            height=300
+            margin=dict(t=20, b=20, l=10, r=80),            height=300
         )
         
         return fig
@@ -263,13 +263,11 @@ class AdminTrendChartStrategy(KPIStrategy):
                 ))
         
         fig.update_layout(
+            template="zam_light",
             barmode='group',
             height=350,
             margin=dict(t=30, b=40, l=40, r=20),
-            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            hovermode='x unified'
+            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),            hovermode='x unified'
         )
         
         return fig
@@ -315,12 +313,10 @@ class AdminHorizontalBarStrategy(KPIStrategy):
             ))
         
         fig.update_layout(
+            template="zam_light",
             height=max(300, len(categories) * 35),
             margin=dict(l=140, r=60, t=30, b=40),
-            yaxis=dict(autorange="reversed"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            plot_bgcolor=DesignSystem.TRANSPARENT,
-            showlegend=len(series_list) > 1
+            yaxis=dict(autorange="reversed"),            showlegend=len(series_list) > 1
         )
         
         return fig
@@ -361,12 +357,11 @@ class AdminStackedBarStrategy(KPIStrategy):
             ))
         
         fig.update_layout(
+            template="zam_light",
             barmode='stack',
             height=max(300, len(categories) * 40),
             margin=dict(l=140, r=40, t=30, b=40),
-            yaxis=dict(autorange="reversed"),
-            paper_bgcolor=DesignSystem.TRANSPARENT,
-            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center")
+            yaxis=dict(autorange="reversed"),            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center")
         )
         
         return fig
@@ -440,6 +435,7 @@ class AdminCashFlowChartStrategy(KPIStrategy):
             ))
         
         fig.update_layout(
+            template="zam_light",
             barmode='group', height=350, margin=dict(t=30, b=40, l=40, r=20),
             legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
             paper_bgcolor=DesignSystem.TRANSPARENT, hovermode='x unified'
@@ -477,6 +473,7 @@ class AdminMultiLineChartStrategy(KPIStrategy):
             ))
         
         fig.update_layout(
+            template="zam_light",
             height=350, margin=dict(t=30, b=40, l=40, r=20),
             legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
             paper_bgcolor=DesignSystem.TRANSPARENT, hovermode='x unified'

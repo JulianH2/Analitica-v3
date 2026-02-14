@@ -8,26 +8,29 @@ import pandas as pd
 
 
 def create_smart_drawer(drawer_id: str = "smart-drawer"):
-    return dmc.Drawer(
-        id=drawer_id,
-        position="right",
-        size="70%",
-        padding=0,
-        withCloseButton=False,
-        opened=False,
-        styles={
-            "body": {"padding": 0, "height": "100%"},
-            "content": {"display": "flex", "flexDirection": "column", "height": "100%"}
-        },
-        children=[
-            html.Div(
-                id=f"{drawer_id}-container",
-                style={"display": "flex", "flexDirection": "column", "height": "100%"},
-                children=[
-                    _create_drawer_header(drawer_id),
-                    
-                    dmc.Tabs(
-                        value="resumen",
+    return html.Div([
+        dcc.Download(id=f"{drawer_id}-download"),
+        dcc.Store(id=f"{drawer_id}-export-data"),
+        dmc.Drawer(
+            id=drawer_id,
+            position="right",
+            size="70%",
+            padding=0,
+            withCloseButton=False,
+            opened=False,
+            styles={
+                "body": {"padding": 0, "height": "100%"},
+                "content": {"display": "flex", "flexDirection": "column", "height": "100%"}
+            },
+            children=[
+                html.Div(
+                    id=f"{drawer_id}-container",
+                    style={"display": "flex", "flexDirection": "column", "height": "100%"},
+                    children=[
+                        _create_drawer_header(drawer_id),
+                        
+                        dmc.Tabs(
+                            value="resumen",
                         variant="pills",
                         color="blue",
                         style={"flex": 1, "display": "flex", "flexDirection": "column", "overflow": "hidden"},
@@ -107,7 +110,8 @@ def create_smart_drawer(drawer_id: str = "smart-drawer"):
                 ]
             )
         ]
-    )
+        )
+    ])
 
 
 def _create_drawer_header(drawer_id):
@@ -186,6 +190,8 @@ def _create_drawer_header(drawer_id):
 def register_drawer_callback(drawer_id: str, widget_registry: dict, screen_id: str):
     from services.data_manager import data_manager
 
+    _no = no_update
+
     @callback(
         Output(drawer_id, "opened"),
         Output(f"{drawer_id}-header-title", "children"),
@@ -196,6 +202,7 @@ def register_drawer_callback(drawer_id: str, widget_registry: dict, screen_id: s
         Output(f"{drawer_id}-tab-datos", "children"),
         Output(f"{drawer_id}-tab-insights", "children"),
         Output(f"{drawer_id}-tab-acciones", "children"),
+        Output(f"{drawer_id}-export-data", "data"),
         Input({"type": "open-smart-drawer", "index": ALL}, "n_clicks"),
         Input(f"{drawer_id}-close", "n_clicks"),
         State(drawer_id, "opened"),
@@ -204,23 +211,23 @@ def register_drawer_callback(drawer_id: str, widget_registry: dict, screen_id: s
     def handle_drawer_interaction(open_clicks, close_click, is_open):
         
         if not dash.ctx.triggered:
-            return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+            return _no, _no, _no, _no, _no, _no, _no, _no, _no, _no
         
         trigger_id = dash.ctx.triggered_id
         
         if trigger_id == f"{drawer_id}-close":
-            return False, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+            return False, _no, _no, _no, _no, _no, _no, _no, _no, _no
         
         if not any(open_clicks):
-            return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+            return _no, _no, _no, _no, _no, _no, _no, _no, _no, _no
         
         widget_id = trigger_id.get("index")
         if not widget_id:
-            return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+            return _no, _no, _no, _no, _no, _no, _no, _no, _no, _no
         
         widget = widget_registry.get(str(widget_id))
         if not widget:
-            return no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update, no_update
+            return _no, _no, _no, _no, _no, _no, _no, _no, _no, _no
         
         try:
             ctx = data_manager.get_screen(screen_id, use_cache=True, allow_stale=True)
@@ -232,6 +239,7 @@ def register_drawer_callback(drawer_id: str, widget_registry: dict, screen_id: s
         title = str(cfg.get("title", "Análisis Detallado")) if cfg else "Sin Datos"
         subtitle = "Exploración profunda de métricas" if cfg else "Información no disponible"
         icon_name = str(cfg.get("icon", "tabler:alert-circle")) if cfg else "tabler:alert-circle"
+        export_data = cfg.get("raw_data", []) if cfg else []
         
         try:
             tab_resumen = _build_resumen_tab(widget, ctx, cfg)
@@ -249,7 +257,8 @@ def register_drawer_callback(drawer_id: str, widget_registry: dict, screen_id: s
                 tab_desglose,
                 tab_datos,
                 tab_insights,
-                tab_acciones
+                tab_acciones,
+                export_data
             )
         except Exception as e:
             print(f"⚠️ Error construyendo tabs: {e}")
@@ -258,9 +267,34 @@ def register_drawer_callback(drawer_id: str, widget_registry: dict, screen_id: s
                 color="red",
                 children=f"No se pudo cargar el contenido: {str(e)}"
             )
-            return True, title, "Error al cargar", DashIconify(icon="tabler:alert-triangle", width=24), error_content, error_content, error_content, error_content, error_content
+            return True, title, "Error al cargar", DashIconify(icon="tabler:alert-triangle", width=24), error_content, error_content, error_content, error_content, error_content, []
     
     return handle_drawer_interaction
+    @callback(
+        Output(f"{drawer_id}-download", "data"),
+        Input("drawer-export-csv", "n_clicks"),
+        Input("drawer-export-excel", "n_clicks"),
+        State(f"{drawer_id}-export-data", "data"),
+        prevent_initial_call=True
+    )
+    def handle_drawer_export(n_csv, n_excel, stored_data):
+        if not stored_data:
+            return no_update
+        
+        trigger = dash.ctx.triggered_id
+        
+        try:
+            df = pd.DataFrame(stored_data)
+            if df.empty:
+                return no_update
+            
+            if trigger == "drawer-export-csv":
+                return dcc.send_data_frame(df.to_csv, "datos_exportados.csv", index=False)
+            elif trigger == "drawer-export-excel":
+                return dcc.send_data_frame(df.to_excel, "datos_exportados.xlsx", index=False, engine="openpyxl")
+        except Exception as e:
+            print(f"⚠️ Error en export: {e}")
+            return no_update
 
 
 def _build_resumen_tab(widget, ctx, cfg):
@@ -388,6 +422,7 @@ def _build_desglose_tab(widget, ctx, cfg):
 
 
 def _build_datos_tab(widget, ctx, cfg):
+    import dash_ag_grid as dag
     
     raw_data = cfg.get("raw_data", [])
     
@@ -408,40 +443,61 @@ def _build_datos_tab(widget, ctx, cfg):
                 icon=DashIconify(icon="tabler:alert-triangle", width=20)
             )
         
-        table_header = [
-            html.Thead(
-                html.Tr([
-                    html.Th(col, style={"padding": "12px", "textAlign": "left", "borderBottom": f"2px solid {DesignSystem.SLATE[3]}"})
-                    for col in df.columns
-                ])
-            )
-        ]
+        row_data = df.to_dict("records")
+        headers = list(df.columns)
         
-        table_rows = [
-            html.Tr([
-                html.Td(
-                    str(df.iloc[i][col]),
-                    style={"padding": "10px", "borderBottom": f"1px solid {DesignSystem.SLATE[2]}"}
-                )
-                for col in df.columns
-            ])
-            for i in range(min(len(df), 100))
-        ]
+        def _detect_type(col):
+            for val in df[col].dropna().head(10):
+                if isinstance(val, (int, float)):
+                    return "agNumberColumnFilter"
+                if isinstance(val, str):
+                    clean = val.replace("$", "").replace(",", "").replace("%", "").strip()
+                    try:
+                        float(clean)
+                        return "agNumberColumnFilter"
+                    except (ValueError, TypeError):
+                        pass
+            return "agTextColumnFilter"
         
-        table_body = [html.Tbody(table_rows)]
+        column_defs = []
+        for i, h in enumerate(headers):
+            col_def = {
+                "field": h,
+                "headerName": h,
+                "sortable": True,
+                "filter": _detect_type(h),
+                "resizable": True,
+                "floatingFilter": True,
+                "minWidth": 110,
+                "flex": 1,
+            }
+            if i == 0:
+                col_def["pinned"] = "left"
+                col_def["flex"] = 0
+                col_def["minWidth"] = 150
+            column_defs.append(col_def)
         
-        table = dmc.Paper(
-            p=0,
-            radius="md",
-            withBorder=True,
-            children=dmc.ScrollArea(
-                h=500,
-                type="auto",
-                children=html.Table(
-                    table_header + table_body,
-                    style={"width": "100%", "borderCollapse": "collapse"}
-                )
-            )
+        grid = dag.AgGrid(
+            id="drawer-analyst-grid",
+            rowData=row_data,
+            columnDefs=column_defs,
+            defaultColDef={
+                "sortable": True,
+                "filter": True,
+                "resizable": True,
+                "floatingFilter": True,
+            },
+            dashGridOptions={
+                "pagination": True,
+                "paginationPageSize": 50,
+                "paginationPageSizeSelector": [25, 50, 100],
+                "animateRows": True,
+                "rowSelection": "single",
+                "enableCellTextSelection": True,
+                "domLayout": "normal",
+            },
+            style={"height": "100%", "width": "100%"},
+            className="ag-theme-alpine",
         )
         
         stats_cards = dmc.SimpleGrid(
@@ -451,8 +507,8 @@ def _build_datos_tab(widget, ctx, cfg):
             children=[
                 _create_stat_card("Total Registros", len(df), "blue", "tabler:database"),
                 _create_stat_card("Columnas", len(df.columns), "green", "tabler:columns"),
-                _create_stat_card("Valores Únicos", df.nunique().sum(), "orange", "tabler:filter"),
-                _create_stat_card("Registros Nulos", df.isnull().sum().sum(), "red", "tabler:alert-circle"),
+                _create_stat_card("Valores Únicos", int(df.nunique().sum()), "orange", "tabler:filter"),
+                _create_stat_card("Registros Nulos", int(df.isnull().sum().sum()), "red", "tabler:alert-circle"),
             ]
         )
         
@@ -465,10 +521,10 @@ def _build_datos_tab(widget, ctx, cfg):
                     mb="xs",
                     children=[
                         dmc.Text("Datos Detallados", fw=600),
-                        dmc.Badge(f"{len(df)} registros", color="blue")
+                        dmc.Badge(f"{len(df)} registros · Modo Analista", variant="light", color="violet")
                     ]
                 ),
-                table
+                html.Div(style={"height": "480px"}, children=grid)
             ]
         )
     
@@ -600,12 +656,14 @@ def _build_acciones_tab(widget, ctx, cfg):
                 children=[
                     dmc.Button(
                         "Descargar CSV",
+                        id="drawer-export-csv",
                         leftSection=DashIconify(icon="tabler:file-type-csv", width=18),
                         variant="light",
                         fullWidth=True
                     ),
                     dmc.Button(
                         "Descargar Excel",
+                        id="drawer-export-excel",
                         leftSection=DashIconify(icon="tabler:file-spreadsheet", width=18),
                         variant="light",
                         color="green",

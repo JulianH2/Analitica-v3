@@ -12,6 +12,7 @@ from components.skeleton import get_skeleton
 from strategies.executive import ExecutiveKPIStrategy, ExecutiveMiniKPIStrategy, ExecutiveDonutStrategy
 from strategies.charts import MainTrendChartStrategy
 from utils.helpers import safe_get
+from flask import session
 
 dash.register_page(__name__, path="/", title="Dashboard Principal")
 SCREEN_ID = "home"
@@ -105,7 +106,7 @@ def _render_home_body(ctx):
     return html.Div([
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(250px, 1fr))", "gap": "1rem", "marginBottom": "2rem"},
-            children=[w_income.render(ctx), w_costs.render(ctx), w_margin.render(ctx), w_bank.render(ctx)]
+            children=[w_income.render(ctx, theme=theme), w_costs.render(ctx, theme=theme), w_margin.render(ctx, theme=theme), w_bank.render(ctx, theme=theme)]
         ),
         
         dmc.Grid(
@@ -115,7 +116,7 @@ def _render_home_body(ctx):
             children=[
                 dmc.GridCol(
                     span={"base": 12, "lg": 8},
-                    children=[w_main_chart.render(ctx)]
+                    children=[w_main_chart.render(ctx, theme=theme)]
                 ),
                 dmc.GridCol(
                     span={"base": 12, "lg": 4},
@@ -129,14 +130,14 @@ def _render_home_body(ctx):
                                 "height": "100%"
                             },
                             children=[
-                                w_yield.render(ctx),
-                                w_km.render(ctx),
-                                w_liters.render(ctx),
-                                w_cvkm.render(ctx),
-                                w_cmkm.render(ctx),
-                                w_viajes.render(ctx),
-                                w_units.render(ctx),
-                                w_clients.render(ctx)
+                                w_yield.render(ctx, theme=theme),
+                                w_km.render(ctx, theme=theme),
+                                w_liters.render(ctx, theme=theme),
+                                w_cvkm.render(ctx, theme=theme),
+                                w_cmkm.render(ctx, theme=theme),
+                                w_viajes.render(ctx, theme=theme),
+                                w_units.render(ctx, theme=theme),
+                                w_clients.render(ctx, theme=theme)
                             ]
                         )
                     ]
@@ -154,7 +155,7 @@ def _render_home_body(ctx):
         
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(250px, 1fr))", "gap": "1rem", "marginBottom": "2rem"},
-            children=[w_total_mtto.render(ctx), w_mi.render(ctx), w_me.render(ctx), w_ml.render(ctx)]
+            children=[w_total_mtto.render(ctx, theme=theme), w_mi.render(ctx, theme=theme), w_me.render(ctx, theme=theme), w_ml.render(ctx, theme=theme)]
         ),
         
         dmc.Divider(
@@ -167,7 +168,7 @@ def _render_home_body(ctx):
         
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "1rem", "marginBottom": "2rem"},
-            children=[truck_visual, w_port.render(ctx), w_supp.render(ctx)]
+            children=[truck_visual, w_port.render(ctx, theme=theme), w_supp.render(ctx, theme=theme)]
         ),
         
         dmc.Space(h=60)

@@ -15,6 +15,7 @@ from strategies.workshop import (
     WorkshopHorizontalBarStrategy,
     WorkshopTableStrategy
 )
+from flask import session
 
 dash.register_page(__name__, path="/taller-inventory", title="Inventarios Almacén")
 
@@ -80,6 +81,8 @@ WIDGET_REGISTRY = {
 }
 
 def _render_taller_inventory_body(ctx):
+    theme = session.get("theme", "dark")
+
     return html.Div([
         dmc.Paper(
             p="md",
@@ -92,11 +95,11 @@ def _render_taller_inventory_body(ctx):
                     cols={"base": 1, "md": 2, "lg": 5},
                     spacing="xs",
                     children=[
-                        w_ini.render(ctx),
-                        w_ent.render(ctx),
-                        w_sal.render(ctx),
-                        w_his.render(ctx),
-                        w_act.render(ctx)
+                        w_ini.render(ctx, theme=theme),
+                        w_ent.render(ctx, theme=theme),
+                        w_sal.render(ctx, theme=theme),
+                        w_his.render(ctx, theme=theme),
+                        w_act.render(ctx, theme=theme)
                     ]
                 )
             ]
@@ -108,10 +111,10 @@ def _render_taller_inventory_body(ctx):
             spacing="md",
             mb="xl",
             children=[
-                w_cumpl.render(ctx),
-                w_reg.render(ctx),
-                w_con.render(ctx),
-                w_sin.render(ctx)
+                w_cumpl.render(ctx, theme=theme),
+                w_reg.render(ctx, theme=theme),
+                w_con.render(ctx, theme=theme),
+                w_sin.render(ctx, theme=theme)
             ]
         ),
         dmc.Grid(
@@ -127,7 +130,7 @@ def _render_taller_inventory_body(ctx):
                         dmc.Paper(
                             p="md",
                             withBorder=True,
-                            style={"height": "100%"},
+                            style={"height": "100%", "backgroundColor": "transparent"},
                             children=[
                                 dmc.Tabs(
                                     value="fam",
@@ -139,7 +142,7 @@ def _render_taller_inventory_body(ctx):
                                         dmc.TabsPanel(
                                             dmc.ScrollArea(
                                                 h=390,
-                                                children=[WorkshopTableStrategy(SCREEN_ID, "valuation_by_family").render(ctx)]
+                                                children=[WorkshopTableStrategy(SCREEN_ID, "valuation_by_family").render(ctx, theme=theme)]
                                             ),
                                             value="fam",
                                             pt="xs"
@@ -147,7 +150,7 @@ def _render_taller_inventory_body(ctx):
                                         dmc.TabsPanel(
                                             dmc.ScrollArea(
                                                 h=390,
-                                                children=[WorkshopTableStrategy(SCREEN_ID, "inventory_history").render(ctx)]
+                                                children=[WorkshopTableStrategy(SCREEN_ID, "inventory_history").render(ctx, theme=theme)]
                                             ),
                                             value="hist",
                                             pt="xs"

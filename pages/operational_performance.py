@@ -14,8 +14,10 @@ from strategies.operational import (
     OpsGaugeStrategy,
     OpsTrendChartStrategy,
     OpsDonutChartStrategy,
-    OpsTableStrategy
+    OpsTableStrategy,
+    TableWidget
 )
+from flask import session
 
 dash.register_page(__name__, path="/ops-performance", title="Rendimientos")
 
@@ -93,7 +95,13 @@ WIDGET_REGISTRY = {
     "cp_mix": w_mix
 }
 
-def _render_performance_tables(ctx):
+WIDGET_REGISTRY.update({
+    "operational-performance-performance_by_unit": TableWidget("operational-performance-performance_by_unit", OpsTableStrategy(SCREEN_ID, "performance_by_unit", title="Rendimiento por Unidad")),
+    "operational-performance-operator_performance": TableWidget("operational-performance-operator_performance", OpsTableStrategy(SCREEN_ID, "operator_performance", title="Rendimiento por Operador")),
+})
+
+def _render_performance_tables(ctx, theme):
+
     return dmc.Grid(
         gutter="md",
         children=[
@@ -108,7 +116,7 @@ def _render_performance_tables(ctx):
                             dmc.Text("Rendimiento por Unidad", fw="bold", size="sm", mb="sm"),
                             html.Div(
                                 style={"height": "330px", "overflowY": "auto"},
-                                children=[OpsTableStrategy(SCREEN_ID, "performance_by_unit").render(ctx)]
+                                children=[OpsTableStrategy(SCREEN_ID, "performance_by_unit").render(ctx, theme=theme)]
                             )
                         ]
                     )
@@ -125,7 +133,7 @@ def _render_performance_tables(ctx):
                             dmc.Text("Rendimiento por Operador", fw="bold", size="sm", mb="sm"),
                             html.Div(
                                 style={"height": "330px", "overflowY": "auto"},
-                                children=[OpsTableStrategy(SCREEN_ID, "operator_performance").render(ctx)]
+                                children=[OpsTableStrategy(SCREEN_ID, "operator_performance").render(ctx, theme=theme)]
                             )
                         ]
                     )
@@ -135,16 +143,26 @@ def _render_performance_tables(ctx):
     )
 
 def _render_ops_performance_body(ctx):
+    
+    theme = session.get("theme", "dark")
+    def _card(widget_content, h=None):
+        style = {"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}
+        return dmc.Paper(
+            p="xs", radius="md", withBorder=True, shadow=None,
+            style=style,
+            children=widget_content
+        )
+
     return html.Div([
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(280px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"},
-            children=[w_kms_lt.render(ctx), w_kms_re.render(ctx), w_litros.render(ctx)]
+            children=[_card(w_kms_lt.render(ctx, theme=theme)), _card(w_kms_re.render(ctx, theme=theme)), _card(w_litros.render(ctx, theme=theme))]
         ),
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(350px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"},
-            children=[w_trend.render(ctx), w_mix.render(ctx)]
+            children=[_card(w_trend.render(ctx, theme=theme)), _card(w_mix.render(ctx, theme=theme))]
         ),
-        _render_performance_tables(ctx),
+        _render_performance_tables(ctx, theme),
         dmc.Space(h=30)
     ])
 
@@ -190,8 +208,7 @@ def layout():
 )
 def trigger_perf_load(data):
     if data is None or not data.get("loaded"):
-        import time
-        time.sleep(0.8)
+
         return {"loaded": True}
     return no_update
 

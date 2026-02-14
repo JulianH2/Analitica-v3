@@ -13,6 +13,7 @@ from strategies.administration import (
     AdminTrendChartStrategy, AdminDonutChartStrategy,
     AdminStackedBarStrategy, AdminTableStrategy
 )
+from flask import session
 
 dash.register_page(__name__, path="/admin-collection", title="Cobranza")
 
@@ -80,12 +81,12 @@ def _render_collection_body(ctx):
             spacing="sm",
             mb="xl",
             children=[
-                kpi_billing.render(ctx),
-                kpi_credit.render(ctx),
-                kpi_debit.render(ctx),
-                kpi_payments.render(ctx),
-                kpi_portfolio.render(ctx),
-                kpi_balance.render(ctx)
+                kpi_billing.render(ctx, theme=theme),
+                kpi_credit.render(ctx, theme=theme),
+                kpi_debit.render(ctx, theme=theme),
+                kpi_payments.render(ctx, theme=theme),
+                kpi_portfolio.render(ctx, theme=theme),
+                kpi_balance.render(ctx, theme=theme)
             ]
         ),
         
@@ -124,7 +125,7 @@ def _render_collection_body(ctx):
                                 dmc.Text("ANTIGÜEDAD DE SALDOS POR CLIENTE", fw="bold", size="xs", c="dimmed", mb="md"),
                                 dmc.ScrollArea(
                                     h=440,
-                                    children=[AdminTableStrategy(SCREEN_ID, "aging_by_client").render(ctx)]
+                                    children=[AdminTableStrategy(SCREEN_ID, "aging_by_client").render(ctx, theme=theme)]
                                 )
                             ]
                         )
