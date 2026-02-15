@@ -1361,6 +1361,62 @@ class RealDataService:
             }
         }
 
+        # Variantes Bancos: Consolidado, Pesos (MXN), Dólares (USD) — rutas de inyección distintas por tab
+        _bank_kpi = lambda unit, inv=False: {
+            "initial_balance": KPICalculator.calculate_kpi(title="Saldo Inicial", current_value=1, kpi_type="currency", unit=unit),
+            "total_income": KPICalculator.calculate_kpi(title="Ingresos", current_value=1, previous_value=1, kpi_type="currency", unit=unit),
+            "total_expenses": KPICalculator.calculate_kpi(title="Egresos", current_value=1, previous_value=1, kpi_type="currency", unit=unit, inverse=inv),
+            "final_balance": KPICalculator.calculate_kpi(title="Saldo Final", current_value=1, kpi_type="currency", unit=unit),
+        }
+        _bank_chart_daily = {
+            "type": "bar_chart",
+            "data": {
+                "categories": ["1", "5", "10", "15", "20", "25", "30"],
+                "series": [
+                    {"name": "Ingresos", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#06D6A0"},
+                    {"name": "Egresos", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#EF476F"}
+                ]
+            }
+        }
+        _bank_chart_donut = {
+            "type": "donut_chart",
+            "data": {
+                "labels": ["BBVA", "Banorte", "Santander", "HSBC", "Banamex"],
+                "values": [0.1, 0.1, 0.1, 0.1, 0.1],
+                "colors": ["#0033A0", "#EB0029", "#EC0000", "#DB0011", "#004B87"]
+            }
+        }
+        _bank_table = {
+            "type": "table",
+            "title": "Ingresos y Egresos por Concepto",
+            "headers": ["Concepto", "Ingresos", "Egresos", "Neto"],
+            "rows": [["Fletes", "$1", "$0", "$1"], ["Combustible", "$0", "$1", "-$1"]]
+        }
+        administration["consolidado"] = {
+            "kpis": _bank_kpi("MXN", inv=True),
+            "charts": {
+                "daily_cash_flow": {"title": "Evolución Diaria de Flujo Consolidado", **_bank_chart_daily},
+                "balance_by_bank": {"title": "Saldo por Institución Bancaria (Consolidado)", **_bank_chart_donut},
+            },
+            "tables": {"income_expense_concepts": _bank_table},
+        }
+        administration["pesos"] = {
+            "kpis": _bank_kpi("MXN", inv=True),
+            "charts": {
+                "daily_cash_flow": {"title": "Evolución Diaria de Flujo MXN", **_bank_chart_daily},
+                "balance_by_bank": {"title": "Saldo por Institución Bancaria MXN", **_bank_chart_donut},
+            },
+            "tables": {"income_expense_concepts": _bank_table},
+        }
+        administration["dolares"] = {
+            "kpis": _bank_kpi("USD", inv=True),
+            "charts": {
+                "daily_cash_flow": {"title": "Evolución Diaria de Flujo USD", **_bank_chart_daily},
+                "balance_by_bank": {"title": "Saldo por Institución Bancaria USD", **_bank_chart_donut},
+            },
+            "tables": {"income_expense_concepts": _bank_table},
+        }
+
         administration["charts"]["debtors_by_range"] = {
             "type": "horizontal_bar_chart",
             "title": "Deudores por Rango de Antigüedad",
@@ -1470,14 +1526,57 @@ class RealDataService:
         }
 
         administration["charts"]["payables_trends"] = {
-            "type": "line_chart",
-            "title": "Tendencia CxP",
+            "type": "bar_chart",
+            "title": "Cuentas x Pagar 2025 vs. 2024",
             "data": {
-                "months": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep"],
+                "months": ["01-Ene", "02-Feb", "03-Mar", "04-Abr", "05-May", "06-Jun", "07-Jul", "08-Ago", "09-Sep", "10-Oct", "11-Nov", "12-Dic"],
                 "series": [
-                    {"name": "CxP", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#EF476F"},
-                    {"name": "Pagado", "data": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1], "color": "#06D6A0"}
+                    {"name": "Anterior", "data": [17, 25, 19, 19, 21, 21, 20, 20, 14, 13, 13, 28], "color": "#A3BAC3"},
+                    {"name": "Actual", "data": [26, 15, 14, 17, 18, 15, 12, 16, 2, 0, 0, 0], "color": "#2E86AB"}
                 ]
+            }
+        }
+
+        administration["charts"]["pago_proveedores_trends"] = {
+            "type": "bar_chart",
+            "title": "Pago Proveedores 2025 vs. 2024",
+            "data": {
+                "months": ["01-Ene", "02-Feb", "03-Mar", "04-Abr", "05-May", "06-Jun", "07-Jul", "08-Ago", "09-Sep", "10-Oct", "11-Nov", "12-Dic"],
+                "series": [
+                    {"name": "Anterior", "data": [24, 22, 16, 19, 18, 15, 19, 18, 12, 17, 13, 28], "color": "#A3BAC3"},
+                    {"name": "Actual", "data": [11, 14, 12, 15, 14, 17, 15, 15, 1, 0, 0, 0], "color": "#2E86AB"}
+                ]
+            }
+        }
+
+        administration["charts"]["pronostico_pago_proveedores"] = {
+            "type": "line_chart",
+            "title": "Pago Proveedores Histórica vs Pronóstico",
+            "data": {
+                "months": [
+                    "ene 2024", "feb 2024", "mar 2024", "abr 2024", "may 2024", "jun 2024",
+                    "jul 2024", "ago 2024", "sep 2024", "oct 2024", "nov 2024", "dic 2024",
+                    "ene 2025", "feb 2025", "mar 2025", "abr 2025", "may 2025", "jun 2025",
+                    "jul 2025", "ago 2025", "sep 2025", "oct 2025"
+                ],
+                "series": [
+                    {
+                        "name": "Pago Proveedores",
+                        "data": [0, 10, 25, 16, 20, 18, 19, 19, 17, 12, 16, 22, 28, 20, 10, 12, 14, 12, 15, 17, 14, 1],
+                        "color": "#2E86AB",
+                        "type": "line"
+                    },
+                    {
+                        "name": "Pronóstico",
+                        "data": [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 15, 15, 15, 15],
+                        "color": "#212529",
+                        "type": "line",
+                        "lower": [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 12, 11, 10, 9],
+                        "upper": [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 18, 19, 20, 21]
+                    }
+                ],
+                "y_axis_label": "$ mill.",
+                "y_axis_format": "millions"
             }
         }
 

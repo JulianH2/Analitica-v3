@@ -1,12 +1,13 @@
 from flask import session
 import dash
-from dash import html
+from dash import html, dcc, callback, Input, Output, no_update
 import dash_mantine_components as dmc
 
 from services.data_manager import data_manager
 from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
-from components.modal_manager import create_smart_modal, register_modal_callback
+from components.drawer_manager import create_smart_drawer, register_drawer_callback
+from components.skeleton import get_skeleton
 from components.filter_manager import create_workshop_filters, get_filter_ids
 from strategies.workshop import (
     WorkshopKPIStrategy,
@@ -23,43 +24,25 @@ SCREEN_ID = "workshop-availability"
 w_disp = SmartWidget(
     "wa_disp",
     WorkshopGaugeStrategy(
-        screen_id=SCREEN_ID,
-        kpi_key="availability_percent",
-        title="% Disponibilidad",
-        icon="tabler:gauge",
-        color="green",
-        use_needle=True
+        SCREEN_ID, "availability_percent", "% Disponibilidad", "green",
+        icon="tabler:gauge", use_needle=True, layout_config={"height": 300}
     )
 )
-
 w_entries = SmartWidget(
     "wa_ent",
-    WorkshopKPIStrategy(
-        screen_id=SCREEN_ID,
-        kpi_key="workshop_entries",
-        title="Entradas a Taller",
-        icon="tabler:truck-entry",
-        color="indigo"
-    )
+    WorkshopKPIStrategy(SCREEN_ID, "workshop_entries", "Entradas a Taller", "tabler:truck-loading", "indigo")
 )
 
 chart_trend = ChartWidget(
     "ca_trend",
     WorkshopTrendChartStrategy(
-        screen_id=SCREEN_ID,
-        chart_key="availability_trends",
-        title="Disponibilidad Mensual 2025 vs 2024",
-        icon="tabler:calendar-stats"
+        SCREEN_ID, "availability_trends", "Disponibilidad Mensual 2025 vs 2024", icon="tabler:calendar-stats"
     )
 )
-
 chart_combo = ChartWidget(
     "ca_combo",
     WorkshopComboChartStrategy(
-        screen_id=SCREEN_ID,
-        chart_key="entries_and_km_by_unit",
-        title="Entradas vs Kilómetros Recorridos",
-        icon="tabler:chart-arrows-vertical"
+        SCREEN_ID, "entries_and_km_by_unit", "Entradas vs Kilómetros Recorridos", icon="tabler:chart-arrows-vertical"
     )
 )
 
@@ -69,72 +52,103 @@ WIDGET_REGISTRY = {
 }
 
 def _render_taller_availability_body(ctx):
+    theme = session.get("theme", "dark")
+    
+    def _card(widget_content, h=None):
+        style = {"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}
+        return dmc.Paper(
+            p="xs", radius="md", withBorder=True, shadow=None,
+            style=style, children=widget_content
+        )
+    
     return html.Div([
-        dmc.SimpleGrid(
-            cols={"base": 1, "md": 2}, # type: ignore
-            spacing="md",
-            mb="xl",
+
+        html.Div(
+            style={
+                "display": "grid",
+                "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))",
+                "gap": "0.8rem",
+                "marginBottom": "1.5rem"
+            },
             children=[
-                w_disp.render(ctx, mode="combined"),
-                w_entries.render(ctx, mode="combined")
+                _card(w_disp.render(ctx, theme=theme)),
+                _card(w_entries.render(ctx, theme=theme))
             ]
         ),
-        dmc.SimpleGrid(
-            cols={"base": 1, "md": 2}, # type: ignore
-            spacing="md",
-            mb="xl",
+        
+
+        html.Div(
+            style={
+                "display": "grid",
+                "gridTemplateColumns": "repeat(auto-fit, minmax(400px, 1fr))",
+                "gap": "0.8rem",
+                "marginBottom": "1.5rem"
+            },
             children=[
-                chart_trend.render(ctx, h=420),
-                chart_combo.render(ctx, h=420)
+                _card(chart_trend.render(ctx, h=420, theme=theme)),
+                _card(chart_combo.render(ctx, h=420, theme=theme))
             ]
         ),
+        
+
         dmc.Paper(
             p="md",
             withBorder=True,
             radius="md",
+            style={"backgroundColor": "transparent"},
             children=[
-                dmc.Text(
-                    "DETALLE DE DISPONIBILIDAD POR ÁREA / UNIDAD",
-                    fw="bold",
-                    mb="md",
-                    size="xs",
-                    c="dimmed" # type: ignore
-                ),
+                dmc.Text("DETALLE DE DISPONIBILIDAD POR ÁREA / UNIDAD", fw="bold", mb="md", size="xs", c="dimmed"), # type: ignore
                 dmc.ScrollArea(
                     h=450,
-                    children=[
-                        WorkshopTableStrategy(SCREEN_ID, "availability_detail").render(ctx)
-                    ]
+                    children=[WorkshopTableStrategy(SCREEN_ID, "availability_detail").render(ctx, theme=theme)]
                 )
             ]
         ),
+        
         dmc.Space(h=50)
     ])
+
+WIDGET_REGISTRY = {
+    "wa_disp": w_disp,
+    "wa_ent": w_entries,
+    "ca_trend": chart_trend,
+    "ca_combo": chart_combo
+}
 
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
-    ctx = data_manager.get_screen(SCREEN_ID, use_cache=True, allow_stale=True)
+    
     refresh_components, _ = data_manager.dash_refresh_components(
         SCREEN_ID,
-        interval_ms=800,
-        max_intervals=1
+        interval_ms=60 * 60 * 1000,
+        max_intervals=-1
     )
+    
     return dmc.Container(
         fluid=True,
+        px="md",
         children=[
-            create_smart_modal("avail-modal"),
+            dcc.Store(id="avail-load-trigger", data={"loaded": True}),
             *refresh_components,
+            create_smart_drawer("avail-drawer"),
             create_workshop_filters(prefix="avail"),
-            html.Div(id="taller-avail-body", children=_render_taller_availability_body(ctx))
+            html.Div(id="taller-avail-body", children=get_skeleton(SCREEN_ID))
         ]
     )
+
+FILTER_IDS = ["avail-year", "avail-month"]
 
 data_manager.register_dash_refresh_callbacks(
     screen_id=SCREEN_ID,
     body_output_id="taller-avail-body",
     render_body=_render_taller_availability_body,
-    filter_ids=get_filter_ids("avail", 5)
+    filter_ids=FILTER_IDS
 )
 
-register_modal_callback("avail-modal", WIDGET_REGISTRY, SCREEN_ID)
+register_drawer_callback(
+    drawer_id="avail-drawer", 
+    widget_registry=WIDGET_REGISTRY, 
+    screen_id=SCREEN_ID, 
+    filter_ids=FILTER_IDS
+)

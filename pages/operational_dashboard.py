@@ -5,6 +5,7 @@ import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 from datetime import datetime
 
+from components.table_widget import TableWidget
 from services.data_manager import data_manager
 from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
@@ -17,8 +18,7 @@ from strategies.operational import (
     OpsDonutChartStrategy,
     OpsHorizontalBarStrategy,
     OpsTableStrategy,
-    OpsGaugeStrategy,
-    TableWidget
+    OpsGaugeStrategy
 )
 from settings.theme import DesignSystem
 from utils.helpers import safe_get
@@ -35,6 +35,7 @@ def get_previous_year():
 
 def get_dynamic_title(base_title: str) -> str:
     return f"{base_title} {get_current_year()} vs {get_previous_year()}"
+
 w_inc = SmartWidget(
     "go_inc",
     OpsGaugeStrategy(
@@ -118,7 +119,7 @@ w_customers = SmartWidget(
         title="Clientes",
         icon="tabler:users",
         color="teal",
-        has_detail=False
+        has_detail=True
     )
 )
 
@@ -239,10 +240,10 @@ def _render_fleet_status(ctx):
                 style={"height": "100%"},
                 gap=8,
                 children=[
-                    dmc.Text("Estado de Carga de Flota", fw="bold", size="xs", c="dimmed", tt="uppercase"),
+                    dmc.Text("Estado de Carga de Flota", fw="bold", size="xs", c="dimmed", tt="uppercase"), # type: ignore
                     DashIconify(icon="tabler:truck-loading", width=52, color=icon_color),
-                    dmc.Text(f"{val:.1f}%", fw="bold", size="1.8rem", c=color),
-                    dmc.Text("Cargado", size="sm", c="dimmed"),
+                    dmc.Text(f"{val:.1f}%", fw="bold", size="1.8rem", c=color), # type: ignore
+                    dmc.Text("Cargado", size="sm", c="dimmed"), # type: ignore
                     dmc.Progress(value=min(val, 100), color=color, h=20, radius="xl", style={"width": "90%"})
                 ]
             )
@@ -250,7 +251,6 @@ def _render_fleet_status(ctx):
     )
 
 def _render_routes_tabs(ctx, theme):
-
     return dmc.Paper(
         p=8,
         withBorder=True,
@@ -284,7 +284,6 @@ def _render_routes_tabs(ctx, theme):
     )
 
 def _render_income_tabs(ctx, theme):
-
     return dmc.Paper(
         p=8,
         withBorder=True,
@@ -340,7 +339,6 @@ def _render_body(ctx):
                 _card(w_tri.render(ctx, theme=theme)),
                 _card(w_kms.render(ctx, theme=theme))
             ]
-            
         ),
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "0.6rem", "marginBottom": "1rem"},
@@ -350,7 +348,6 @@ def _render_body(ctx):
                 _card(w_units_qty.render(ctx, theme=theme)),
                 _card(w_customers.render(ctx, theme=theme)),
             ]
-            
         ),
         html.Div(
             style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(400px, 1fr))", "gap": "0.8rem", "marginBottom": "1rem"},
@@ -358,23 +355,22 @@ def _render_body(ctx):
                 _card(w_inc_comp.render(ctx, theme=theme)),
                 _card(w_trips_comp.render(ctx, theme=theme))
             ]
-
         ),
         dmc.Grid(
             gutter="md",
             mb="lg",
             children=[
-                dmc.GridCol(span={"base": 12, "lg": 4}, children=[_render_fleet_status(ctx)]),
-                dmc.GridCol(span={"base": 12, "lg": 8}, children=[_render_routes_tabs(ctx, theme),])
+                dmc.GridCol(span={"base": 12, "lg": 4}, children=[_render_fleet_status(ctx)]), # type: ignore
+                dmc.GridCol(span={"base": 12, "lg": 8}, children=[_render_routes_tabs(ctx, theme),]) # type: ignore
             ]
         ),
         dmc.Grid(
             gutter="md",
             mb="lg",
             children=[
-                dmc.GridCol(span={"base": 12, "md": 5}, children=[_card(w_mix.render(ctx, theme=theme))]),
+                dmc.GridCol(span={"base": 12, "md": 5}, children=[_card(w_mix.render(ctx, theme=theme))]), # type: ignore
                 dmc.GridCol(
-                    span={"base": 12, "md": 7},
+                    span={"base": 12, "md": 7}, # type: ignore
                     children=[
                         dmc.Paper(
                             p=6,
@@ -400,6 +396,7 @@ def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
     
+
     refresh_components, _ = data_manager.dash_refresh_components(
         SCREEN_ID, 
         interval_ms=60 * 60 * 1000, 
@@ -410,7 +407,8 @@ def layout():
         fluid=True,
         px="md",
         children=[
-            dcc.Store(id="ops-load-trigger", data={"loaded": False}),
+
+            dcc.Store(id="ops-load-trigger", data={"loaded": True}), 
             *refresh_components,
             create_smart_drawer("ops-drawer"),
             create_operational_filters(prefix="ops"),
@@ -418,22 +416,22 @@ def layout():
         ]
     )
 
-@callback(
-    Output("ops-load-trigger", "data"),
-    Input("ops-load-trigger", "data"),
-    prevent_initial_call=False
-)
-def trigger_ops_load(data):
-    if data is None or not data.get("loaded"):
-
-        return {"loaded": True}
-    return no_update
-
+FILTROS_IDS = [
+    "ops-year", 
+    "ops-month", 
+    "ops-empresa", 
+    "ops-clasificacion", 
+    "ops-cliente", 
+    "ops-unidad", 
+    "ops-operador"
+]
 data_manager.register_dash_refresh_callbacks(
     screen_id=SCREEN_ID,
     body_output_id="ops-body",
     render_body=_render_body,
-    filter_ids=get_filter_ids("ops", 5)
+    filter_ids=FILTROS_IDS
 )
 
-register_drawer_callback("ops-drawer", WIDGET_REGISTRY, SCREEN_ID)
+
+
+register_drawer_callback("ops-drawer", WIDGET_REGISTRY, SCREEN_ID, filter_ids=FILTROS_IDS)

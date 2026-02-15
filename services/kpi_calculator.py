@@ -72,7 +72,7 @@ class KPICalculator:
                     status_color = SemanticColors.WARNING
                 else:
                     status = "negative"
-                    status_color = SemanticColors.DANGER
+                    status_color = SemanticColors.ERROR
             except: pass
 
         ytd_fmt = "---"

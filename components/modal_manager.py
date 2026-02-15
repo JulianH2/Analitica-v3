@@ -1,49 +1,32 @@
-"""
-Modal Manager - Actualizado con Design System
-Modales de detalle con diseño según mockups
-"""
-
 import dash
 from dash import html, callback, Input, Output, ALL, State, no_update, dcc
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 import plotly.graph_objects as go
-from design_system import (
-    DesignSystem as DS, 
-    Typography, 
-    ComponentSizes, 
-    Space,
-    BadgeConfig
-)
+from design_system import DesignSystem as DS, Typography, ComponentSizes, Space, BadgeConfig
 
 
 def create_smart_modal(modal_id: str = "smart-modal"):
-    """Crea modal inteligente para detalles"""
     return dmc.Modal(
         id=modal_id,
         size="xl",
         centered=True,
         padding="xl",
         radius="md",
-        styles={
-            "content": {
-                "backgroundColor": "var(--mantine-color-body)"
-            }
-        },
+        styles={"content": {"backgroundColor": "var(--mantine-color-body)"}},
         children=[
             html.Div(
                 id=f"{modal_id}-container",
                 children=[
                     html.Div(id=f"{modal_id}-header"),
-                    html.Div(id=f"{modal_id}-content")
-                ]
+                    html.Div(id=f"{modal_id}-content"),
+                ],
             )
-        ]
+        ],
     )
 
 
 def register_modal_callback(modal_id: str, widget_registry: dict, screen_id: str):
-    """Registra callback para manejar interacción del modal"""
     from services.data_manager import data_manager
 
     @callback(
@@ -52,28 +35,28 @@ def register_modal_callback(modal_id: str, widget_registry: dict, screen_id: str
         Output(f"{modal_id}-header", "children"),
         Output(f"{modal_id}-content", "children"),
         Input({"type": "open-smart-detail", "index": ALL}, "n_clicks"),
-        prevent_initial_call=True
+        prevent_initial_call=True,
     )
     def handle_modal_interaction(n_clicks):
         if not dash.ctx.triggered or not any(n_clicks):
             return no_update, no_update, no_update, no_update
-            
-        widget_id = dash.ctx.triggered_id.get("index")
+
+        widget_id = dash.ctx.triggered_id.get("index") # type: ignore
         if not widget_id:
             return no_update, no_update, no_update, no_update
-            
+
         widget = widget_registry.get(str(widget_id))
         if not widget:
             return no_update, no_update, no_update, no_update
-            
+
         ctx = data_manager.get_screen(screen_id, use_cache=True, allow_stale=True)
-        
+
         try:
             cfg = widget.strategy.get_card_config(ctx)
             title = cfg.get("title", "Detalle")
             icon = cfg.get("icon", "tabler:chart-bar")
             color = cfg.get("color", "blue")
-            
+
             header = _build_modal_header(cfg, icon, color)
             content = _build_modal_content(widget, ctx, cfg)
 
@@ -84,7 +67,7 @@ def register_modal_callback(modal_id: str, widget_registry: dict, screen_id: str
                 title="Error al cargar detalle",
                 color="red",
                 icon=DashIconify(icon="tabler:alert-triangle", width=20),
-                children=f"No se pudo cargar el contenido: {str(e)}"
+                children=f"No se pudo cargar el contenido: {str(e)}",
             )
             return True, "Error", html.Div(), error_content
 
@@ -92,25 +75,21 @@ def register_modal_callback(modal_id: str, widget_registry: dict, screen_id: str
 
 
 def _build_modal_header(cfg, icon, color):
-    """Construye header del modal con gradiente"""
     color_hex = DS.COLOR_MAP.get(color, DS.CHART_BLUE)
-    
-    # Crear gradiente más oscuro para el header
     gradient_start = color_hex
     gradient_end = _darken_color(color_hex, 20)
-    
+
     return dmc.Paper(
         p="md",
         radius="md",
         mb="lg",
         style={
             "background": f"linear-gradient(135deg, {gradient_start} 0%, {gradient_end} 100%)",
-            "color": "white"
+            "color": "white",
         },
         children=dmc.Group(
             justify="space-between",
             children=[
-                # Lado izquierdo: Icono + Título
                 dmc.Group(
                     gap="md",
                     children=[
@@ -119,26 +98,26 @@ def _build_modal_header(cfg, icon, color):
                             size="xl",
                             radius="md",
                             variant="white",
-                            color=color
+                            color=color,
                         ),
-                        html.Div([
-                            dmc.Text(
-                                cfg.get("title", "Detalle"), 
-                                size="xl", 
-                                fw=Typography.WEIGHT_BOLD,
-                                c="white"
-                            ),
-                            dmc.Text(
-                                "Análisis rápido", 
-                                size="sm", 
-                                c="white", 
-                                opacity=0.9
-                            )
-                        ])
-                    ]
+                        html.Div(
+                            [
+                                dmc.Text(
+                                    cfg.get("title", "Detalle"),
+                                    size="xl",
+                                    fw=Typography.WEIGHT_BOLD, # type: ignore
+                                    c="white", # type: ignore
+                                ),
+                                dmc.Text(
+                                    "Análisis rápido",
+                                    size="sm",
+                                    c="white", # type: ignore
+                                    opacity=0.9, # type: ignore
+                                ),
+                            ]
+                        ),
+                    ],
                 ),
-                
-                # Lado derecho: Badge de actualización
                 dmc.Group(
                     gap="xs",
                     children=[
@@ -147,25 +126,18 @@ def _build_modal_header(cfg, icon, color):
                             variant="white",
                             size="lg",
                             leftSection=DashIconify(icon="tabler:refresh", width=14),
-                            styles={
-                                "root": {
-                                    "fontSize": f"{Typography.XS}px"
-                                }
-                            }
+                            styles={"root": {"fontSize": f"{Typography.XS}px"}},
                         )
-                    ]
-                )
-            ]
-        )
+                    ],
+                ),
+            ],
+        ),
     )
 
 
 def _build_modal_content(widget, ctx, cfg):
-    """Construye contenido principal del modal"""
-    
-    # Sección de métricas principales
     main_section = dmc.SimpleGrid(
-        cols={"base": 1, "sm": 2, "md": 4},
+        cols={"base": 1, "sm": 2, "md": 4}, # type: ignore
         spacing="md",
         mb="xl",
         children=[
@@ -174,35 +146,34 @@ def _build_modal_content(widget, ctx, cfg):
                 value=cfg.get("main_value", "---"),
                 icon="tabler:currency-dollar",
                 color="blue",
-                size="xl"
+                size="xl",
             ),
             _create_metric_card(
                 label="vs Año Anterior",
                 value=cfg.get("vs_last_year_formatted", "---"),
                 delta=cfg.get("vs_last_year_delta_formatted", ""),
                 icon="tabler:calendar",
-                color="green"
+                color="green",
             ),
             _create_metric_card(
                 label="Meta",
                 value=cfg.get("target_formatted", "---"),
                 delta=cfg.get("target_delta_formatted", ""),
                 icon="tabler:target",
-                color="orange"
+                color="orange",
             ),
             _create_metric_card(
                 label="YTD",
                 value=cfg.get("ytd_formatted", "---"),
                 delta=cfg.get("ytd_delta_formatted", ""),
                 icon="tabler:calendar-stats",
-                color="violet"
-            )
-        ]
+                color="violet",
+            ),
+        ],
     )
-    
-    # Sección de tendencia (si existe)
+
     trend_section = None
-    if hasattr(widget.strategy, 'get_figure'):
+    if hasattr(widget.strategy, "get_figure"):
         try:
             fig = widget.strategy.get_figure(ctx)
             if fig:
@@ -216,79 +187,67 @@ def _build_modal_content(widget, ctx, cfg):
                             mb="md",
                             children=[
                                 DashIconify(
-                                    icon="tabler:chart-line", 
-                                    width=24, 
-                                    color=DS.CHART_BLUE
+                                    icon="tabler:chart-line",
+                                    width=24,
+                                    color=DS.CHART_BLUE,
                                 ),
                                 dmc.Text(
-                                    "Tendencia Histórica", 
-                                    fw=Typography.WEIGHT_SEMIBOLD,
-                                    size="lg"
-                                )
-                            ]
+                                    "Tendencia Histórica",
+                                    fw=Typography.WEIGHT_SEMIBOLD, # type: ignore
+                                    size="lg",
+                                ),
+                            ],
                         ),
                         dcc.Graph(
                             figure=fig,
-                            config={'displayModeBar': True, 'displaylogo': False},
-                            style={"height": "300px"}
-                        )
-                    ]
+                            config={"displayModeBar": True, "displaylogo": False},
+                            style={"height": "300px"},
+                        ),
+                    ],
                 )
         except:
             pass
-    
-    # Sección de insights
+
     insights_section = _build_insights_section(cfg)
-    
-    # Sección de acciones rápidas
     actions_section = _build_actions_section()
-    
+
     return dmc.Stack(
         gap="lg",
         children=[
             main_section,
             trend_section if trend_section else html.Div(),
             insights_section,
-            actions_section
-        ]
+            actions_section,
+        ],
     )
 
 
 def _create_metric_card(label, value, icon, color, delta=None, size="md"):
-    """
-    Crea tarjeta de métrica con badge dinámico
-    Usa BadgeConfig para determinar colores automáticamente
-    """
     color_hex = DS.COLOR_MAP.get(color, color)
-    
-    # Determinar badge según delta
-    badge_component = html.Div(style={"height": "20px"})  # Placeholder
-    
+    badge_component = html.Div(style={"height": "20px"})
+
     if delta and delta not in ("", "---", "N/A"):
         try:
-            # Extraer valor numérico del delta
-            clean = str(delta).replace('%', '').replace('+', '').replace(',', '').strip()
+            clean = str(delta).replace("%", "").replace("+", "").replace(",", "").strip()
             delta_num = float(clean)
-            
-            # Usar BadgeConfig para obtener configuración
             badge_config = BadgeConfig.get_comparison_badge(delta_num)
-            
+
             badge_component = dmc.Badge(
-                badge_config['label'],
+                badge_config["label"],
                 variant="light",
                 size="sm",
                 styles={
                     "root": {
-                        "backgroundColor": badge_config['background'],
-                        "color": badge_config['text'],
+                        "backgroundColor": badge_config["background"],
+                        "color": badge_config["text"],
                         "fontSize": f"{Typography.BADGE}px",
-                        "fontWeight": Typography.WEIGHT_SEMIBOLD
+                        "fontWeight": Typography.WEIGHT_SEMIBOLD,
                     }
-                }
+                },
             )
         except:
             pass
-    
+
     return dmc.Paper(
         p="md",
         radius="md",
@@ -296,47 +255,41 @@ def _create_metric_card(label, value, icon, color, delta=None, size="md"):
         children=dmc.Stack(
             gap="xs",
             children=[
-                # Header: Label + Icono
                 dmc.Group(
                     justify="space-between",
                     children=[
                         dmc.Text(
-                            label, 
-                            size="xs", 
-                            c="dimmed", 
-                            fw=Typography.WEIGHT_SEMIBOLD,
+                            label,
+                            size="xs",
+                            c="dimmed", # type: ignore
+                            fw=Typography.WEIGHT_SEMIBOLD, # type: ignore
                             tt="uppercase",
-                            style={"fontSize": f"{Typography.XS}px"}
+                            style={"fontSize": f"{Typography.XS}px"},
                         ),
                         DashIconify(
                             icon=icon,
                             width=ComponentSizes.ICON_LG,
-                            color=color_hex
-                        )
-                    ]
+                            color=color_hex,
+                        ),
+                    ],
                 ),
-                
-                # Valor principal
                 dmc.Text(
                     str(value),
-                    size=size,
-                    fw=Typography.WEIGHT_BOLD,
+                    size=size, # type: ignore
+                    fw=Typography.WEIGHT_BOLD, # type: ignore
                     c=color,
                     style={
                         "lineHeight": Typography.LH_TIGHT,
-                        "fontSize": f"{Typography.KPI_LARGE if size == 'xl' else Typography.KPI_MEDIUM}px"
-                    }
+                        "fontSize": f"{Typography.KPI_LARGE if size == 'xl' else Typography.KPI_MEDIUM}px",
+                    },
                 ),
-                
-                # Badge de delta
-                badge_component
-            ]
-        )
+                badge_component,
+            ],
+        ),
     )
 
 
 def _build_insights_section(cfg):
-    """Construye sección de insights/análisis"""
     return dmc.Paper(
         p="md",
         radius="md",
@@ -346,17 +299,13 @@ def _build_insights_section(cfg):
             dmc.Group(
                 mb="md",
                 children=[
-                    DashIconify(
-                        icon="tabler:bulb", 
-                        width=24, 
-                        color=DS.CHART_BLUE
-                    ),
+                    DashIconify(icon="tabler:bulb", width=24, color=DS.CHART_BLUE),
                     dmc.Text(
-                        "Análisis Rápido", 
-                        fw=Typography.WEIGHT_SEMIBOLD,
-                        size="lg"
-                    )
-                ]
+                        "Análisis Rápido",
+                        fw=Typography.WEIGHT_SEMIBOLD, # type: ignore
+                        size="lg",
+                    ),
+                ],
             ),
             dmc.Stack(
                 gap="sm",
@@ -364,26 +313,25 @@ def _build_insights_section(cfg):
                     _create_insight_item(
                         icon="tabler:trending-up",
                         color="green",
-                        text=f"El indicador {cfg.get('title', 'actual')} muestra desempeño {_get_performance_label(cfg)}"
+                        text=f"El indicador {cfg.get('title', 'actual')} muestra desempeño {_get_performance_label(cfg)}",
                     ),
                     _create_insight_item(
                         icon="tabler:calendar-check",
                         color="blue",
-                        text=_get_comparison_text(cfg)
+                        text=_get_comparison_text(cfg),
                     ),
                     _create_insight_item(
                         icon="tabler:target",
                         color="orange",
-                        text=_get_target_text(cfg)
-                    )
-                ]
-            )
-        ]
+                        text=_get_target_text(cfg),
+                    ),
+                ],
+            ),
+        ],
     )
 
 
 def _create_insight_item(icon, color, text):
-    """Crea item de insight"""
     return dmc.Group(
         gap="sm",
         children=[
@@ -392,19 +340,14 @@ def _create_insight_item(icon, color, text):
                 size="md",
                 variant="light",
                 color=color,
-                radius="xl"
+                radius="xl",
             ),
-            dmc.Text(
-                text,
-                size="sm",
-                style={"fontSize": f"{Typography.SM}px"}
-            )
-        ]
+            dmc.Text(text, size="sm", style={"fontSize": f"{Typography.SM}px"}),
+        ],
     )
 
 
 def _build_actions_section():
-    """Construye sección de acciones rápidas"""
     return dmc.Paper(
         p="md",
         radius="md",
@@ -413,17 +356,13 @@ def _build_actions_section():
             dmc.Group(
                 mb="md",
                 children=[
-                    DashIconify(
-                        icon="tabler:bolt", 
-                        width=24, 
-                        color=DS.CHART_BLUE
-                    ),
+                    DashIconify(icon="tabler:bolt", width=24, color=DS.CHART_BLUE),
                     dmc.Text(
-                        "Acciones Rápidas", 
-                        fw=Typography.WEIGHT_SEMIBOLD,
-                        size="lg"
-                    )
-                ]
+                        "Acciones Rápidas",
+                        fw=Typography.WEIGHT_SEMIBOLD, # type: ignore
+                        size="lg",
+                    ),
+                ],
             ),
             dmc.Group(
                 gap="sm",
@@ -433,90 +372,82 @@ def _build_actions_section():
                         leftSection=DashIconify(icon="tabler:zoom-in", width=18),
                         variant="light",
                         color="blue",
-                        size="sm"
+                        size="sm",
                     ),
                     dmc.Button(
                         "Exportar Datos",
                         leftSection=DashIconify(icon="tabler:download", width=18),
                         variant="light",
                         color="green",
-                        size="sm"
+                        size="sm",
                     ),
                     dmc.Button(
                         "Compartir",
                         leftSection=DashIconify(icon="tabler:share", width=18),
                         variant="light",
                         color="gray",
-                        size="sm"
+                        size="sm",
                     ),
                     dmc.Button(
                         "Configurar Alerta",
                         leftSection=DashIconify(icon="tabler:bell", width=18),
                         variant="light",
                         color="orange",
-                        size="sm"
-                    )
-                ]
-            )
-        ]
+                        size="sm",
+                    ),
+                ],
+            ),
+        ],
     )
 
 
-# ==================== HELPER FUNCTIONS ====================
-
 def _darken_color(hex_color: str, percent: int) -> str:
-    """Oscurece un color hexadecimal"""
-    hex_color = hex_color.lstrip('#')
-    rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    hex_color = hex_color.lstrip("#")
+    rgb = tuple(int(hex_color[i : i + 2], 16) for i in (0, 2, 4))
     factor = (100 - percent) / 100
     darkened = tuple(int(c * factor) for c in rgb)
     return f"#{darkened[0]:02x}{darkened[1]:02x}{darkened[2]:02x}"
 
 
 def _get_performance_label(cfg):
-    """Determina etiqueta de desempeño según delta"""
     delta = cfg.get("vs_last_year_delta", 0)
     try:
         delta_num = float(delta) if delta else 0
         if delta_num > 15:
             return "excepcional (+{:.1f}%)".format(delta_num)
-        elif delta_num > 5:
+        if delta_num > 5:
             return "muy positivo (+{:.1f}%)".format(delta_num)
-        elif delta_num > 0:
+        if delta_num > 0:
             return "positivo (+{:.1f}%)".format(delta_num)
-        elif delta_num > -5:
+        if delta_num > -5:
             return "estable ({:.1f}%)".format(delta_num)
-        else:
-            return "por debajo de expectativas ({:.1f}%)".format(delta_num)
+        return "por debajo de expectativas ({:.1f}%)".format(delta_num)
     except:
         return "estable"
 
 
 def _get_comparison_text(cfg):
-    """Genera texto de comparación"""
     prev_value = cfg.get("vs_last_year_formatted", "N/A")
     delta = cfg.get("vs_last_year_delta_formatted", "N/A")
-    
+
     if prev_value != "N/A" and delta != "N/A":
         return f"Año anterior: {prev_value} (variación: {delta})"
     return "Comparación con año anterior no disponible"
 
 
 def _get_target_text(cfg):
-    """Genera texto de meta"""
     target = cfg.get("target_formatted", "N/A")
     delta = cfg.get("target_delta_formatted", "N/A")
-    
+
     if target != "N/A" and delta != "N/A":
         try:
-            delta_clean = str(delta).replace('%', '').replace('+', '').strip()
+            delta_clean = str(delta).replace("%", "").replace("+", "").strip()
             delta_num = float(delta_clean)
             if delta_num > 0:
                 return f"Meta: {target} - Superada en {delta}"
-            elif delta_num < 0:
+            if delta_num < 0:
                 return f"Meta: {target} - Faltante: {delta}"
-            else:
-                return f"Meta: {target} - Cumplida exactamente"
+            return f"Meta: {target} - Cumplida exactamente"
         except:
             return f"Meta establecida: {target}"
     return "Meta no definida para este período"

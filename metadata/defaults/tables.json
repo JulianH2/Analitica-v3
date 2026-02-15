@@ -369,13 +369,14 @@
   },
   "d_area": {
     "table_name": "d_area",
-    "description": "Sucursales o bases operativas (ej. Base Veracruz, Base México)",
+    "description": "Sucursales o bases operativas",
     "type": "dim",
     "pk": "id_area",
     "label_column": "no_area",
     "fields": {
       "id_area": "integer",
-      "no_abrev_area": "string"
+      "no_abrev_area": "string",
+      "area": "string"
     }
   },
   "d_tipo_operacion": {
@@ -520,6 +521,8 @@
     "pk": "id",
     "date_column": "fecha_consulta",
     "fields": {
+      "id_rango_vencimiento": "integer",
+      "id_proveedor": "integer",
       "saldo_inicial": "decimal",
       "cxp": "decimal",
       "notas_cargo": "decimal",
@@ -534,7 +537,29 @@
     },
     "joins": {
       "area": { "target_table": "d_area", "type": "INNER", "on": "h_proveedores.id_area = d_area.id_area" },
-      "proveedor": { "target_table": "d_proveedor", "type": "INNER", "on": "h_proveedores.id_proveedor = d_proveedor.id_proveedor" }
+      "proveedor": { "target_table": "d_proveedor", "type": "INNER", "on": "h_proveedores.id_proveedor = d_proveedor.id_proveedor" },
+      "rango_vencimiento": { "target_table": "d_cxp_rango_vencimiento", "type": "INNER", "on": "h_proveedores.id_rango_vencimiento = d_cxp_rango_vencimiento.id_rango_vencimiento" },
+      "cxp_proveedor": { "target_table": "d_cxp_proveedor", "type": "INNER", "on": "h_proveedores.id_proveedor = d_cxp_proveedor.id_proveedor" }
+    }
+  },
+  "d_cxp_rango_vencimiento": {
+    "table_name": "d_cxp_rango_vencimiento",
+    "type": "dim",
+    "pk": "id_rango_vencimiento",
+    "fields": {
+      "id_rango_vencimiento": "integer",
+      "clasificacion": "string",
+      "desc_rango_vencimiento": "string"
+    }
+  },
+  "d_cxp_proveedor": {
+    "table_name": "d_cxp_proveedor",
+    "type": "dim",
+    "pk": "id_proveedor",
+    "label_column": "nombre_proveedor",
+    "fields": {
+      "id_proveedor": "integer",
+      "nombre_proveedor": "string"
     }
   }
 }

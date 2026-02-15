@@ -3,7 +3,7 @@ import datetime
 import re
 
 class SmartQueryBuilder:
-    # Identifiers that must not be qualified when parsing SQL expressions (functions, keywords)
+
     _SQL_EXPRESSION_SKIP = frozenset(
         s.upper() for s in (
             "day", "month", "year", "getdate", "datediff", "sum", "avg", "count",
@@ -13,7 +13,7 @@ class SmartQueryBuilder:
     )
 
     def _qualify_expression(self, expression: str, table_alias: str) -> str:
-        """Qualify bare column names in a SQL expression with table_alias (e.g. fecha_factura -> t.fecha_factura)."""
+        
         def repl(m):
             word = m.group(0)
             if word.upper() in self._SQL_EXPRESSION_SKIP:
@@ -98,7 +98,7 @@ class SmartQueryBuilder:
         if "__month__" in dimensions:
             group_by_month = True
             dimensions = [d for d in dimensions if d != "__month__"]
-        # Dimensiones
+
         for dim in dimensions:
             if "." in dim:
                 tbl, col = dim.split(".")
@@ -134,7 +134,7 @@ class SmartQueryBuilder:
                     return f"COUNT(DISTINCT {table_alias}.{column_name})"
                 return f"{aggregation_type}({table_alias}.{column_name})"
 
-            # Si la métrica está en otra tabla, necesitamos asegurar el JOIN
+
             if m_table != fact_alias:
                 path = self._find_join_path(fact_alias, m_table)
                 if path:
@@ -148,12 +148,12 @@ class SmartQueryBuilder:
                 expr = get_agg_expr(fact_alias, col, agg)
                 selects.append(f"{expr} as {m_key}")
 
-        # 3. Construir JOINS
+
         joins_sql = ""
         processed_joins = set()
         active_tables_with_date = []
         
-        # Ordenamos joins para asegurar consistencia
+
         if fact_alias != fact_alias:
             joins_needed.add(fact_alias)
         
@@ -193,23 +193,23 @@ class SmartQueryBuilder:
                 if hasattr(self, 'MONTH_MAP') and m_name in self.MONTH_MAP:
                     target_month = self.MONTH_MAP[m_name]
         
-        # Analizamos la primera métrica para ver si el grupo requiere un desplazamiento temporal
+
         time_modifier = None
         for m_key in metrics:
             m_def = self.metrics.get(m_key)
             if m_def and 'recipe' in m_def and m_def['recipe'].get('time_modifier'):
                 time_modifier = m_def['recipe']['time_modifier']
-                break # Asumimos que todo el grupo comparte el mismo contexto temporal
+                break
         
-        # Aplicar modificaciones
+
         month_operator = "="
         
         if time_modifier == 'previous_year':
-            target_year -= 1 # Retrocedemos el año
+            target_year -= 1
         elif time_modifier == 'ytd':
-            month_operator = "<=" # Cambiamos a acumulado
+            month_operator = "<="
 
-        # Definir columna de fecha
+
         date_col_to_use = None
         if fact_def.get('date_column'):
             date_col_to_use = f"{fact_alias}.{fact_def['date_column']}"
@@ -225,10 +225,10 @@ class SmartQueryBuilder:
 
             wheres.append(f"YEAR({date_col_to_use}) = {target_year}")
             if target_month and not group_by_month:
-                # Usamos el operador dinámico (= o <=)
+
                 wheres.append(f"MONTH({date_col_to_use}) {month_operator} {target_month}")
 
-        # Filtros adicionales (Igual que antes)
+
         if filters:
             ignore_keys = ['year', 'month']
             ignore_values = ["Todas", "Todos", "All", None]
@@ -242,7 +242,7 @@ class SmartQueryBuilder:
 
         where_sql = " WHERE " + " AND ".join(wheres) if wheres else ""
 
-        # 5. Query Final (Con corrección de GROUP BY escalar del paso anterior)
+
         group_by_clause = f"GROUP BY {', '.join(group_bys)}" if group_bys else ""
 
         query = f"""
@@ -252,6 +252,6 @@ class SmartQueryBuilder:
             {where_sql}
             {group_by_clause}
         """
-        ###print("Generated DataFrame Query:", query)  # Debugging
+
 
         return {"type": "sql", "query": query}

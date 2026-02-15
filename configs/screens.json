@@ -2583,68 +2583,30 @@
   "administration-banks": {
     "section_key": "administration",
     "ttl_seconds": 3600,
-    "kpi_roadmap": {
-      "initial_balance": "bank_balance",
-      "total_income": "income_month",
-      "total_expenses": "expenses_month",
-      "final_balance": "bank_balance",
-      "cash_flow": "cash_flow"
-    },
-    "chart_roadmap": {
-      "daily_cash_flow": {
-        "ingresos": "income_month",
-        "egresos": "expenses_month"
-      }
-    },
+    "kpi_roadmap": {},
+    "chart_roadmap": {},
     "inject_paths": {
-      "initial_balance": [
-        "administration",
-        "dashboard",
-        "kpis",
-        "initial_balance"
-      ],
-      "total_income": [
-        "administration",
-        "dashboard",
-        "kpis",
-        "total_income"
-      ],
-      "total_expenses": [
-        "administration",
-        "dashboard",
-        "kpis",
-        "total_expenses"
-      ],
-      "final_balance": [
-        "administration",
-        "dashboard",
-        "kpis",
-        "final_balance"
-      ],
-      "cash_flow": [
-        "administration",
-        "dashboard",
-        "kpis",
-        "cash_flow"
-      ],
-      "daily_cash_flow": [
-        "administration",
-        "dashboard",
-        "charts",
-        "daily_cash_flow"
-      ],
-      "balance_by_bank": [
-        "administration",
-        "dashboard",
-        "charts",
-        "balance_by_bank"
-      ],
-      "income_expense_concepts": [
-        "administration",
-        "dashboard",
-        "tables",
-        "income_expense_concepts"
-      ]
+      "initial_balance_consolidado": ["administration", "dashboard", "consolidado", "kpis", "initial_balance"],
+      "total_income_consolidado": ["administration", "dashboard", "consolidado", "kpis", "total_income"],
+      "total_expenses_consolidado": ["administration", "dashboard", "consolidado", "kpis", "total_expenses"],
+      "final_balance_consolidado": ["administration", "dashboard", "consolidado", "kpis", "final_balance"],
+      "daily_cash_flow_consolidado": ["administration", "dashboard", "consolidado", "charts", "daily_cash_flow"],
+      "balance_by_bank_consolidado": ["administration", "dashboard", "consolidado", "charts", "balance_by_bank"],
+      "income_expense_concepts_consolidado": ["administration", "dashboard", "consolidado", "tables", "income_expense_concepts"],
+      "initial_balance_pesos": ["administration", "dashboard", "pesos", "kpis", "initial_balance"],
+      "total_income_pesos": ["administration", "dashboard", "pesos", "kpis", "total_income"],
+      "total_expenses_pesos": ["administration", "dashboard", "pesos", "kpis", "total_expenses"],
+      "final_balance_pesos": ["administration", "dashboard", "pesos", "kpis", "final_balance"],
+      "daily_cash_flow_pesos": ["administration", "dashboard", "pesos", "charts", "daily_cash_flow"],
+      "balance_by_bank_pesos": ["administration", "dashboard", "pesos", "charts", "balance_by_bank"],
+      "income_expense_concepts_pesos": ["administration", "dashboard", "pesos", "tables", "income_expense_concepts"],
+      "initial_balance_dolares": ["administration", "dashboard", "dolares", "kpis", "initial_balance"],
+      "total_income_dolares": ["administration", "dashboard", "dolares", "kpis", "total_income"],
+      "total_expenses_dolares": ["administration", "dashboard", "dolares", "kpis", "total_expenses"],
+      "final_balance_dolares": ["administration", "dashboard", "dolares", "kpis", "final_balance"],
+      "daily_cash_flow_dolares": ["administration", "dashboard", "dolares", "charts", "daily_cash_flow"],
+      "balance_by_bank_dolares": ["administration", "dashboard", "dolares", "charts", "balance_by_bank"],
+      "income_expense_concepts_dolares": ["administration", "dashboard", "dolares", "tables", "income_expense_concepts"]
     }
   },
   "administration-receivables": {
@@ -3164,18 +3126,136 @@
     },
     "categorical_roadmap": {
       "payables_by_status": {
-        "kpi": "accounts_payable",
-        "dimension": "d_trafico_gpogasto"
+        "dimensions": [
+          "d_cxp_rango_vencimiento.clasificacion"
+        ],
+        "metrics": [
+          "saldo_cxp"
+        ],
+        "columns": [
+          {
+            "key": "d_cxp_rango_vencimiento.clasificacion",
+            "role": "label"
+          },
+          {
+            "key": "saldo_cxp",
+            "role": "value",
+            "format": "currency"
+          },
+          {
+             "key": "pct_saldo",
+             "label": "% Total",
+             "format": "percent",
+             "is_total_ratio": true,
+             "numerator_key": "saldo_cxp"
+          }
+        ]
       },
       "suppliers_by_range": {
-        "kpi": "accounts_payable",
-        "dimension": "d_trafico_gpogasto"
+        "dimensions": [
+          "d_cxp_proveedor.nombre_proveedor",
+          "d_cxp_rango_vencimiento.clasificacion"
+        ],
+        "metrics": [
+          "saldo_cxp"
+        ],
+        "columns": [
+          {
+            "key": "d_cxp_proveedor.nombre_proveedor",
+            "role": "label"
+          },
+          {
+            "key": "d_cxp_rango_vencimiento.clasificacion",
+            "role": "series"
+          },
+          {
+            "key": "saldo_cxp",
+            "role": "value",
+            "format": "currency"
+          },
+          {
+             "key": "pct_saldo_prov",
+             "label": "% del Proveedor",
+             "format": "percent",
+             "is_total_ratio": true,
+             "numerator_key": "saldo_cxp"
+          }
+        ]
       }
     },
     "chart_roadmap": {
       "payables_trends": {
-        "pagado": "expenses_month",
-        "pendiente": "accounts_payable"
+        "dimensions": [
+          "__month__"
+        ],
+        "metrics": [
+          ["cxp_proveedores"],
+          ["cxp_proveedores_anterior"]
+        ],
+        "columns": [
+          {
+            "key": "cxp_proveedores",
+            "series": "Año Actual"            
+          },
+          {
+            "key": "cxp_proveedores_anterior",
+            "series": "Año Anterior"
+          }
+        ]
+      },
+      "pago_proveedores_trends": {
+        "metrics": [
+          ["pago_proveedores"],
+          ["pago_proveedores_anterior"]
+        ],
+        "columns": [
+          {
+            "key": "pago_proveedores",
+            "series": "Año Actual"
+          },
+          {
+            "key": "pago_proveedores_anterior",
+            "series": "Año Anterior"
+          }
+        ]
+      },
+      "pronostico_pago_proveedores": {
+        "metrics": [
+          "pago_proveedores"
+        ],
+        "columns": [
+          {
+            "key": "pago_proveedores",
+            "series": "Pago Real"
+          }
+        ]
+      }
+    },
+    "table_roadmap": {
+      "aging_by_supplier": {
+        "title": "Antigüedad de Saldos por Área",
+        "dimensions": [
+          "d_area.area",
+          "d_cxp_rango_vencimiento.desc_rango_vencimiento"
+        ],
+        "metrics": [
+          "saldo_cxp"
+        ],
+        "columns": [
+          {
+            "key": "d_area.area",
+            "label": "Área"
+          },
+          {
+            "key": "d_cxp_rango_vencimiento.desc_rango_vencimiento",
+            "label": "Rango Vencimiento"
+          },
+          {
+            "key": "saldo_cxp",
+            "label": "Saldo",
+            "format": "currency"
+          }
+        ]
       }
     },
     "inject_paths": {
@@ -3361,6 +3441,18 @@
         "dashboard",
         "charts",
         "payables_trends"
+      ],
+      "pago_proveedores_trends": [
+        "administration",
+        "dashboard",
+        "charts",
+        "pago_proveedores_trends"
+      ],
+      "pronostico_pago_proveedores": [
+        "administration",
+        "dashboard",
+        "charts",
+        "pronostico_pago_proveedores"
       ],
       "aging_by_supplier": [
         "administration",

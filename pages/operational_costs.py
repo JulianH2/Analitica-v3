@@ -3,6 +3,7 @@ import dash
 from dash import html, dcc, callback, Input, Output, no_update
 import dash_mantine_components as dmc
 
+from components.table_widget import TableWidget
 from design_system import ComponentSizes
 from services.data_manager import data_manager
 from components.smart_widget import SmartWidget
@@ -16,13 +17,12 @@ from strategies.operational import (
     OpsTrendChartStrategy,
     OpsHorizontalBarStrategy,
     OpsTableStrategy,
-    TableWidget
 )
-from flask import session
 
 dash.register_page(__name__, path="/ops-costs", title="Costos Operaciones")
 
 SCREEN_ID = "operational-costs"
+
 w_utilidad = SmartWidget(
     "kc_utility",
     OpsGaugeStrategy(
@@ -162,10 +162,9 @@ def _render_ops_costs_body(ctx):
     theme = session.get("theme", "dark")
 
     def _card(widget_content, h=None):
-    # Quitamos el padding (p=0) para que el widget interno use todo el espacio
         style = {"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}
         return dmc.Paper(
-            p=0, # 👈 Cambiado de "xs" a 0
+            p="xs",
             radius="md", 
             withBorder=True, 
             shadow=None,
@@ -180,7 +179,7 @@ def _render_ops_costs_body(ctx):
             align="stretch",
             children=[
                 dmc.GridCol(
-                    span={"base": 12, "lg": 4},
+                    span={"base": 12, "lg": 4}, # type: ignore
                     children=[
                         html.Div(
                             style={"display": "grid", "gridTemplateRows": "1fr 1fr", "gap": "0.8rem", "height": "100%"},
@@ -189,7 +188,7 @@ def _render_ops_costs_body(ctx):
                     ]
                 ),
                 dmc.GridCol(
-                    span={"base": 12, "lg": 8},
+                    span={"base": 12, "lg": 8}, # type: ignore
                     children=[_card(chart_cost_stack.render(ctx, theme=theme))]
                 )
             ]
@@ -206,14 +205,27 @@ def _render_ops_costs_body(ctx):
         _render_cost_tabs(ctx),
         dmc.Space(h=30)
     ])
+    
+WIDGET_REGISTRY = {
+    "kc_utility": w_utilidad,
+    "kc_total": w_costo_total,
+    "cc_stack": chart_cost_stack,
+    "cc_break": chart_cost_breakdown,
+    "cc_comp": chart_cost_yearly_comp,
+    "operational-costs-margin_by_route": TableWidget("operational-costs-margin_by_route", OpsTableStrategy(SCREEN_ID, "margin_by_route", title="Margen por Ruta")),
+    "operational-costs-margin_by_unit": TableWidget("operational-costs-margin_by_unit", OpsTableStrategy(SCREEN_ID, "margin_by_unit", title="Margen por Unidad")),
+    "operational-costs-margin_by_operator": TableWidget("operational-costs-margin_by_operator", OpsTableStrategy(SCREEN_ID, "margin_by_operator", title="Margen por Operador")),
+    "operational-costs-margin_by_trip": TableWidget("operational-costs-margin_by_trip", OpsTableStrategy(SCREEN_ID, "margin_by_trip", title="Margen por Viaje")),
+    "operational-costs-margin_by_client": TableWidget("operational-costs-margin_by_client", OpsTableStrategy(SCREEN_ID, "margin_by_client", title="Margen por Cliente")),
+}
 
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
     
     refresh_components, _ = data_manager.dash_refresh_components(
-        SCREEN_ID,
-        interval_ms=60 * 60 * 1000,
+        SCREEN_ID, 
+        interval_ms=60 * 60 * 1000, 
         max_intervals=-1
     )
     
@@ -234,7 +246,7 @@ def layout():
         fluid=True,
         px="md",
         children=[
-            dcc.Store(id="costs-load-trigger", data={"loaded": False}),
+            dcc.Store(id="costs-load-trigger", data={"loaded": True}),
             *refresh_components,
             create_smart_drawer("costs-drawer"),
             filters,
@@ -242,24 +254,13 @@ def layout():
         ]
     )
 
-@callback(
-    Output("costs-load-trigger", "data"),
-    Input("costs-load-trigger", "data"),
-    prevent_initial_call=False
-)
-def trigger_costs_load(data):
-    if data is None or not data.get("loaded"):
-
-        return {"loaded": True}
-    return no_update
-
 FILTER_IDS = [
-    "cost-year",
-    "cost-month",
-    "cost-empresa",
-    "cost-clasificacion",
-    "cost-concepto",
-    "cost-unidad",
+    "cost-year", 
+    "cost-month", 
+    "cost-empresa", 
+    "cost-clasificacion", 
+    "cost-concepto", 
+    "cost-unidad", 
     "cost-operador"
 ]
 
@@ -270,4 +271,9 @@ data_manager.register_dash_refresh_callbacks(
     filter_ids=FILTER_IDS
 )
 
-register_drawer_callback("costs-drawer", WIDGET_REGISTRY, SCREEN_ID)
+register_drawer_callback(
+    drawer_id="costs-drawer", 
+    widget_registry=WIDGET_REGISTRY, 
+    screen_id=SCREEN_ID, 
+    filter_ids=FILTER_IDS
+)

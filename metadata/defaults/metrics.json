@@ -889,5 +889,37 @@
       "aggregation": "SUM",
       "format": "integer"
     }
+  },
+  "saldo_cxp": {
+    "name": "Saldo CxP",
+    "description": "Saldo final acumulado de proveedores",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "saldo_final",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "cxp_proveedores_anterior": {
+    "name": "CxP Año Anterior",
+    "description": "Cuentas por pagar en el mismo periodo del año anterior",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "cxp",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    }
+  },
+  "pago_proveedores_anterior": {
+    "name": "Pago Proveedores Año Anterior",
+    "description": "Monto pagado a proveedores en el mismo periodo del año anterior",
+    "recipe": {
+      "table": "h_proveedores",
+      "column": "pago_proveedores",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    }
   }
 }

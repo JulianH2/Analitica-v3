@@ -55,6 +55,7 @@ class UserService:
             FROM PowerZam.cliente c 
             JOIN PowerZam.cliente_bd_dwh dwh ON c.id_cliente = dwh.id_cliente
             WHERE c.id_estatus = 1 
+              AND c.tipo_cliente = 'BI' -- Filtro para base instalada (evita demos)
             ORDER BY c.nombre;
             """
             params = {}
@@ -69,7 +70,9 @@ class UserService:
             JOIN PowerZam.cliente_usuario cu ON u.id_usuario = cu.id_usuario
             JOIN PowerZam.cliente c ON cu.id_cliente = c.id_cliente
             JOIN PowerZam.cliente_bd_dwh dwh ON c.id_cliente = dwh.id_cliente
-            WHERE l.correo_acceso = :email AND c.id_estatus = 1;
+            WHERE l.correo_acceso = :email 
+              AND c.id_estatus = 1
+              AND c.tipo_cliente = 'BI' -- Filtro para base instalada (evita demos)
             """
             params = {"email": email}
 

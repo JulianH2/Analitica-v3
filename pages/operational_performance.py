@@ -3,6 +3,7 @@ import dash
 from dash import html, dcc, callback, Input, Output, no_update
 import dash_mantine_components as dmc
 
+from components.table_widget import TableWidget
 from services.data_manager import data_manager
 from components.smart_widget import SmartWidget
 from components.visual_widget import ChartWidget
@@ -14,14 +15,13 @@ from strategies.operational import (
     OpsGaugeStrategy,
     OpsTrendChartStrategy,
     OpsDonutChartStrategy,
-    OpsTableStrategy,
-    TableWidget
+    OpsTableStrategy
 )
-from flask import session
 
 dash.register_page(__name__, path="/ops-performance", title="Rendimientos")
 
 SCREEN_ID = "operational-performance"
+
 w_kms_lt = SmartWidget(
     "rp_kms_lt",
     OpsGaugeStrategy(
@@ -101,12 +101,11 @@ WIDGET_REGISTRY.update({
 })
 
 def _render_performance_tables(ctx, theme):
-
     return dmc.Grid(
         gutter="md",
         children=[
             dmc.GridCol(
-                span={"base": 12, "md": 5},
+                span={"base": 12, "md": 5}, # type: ignore
                 children=[
                     dmc.Paper(
                         p=8,
@@ -123,7 +122,7 @@ def _render_performance_tables(ctx, theme):
                 ]
             ),
             dmc.GridCol(
-                span={"base": 12, "md": 7},
+                span={"base": 12, "md": 7}, # type: ignore
                 children=[
                     dmc.Paper(
                         p=8,
@@ -143,7 +142,6 @@ def _render_performance_tables(ctx, theme):
     )
 
 def _render_ops_performance_body(ctx):
-    
     theme = session.get("theme", "dark")
     def _card(widget_content, h=None):
         style = {"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}
@@ -166,13 +164,23 @@ def _render_ops_performance_body(ctx):
         dmc.Space(h=30)
     ])
 
+WIDGET_REGISTRY = {
+    "rp_kms_lt": w_kms_lt,
+    "rp_kms_tot": w_kms_re,
+    "rp_litros": w_litros,
+    "cp_trend": w_trend,
+    "cp_mix": w_mix,
+    "operational-performance-performance_by_unit": TableWidget("operational-performance-performance_by_unit", OpsTableStrategy(SCREEN_ID, "performance_by_unit", title="Rendimiento por Unidad")),
+    "operational-performance-operator_performance": TableWidget("operational-performance-operator_performance", OpsTableStrategy(SCREEN_ID, "operator_performance", title="Rendimiento por Operador")),
+}
+
 def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
     
     refresh_components, _ = data_manager.dash_refresh_components(
-        SCREEN_ID,
-        interval_ms=60 * 60 * 1000,
+        SCREEN_ID, 
+        interval_ms=60 * 60 * 1000, 
         max_intervals=-1
     )
     
@@ -193,7 +201,7 @@ def layout():
         fluid=True,
         px="md",
         children=[
-            dcc.Store(id="perf-load-trigger", data={"loaded": False}),
+            dcc.Store(id="perf-load-trigger", data={"loaded": True}),
             *refresh_components,
             create_smart_drawer("perf-drawer"),
             filters,
@@ -201,24 +209,13 @@ def layout():
         ]
     )
 
-@callback(
-    Output("perf-load-trigger", "data"),
-    Input("perf-load-trigger", "data"),
-    prevent_initial_call=False
-)
-def trigger_perf_load(data):
-    if data is None or not data.get("loaded"):
-
-        return {"loaded": True}
-    return no_update
-
 FILTER_IDS = [
-    "perf-year",
-    "perf-month",
-    "perf-area",
-    "perf-unidad",
-    "perf-operador",
-    "perf-ruta",
+    "perf-year", 
+    "perf-month", 
+    "perf-area", 
+    "perf-unidad", 
+    "perf-operador", 
+    "perf-ruta", 
     "perf-cliente"
 ]
 
@@ -229,4 +226,9 @@ data_manager.register_dash_refresh_callbacks(
     filter_ids=FILTER_IDS
 )
 
-register_drawer_callback("perf-drawer", WIDGET_REGISTRY, SCREEN_ID)
+register_drawer_callback(
+    drawer_id="perf-drawer", 
+    widget_registry=WIDGET_REGISTRY, 
+    screen_id=SCREEN_ID, 
+    filter_ids=FILTER_IDS
+)

@@ -31,13 +31,13 @@ class Breakpoints:
 
 
 class Colors:
-    """Paleta de colores base y extendida según análisis de mockups"""
-    # === COLORES ESPECÍFICOS DE COMPARACIÓN (SEGÚN MOCKUP) ===
-    CHART_CURRENT: Final[str] = "#f9daa0"    # Dorado claro (Año Actual)
-    CHART_PREVIOUS: Final[str] = "#bec4c6"   # Gris (Año Anterior)
-    CHART_TARGET: Final[str] = "#418cdf"     # Azul (Meta/Objetivo)
+
+    CHART_CURRENT: Final[str] = "#f9daa0"
+    CHART_PREVIOUS: Final[str] = "#bec4c6"
+    CHART_TARGET: Final[str] = "#418cdf"
     CHART_COLORS: Final[str] = "#c9c4b8"
-    # === COLORES DE MARCA (NEXA) ===
+
+
     NEXA_ORANGE: Final[str] = "#e27f08"
     NEXA_BLUE: Final[str] = "#418cdf"
     NEXA_GREEN: Final[str] = "#4c9f54"
@@ -48,65 +48,65 @@ class Colors:
     NEXA_GRAY: Final[str] = "#808080"
     NEXA_CREAM: Final[str] = "#f9daa0"
     NEXA_PINK_LIGHT: Final[str] = "#fccaca"
-    
-    # === FONDOS TEMA CLARO ===
-    BG_LIGHT: Final[str] = "#FFFFFF"
-    BG_LIGHT_SECONDARY: Final[str] = "#f2f2f2"
+
+
+    BG_LIGHT: Final[str] = "#F8FAFC"
+    BG_LIGHT_SECONDARY: Final[str] = "#FFFFFF"
     BG_LIGHT_CARD: Final[str] = "#FFFFFF"
+
+
+
+    BG_DARK: Final[str] = "#1d1d1b"       
     
-    # === FONDOS TEMA OSCURO (EXACTOS DE LA APP) ===
-    BG_DARK: Final[str] = "#6b6e62"           # ✅ CORREGIDO (Gris PDF)
-    BG_DARK_SECONDARY: Final[str] = "#3b4249"  # Se mantiene igual
-    BG_DARK_CARD: Final[str] = "#62686e"       # ✅ CORREGIDO (Mismo que BG_DARK)
+
+    BG_DARK_SECONDARY: Final[str] = "#2c2e33" 
     
-    # === COLORES DE GRÁFICAS TEMA OSCURO (EXACTOS) ===
-    PLOT_BG_DARK: Final[str] = "#62686e"      # ✅ CORREGIDO (Unificado con el fondo)
-    PLOT_GRID_DARK: Final[str] = "#4a5a68"    # Color de grillas
+
+    BG_DARK_CARD: Final[str] = "#62686e"      
+
+
+    PLOT_BG_DARK: Final[str] = "rgba(0,0,0,0)"
+    PLOT_GRID_DARK: Final[str] = "#4a4a4a"
     
-    # === COLORES DE GRÁFICAS TEMA CLARO ===
-    PLOT_BG_LIGHT: Final[str] = "#FFFFFF"
-    PLOT_GRID_LIGHT: Final[str] = "#f2f2f2"
-    
-    # === TEXTOS ===
+    PLOT_BG_LIGHT: Final[str] = "rgba(0,0,0,0)"
+    PLOT_GRID_LIGHT: Final[str] = "#e2e8f0"
+
+
     TEXT_LIGHT: Final[str] = "#1d1d1b"
-    TEXT_LIGHT_SECONDARY: Final[str] = "#808080"
-    TEXT_DARK: Final[str] = "#e8eaed"          # Texto principal oscuro (actualizado)
-    TEXT_DARK_SECONDARY: Final[str] = "#9ca3af" # Texto secundario oscuro (actualizado)
-    
-    # === COLORES SEMÁNTICOS (Detectados en mockups) ===
-    # Positivo (Verde)
+    TEXT_LIGHT_SECONDARY: Final[str] = "#64748b"
+    TEXT_DARK: Final[str] = "#f2f2f2"
+    TEXT_DARK_SECONDARY: Final[str] = "#bec4c6"
+
+
     POSITIVE: Final[str] = "#4c9f54"
     POSITIVE_LIGHT: Final[str] = "#62c26d"
-    POSITIVE_BG: Final[str] = "#b9efbc"
-    
-    # Neutro (Naranja/Dorado)
+    POSITIVE_BG: Final[str] = "rgba(76, 159, 84, 0.15)"
+
     NEUTRAL: Final[str] = "#e9a13b"
-    NEUTRAL_BG: Final[str] = "#f9daa0"
-    
-    # Negativo (Rojo)
+    NEUTRAL_BG: Final[str] = "rgba(233, 161, 59, 0.15)"
+
     NEGATIVE: Final[str] = "#ff0000"
     NEGATIVE_LIGHT: Final[str] = "#fccaca"
-    NEGATIVE_BG: Final[str] = "#fccaca"
-    
-    # === COLORES DE DATOS/CHARTS ===
+    NEGATIVE_BG: Final[str] = "rgba(255, 0, 0, 0.15)"
+
+
     CHART_BLUE: Final[str] = "#418cdf"
     CHART_BLUE_LIGHT: Final[str] = "#80abd4"
     CHART_GRAY: Final[str] = "#bec4c6"
     CHART_GOLD: Final[str] = "#f9daa0"
     CHART_ORANGE: Final[str] = "#e27f07"
-    
-    # === COLORES DE BARRAS (EXACTOS DE LA APP) ===
-    BAR_GOLD: Final[str] = "#e9a13b"          # Dorado actual
-    BAR_GRAY: Final[str] = "#7a8895"          # Gris anterior
-    BAR_BLUE: Final[str] = "#418cdf"          # Azul meta
-    
-    # === ESCALAS DE COLORES ===
-    # design_system.py -> Clase Colors
+
+    BAR_GOLD: Final[str] = "#e9a13b"
+    BAR_GRAY: Final[str] = "#7a8895"
+    BAR_BLUE: Final[str] = "#418cdf"
+
+
     SLATE: Final[List[str]] = [
         "#f8fafc", "#f2f2f2", "#e2e8f0", "#cbd5e1", 
-        "#94a3b8", "#808080", "#475569", 
-        "#62686e", 
-        "#1d1d1b", "#0f172a"
+        "#94a3b8", "#808080", "#757575F9", 
+        "#62686e",
+        "#1d1d1b",
+        "#0f172a"  
     ]
     
     BRAND: Final[List[str]] = [
@@ -138,8 +138,6 @@ class Colors:
         "#f79f47", "#e27f08", "#b56606", "#884d05",
         "#5b3403", "#2d1a01"
     ]
-    
-    # === UTILIDADES ===
     TRANSPARENT: Final[str] = "rgba(0,0,0,0)"
     WHITE: Final[str] = "#ffffff"
     
@@ -153,7 +151,7 @@ class Colors:
         "orange": NEXA_ORANGE,
         "red": NEXA_RED,
         "rose": "#f43f5e",
-        "slate": SLATE[5],
+        "slate": SLATE[7],
         "gray": NEXA_GRAY,
         "dark": NEXA_BLACK,
         "black": NEXA_BLACK,
@@ -167,10 +165,9 @@ class Colors:
         "cream": NEXA_CREAM,
         "white": WHITE,
     }
-
-
+    
 class Typography:
-    """Sistema de tipografía detectado en mockups"""
+    
     
     FAMILY: Final[str] = (
         "'Nexa', 'Montserrat', 'Inter', "
@@ -178,7 +175,7 @@ class Typography:
         "'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
     )
     
-    # === PESOS ===
+
     WEIGHT_NORMAL: Final[FontWeight] = 400
     WEIGHT_MEDIUM: Final[FontWeight] = 500
     WEIGHT_SEMIBOLD: Final[FontWeight] = 600
@@ -186,7 +183,7 @@ class Typography:
     WEIGHT_EXTRABOLD: Final[FontWeight] = 800
     WEIGHT_BLACK: Final[FontWeight] = 900
     
-    # === TAMAÑOS (detectados en mockups) ===
+
     XS_TINY: Final[int] = 9
     XS: Final[int] = 10
     BADGE: Final[int] = 11
@@ -207,14 +204,14 @@ class Typography:
     KPI_LARGE: Final[int] = 32
     XXXL: Final[int] = 48
     
-    # === LINE HEIGHTS ===
+
     LH_TIGHT: Final[str] = "1"
     LH_NORMAL: Final[str] = "1.5"
     LH_RELAXED: Final[str] = "1.75"
 
 
 class Space:
-    """Sistema de espaciado"""
+    
     
     XXS: Final[int] = 2
     XS: Final[int] = 4
@@ -239,7 +236,7 @@ class Space:
 
 
 class BorderRadius:
-    """Radios de borde detectados"""
+    
     
     XS: Final[str] = "2px"
     SM: Final[str] = "4px"
@@ -252,15 +249,15 @@ class BorderRadius:
 
 
 class Shadows:
-    """Sombras para tema claro y oscuro"""
     
-    # Tema Claro
+    
+
     SM: Final[str] = "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
     MD: Final[str] = "0 1px 3px 0 rgba(0, 0, 0, 0.08)"
     LG: Final[str] = "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
     XL: Final[str] = "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
     
-    # Tema Oscuro
+
     SM_DARK: Final[str] = "0 2px 4px 0 rgba(0, 0, 0, 0.25)"
     MD_DARK: Final[str] = "0 2px 6px 0 rgba(0, 0, 0, 0.3)"
     LG_DARK: Final[str] = "0 12px 18px -4px rgba(0, 0, 0, 0.4), 0 6px 8px -3px rgba(0, 0, 0, 0.3)"
@@ -268,34 +265,34 @@ class Shadows:
 
 
 class ComponentSizes:
-    """Tamaños de componentes detectados en mockups"""
     
-    # === TARJETAS KPI ===
+    
+
     KPI_HEIGHT_COMPACT: Final[int] = 110
     KPI_HEIGHT_NORMAL: Final[int] = 160
     KPI_HEIGHT_GAUGE: Final[int] = 195
     
-    # === CHARTS ===
+
     CHART_HEIGHT_SM: Final[int] = 200
     CHART_HEIGHT_MD: Final[int] = 280
     CHART_HEIGHT_BASE: Final[int] = 320
     CHART_HEIGHT_LG: Final[int] = 450
     
-    # === GAUGE ===
+
     GAUGE_HEIGHT: Final[int] = 195
     GAUGE_SIZE: Final[int] = 120
     GAUGE_THICKNESS: Final[int] = 18
     GAUGE_INNER_RADIUS: Final[str] = "75%"
     
-    # === BOTONES ===
+
     BUTTON_HEIGHT_SM: Final[int] = 32
     BUTTON_HEIGHT_MD: Final[int] = 36
     BUTTON_HEIGHT_LG: Final[int] = 44
     
-    # === BADGES ===
+
     BADGE_HEIGHT: Final[int] = 20
     
-    # === ICONOS ===
+
     ICON_XS: Final[int] = 12
     ICON_SM: Final[int] = 14
     ICON_MD: Final[int] = 16
@@ -304,34 +301,34 @@ class ComponentSizes:
     ICON_XXL: Final[int] = 32
     ICON_XXXL: Final[int] = 48
     
-    # === TABLAS ===
+
     TABLE_HEADER_HEIGHT: Final[int] = 40
     TABLE_ROW_HEIGHT: Final[int] = 44
     
-    # === OTROS ===
+
     CHAT_SIDEBAR_WIDTH: Final[int] = 380
     FILTER_MODAL_WIDTH: Final[int] = 400
     INPUT_HEIGHT: Final[int] = 48
 
 
 class SemanticColors:
-    """Colores semánticos para contextos específicos"""
     
-    # === MÉTRICAS FINANCIERAS ===
+    
+
     INGRESO: Final[str] = Colors.NEXA_GREEN
     EGRESO: Final[str] = Colors.NEXA_RED
     PROFIT: Final[str] = Colors.NEXA_BLUE
     
-    # === TEXTOS ===
+
     TEXT_MAIN: Final[str] = Colors.NEXA_BLACK
     TEXT_MUTED: Final[str] = Colors.NEXA_GRAY
     TEXT_DIMMED: Final[str] = Colors.SLATE[5]
     
-    # === BORDES ===
+
     BORDER: Final[str] = Colors.SLATE[2]
     BORDER_MUTED: Final[str] = Colors.SLATE[1]
     
-    # === ESTADOS ===
+
     SUCCESS: Final[str] = Colors.POSITIVE
     SUCCESS_BG: Final[str] = Colors.POSITIVE_BG
     WARNING: Final[str] = Colors.NEUTRAL
@@ -342,7 +339,7 @@ class SemanticColors:
 
 
 class ChartColors:
-    """Colores específicos para gráficas según mockups"""
+    
     
     DEFAULT: Final[List[str]] = [
         Colors.NEXA_BLUE,
@@ -355,23 +352,23 @@ class ChartColors:
     
     CHART_COLORS: Final[List[str]] = ["#f9daa0", "#bec4c6", "#418cdf", "#e9a13b"]
     
-    # Tendencia Financiera Anual (detectado en mockup)
+
     YEAR_COMPARISON: Final[Dict[str, str]] = {
-        "meta": Colors.CHART_BLUE,      # Azul para línea de meta
-        "2025": Colors.CHART_GRAY,      # Gris para año anterior
-        "2026": Colors.CHART_GOLD,      # Dorado para año actual
-        "current": Colors.CHART_GOLD,   # Alias
-        "previous": Colors.CHART_GRAY,  # Alias
-        "target": Colors.CHART_BLUE,    # Alias
+        "meta": Colors.CHART_BLUE,
+        "2025": Colors.CHART_GRAY,
+        "2026": Colors.CHART_GOLD,
+        "current": Colors.CHART_GOLD,
+        "previous": Colors.CHART_GRAY,
+        "target": Colors.CHART_BLUE,
     }
     
-    # Para líneas de tendencia histórica
-    LINE_TRENDS: Final[Dict[str, str]] = {
-        "2024": Colors.CHART_BLUE_LIGHT,  # Azul claro
-        "2026": Colors.CHART_GOLD,        # Dorado
-    }
+
+    LINE_TRENDS: Final[List[str]] = [
+        Colors.CHART_BLUE_LIGHT,
+        Colors.CHART_GOLD,
+    ]
     
-    # Para barras horizontales
+
     HORIZONTAL_BARS: Final[str] = Colors.CHART_GOLD
     
     DONUT: Final[List[str]] = [
@@ -386,11 +383,11 @@ class ChartColors:
 
 
 class BadgeConfig:
-    """Configuración de badges según valor/comparación"""
+    
     
     @staticmethod
     def get_positive_badge() -> Dict[str, str]:
-        """Badge para valores positivos (+71%, etc)"""
+        
         return {
             "background": Colors.POSITIVE_BG,
             "text": Colors.POSITIVE,
@@ -399,7 +396,7 @@ class BadgeConfig:
     
     @staticmethod
     def get_negative_badge() -> Dict[str, str]:
-        """Badge para valores negativos (-68%, etc)"""
+        
         return {
             "background": Colors.NEGATIVE_BG,
             "text": Colors.NEGATIVE,
@@ -408,7 +405,7 @@ class BadgeConfig:
     
     @staticmethod
     def get_neutral_badge() -> Dict[str, str]:
-        """Badge para valores neutros"""
+        
         return {
             "background": Colors.NEUTRAL_BG,
             "text": Colors.NEUTRAL,
@@ -444,7 +441,7 @@ class BadgeConfig:
 
 
 class GaugeConfig:
-    """Configuración de gauges según valor vs meta"""
+    
     
     @staticmethod
     def get_gauge_color(percentage: float) -> str:
@@ -458,11 +455,11 @@ class GaugeConfig:
             Color hex string
         """
         if percentage >= 80:
-            return Colors.POSITIVE  # Verde - Excelente
+            return Colors.POSITIVE
         elif percentage >= 60:
-            return Colors.NEUTRAL   # Naranja - Aceptable
+            return Colors.NEUTRAL
         else:
-            return Colors.NEGATIVE  # Rojo - Malo
+            return Colors.NEGATIVE
     
     @staticmethod
     def get_gauge_colors(percentage: float) -> Dict[str, str]:
@@ -489,7 +486,7 @@ class GaugeConfig:
 
 
 class TableStatusConfig:
-    """Configuración de badges de estado en tablas"""
+    
     
     @staticmethod
     def get_status_badge(status: str) -> Dict[str, str]:
@@ -543,7 +540,7 @@ class TableStatusConfig:
 
 
 class ZIndex:
-    """Z-index para capas de la interfaz"""
+    
     
     BASE: Final[int] = 0
     DROPDOWN: Final[int] = 100
@@ -560,7 +557,7 @@ class ZIndex:
 
 
 class PlotlyConfig:
-    """Configuración para gráficas Plotly según mockups"""
+    
     
     @staticmethod
     def get_base_layout(theme: str = "light") -> Dict[str, Any]:
@@ -614,7 +611,7 @@ class PlotlyConfig:
     
     @staticmethod
     def get_bar_chart_config(theme: str = "light") -> Dict[str, Any]:
-        """Configuración específica para gráficas de barras (Tendencia Financiera Anual)"""
+        
         return {
             "colors": ChartColors.YEAR_COMPARISON,
             "bar_width": 0.6,
@@ -627,7 +624,7 @@ class PlotlyConfig:
     
     @staticmethod
     def get_line_chart_config(theme: str = "light") -> Dict[str, Any]:
-        """Configuración específica para gráficas de líneas"""
+        
         return {
             "colors": ChartColors.LINE_TRENDS,
             "line_width": 2,
@@ -638,7 +635,7 @@ class PlotlyConfig:
     
     @staticmethod
     def get_horizontal_bar_config(theme: str = "light") -> Dict[str, Any]:
-        """Configuración para barras horizontales"""
+        
         return {
             "bar_color": ChartColors.HORIZONTAL_BARS,
             "bar_height": 0.5,
@@ -654,7 +651,7 @@ class PlotlyConfig:
     
     @staticmethod
     def get_display_config() -> Dict[str, Any]:
-        """Configuración de display para interactividad"""
+        
         return {
             'displayModeBar': 'hover',
             'responsive': True,
@@ -664,13 +661,13 @@ class PlotlyConfig:
     
     @staticmethod
     def setup_templates() -> None:
-        """Configura templates de Plotly"""
-        # Template tema claro
+        
+
         pio.templates["zam_light"] = go.layout.Template(
             layout=PlotlyConfig.get_base_layout("light")
         )
         
-        # Template tema oscuro
+
         pio.templates["zam_dark"] = go.layout.Template(
             layout=PlotlyConfig.get_base_layout("dark")
         )
@@ -679,7 +676,7 @@ class PlotlyConfig:
 
 
 class MantineTheme:
-    """Configuración de tema Mantine según mockups"""
+    
     
     @staticmethod
     def get_light_theme() -> Dict[str, Any]:
@@ -754,7 +751,7 @@ class MantineTheme:
             "black": Colors.TEXT_DARK,
         })
         
-        # Ajustes específicos para tema oscuro
+
         if "components" in theme:
             theme["components"]["Paper"]["styles"] = {
                 "root": {
@@ -767,13 +764,13 @@ class MantineTheme:
         return theme
 
 
-# Inicializar templates de Plotly
+
 PlotlyConfig.setup_templates()
 
 class DesignSystem:
     
-    # === TEXTOS ===
-    # === TEXTOS ===
+
+
     TEXT_LIGHT = Colors.TEXT_LIGHT
     TEXT_LIGHT_SECONDARY = Colors.TEXT_LIGHT_SECONDARY
     TEXT_DARK = Colors.TEXT_DARK
@@ -788,7 +785,7 @@ class DesignSystem:
     y nocturno_AnaliticaZAM-V4.pdf (tema oscuro)
     """
     
-    # === COLORES BASE ===
+
     NEXA_ORANGE = Colors.NEXA_ORANGE
     NEXA_BLUE = Colors.NEXA_BLUE
     NEXA_GREEN = Colors.NEXA_GREEN
@@ -800,17 +797,17 @@ class DesignSystem:
     NEXA_CREAM = Colors.NEXA_CREAM
     NEXA_PINK_LIGHT = Colors.NEXA_PINK_LIGHT
     
-    # === FONDOS ===
+
     NEXA_BG_LIGHT = Colors.BG_LIGHT
     NEXA_BG_LIGHT_SECONDARY = Colors.BG_LIGHT_SECONDARY
     NEXA_BG_DARK = Colors.BG_DARK
     NEXA_BG_DARK_SECONDARY = Colors.BG_DARK_SECONDARY
     
-    # === TEXTOS ===
+
     TEXT_LIGHT = Colors.TEXT_LIGHT
     TEXT_DARK = Colors.TEXT_DARK
     
-    # === COLORES SEMÁNTICOS ===
+
     POSITIVE = Colors.POSITIVE
     POSITIVE_LIGHT = Colors.POSITIVE_LIGHT
     POSITIVE_BG = Colors.POSITIVE_BG
@@ -819,14 +816,14 @@ class DesignSystem:
     NEGATIVE = Colors.NEGATIVE
     NEGATIVE_BG = Colors.NEGATIVE_BG
     
-    # === COLORES DE CHARTS ===
+
     CHART_BLUE = Colors.CHART_BLUE
     CHART_BLUE_LIGHT = Colors.CHART_BLUE_LIGHT
     CHART_GRAY = Colors.CHART_GRAY
     CHART_GOLD = Colors.CHART_GOLD
     CHART_ORANGE = Colors.CHART_ORANGE
     
-    # === ESCALAS ===
+
     SLATE = Colors.SLATE
     BRAND = Colors.BRAND
     SUCCESS = Colors.SUCCESS
@@ -838,13 +835,13 @@ class DesignSystem:
     WHITE = Colors.WHITE
     COLOR_MAP = Colors.COLOR_MAP
     
-    # === COLORES DE CHARTS ===
+
     CHART_COLORS = ChartColors.CHART_COLORS
     CHART_YEAR_COLORS = ChartColors.YEAR_COMPARISON
     CHART_LINE_COLORS = ChartColors.LINE_TRENDS
     CHART_DONUT_COLORS = ChartColors.DONUT
     
-    # === TIPOGRAFÍA ===
+
     TYPOGRAPHY = {
         "family": Typography.FAMILY,
         "weights": {
@@ -877,7 +874,7 @@ class DesignSystem:
         }
     }
     
-    # Atajos de tipografía
+
     FONT_TABLE = Typography.TABLE
     FONT_XS = Typography.XS
     FONT_SM = Typography.SM
@@ -888,7 +885,7 @@ class DesignSystem:
     FW_SEMIBOLD = Typography.WEIGHT_SEMIBOLD
     FW_BOLD = Typography.WEIGHT_BOLD
     
-    # === LAYOUT ===
+
     LAYOUT = {
         "grid_columns": 12,
         "breakpoints": {
@@ -930,7 +927,7 @@ class DesignSystem:
         }
     }
     
-    # === COMPONENTES ===
+
     COMPONENTS = {
         "kpi_card": {
             "height_compact": ComponentSizes.KPI_HEIGHT_COMPACT,
@@ -976,46 +973,46 @@ class DesignSystem:
         }
     }
     
-    # === MÉTODOS ESTÁTICOS ===
+
     
     @staticmethod
     def get_mantine_theme(scheme: str = "light") -> Dict[str, Any]:
-        """Obtiene configuración de tema Mantine"""
+        
         if scheme == "dark":
             return MantineTheme.get_dark_theme()
         return MantineTheme.get_light_theme()
     
     @staticmethod
     def get_mantine_theme_dark() -> Dict[str, Any]:
-        """Alias para tema oscuro"""
+        
         return MantineTheme.get_dark_theme()
     
     @staticmethod
     def setup_plotly_templates() -> None:
-        """Configura templates de Plotly"""
+        
         PlotlyConfig.setup_templates()
     
     @staticmethod
     def get_plotly_layout(theme: str = "light") -> Dict[str, Any]:
-        """Obtiene layout base de Plotly"""
+        
         return PlotlyConfig.get_base_layout(theme)
     
     @staticmethod
     def get_badge_config(diff_percentage: float) -> Dict[str, str]:
-        """Obtiene configuración de badge según diferencia porcentual"""
+        
         return BadgeConfig.get_comparison_badge(diff_percentage)
     
     @staticmethod
     def get_gauge_color(percentage: float) -> str:
-        """Obtiene color de gauge según porcentaje"""
+        
         return GaugeConfig.get_gauge_color(percentage)
     
     @staticmethod
     def get_status_badge(status: str) -> Dict[str, str]:
-        """Obtiene configuración de badge de estado para tablas"""
+        
         return TableStatusConfig.get_status_badge(status)
     
     @staticmethod
     def determine_status(current: float, min_val: float, max_val: float) -> str:
-        """Determina estado según rango MinMax"""
+        
         return TableStatusConfig.determine_status(current, min_val, max_val)
