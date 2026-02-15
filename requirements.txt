@@ -2,7 +2,6 @@ dash==3.3.0
 dash-mantine-components==2.4.1
 dash-iconify==0.1.2
 dash-draggable==0.1.2
-//para filtros en las tablas
 dash-ag-grid==31.3.0
 
 Flask==3.0.2
