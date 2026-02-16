@@ -205,6 +205,7 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
         reset_engine()
         data_manager.cache.clear()
         session["current_db"] = db_value
+        session.modified = True
         session["current_client_logo"] = (selected_db_info.get("url_logo") if selected_db_info else None)
         
         return dash.no_update, dash.no_update, db_value

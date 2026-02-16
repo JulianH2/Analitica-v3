@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 FAILURES = {}
 
-BLOCK_SECONDS = 30
+BLOCK_SECONDS = 5
 MAX_FAILS = 2
 QUERY_TIMEOUT = 15
 

@@ -287,6 +287,7 @@ class DataManager:
                     build = self.qb.get_dataframe_query(batch, dims, filters=combined_filters)
                     if build and "query" in build:
                         rows = await execute_dynamic_query(db_config, build["query"])
+                        if not rows and db_config: return data
                         if rows:
 
                             for k, v in rows[0].items():
@@ -392,6 +393,7 @@ class DataManager:
                     build = self.qb.get_dataframe_query(batch, ["__month__"], filters=combined_filters)
                     if build and "query" in build:
                         rows = await execute_dynamic_query(db_config, build["query"])
+                        if not rows and db_config: return data
                         if rows:
                             for r in rows:
 
@@ -481,6 +483,7 @@ class DataManager:
                         build = self.qb.get_dataframe_query(mets, dims, filters=combined_filters)
                         if build and "query" in build:
                             rows = await execute_dynamic_query(db_config, build["query"])
+                            if not rows and db_config: return data
                             if rows:
                                 has_data = True
                                 for r in rows[:15]:
@@ -512,6 +515,7 @@ class DataManager:
                     build = self.qb.get_dataframe_query(mets, dims, filters=combined_filters)
                     if build and "query" in build:
                         rows = await execute_dynamic_query(db_config, build["query"])
+                        if not rows and db_config: return data
                         if rows:
                             has_data = True
                             val_key = mets[0] if mets else "value"
@@ -566,6 +570,7 @@ class DataManager:
                     build = self.qb.get_dataframe_query(grp_mets, dims, filters=combined_filters)
                     if build and "query" in build:
                         rows = await execute_dynamic_query(db_config, build["query"])
+                        if not rows and db_config: return data
                         if rows:
                             has_data = True
                             for r in rows:
