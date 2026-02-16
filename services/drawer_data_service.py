@@ -484,39 +484,54 @@ class DrawerDataService:
     @staticmethod
     def _create_table_summary_tab(strategy, ctx, theme):
         try:
-            screen_id = getattr(strategy, "screen_id", "")
-            table_key = getattr(strategy, "table_key", "")
+            df = pd.DataFrame()
+            
+            # --- SOPORTE PARA ESTRATEGIA NUEVA (AdminTableStrategy) ---
+            # Si la estrategia tiene el método moderno _get_data, úsalo
+            if hasattr(strategy, "_get_data"):
+                cols_cfg, rows = strategy._get_data(ctx)
+                if rows:
+                    df = pd.DataFrame(rows)
+                    # Opcional: Poner nombres bonitos a las columnas
+                    if cols_cfg:
+                        rename_map = {c['field']: c['headerName'] for c in cols_cfg}
+                        df.rename(columns=rename_map, inplace=True)
 
-            if screen_id and table_key:
-                table_data = strategy._resolve_chart_data(ctx, screen_id, table_key)
+            # --- SOPORTE PARA ESTRATEGIAS ANTIGUAS (Legacy) ---
+            elif hasattr(strategy, "_resolve_chart_data"):
+                screen_id = getattr(strategy, "screen_id", "")
+                table_key = getattr(strategy, "table_key", "")
+                if screen_id and table_key:
+                    table_data = strategy._resolve_chart_data(ctx, screen_id, table_key)
+                    if table_data:
+                        data_source = table_data.get("data", table_data)
+                        rows = data_source.get("rows", [])
+                        df = pd.DataFrame(rows) if rows else pd.DataFrame()
 
-                if table_data:
-                    data_source = table_data.get("data", table_data)
-                    rows = data_source.get("rows", [])
+            # --- GENERAR VISUALIZACIÓN ---
+            if not df.empty:
+                return dmc.Stack(
+                    gap="lg",
+                    children=[
+                        dmc.Text("Resumen de Datos", size="xl", fw=700), # type: ignore
+                        dmc.SimpleGrid(
+                            cols=3,
+                            spacing="md",
+                            children=[
+                                DrawerDataService._create_stat_card("Total Registros", f"{len(df):,}", "blue", "tabler:database", theme),
+                                DrawerDataService._create_stat_card("Columnas", f"{len(df.columns)}", "green", "tabler:columns", theme),
+                                DrawerDataService._create_stat_card("Integridad", "100%", "yellow", "tabler:shield-check", theme),
+                            ],
+                        ),
+                        dmc.Text("Vista previa (Top 10):", size="sm", fw=600, c="dimmed", mt="md"), # type: ignore
+                        DrawerDataService._create_ag_grid(df.head(10), theme),
+                    ],
+                )
+            
+            return dmc.Alert("No se encontraron datos para generar el resumen.", color="gray")
 
-                    df = pd.DataFrame(rows) if rows else pd.DataFrame()
-
-                    return dmc.Stack(
-                        gap="lg",
-                        children=[
-                            dmc.Text("Resumen de Datos", size="xl", fw=700), # type: ignore
-                            dmc.SimpleGrid(
-                                cols=3,
-                                spacing="md",
-                                children=[
-                                    DrawerDataService._create_stat_card("Total Registros", f"{len(df):,}", "blue", "tabler:database", theme),
-                                    DrawerDataService._create_stat_card("Columnas", f"{len(df.columns)}", "green", "tabler:columns", theme),
-                                    DrawerDataService._create_stat_card("Completitud", "95%", "yellow", "tabler:checkup-list", theme),
-                                ],
-                            ),
-                            dmc.Text("Vista previa de datos:", size="sm", fw=600, c="dimmed", mt="md"), # type: ignore
-                            DrawerDataService._create_ag_grid(df.head(10), theme),
-                        ],
-                    )
-        except:
-            pass
-
-        return dmc.Alert("Error al cargar resumen", color="red")
+        except Exception as e:
+            return dmc.Alert(f"Error al cargar resumen: {str(e)}", color="red")
 
     @staticmethod
     def _create_table_insights_tab(strategy, ctx, theme):

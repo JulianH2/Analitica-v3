@@ -355,6 +355,15 @@ class AdminMultiLineChartStrategy(KPIStrategy):
         )
         return fig
 
+# En strategies/administration.py
+
+import dash_mantine_components as dmc
+import dash_ag_grid as dag
+from dash import html
+from dash_iconify import DashIconify
+from design_system import DesignSystem, Colors, Typography, Space, ComponentSizes
+from utils.helpers import safe_get 
+
 class AdminTableStrategy:
     def __init__(self, screen_id, table_key, title="", icon="tabler:table", color="gray", variant=None):
         self.screen_id = screen_id
@@ -362,15 +371,16 @@ class AdminTableStrategy:
         self.title = title
         self.icon = icon
         self.color = color
-        self.has_detail = True
         self.variant = variant
+        self.has_detail = True  # <--- CRÍTICO: Habilita el botón del drawer
 
     def _get_data(self, data_context):
         from services.data_manager import data_manager
-
-        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {}) # type: ignore
+        
+        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {})
         inject_paths = screen_config.get("inject_paths", {})
-
+        
+        path = None
         if self.variant:
             lookup_key = f"{self.table_key}_{self.variant}"
             path = inject_paths.get(lookup_key) or inject_paths.get(self.table_key)
@@ -385,16 +395,19 @@ class AdminTableStrategy:
             return None, None
 
         data_source = node.get("data", node) if isinstance(node, dict) else node
-
-        headers_list, raw_rows = [], []
+        headers_list = []
+        raw_rows = []
 
         if isinstance(data_source, dict):
             headers_list = data_source.get("headers", [])
             raw_rows = data_source.get("rows", [])
-        elif isinstance(data_source, list) and data_source and isinstance(data_source[0], dict):
-            headers_list = list(data_source[0].keys())
-            for item in data_source:
-                raw_rows.append([item.get(h) for h in headers_list])
+        elif isinstance(data_source, list) and data_source:
+            if isinstance(data_source[0], dict):
+                headers_list = list(data_source[0].keys())
+                raw_rows = [[item.get(h) for h in headers_list] for item in data_source]
+            elif isinstance(data_source[0], list):
+                headers_list = [f"Col {i+1}" for i in range(len(data_source[0]))]
+                raw_rows = data_source
 
         if not headers_list:
             return None, None
@@ -406,7 +419,8 @@ class AdminTableStrategy:
             row_dict = {}
             if isinstance(row, (list, tuple)):
                 for i, col in enumerate(columns_config):
-                    row_dict[col["field"]] = row[i] if i < len(row) and row[i] is not None else ""
+                    val = row[i] if i < len(row) else ""
+                    row_dict[col["field"]] = val if val is not None else ""
             elif isinstance(row, dict):
                 for i, h in enumerate(headers_list):
                     val = row.get(h, "")
@@ -415,10 +429,27 @@ class AdminTableStrategy:
 
         return columns_config, safe_row_data
 
+    def get_card_config(self, data_context):
+        columns_config, row_data = self._get_data(data_context)
+        # Preparar datos crudos para el drawer (similar a OpsTableStrategy)
+        export_data = []
+        if columns_config and row_data:
+             for row in row_data:
+                new_row = {col["headerName"]: row.get(col["field"]) for col in columns_config}
+                export_data.append(new_row)
+
+        return {
+            "title": self.title or self.table_key,
+            "icon": self.icon,
+            "is_table": True,
+            "main_value": f"{len(row_data)} registros" if row_data else "0",
+            "raw_data": export_data 
+        }
+
     def render(self, data_context, mode="dashboard", theme="dark"):
         columns_config, row_data = self._get_data(data_context)
 
-        if columns_config is None:
+        if columns_config is None or not row_data:
             return dmc.Center(
                 style={"height": 200},
                 children=[
@@ -427,35 +458,18 @@ class AdminTableStrategy:
                         gap=Space.XS,
                         children=[
                             DashIconify(icon="tabler:table-off", width=40, color=Colors.NEXA_GRAY),
-                            dmc.Text("Sin datos disponibles", size="xs", c="dimmed", style={"fontFamily": Typography.FAMILY}), # type: ignore
+                            dmc.Text("Sin datos disponibles", size="xs", c="dimmed", style={"fontFamily": Typography.FAMILY}),
                         ],
                     )
                 ],
             )
 
-        if mode == "analyst":
+        # CORRECCIÓN CLAVE: El drawer manda "analysis", tu código usa "analyst".
+        # Aceptamos ambos y llamamos a _render_analyst para tener una ID ÚNICA.
+        if mode in ["analyst", "analysis"]:
             return self._render_analyst(columns_config, row_data, theme)
 
         return self._render_dashboard(columns_config, row_data, theme)
-
-    def get_card_config(self, data_context):
-        columns_config, row_data = self._get_data(data_context)
-
-        export_data = []
-        if columns_config and row_data:
-            for row in row_data:
-                export_data.append({col["headerName"]: row.get(col["field"]) for col in columns_config})
-
-        return {
-            "title": self.title or self.table_key,
-            "icon": self.icon,
-            "is_table": True,
-            "main_value": f"{len(row_data)} registros" if row_data else "0",
-            "raw_data": export_data,
-        }
-
-    def get_figure(self, data_context):
-        return None
 
     def _render_dashboard(self, columns_config, row_data, theme="dark"):
         is_dark = theme == "dark"
@@ -470,69 +484,41 @@ class AdminTableStrategy:
                 "resizable": True,
                 "suppressMenu": True,
                 "tooltipField": col["field"],
+                "cellStyle": {"fontSize": "12px", "display": "flex", "alignItems": "center"}
             }
             if i == 0:
-                col_def.update({"pinned": "left", "width": 90, "flex": 0})
+                col_def.update({"pinned": "left", "width": 140, "suppressSizeToFit": True})
             else:
-                col_def.update({"minWidth": 130, "flex": 1})
+                col_def.update({"flex": 1, "minWidth": 100})
             column_defs.append(col_def)
 
         grid = dag.AgGrid(
+            # ID ÚNICA PARA DASHBOARD: ag-grid-dashboard
             id={"type": "ag-grid-dashboard", "index": unique_key},
             rowData=row_data,
             columnDefs=column_defs,
             defaultColDef={"sortable": True, "resizable": True, "filter": False},
             dashGridOptions={
                 "pagination": True,
-                "paginationPageSize": 20,
-                "rowHeight": ComponentSizes.TABLE_ROW_HEIGHT,
-                "headerHeight": ComponentSizes.TABLE_HEADER_HEIGHT,
+                "paginationPageSize": 10,
+                "rowHeight": 35,
+                "headerHeight": 35,
                 "suppressFieldDotNotation": True,
-                "quickFilterText": "",
+                "domLayout": "autoHeight"
             },
-            style={"height": "100%", "width": "100%"},
-            className="ag-theme-alpine compact",
-        )
-
-        search_bar = dmc.Group(
-            justify="space-between",
-            mt=Space.SM,
-            children=[
-                dmc.TextInput(
-                    id={"type": "ag-quick-search", "index": unique_key},
-                    placeholder="Buscar...",
-                    leftSection=DashIconify(icon="tabler:search", width=ComponentSizes.ICON_SM),
-                    size="xs",
-                    radius="xl",
-                    style={"width": "220px"},
-                    styles={
-                        "input": {
-                            "fontSize": f"{Typography.SM}px",
-                            "height": f"{ComponentSizes.BUTTON_HEIGHT_SM}px",
-                            "fontFamily": Typography.FAMILY,
-                            "backgroundColor": "rgba(255,255,255,0.05)" if is_dark else "rgba(0,0,0,0.03)",
-                            "color": Colors.TEXT_DARK if is_dark else Colors.TEXT_LIGHT,
-                        }
-                    },
-                ),
-                dmc.Text(
-                    f"{len(row_data)} registros",
-                    size="xs",
-                    c="dimmed", # type: ignore
-                    style={"fontSize": f"{Typography.XS}px", "fontFamily": Typography.FAMILY},
-                ),
-            ],
+            className="ag-theme-alpine-dark" if is_dark else "ag-theme-alpine",
         )
 
         return html.Div(
-            style={"height": "100%", "display": "flex", "flexDirection": "column"},
+            style={"display": "flex", "flexDirection": "column"},
             children=[
-                html.Div(style={"flex": 1, "minHeight": "250px", "overflow": "hidden"}, children=grid),
-                search_bar,
+                html.Div(style={"width": "100%"}, children=grid),
             ],
         )
 
     def _render_analyst(self, columns_config, row_data, theme="dark"):
+        # ID ÚNICA PARA DRAWER: ag-grid-analyst
+        # Esto evita el conflicto de IDs duplicadas que impedía abrir el drawer
         table_id = {"type": "ag-grid-analyst", "index": f"{self.screen_id}-{self.table_key}"}
 
         def _get_filter_type(field):
@@ -565,7 +551,7 @@ class AdminTableStrategy:
             columnDefs=column_defs,
             dashGridOptions={"pagination": True, "paginationPageSize": 50, "suppressFieldDotNotation": True},
             style={"height": "100%", "width": "100%"},
-            className="ag-theme-alpine",
+            className="ag-theme-alpine-dark" if theme == "dark" else "ag-theme-alpine",
         )
 
         return html.Div(
@@ -573,5 +559,5 @@ class AdminTableStrategy:
             children=[
                 dmc.Badge("Modo Analista", variant="light", color="violet", mb=Space.XS),
                 html.Div(style={"flex": 1}, children=grid),
-            ],
+            ]
         )

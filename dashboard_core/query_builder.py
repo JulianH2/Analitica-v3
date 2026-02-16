@@ -236,9 +236,27 @@ class SmartQueryBuilder:
             for k, v in filters.items():
                 if k in ignore_keys: continue
                 if v in ignore_values: continue
-                val = f"'{v}'" if isinstance(v, str) else v
-                if "." in k: wheres.append(f"{k} = {val}")
-                else: wheres.append(f"{fact_alias}.{k} = {val}")
+                
+                # Determinar nombre de columna (con alias si es necesario)
+                col_name = k if "." in k else f"{fact_alias}.{k}"
+
+                # CASO 1: Filtro Avanzado (Diccionario con operador)
+                if isinstance(v, dict) and "operator" in v and "value" in v:
+                    op = v["operator"]
+                    val = v["value"]
+                    clean_val = f"'{val}'" if isinstance(val, str) else str(val)
+                    wheres.append(f"{col_name} {op} {clean_val}")
+
+                # CASO 2: Lista de valores (IN)
+                elif isinstance(v, list):
+                    if not v: continue
+                    clean_vals = [f"'{x}'" if isinstance(x, str) else str(x) for x in v]
+                    wheres.append(f"{col_name} IN ({', '.join(clean_vals)})")
+
+                # CASO 3: Filtro Normal (Igualdad)
+                else:
+                    clean_val = f"'{v}'" if isinstance(v, str) else str(v)
+                    wheres.append(f"{col_name} = {clean_val}")
 
         where_sql = " WHERE " + " AND ".join(wheres) if wheres else ""
 

@@ -28,3 +28,9 @@ def execute_global_query(query_sql, params=None):
     except Exception as e:
         print(f"Error Global DB: {e}")
         return []
+
+def reset_engine():
+    global _engine
+    if _engine:
+        _engine.dispose()
+        _engine = None

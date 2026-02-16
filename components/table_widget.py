@@ -46,7 +46,9 @@ class TableWidget:
                     variant="subtle",
                     color="blue",
                     size="sm",
+                    n_clicks=0,
                     id={"type": "open-smart-drawer", "index": self.widget_id},
+                    style={"flexShrink": 0}
                 )
                 if has_detail
                 else html.Div(),

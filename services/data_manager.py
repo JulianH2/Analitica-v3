@@ -365,6 +365,8 @@ class DataManager:
                 print(f"⚠️ DataManager: spec para chart '{chart_key}' no es dict (tipo: {type(spec).__name__}), skipping...")
                 continue
 
+            fixed_filters_raw = spec.get("fixed_filters", {})
+            fixed_filters_per_batch = isinstance(fixed_filters_raw, list)
 
             chart_batches = []
             if "metrics" in spec: 
@@ -376,9 +378,18 @@ class DataManager:
                 series_defs = [{"key": v, "series": k} for k, v in spec.items()]
 
             temp_results = {i: {} for i in range(1, 13)}
-            for batch in chart_batches:
+            for batch_idx, batch in enumerate(chart_batches):
                 try:
-                    build = self.qb.get_dataframe_query(batch, ["__month__"], filters=filters)
+                    combined_filters = (filters or {}).copy()
+                    if fixed_filters_per_batch:
+                        if batch_idx < len(fixed_filters_raw):
+                            ff = fixed_filters_raw[batch_idx]
+                            if isinstance(ff, dict):
+                                combined_filters.update(ff)
+                    elif isinstance(fixed_filters_raw, dict):
+                        combined_filters.update(fixed_filters_raw)
+                    
+                    build = self.qb.get_dataframe_query(batch, ["__month__"], filters=combined_filters)
                     if build and "query" in build:
                         rows = await execute_dynamic_query(db_config, build["query"])
                         if rows:
@@ -441,6 +452,11 @@ class DataManager:
                 continue
 
             try:
+                combined_filters = (filters or {}).copy()
+                ff = spec.get("fixed_filters", {})
+                if isinstance(ff, dict):
+                    combined_filters.update(ff)
+                
                 dims = [spec.get("dimension")] if isinstance(spec.get("dimension"), str) else spec.get("dimensions", [])
                 raw_mets = spec.get("metrics", [])
 
@@ -462,7 +478,7 @@ class DataManager:
                     if not mets or not dims:
                         pass
                     else:
-                        build = self.qb.get_dataframe_query(mets, dims, filters=filters)
+                        build = self.qb.get_dataframe_query(mets, dims, filters=combined_filters)
                         if build and "query" in build:
                             rows = await execute_dynamic_query(db_config, build["query"])
                             if rows:
@@ -493,7 +509,7 @@ class DataManager:
                 else:
 
                     mets = [spec.get("kpi")] if isinstance(spec.get("kpi"), str) else mets
-                    build = self.qb.get_dataframe_query(mets, dims, filters=filters)
+                    build = self.qb.get_dataframe_query(mets, dims, filters=combined_filters)
                     if build and "query" in build:
                         rows = await execute_dynamic_query(db_config, build["query"])
                         if rows:

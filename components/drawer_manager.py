@@ -42,11 +42,22 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
     border_color = DS.SLATE[7] if is_dark else DS.SLATE[3]
     text_color = DS.TEXT_DARK if is_dark else DS.TEXT_LIGHT
     
-    # CORRECCIÓN DE COLOR: Gradiente Azul Marca (Reemplaza al morado)
+    # Gradiente Azul Marca para Insights
     brand_gradient = f"linear-gradient(135deg, {DS.NEXA_BLUE} 0%, {DS.BRAND[8]} 100%)"
-    
-    # CORRECCIÓN: Color de iconos activo
     icon_color = DS.NEXA_BLUE
+
+    # --- CORRECCIÓN AQUÍ: Claves alineadas con DrawerDataService (tab_...) ---
+    tab_defs = [
+        ("tab_resumen", "Resumen", "tabler:chart-pie"),
+        ("tab_desglose", "Desglose", "tabler:list"),
+        ("tab_datos", "Datos", "tabler:table"),
+        ("tab_insights", "Insights", "tabler:bulb"),
+        ("tab_acciones", "Acciones", "tabler:bolt"),
+    ]
+
+    # Seleccionar tab por defecto
+    available_tabs = [key for key, _, _ in tab_defs if drawer_data.get(key)]
+    default_tab = available_tabs[0] if available_tabs else "tab_resumen"
 
     return html.Div(
         style={"display": "flex", "flexDirection": "column", "height": "100%", "backgroundColor": bg_main},
@@ -57,7 +68,6 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
                 radius=0,
                 shadow="sm",
                 style={
-                    # Borde sutil usando SLATE del sistema
                     "borderBottom": f"1px solid {border_color}",
                     "backgroundColor": bg_secondary,
                 },
@@ -68,10 +78,9 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
                             gap="md",
                             children=[
                                 dmc.ThemeIcon(
-                                    children=DashIconify(icon=drawer_data["icon"], width=28),
+                                    children=DashIconify(icon=drawer_data.get("icon", "tabler:info-circle"), width=28),
                                     size="xl",
                                     variant="light",
-                                    # Usamos el azul corporativo explícito
                                     color="blue", 
                                     style={"color": DS.NEXA_BLUE, "backgroundColor": "rgba(65, 140, 223, 0.15)"},
                                     radius="md",
@@ -79,13 +88,13 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
                                 html.Div(
                                     [
                                         dmc.Text(
-                                            drawer_data["title"],
+                                            drawer_data.get("title", "Detalle"),
                                             size="xl",
                                             fw=700,  # type: ignore
                                             c=text_color,  # type: ignore
                                         ),
                                         dmc.Text(
-                                            drawer_data["subtitle"],
+                                            drawer_data.get("subtitle", ""),
                                             size="sm",
                                             c="dimmed",  # type: ignore
                                             mt=4,
@@ -94,38 +103,24 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
                                 ),
                             ],
                         ),
-                        dmc.Group(
-                            gap="xs",
-                            children=[
-                                dmc.Tooltip(
-                                    label="Exportar",
-                                    children=dmc.ActionIcon(
-                                        DashIconify(icon="tabler:download", width=20),
-                                        variant="subtle",
-                                        color="gray",
-                                        size="xl",
-                                    ),
-                                ),
-                                dmc.Tooltip(
-                                    label="Cerrar",
-                                    children=dmc.ActionIcon(
-                                        id=f"{drawer_id}-close",
-                                        children=DashIconify(icon="tabler:x", width=20),
-                                        variant="subtle",
-                                        color="red", # Mantiene rojo funcional para cerrar
-                                        size="xl",
-                                    ),
-                                ),
-                            ],
+                        dmc.Tooltip(
+                            label="Cerrar",
+                            children=dmc.ActionIcon(
+                                id=f"{drawer_id}-close",
+                                children=DashIconify(icon="tabler:x", width=20),
+                                variant="subtle",
+                                color="red", 
+                                size="xl",
+                            ),
                         ),
                     ],
                 ),
             ),
             # --- TABS ---
             dmc.Tabs(
-                value="resumen",
+                value=default_tab,
                 variant="pills",
-                color="blue", # Esto usará el PrimaryColor definido en tu theme (NEXA_BLUE)
+                color="blue",
                 radius="md",
                 style={
                     "flex": 1,
@@ -147,81 +142,32 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
                                 dmc.Group(
                                     gap="xs",
                                     children=[
-                                        # Iconos coloreados con icon_color (NEXA_BLUE)
-                                        DashIconify(icon="tabler:chart-line", width=16, color=icon_color),
-                                        dmc.Text("Resumen", size="sm", fw=600),  # type: ignore
+                                        DashIconify(icon=icon, width=16, color="white" if key == "tab_insights" else icon_color),
+                                        dmc.Text(label, size="sm", fw=600),  # type: ignore
                                     ],
                                 ),
-                                value="resumen",
-                            ),
-                            dmc.TabsTab(
-                                dmc.Group(
-                                    gap="xs",
-                                    children=[
-                                        DashIconify(icon="tabler:layout-grid", width=16, color=icon_color),
-                                        dmc.Text("Desglose", size="sm", fw=600),  # type: ignore
-                                    ],
-                                ),
-                                value="desglose",
-                            ),
-                            dmc.TabsTab(
-                                dmc.Group(
-                                    gap="xs",
-                                    children=[
-                                        DashIconify(icon="tabler:table", width=16, color=icon_color),
-                                        dmc.Text("Datos", size="sm", fw=600),  # type: ignore
-                                    ],
-                                ),
-                                value="datos",
-                            ),
-                            # PESTAÑA INSIGHTS CORREGIDA (Ya no es morada)
-                            dmc.TabsTab(
-                                dmc.Group(
-                                    gap="xs",
-                                    children=[
-                                        DashIconify(icon="tabler:sparkles", width=16),
-                                        dmc.Text("Insights IA", size="sm", fw=700),  # type: ignore
-                                    ],
-                                ),
-                                value="insights",
+                                value=key,
                                 style={
-                                    "background": brand_gradient, # Gradiente Azul/Brand
-                                    "color": "white",
-                                    "borderRadius": "8px",
-                                    "marginLeft": "auto",
-                                    "border": "none"
-                                },
-                            ),
-                            dmc.TabsTab(
-                                dmc.Group(
-                                    gap="xs",
-                                    children=[
-                                        DashIconify(icon="tabler:bolt", width=16, color=DS.NEXA_ORANGE), # Acciones en naranja
-                                        dmc.Text("Acciones", size="sm", fw=600),  # type: ignore
-                                    ],
-                                ),
-                                value="acciones",
-                            ),
+                                    "background": brand_gradient if key == "tab_insights" else None,
+                                    "color": "white" if key == "tab_insights" else None,
+                                    "borderRadius": "8px" if key == "tab_insights" else None,
+                                    "marginLeft": "auto" if key == "tab_insights" else None
+                                } if key == "tab_insights" else {}
+                            ) for key, label, icon in tab_defs if drawer_data.get(key)
                         ],
                     ),
-                    # Paneles
+                    # Paneles de contenido
                     *[
                         dmc.TabsPanel(
                             drawer_data[key],
-                            value=val,
+                            value=key,
                             style={
                                 "flex": 1,
                                 "overflow": "auto",
                                 "padding": "1.5rem",
                                 "backgroundColor": bg_main,
                             },
-                        ) for key, val in [
-                            ("tab_resumen", "resumen"),
-                            ("tab_desglose", "desglose"),
-                            ("tab_datos", "datos"),
-                            ("tab_insights", "insights"),
-                            ("tab_acciones", "acciones")
-                        ]
+                        ) for key, label, icon in tab_defs if drawer_data.get(key)
                     ]
                 ],
             ),
@@ -276,7 +222,6 @@ def register_drawer_callback(drawer_id: str, widget_registry: dict, screen_id: s
 
             if isinstance(ctx, str):
                 import json
-
                 try:
                     ctx = json.loads(ctx)
                 except:

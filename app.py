@@ -4,6 +4,10 @@ import logging
 from flask import Flask, redirect, request, session
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Analitica.settings")
+django.setup()
+
+
 import dash
 from dash import Input, Output, State, dcc, callback_context, ALL, ClientsideFunction
 import dash_mantine_components as dmc
@@ -18,6 +22,8 @@ from pages.auth import get_login_layout
 from services.auth_service import auth_service
 from design_system import DesignSystem
 from settings.plotly_config import PlotlyConfig
+from services.global_db import reset_engine
+from services.data_manager import data_manager
 
 
 logging.basicConfig(
@@ -30,10 +36,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Analitica.settings")
-django.setup()
-
 PlotlyConfig.setup_templates()
 
 server = Flask(__name__)
@@ -196,6 +198,8 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
         session["current_client_logo"] = (
             selected_db_info.get("url_logo") if selected_db_info else None
         )
+        reset_engine()
+        data_manager.cache.clear()
 
         return dash.no_update, dash.no_update, db_value
 

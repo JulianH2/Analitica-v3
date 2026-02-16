@@ -1,13 +1,4 @@
-"""
-Skeleton components para eliminar flickering durante carga de datos.
-Renderiza inmediatamente estructuras animadas que se reemplazan por datos reales.
-"""
-
 from dash import html
-
-
-
-
 
 def skeleton_box(height="20px", width="100%", class_name=""):
     
@@ -15,10 +6,6 @@ def skeleton_box(height="20px", width="100%", class_name=""):
         className=f"skeleton-box {class_name}".strip(),
         style={"height": height, "width": width}
     )
-
-
-
-
 
 def skeleton_kpi():
     
@@ -37,10 +24,6 @@ def skeleton_kpi_row(count=4):
         className="skeleton-kpi-row",
         children=[skeleton_kpi() for _ in range(count)]
     )
-
-
-
-
 
 def skeleton_chart(height="300px"):
     
@@ -71,9 +54,6 @@ def skeleton_chart_row(count=2, height="300px"):
     )
 
 
-
-
-
 def skeleton_table(rows=5, cols=4):
     
     header_row = html.Div(
@@ -95,9 +75,6 @@ def skeleton_table(rows=5, cols=4):
     )
 
 
-
-
-
 def skeleton_gauge():
     
     return html.Div(
@@ -114,9 +91,6 @@ def skeleton_gauge_row(count=3):
         className="skeleton-gauge-row",
         children=[skeleton_gauge() for _ in range(count)]
     )
-
-
-
 
 
 def skeleton_dashboard_standard():
@@ -227,36 +201,21 @@ def skeleton_home():
         ]
     )
 
-
-
-
-
 SKELETON_MAP = {
-
     "home": skeleton_home,
-    
-
     "operational-dashboard": skeleton_dashboard_operational,
     "operational-costs": skeleton_dashboard_standard,
     "operational-performance": skeleton_dashboard_standard,
     "operational-routes": skeleton_dashboard_table_focus,
-    
-
     "workshop-dashboard": skeleton_dashboard_with_gauges,
     "workshop-inventory": skeleton_dashboard_table_focus,
     "workshop-availability": skeleton_dashboard_standard,
     "workshop-purchases": skeleton_dashboard_table_focus,
-    
-
     "administration-banks": skeleton_dashboard_standard,
     "administration-receivables": skeleton_dashboard_table_focus,
     "administration-payables": skeleton_dashboard_table_focus,
 }
 
 def get_skeleton(screen_id: str):
-    """
-    Retorna el skeleton apropiado para una pantalla.
-    Si no hay mapeo específico, retorna el estándar.
-    """
     skeleton_fn = SKELETON_MAP.get(screen_id, skeleton_dashboard_standard)
     return skeleton_fn()

@@ -14,7 +14,16 @@ class RealDataService:
         return {
             "main": { "dashboard": { "kpis": {}, "charts": {}, "tables": {} } },
             "operational": { "dashboard": { "kpis": {}, "charts": {}, "tables": {} } },
-            "administration": { "dashboard": { "kpis": {}, "charts": {}, "tables": {} } },
+            "administration": {
+                "dashboard": {
+                    "kpis": {},
+                    "charts": {},
+                    "tables": {},
+                    "consolidado": { "kpis": {}, "charts": {}, "tables": {} },
+                    "pesos": { "kpis": {}, "charts": {}, "tables": {} },
+                    "dolares": { "kpis": {}, "charts": {}, "tables": {} }
+                }
+            },
             "workshop": { "dashboard": { "kpis": {}, "charts": {}, "tables": {} } }
         }
     

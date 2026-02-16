@@ -51,4 +51,4 @@ def _execute_dynamic_query_sync(db_name: str, query: str):
             engine.dispose()
 
 
-execute_dynamic_query = sync_to_async(_execute_dynamic_query_sync, thread_sensitive=True)
+execute_dynamic_query = sync_to_async(_execute_dynamic_query_sync, thread_sensitive=False)
