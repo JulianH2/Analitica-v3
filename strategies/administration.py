@@ -1,49 +1,20 @@
 import dash_ag_grid as dag
 import dash_mantine_components as dmc
-import plotly.graph_objects as go
 from dash import html
 from dash_iconify import DashIconify
-from datetime import datetime
-from design_system import BadgeConfig, ChartColors, Colors, ComponentSizes, GaugeConfig, SemanticColors, Shadows, Space, Typography
-from design_system import DesignSystem as DS
-from utils.helpers import format_value, safe_get
-
+from design_system import Colors, ComponentSizes, Space, Typography
+from utils.helpers import safe_get
 from .base_strategy import KPIStrategy
 from .chart_engine import ChartEngine
 
 
-def get_current_month():
-    return datetime.now().month
-
-
-def safe_float(val, default=0.0):
-    if val is None:
-        return default
-    if isinstance(val, (int, float)):
-        return float(val)
-    if isinstance(val, str):
-        try:
-            clean = val.replace("%", "").replace("$", "").replace(",", "").strip()
-            return float(clean) if clean else default
-        except:
-            return default
-    return default
-
-
-def safe_max(*args):
-    valid = [safe_float(v) for v in args if v is not None]
-    return max(valid) if valid else 0.0
-
-
 class AdminKPIStrategy(KPIStrategy):
-    def __init__(self, screen_id, kpi_key, title, icon, color, has_detail=True, layout_config=None, inverse=False, variant=None):
-        super().__init__(title=title, color=color, icon=icon, has_detail=has_detail, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.kpi_key = kpi_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="", has_detail=True, variant=None, inverse=False, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
         self.inverse = inverse
 
-    def get_card_config(self, data_context):
-        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
+    def get_card_config(self, ctx):
+        raw_node = self._resolve_kpi_data(ctx, self.screen_id, self.key)
         if isinstance(raw_node, (int, float, str)) and raw_node is not None:
             node = {"value": raw_node}
         elif raw_node is None:
@@ -54,6 +25,9 @@ class AdminKPIStrategy(KPIStrategy):
         return {
             "title": self.title,
             "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": False,
             "color": self.color,
             "inverse": self.inverse,
             "value": node.get("value_formatted", "---"),
@@ -70,20 +44,19 @@ class AdminKPIStrategy(KPIStrategy):
             "ytd_delta_formatted": node.get("ytd_delta_formatted"),
             "status": node.get("status"),
             "status_color": node.get("status_color") or self.color,
+            "raw_data": node,
         }
 
-    def render_detail(self, data_context):
+    def _render_standard_view(self, ctx, theme):
         return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
 
 
 class AdminGaugeStrategy(KPIStrategy):
-    def __init__(self, screen_id, kpi_key, title, color="indigo", icon="tabler:gauge", has_detail=True, layout_config=None, variant=None):
-        super().__init__(title=title, color=color, icon=icon, has_detail=has_detail, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.kpi_key = kpi_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:gauge", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
+    def get_card_config(self, ctx):
+        raw_node = self._resolve_kpi_data(ctx, self.screen_id, self.key)
         if isinstance(raw_node, (int, float)):
             node = {"value": raw_node}
         elif raw_node is None:
@@ -94,6 +67,9 @@ class AdminGaugeStrategy(KPIStrategy):
         cfg = {
             "title": self.title,
             "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": False,
             "value": node.get("value_formatted", "---"),
             "vs_last_year_formatted": node.get("vs_last_year_formatted"),
             "vs_last_year_delta": node.get("vs_last_year_delta"),
@@ -101,75 +77,93 @@ class AdminGaugeStrategy(KPIStrategy):
             "label_prev_year": node.get("label_prev_year"),
             "target_formatted": node.get("target_formatted"),
             "meta_text": f"Meta: {node.get('target_formatted')}" if node.get("target_formatted") else "",
+            "raw_data": node,
         }
 
-        if self.kpi_key == "average_collection_days":
+        if self.key == "average_collection_days":
             cfg["vs_last_year_formatted"] = "none"
             cfg["label_prev_year"] = "Vs 2025"
 
         return cfg
 
-    def get_figure(self, data_context, theme="dark"):
-        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
+    def get_figure(self, ctx, theme="dark"):
+        raw_node = self._resolve_kpi_data(ctx, self.screen_id, self.key)
         fig = ChartEngine.render_gauge(raw_node, theme, self.layout, self.hex_color)
         if fig is None:
             return self._create_empty_figure(theme=theme)
         return fig
 
-    def render_detail(self, data_context):
+    def _render_standard_view(self, ctx, theme):
         return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
 
 
 class AdminDonutChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-pie", color="indigo", has_detail=True, layout_config=None, variant=None):
-        super().__init__(title=title, icon=icon, color=color, has_detail=has_detail, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-pie", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon, "is_chart": True}
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "raw_data": {},
+        }
 
-    def get_figure(self, data_context, theme="dark"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+    def get_figure(self, ctx, theme="dark"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
         fig = ChartEngine.render_donut(node, theme, self.layout)
         if fig is None:
             return self._create_empty_figure(theme=theme)
         return fig
 
-    def render_detail(self, data_context):
+    def _render_standard_view(self, ctx, theme):
         return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
 
 
 class AdminTrendChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-line", color="indigo", has_detail=True, layout_config=None, variant=None):
-        super().__init__(title=title, icon=icon, color=color, has_detail=has_detail, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-line", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon, "color": self.color, "is_chart": True}
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "color": self.color,
+            "raw_data": {},
+        }
 
-    def get_figure(self, data_context, theme="dark"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+    def get_figure(self, ctx, theme="dark"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
         fig = ChartEngine.render_trend(node, theme, self.layout)
         if fig is None:
             return self._create_empty_figure(theme=theme)
         return fig
 
-    def render_detail(self, data_context):
+    def _render_standard_view(self, ctx, theme):
         return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
 
+
 class AdminHorizontalBarStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-bar", color="indigo", has_detail=True, layout_config=None, variant=None):
-        super().__init__(title=title, icon=icon, color=color, has_detail=has_detail, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-bar", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon, "is_chart": True}
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "raw_data": {},
+        }
 
-    def get_figure(self, data_context, theme="dark"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+    def get_figure(self, ctx, theme="dark"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
         fig = ChartEngine.render_horizontal_bar(node, theme, self.layout)
         if fig is None:
             return self._create_empty_figure(theme=theme)
@@ -177,204 +171,90 @@ class AdminHorizontalBarStrategy(KPIStrategy):
 
 
 class AdminHistoricalForecastLineStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-line", color="indigo", has_detail=True, layout_config=None, variant=None):
-        super().__init__(title=title, icon=icon, color=color, has_detail=has_detail, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-line", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon, "color": self.color, "is_chart": True}
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "color": self.color,
+            "raw_data": {},
+        }
 
-    def get_figure(self, data_context, theme="dark"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
-        if not node:
+    def get_figure(self, ctx, theme="dark"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
+        fig = ChartEngine.render_multi_line(node, theme, self.layout, forecast_mode=True)
+        if fig is None:
             return self._create_empty_figure(theme=theme)
-
-        data_source = node.get("data", node)
-        categories = data_source.get("categories", [])
-        series_list = data_source.get("series", [])
-
-        fig = go.Figure()
-
-        for idx, s in enumerate(series_list):
-            s_name = s.get("name", "")
-            s_data = s.get("data", [])
-            is_forecast = "Forecast" in s_name or "Proyección" in s_name
-            base_color = ChartColors.LINE_TRENDS[idx % len(ChartColors.LINE_TRENDS)]
-
-            fig.add_trace(go.Scatter(
-                x=categories,
-                y=s_data,
-                name=s_name,
-                mode="lines+markers",
-                line=dict(color=base_color, width=2, dash="dash" if is_forecast else "solid"),
-                marker=dict(size=5 if is_forecast else 6),
-            ))
-
-        h_val = self.layout.get("height")
-        plot_height = h_val if isinstance(h_val, (int, float)) else ComponentSizes.CHART_HEIGHT_BASE
-
-        fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
-            height=plot_height,
-            hovermode="x unified",
-            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
-        )
         return fig
 
-    def render_detail(self, data_context):
+    def _render_standard_view(self, ctx, theme):
         return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
 
 
 class AdminStackedBarStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-bar", color="indigo", has_detail=True, layout_config=None, variant=None):
-        super().__init__(title=title, icon=icon, color=color, has_detail=has_detail, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-bar", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon, "is_chart": True}
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "color": self.color,
+            "raw_data": {},
+        }
 
-    def get_figure(self, data_context, theme="dark"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
-        if not node:
+    def get_figure(self, ctx, theme="dark"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
+        fig = ChartEngine.render_stacked_bar(node, theme, self.layout)
+        if fig is None:
             return self._create_empty_figure(theme=theme)
-
-        data_source = node.get("data", node)
-        categories = data_source.get("categories", [])
-        series_list = data_source.get("series", [])
-
-        fig = go.Figure()
-
-        for idx, s in enumerate(series_list):
-            s_name = s.get("name", "")
-            s_data = s.get("data", [])
-            base_color = ChartColors.CHART_COLORS[idx % len(ChartColors.CHART_COLORS)]
-
-            fig.add_trace(go.Bar(
-                x=categories,
-                y=s_data,
-                name=s_name,
-                marker=dict(color=base_color, cornerradius=6),
-            ))
-
-        h_val = self.layout.get("height")
-        plot_height = h_val if isinstance(h_val, (int, float)) else ComponentSizes.CHART_HEIGHT_BASE
-
-        fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
-            height=plot_height,
-            barmode="stack",
-            hovermode="x unified",
-            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
-        )
         return fig
 
-    def render_detail(self, data_context):
+    def _render_standard_view(self, ctx, theme):
         return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
 
 
-class AdminCashFlowChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:arrows-up-down", color="indigo", has_detail=True, layout_config=None, variant=None):
-        super().__init__(title=title, icon=icon, color=color, has_detail=has_detail, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
+class AdminMultiLineStrategy(KPIStrategy):
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-line", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon, "is_chart": True}
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "raw_data": {},
+        }
 
-    def get_figure(self, data_context, theme="dark"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
-        if not node:
+    def get_figure(self, ctx, theme="dark"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
+        fig = ChartEngine.render_multi_line(node, theme, self.layout)
+        if fig is None:
             return self._create_empty_figure(theme=theme)
-
-        data_source = node.get("data", node)
-        categories = data_source.get("categories", [])
-        ingresos = data_source.get("ingresos", [])
-        egresos = data_source.get("egresos", [])
-
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=categories, y=ingresos, name="Ingresos", marker=dict(color=Colors.POSITIVE, cornerradius=6)))
-        fig.add_trace(go.Bar(x=categories, y=[-e for e in egresos], name="Egresos", marker=dict(color=Colors.NEGATIVE, cornerradius=6)))
-
-        h_val = self.layout.get("height")
-        plot_height = h_val if isinstance(h_val, (int, float)) else ComponentSizes.CHART_HEIGHT_BASE
-
-        fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
-            height=plot_height,
-            barmode="relative",
-            hovermode="x unified",
-            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
-        )
         return fig
 
-
-class AdminMultiLineChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-line", color="indigo", has_detail=True, layout_config=None, variant=None):
-        super().__init__(title=title, icon=icon, color=color, has_detail=has_detail, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
-
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon, "is_chart": True}
-
-    def get_figure(self, data_context, theme="dark"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
-        if not node:
-            return self._create_empty_figure(theme=theme)
-
-        data_source = node.get("data", node)
-        categories = data_source.get("categories", [])
-        series_list = data_source.get("series", [])
-
-        fig = go.Figure()
-
-        for idx, s in enumerate(series_list):
-            s_name = s.get("name", "")
-            s_data = s.get("data", [])
-            base_color = ChartColors.LINE_TRENDS[idx % len(ChartColors.LINE_TRENDS)]
-
-            fig.add_trace(go.Scatter(
-                x=categories,
-                y=s_data,
-                name=s_name,
-                mode="lines+markers",
-                line=dict(color=base_color, width=2),
-                marker=dict(size=6),
-            ))
-
-        h_val = self.layout.get("height")
-        plot_height = h_val if isinstance(h_val, (int, float)) else ComponentSizes.CHART_HEIGHT_BASE
-
-        fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
-            height=plot_height,
-            hovermode="x unified",
-            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
-        )
-        return fig
-
-# En strategies/administration.py
-
-import dash_mantine_components as dmc
-import dash_ag_grid as dag
-from dash import html
-from dash_iconify import DashIconify
-from design_system import DesignSystem, Colors, Typography, Space, ComponentSizes
-from utils.helpers import safe_get 
 
 class AdminTableStrategy:
-    def __init__(self, screen_id, table_key, title="", icon="tabler:table", color="gray", variant=None):
+    def __init__(self, screen_id, key, title="", color="gray", icon="tabler:table", has_detail=True, variant=None):
         self.screen_id = screen_id
-        self.table_key = table_key
+        self.key = key
         self.title = title
         self.icon = icon
         self.color = color
+        self.has_detail = has_detail
         self.variant = variant
-        self.has_detail = True  # <--- CRÍTICO: Habilita el botón del drawer
 
-    def _get_data(self, data_context):
+    def _get_data(self, ctx):
         from services.data_manager import data_manager
         
         screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {})
@@ -382,15 +262,15 @@ class AdminTableStrategy:
         
         path = None
         if self.variant:
-            lookup_key = f"{self.table_key}_{self.variant}"
-            path = inject_paths.get(lookup_key) or inject_paths.get(self.table_key)
+            lookup_key = f"{self.key}_{self.variant}"
+            path = inject_paths.get(lookup_key) or inject_paths.get(self.key)
         else:
-            path = inject_paths.get(self.table_key)
+            path = inject_paths.get(self.key)
 
         if not path:
             return None, None
 
-        node = safe_get(data_context, path)
+        node = safe_get(ctx, path)
         if not node:
             return None, None
 
@@ -429,9 +309,8 @@ class AdminTableStrategy:
 
         return columns_config, safe_row_data
 
-    def get_card_config(self, data_context):
-        columns_config, row_data = self._get_data(data_context)
-        # Preparar datos crudos para el drawer (similar a OpsTableStrategy)
+    def get_card_config(self, ctx):
+        columns_config, row_data = self._get_data(ctx)
         export_data = []
         if columns_config and row_data:
              for row in row_data:
@@ -439,15 +318,17 @@ class AdminTableStrategy:
                 export_data.append(new_row)
 
         return {
-            "title": self.title or self.table_key,
+            "title": self.title or self.key,
             "icon": self.icon,
+            "has_detail": self.has_detail,
             "is_table": True,
+            "is_chart": False,
             "main_value": f"{len(row_data)} registros" if row_data else "0",
             "raw_data": export_data 
         }
 
-    def render(self, data_context, mode="dashboard", theme="dark"):
-        columns_config, row_data = self._get_data(data_context)
+    def render(self, ctx, mode="dashboard", theme="dark"):
+        columns_config, row_data = self._get_data(ctx)
 
         if columns_config is None or not row_data:
             return dmc.Center(
@@ -458,14 +339,12 @@ class AdminTableStrategy:
                         gap=Space.XS,
                         children=[
                             DashIconify(icon="tabler:table-off", width=40, color=Colors.NEXA_GRAY),
-                            dmc.Text("Sin datos disponibles", size="xs", c="dimmed", style={"fontFamily": Typography.FAMILY}),
+                            dmc.Text("Sin datos disponibles", size="xs", c="dimmed", style={"fontFamily": Typography.FAMILY}), # type: ignore
                         ],
                     )
                 ],
             )
 
-        # CORRECCIÓN CLAVE: El drawer manda "analysis", tu código usa "analyst".
-        # Aceptamos ambos y llamamos a _render_analyst para tener una ID ÚNICA.
         if mode in ["analyst", "analysis"]:
             return self._render_analyst(columns_config, row_data, theme)
 
@@ -473,7 +352,7 @@ class AdminTableStrategy:
 
     def _render_dashboard(self, columns_config, row_data, theme="dark"):
         is_dark = theme == "dark"
-        unique_key = f"{self.screen_id}-{self.table_key}"
+        unique_key = f"{self.screen_id}-{self.key}"
 
         column_defs = []
         for i, col in enumerate(columns_config):
@@ -493,7 +372,6 @@ class AdminTableStrategy:
             column_defs.append(col_def)
 
         grid = dag.AgGrid(
-            # ID ÚNICA PARA DASHBOARD: ag-grid-dashboard
             id={"type": "ag-grid-dashboard", "index": unique_key},
             rowData=row_data,
             columnDefs=column_defs,
@@ -517,9 +395,7 @@ class AdminTableStrategy:
         )
 
     def _render_analyst(self, columns_config, row_data, theme="dark"):
-        # ID ÚNICA PARA DRAWER: ag-grid-analyst
-        # Esto evita el conflicto de IDs duplicadas que impedía abrir el drawer
-        table_id = {"type": "ag-grid-analyst", "index": f"{self.screen_id}-{self.table_key}"}
+        table_id = {"type": "ag-grid-analyst", "index": f"{self.screen_id}-{self.key}"}
 
         def _get_filter_type(field):
             if row_data:

@@ -7,24 +7,27 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Analitica.settings")
 django.setup()
 
-
 import dash
 from dash import Input, Output, State, dcc, callback_context, ALL, ClientsideFunction
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify
+from dash import html
 
 from typing import Any, Dict, cast
 
 from config import Config
 from components.layout.sidebar import render_sidebar
-from components.ai_copilot_sidebar import render_ai_copilot_sidebar, get_ai_toggle_button
+from components.ai_copilot_sidebar import (
+    render_ai_copilot,
+    get_ai_toggle_button,
+    create_chat_stores
+)
 from pages.auth import get_login_layout
 from services.auth_service import auth_service
+from services.ai_chat_service import ai_chat_service
 from design_system import DesignSystem
 from settings.plotly_config import PlotlyConfig
 from services.global_db import reset_engine
 from services.data_manager import data_manager
-
 
 logging.basicConfig(
     level=logging.INFO,
@@ -50,7 +53,8 @@ app = dash.Dash(
     suppress_callback_exceptions=True,
     title="Enterprise Analytics",
     external_stylesheets=[
-        "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap",
+        "/assets/style.css"
     ]
 )
 
@@ -85,19 +89,11 @@ def logout():
 
 def get_app_shell():
     theme = cast(Any, DesignSystem.get_mantine_theme())
-
     header_config = cast(Any, {"height": {"base": 60, "sm": 0}})
-
-    navbar_config = cast(Any, {
-        "width": 260,
-        "breakpoint": "sm",
-        "collapsed": {"mobile": True},
-    })
-
-    pt_config = cast(Any, {"base": "md", "sm": 80})
+    navbar_config = cast(Any, {"width": 260, "breakpoint": "sm", "collapsed": {"mobile": True}})
+    pt_config = cast(Any, {"base": 80, "sm": "md"})
 
     return dmc.MantineProvider(
-        
         id="mantine-provider",
         theme=theme,
         children=[
@@ -105,8 +101,7 @@ def get_app_shell():
             dcc.Store(id="theme-store", storage_type="local"),
             dcc.Store(id="sidebar-store", storage_type="local"),
             dcc.Store(id="selected-db-store", storage_type="local", data="db_1"),
-            dcc.Store(id="ai-copilot-store", storage_type="local", data=False),
-
+            create_chat_stores(),
             dmc.AppShell(
                 id="app-shell",
                 header=header_config,
@@ -125,19 +120,23 @@ def get_app_shell():
                             ],
                         ),
                     ),
-
-                    dmc.AppShellNavbar(
-                        id="navbar",
-                        children=[]
-                    ),
-
+                    dmc.AppShellNavbar(id="navbar", children=[]),
                     dmc.AppShellMain(
+                        id="app-shell-main",
                         children=dash.page_container,
                         pt=pt_config,
                     ),
-
                     get_ai_toggle_button(),
-                    render_ai_copilot_sidebar(is_open=False),
+                    dmc.Box(
+                        id="ai-copilot-wrapper",
+                        children=render_ai_copilot(
+                            is_open=False,
+                            theme="dark",
+                            mode="drawer",
+                            messages=[],
+                            quick_actions=ai_chat_service.get_quick_actions(),
+                        ),
+                    ),
                 ],
             ),
         ],
@@ -148,7 +147,6 @@ app.layout = lambda: (
     if Config.ENABLE_LOGIN and not session.get("user")
     else get_app_shell()
 )
-
 
 @app.callback(
     Output("theme-store", "data"),
@@ -166,43 +164,25 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
     ctx = callback_context
     if not ctx.triggered:
         return dash.no_update, dash.no_update, dash.no_update
-
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
     if trigger_id == "theme-toggle":
         new_theme = "light" if (current_theme or "dark") == "dark" else "dark"
         session["theme"] = new_theme
         return new_theme, dash.no_update, dash.no_update
-    
-
     if trigger_id == "btn-sidebar-toggle":
         return dash.no_update, not is_collapsed, dash.no_update
-
     if trigger_id == "db-selector" and db_value:
         previous_db = session.get("current_db")
         databases = session.get("databases", [])
         selected_db_info = next((d for d in databases if d.get("base_de_datos") == db_value), None)
-
         client_name = selected_db_info.get("nombre_cliente") if selected_db_info else "Desconocido"
         user_email = session.get("user", {}).get("email", "Desconocido")
-
-        logger.info(
-            "Cambio de base de datos | usuario=%s anterior=%s nueva=%s cliente=%s",
-            user_email,
-            previous_db,
-            db_value,
-            client_name,
-        )
-
+        logger.info("Cambio de base de datos | usuario=%s anterior=%s nueva=%s cliente=%s", user_email, previous_db, db_value, client_name)
         session["current_db"] = db_value
-        session["current_client_logo"] = (
-            selected_db_info.get("url_logo") if selected_db_info else None
-        )
+        session["current_client_logo"] = (selected_db_info.get("url_logo") if selected_db_info else None)
         reset_engine()
         data_manager.cache.clear()
-
         return dash.no_update, dash.no_update, db_value
-
     return dash.no_update, dash.no_update, dash.no_update
 
 @app.callback(
@@ -218,41 +198,129 @@ def render_interface(theme, collapsed, selected_db, pathname):
     theme = theme or "dark"
     collapsed = collapsed if collapsed is not None else False
     selected_db = selected_db or "db_1"
-
-    navbar_config = cast(
-        Dict[str, Any],
-        {
-            "width": 80 if collapsed else 260,
-            "breakpoint": "sm",
-            "collapsed": {"mobile": True},
-        },
-    )
-
-    sidebar_ui = render_sidebar(
-        collapsed=collapsed,
-        current_theme=theme,
-        current_db=selected_db,
-        active_path=pathname,
-    )
-
+    navbar_config = cast(Dict[str, Any], {"width": 80 if collapsed else 260, "breakpoint": "sm", "collapsed": {"mobile": True}})
+    sidebar_ui = render_sidebar(collapsed=collapsed, current_theme=theme, current_db=selected_db, active_path=pathname)
     return theme, navbar_config, sidebar_ui
 
 @app.callback(
-    Output("ai-copilot-drawer", "opened"),
+    Output("chat-open-store", "data"),
     Input("ai-copilot-toggle", "n_clicks"),
-    State("ai-copilot-drawer", "opened"),
+    Input({"type": "chat-control", "action": ALL}, "n_clicks"),
+    State("chat-open-store", "data"),
     prevent_initial_call=True,
 )
-def toggle_ai_copilot(n_clicks, is_open):
-    return not is_open
+def toggle_chat(toggle_clicks, actions, is_open):
+    triggered = callback_context.triggered_id
+    if isinstance(triggered, dict) and triggered.get("action") == "close":
+        return False
+    if triggered == "ai-copilot-toggle":
+        return not is_open
+    return dash.no_update
 
-app.clientside_callback(
-    ClientsideFunction(namespace="clientside", function_name="switch_graph_theme"),
-    Output({"type": "interactive-graph", "index": ALL}, "figure"),
-    Input("theme-store", "data"),
-    Input({"type": "interactive-graph", "index": ALL}, "id"),
-    State({"type": "interactive-graph", "index": ALL}, "figure"),
+@app.callback(
+    Output("chat-mode-store", "data"),
+    Output("chat-sidebar-active", "data"),
+    Input("chat-mode-drawer", "n_clicks"),
+    Input("chat-mode-sidebar", "n_clicks"),
+    Input("chat-mode-float", "n_clicks"),
+    State("chat-open-store", "data"),
+    prevent_initial_call=True,
 )
+def change_chat_mode(drawer_clicks, sidebar_clicks, float_clicks, is_open):
+    triggered = callback_context.triggered_id
+    mode_map = {
+        "chat-mode-drawer": "drawer",
+        "chat-mode-sidebar": "sidebar",
+        "chat-mode-float": "float",
+    }
+    new_mode = mode_map.get(triggered, "drawer")
+    sidebar_active = (new_mode == "sidebar" and is_open)
+    return new_mode, sidebar_active
+
+@app.callback(
+    Output("app-shell-main", "style"),
+    Input("chat-sidebar-active", "data"),
+)
+def adjust_main_padding(sidebar_active):
+    if sidebar_active:
+        return {"marginRight": "450px", "transition": "margin-right 0.3s ease"}
+    return {"marginRight": "0px", "transition": "margin-right 0.3s ease"}
+
+@app.callback(
+    Output("chat-sidebar-active", "data", allow_duplicate=True),
+    Input("chat-open-store", "data"),
+    Input("chat-mode-store", "data"),
+    prevent_initial_call=True,
+)
+def update_sidebar_active(is_open, mode):
+    return (mode == "sidebar" and is_open)
+
+@app.callback(
+    Output("chat-messages-store", "data"),
+    Input("chat-send", "n_clicks"),
+    Input("chat-input", "n_submit"),
+    Input({"type": "quick-action", "action": ALL}, "n_clicks"),
+    State("chat-input", "value"),
+    State("chat-messages-store", "data"),
+    prevent_initial_call=True,
+)
+def send_message(send_clicks, submit, quick_clicks, input_value, messages):
+    triggered = callback_context.triggered_id
+    user_message = None
+    if triggered in ["chat-send", "chat-input"]:
+        if input_value and input_value.strip():
+            user_message = input_value.strip()
+    elif isinstance(triggered, dict) and triggered.get("type") == "quick-action":
+        if any(quick_clicks):
+            user_message = triggered.get("action")
+    if not user_message:
+        return dash.no_update
+    response, timestamp = ai_chat_service.get_response(user_message)
+    messages = messages or []
+    messages.append({"role": "user", "content": user_message, "timestamp": timestamp})
+    messages.append({"role": "assistant", "content": response, "timestamp": timestamp})
+    return messages
+
+@app.callback(
+    Output("chat-input", "value"),
+    Input("chat-messages-store", "data"),
+    prevent_initial_call=True,
+)
+def clear_input_after_send(messages):
+    return ""
+
+@app.callback(
+    Output("chat-messages-store", "data", allow_duplicate=True),
+    Input({"type": "chat-control", "action": ALL}, "n_clicks"),
+    prevent_initial_call=True,
+)
+def clear_conversation(actions):
+    triggered = callback_context.triggered_id
+    if isinstance(triggered, dict) and triggered.get("action") == "clear":
+        ai_chat_service.clear_history()
+        return []
+    return dash.no_update
+
+
+@app.callback(
+    Output("ai-copilot-wrapper", "children"),
+    Input("chat-open-store", "data"),
+    Input("chat-mode-store", "data"),
+    Input("chat-messages-store", "data"),
+    Input("theme-store", "data"),
+)
+def render_chat_ui(is_open, mode, messages, theme):
+    theme = theme or "dark"
+    messages = messages or []
+    mode = mode or "drawer"
+    quick_actions = ai_chat_service.get_quick_actions() if not messages else []
+    return render_ai_copilot(
+        is_open=is_open,
+        theme=theme,
+        mode=mode,
+        messages=messages,
+        quick_actions=quick_actions,
+    )
 
 @app.callback(
     Output("app-shell", "navbar", allow_duplicate=True),
@@ -262,14 +330,15 @@ app.clientside_callback(
 )
 def toggle_mobile_navbar(opened, collapsed):
     collapsed = collapsed if collapsed is not None else False
-    return cast(
-        Dict[str, Any],
-        {
-            "width": 80 if collapsed else 260,
-            "breakpoint": "sm",
-            "collapsed": {"mobile": not opened if opened is not None else True},
-        },
-    )
+    return cast(Dict[str, Any], {"width": 80 if collapsed else 260, "breakpoint": "sm", "collapsed": {"mobile": not opened if opened is not None else True}})
+
+app.clientside_callback(
+    ClientsideFunction(namespace="clientside", function_name="switch_graph_theme"),
+    Output({"type": "interactive-graph", "index": ALL}, "figure"),
+    Input("theme-store", "data"),
+    Input({"type": "interactive-graph", "index": ALL}, "id"),
+    State({"type": "interactive-graph", "index": ALL}, "figure"),
+)
 
 app.clientside_callback(
     """
@@ -285,6 +354,26 @@ app.clientside_callback(
     Output({"type": "ag-grid-dashboard", "index": ALL}, "dashGridOptions"),
     Input({"type": "ag-quick-search", "index": ALL}, "value"),
     State({"type": "ag-grid-dashboard", "index": ALL}, "dashGridOptions"),
+    prevent_initial_call=True,
+)
+
+app.clientside_callback(
+    """
+    function(messages) {
+        if (!messages || messages.length === 0) {
+            return window.dash_clientside.no_update;
+        }
+        setTimeout(function() {
+            const container = document.getElementById('chat-messages-container');
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }, 100);
+        return window.dash_clientside.no_update;
+    }
+    """,
+    Output("chat-input", "placeholder"),
+    Input("chat-messages-store", "data"),
     prevent_initial_call=True,
 )
 

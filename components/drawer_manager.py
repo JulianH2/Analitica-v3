@@ -26,8 +26,38 @@ def create_smart_drawer(drawer_id: str = "smart-drawer"):
                 withCloseButton=False,
                 opened=False,
                 zIndex=1200,
-                styles={"drawer": {"backgroundColor": "transparent", "border": "none"}},
-                children=[html.Div(id=f"{drawer_id}-content", children=[])],
+                styles={
+                    "drawer": {
+                        "backgroundColor": "transparent", 
+                        "border": "none",
+                        "boxShadow": "none",
+                    },
+                    "body": {
+                        "padding": 0,
+                        "height": "100%",
+                        "display": "flex",
+                        "flexDirection": "column",
+                    },
+                    "content": {
+                        "height": "100%",
+                        "display": "flex",
+                        "flexDirection": "column",
+                    },
+                    "header": {
+                        "display": "none",
+                    },
+                },
+                children=[
+                    html.Div(
+                        id=f"{drawer_id}-content",
+                        children=[],
+                        style={
+                            "height": "100%",
+                            "display": "flex",
+                            "flexDirection": "column",
+                        }
+                    )
+                ],
             ),
         ]
     )
@@ -36,15 +66,13 @@ def create_smart_drawer(drawer_id: str = "smart-drawer"):
 def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
     is_dark = theme == "dark"
 
-    # Colores base del Design System
+    # Colores base del Design System - solo colores base, sin paletas
     bg_main = DS.NEXA_BG_DARK if is_dark else DS.NEXA_BG_LIGHT
-    bg_secondary = DS.NEXA_BG_DARK_SECONDARY if is_dark else DS.NEXA_BG_LIGHT_SECONDARY
-    border_color = DS.SLATE[7] if is_dark else DS.SLATE[3]
     text_color = DS.TEXT_DARK if is_dark else DS.TEXT_LIGHT
     
-    # Gradiente Azul Marca para Insights
-    brand_gradient = f"linear-gradient(135deg, {DS.NEXA_BLUE} 0%, {DS.BRAND[8]} 100%)"
-    icon_color = DS.NEXA_BLUE
+    # Tonos dorados en lugar de azules
+    brand_gradient = f"linear-gradient(135deg, {DS.NEXA_GOLD} 0%, {DS.NEXA_ORANGE} 100%)"
+    icon_color = DS.NEXA_GOLD
 
     # --- CORRECCIÓN AQUÍ: Claves alineadas con DrawerDataService (tab_...) ---
     tab_defs = [
@@ -60,16 +88,22 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
     default_tab = available_tabs[0] if available_tabs else "tab_resumen"
 
     return html.Div(
-        style={"display": "flex", "flexDirection": "column", "height": "100%", "backgroundColor": bg_main},
+        style={
+            "display": "flex", 
+            "flexDirection": "column", 
+            "height": "100vh",
+            "width": "100%",
+            "backgroundColor": bg_main,
+            "overflow": "hidden",
+        },
         children=[
             # --- HEADER ---
             dmc.Paper(
                 p="lg",
                 radius=0,
-                shadow="sm",
                 style={
-                    "borderBottom": f"1px solid {border_color}",
-                    "backgroundColor": bg_secondary,
+                    "backgroundColor": bg_main,
+                    "border": "none",
                 },
                 children=dmc.Group(
                     justify="space-between",
@@ -81,8 +115,8 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
                                     children=DashIconify(icon=drawer_data.get("icon", "tabler:info-circle"), width=28),
                                     size="xl",
                                     variant="light",
-                                    color="blue", 
-                                    style={"color": DS.NEXA_BLUE, "backgroundColor": "rgba(65, 140, 223, 0.15)"},
+                                    color="yellow", 
+                                    style={"color": DS.NEXA_GOLD, "backgroundColor": "rgba(233, 161, 59, 0.15)"},
                                     radius="md",
                                 ),
                                 html.Div(
@@ -120,13 +154,14 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
             dmc.Tabs(
                 value=default_tab,
                 variant="pills",
-                color="blue",
+                color="yellow",
                 radius="md",
                 style={
                     "flex": 1,
                     "display": "flex",
                     "flexDirection": "column",
                     "overflow": "hidden",
+                    "height": "100%",
                 },
                 children=[
                     dmc.TabsList(
@@ -134,8 +169,8 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
                         pt="sm",
                         pb="md",
                         style={
-                            "borderBottom": f"1px solid {border_color}",
-                            "backgroundColor": bg_secondary,
+                            "backgroundColor": bg_main,
+                            "border": "none",
                         },
                         children=[
                             dmc.TabsTab(
@@ -166,6 +201,8 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
                                 "overflow": "auto",
                                 "padding": "1.5rem",
                                 "backgroundColor": bg_main,
+                                "height": "100%",
+                                "minHeight": "0",
                             },
                         ) for key, label, icon in tab_defs if drawer_data.get(key)
                     ]

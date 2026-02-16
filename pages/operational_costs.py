@@ -17,12 +17,12 @@ dash.register_page(__name__, path="/operational-costs", title="Costos Operacione
 SCREEN_ID = "operational-costs"
 PREFIX = "oc"
 
-w_profit = SmartWidget(f"{PREFIX}_profit", OpsGaugeStrategy(screen_id=SCREEN_ID, kpi_key="profit_per_trip", title="Utilidad Viaje", icon="tabler:trending-up", color="teal", has_detail=True, layout_config={"height": 290}))
-w_total = SmartWidget(f"{PREFIX}_total", OpsGaugeStrategy(screen_id=SCREEN_ID, kpi_key="total_trip_cost", title="Costo Viaje Total", icon="tabler:calculator", color="red", has_detail=True, layout_config={"height": 300}))
+w_profit = SmartWidget(f"{PREFIX}_profit", OpsGaugeStrategy(screen_id=SCREEN_ID, key="profit_per_trip", title="Utilidad Viaje", icon="tabler:trending-up", color="teal", has_detail=True, layout_config={"height": 290}))
+w_total = SmartWidget(f"{PREFIX}_total", OpsGaugeStrategy(screen_id=SCREEN_ID, key="total_trip_cost", title="Costo Viaje Total", icon="tabler:calculator", color="red", has_detail=True, layout_config={"height": 300}))
 
-c_stack = ChartWidget(f"{PREFIX}_stack", OpsTrendChartStrategy(screen_id=SCREEN_ID, chart_key="cost_and_profit_trends", title="Costo y Utilidad", has_detail=True, layout_config={"height": "100%"}))
-c_break = ChartWidget(f"{PREFIX}_break", OpsHorizontalBarStrategy(screen_id=SCREEN_ID, chart_key="cost_by_concept", title="Costos por Concepto", has_detail=True, layout_config={"height": 360}))
-c_comp = ChartWidget(f"{PREFIX}_comp", OpsTrendChartStrategy(screen_id=SCREEN_ID, chart_key="cost_breakdown", title="Costo Viaje Total 2025 vs 2024", icon="tabler:chart-line", color="red", has_detail=True, layout_config={"height": 360}))
+c_stack = ChartWidget(f"{PREFIX}_stack", OpsTrendChartStrategy(screen_id=SCREEN_ID, key="cost_and_profit_trends", title="Costo y Utilidad", has_detail=True, layout_config={"height": "100%"}))
+c_break = ChartWidget(f"{PREFIX}_break", OpsHorizontalBarStrategy(screen_id=SCREEN_ID, key="cost_by_concept", title="Costos por Concepto", has_detail=True, layout_config={"height": 360}))
+c_comp = ChartWidget(f"{PREFIX}_comp", OpsTrendChartStrategy(screen_id=SCREEN_ID, key="cost_breakdown", title="Costo Viaje Total 2025 vs 2024", icon="tabler:chart-line", color="red", has_detail=True, layout_config={"height": 360}))
 
 t_route = TableWidget(f"{PREFIX}_route", OpsTableStrategy(SCREEN_ID, "margin_by_route", title="Margen por Ruta"))
 t_unit = TableWidget(f"{PREFIX}_unit", OpsTableStrategy(SCREEN_ID, "margin_by_unit", title="Margen por Unidad"))
@@ -32,8 +32,11 @@ t_client = TableWidget(f"{PREFIX}_client", OpsTableStrategy(SCREEN_ID, "margin_b
 
 def _render_cost_tabs(ctx):
     theme = session.get("theme", "dark")
-    return dmc.Paper(p=8, withBorder=True, radius="md", children=[
-        dmc.Tabs(value="ruta", children=[
+    return dmc.Paper(
+        p=8,
+        withBorder=True,
+        radius="md",
+        children=[dmc.Tabs(value="ruta", children=[
             dmc.TabsList([
                 dmc.TabsTab("Margen por Ruta", value="ruta"),
                 dmc.TabsTab("Margen por Unidad", value="unidad"),
@@ -46,21 +49,24 @@ def _render_cost_tabs(ctx):
             dmc.TabsPanel(html.Div(style={"height": "380px", "overflowY": "auto"}, children=[t_op.render(ctx, theme=theme)]), value="operador"),
             dmc.TabsPanel(html.Div(style={"height": "380px", "overflowY": "auto"}, children=[t_trip.render(ctx, theme=theme)]), value="viaje"),
             dmc.TabsPanel(html.Div(style={"height": "380px", "overflowY": "auto"}, children=[t_client.render(ctx, theme=theme)]), value="cliente"),
-        ])
-    ])
+        ])]
+    )
 
 def _render_ops_costs_body(ctx):
     theme = session.get("theme", "dark")
 
-    def _card(widget_content, h=None):
-        return dmc.Paper(p="xs", radius="md", withBorder=True, shadow=None, style={"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}, children=widget_content)
-
     return html.Div([
         dmc.Grid(gutter="md", mb="lg", align="stretch", children=[
-            dmc.GridCol(span={"base": 12, "lg": 4}, children=[html.Div(style={"display": "grid", "gridTemplateRows": "1fr 1fr", "gap": "0.8rem", "height": "100%"}, children=[_card(w_profit.render(ctx, theme=theme)), _card(w_total.render(ctx, theme=theme))])]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 8}, children=[_card(c_stack.render(ctx, theme=theme))]) # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 4}, children=[html.Div(style={"display": "grid", "gridTemplateRows": "1fr 1fr", "gap": "0.8rem", "height": "100%"}, children=[ # type: ignore
+                w_profit.render(ctx, theme=theme),
+                w_total.render(ctx, theme=theme)
+            ])]),
+            dmc.GridCol(span={"base": 12, "lg": 8}, children=[c_stack.render(ctx, theme=theme)]) # type: ignore
         ]),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(350px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[_card(c_break.render(ctx, theme=theme)), _card(c_comp.render(ctx, theme=theme))]),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(350px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
+            c_break.render(ctx, theme=theme),
+            c_comp.render(ctx, theme=theme)
+        ]),
         dmc.Divider(my="lg", label="Análisis de Margen", labelPosition="center"),
         _render_cost_tabs(ctx),
         dmc.Space(h=30),

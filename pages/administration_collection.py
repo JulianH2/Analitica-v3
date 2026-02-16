@@ -9,16 +9,12 @@ from components.smart_widget import SmartWidget
 from components.table_widget import TableWidget
 from components.drawer_manager import create_smart_drawer, register_drawer_callback
 from components.filter_manager import create_filter_section
-from strategies.administration import (
-    AdminKPIStrategy, AdminGaugeStrategy,
-    AdminTrendChartStrategy, AdminHistoricalForecastLineStrategy,
-    AdminDonutChartStrategy, AdminStackedBarStrategy, AdminTableStrategy
-)
+from strategies.administration import AdminKPIStrategy, AdminGaugeStrategy, AdminTrendChartStrategy, AdminHistoricalForecastLineStrategy, AdminDonutChartStrategy, AdminStackedBarStrategy, AdminTableStrategy
 
 dash.register_page(__name__, path="/administration-receivables", title="Cobranza")
 
 SCREEN_ID = "administration-receivables"
-PREFIX = "ac"
+PREFIX = "ar"
 
 def skeleton_admin_collection():
     from components.skeleton import skeleton_kpi, skeleton_gauge, skeleton_chart, skeleton_table, skeleton_box
@@ -53,23 +49,38 @@ c_forecast_bill = ChartWidget(f"{PREFIX}_forecast_bill", AdminHistoricalForecast
 def _render_collection_body(ctx):
     theme = session.get("theme", "dark")
 
-    def _card(widget_content, h=None):
-        return dmc.Paper(p="xs", radius="md", withBorder=True, shadow=None, style={"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}, children=widget_content)
-
     return html.Div([
         dmc.Title("Administración - Cobranza", order=3, mb="lg", c="dimmed"), # type: ignore
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(180px, 1fr))", "gap": "0.6rem", "marginBottom": "1rem"}, children=[_card(k_billing.render(ctx, theme=theme)), _card(k_credit.render(ctx, theme=theme)), _card(k_debit.render(ctx, theme=theme)), _card(k_payments.render(ctx, theme=theme)), _card(k_portfolio.render(ctx, theme=theme))]),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[_card(g_eff.render(ctx, theme=theme)), _card(g_days.render(ctx, theme=theme))]),
-        _card(c_mix.render(ctx, h=400, theme=theme)),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(180px, 1fr))", "gap": "0.6rem", "marginBottom": "1rem"}, children=[
+            k_billing.render(ctx, theme=theme),
+            k_credit.render(ctx, theme=theme),
+            k_debit.render(ctx, theme=theme),
+            k_payments.render(ctx, theme=theme),
+            k_portfolio.render(ctx, theme=theme)
+        ]),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
+            g_eff.render(ctx, theme=theme),
+            g_days.render(ctx, theme=theme)
+        ]),
+        c_mix.render(ctx, h=400, theme=theme),
         dmc.Space(h="md"),
         dmc.Grid(gutter="lg", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "lg": 7}, children=[_card(t_aging.render(ctx, theme=theme), h=480)]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 5}, children=[_card(c_stack.render(ctx, h=480, theme=theme))]) # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 7}, children=[html.Div(style={"height": "480px", "overflowY": "auto"}, children=[t_aging.render(ctx, theme=theme)])]), # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 5}, children=[c_stack.render(ctx, h=480, theme=theme)]) # type: ignore
         ]),
         dmc.Paper(
-            p="md", withBorder=True, mb="xl", shadow="sm", style={"backgroundColor": "transparent"},
+            p="md",
+            withBorder=True,
+            mb="xl",
+            shadow="sm",
+            style={"backgroundColor": "transparent"},
             children=[dmc.Tabs(value="facturado", children=[
-                dmc.TabsList([dmc.TabsTab("Facturado", value="facturado"), dmc.TabsTab("Días Cartera", value="dias_cartera"), dmc.TabsTab("Pronóstico Cobranza", value="pronostico_cobranza"), dmc.TabsTab("Pronóstico Facturación", value="pronostico_facturacion")]),
+                dmc.TabsList([
+                    dmc.TabsTab("Facturado", value="facturado"),
+                    dmc.TabsTab("Días Cartera", value="dias_cartera"),
+                    dmc.TabsTab("Pronóstico Cobranza", value="pronostico_cobranza"),
+                    dmc.TabsTab("Pronóstico Facturación", value="pronostico_facturacion")
+                ]),
                 dmc.TabsPanel(dmc.Box(c_fact.render(ctx, h=400, theme=theme), pt="md"), value="facturado"),
                 dmc.TabsPanel(dmc.Box(c_days_trend.render(ctx, h=400, theme=theme), pt="md"), value="dias_cartera"),
                 dmc.TabsPanel(dmc.Box(c_forecast_col.render(ctx, h=400, theme=theme), pt="md"), value="pronostico_cobranza"),

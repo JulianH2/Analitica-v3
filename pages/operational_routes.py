@@ -26,17 +26,14 @@ FILTER_IDS = ["route-year", "route-month"] + [f["id"] for f in ADDITIONAL_FILTER
 
 def skeleton_ops_routes():
     from components.skeleton import skeleton_chart, skeleton_table, skeleton_box
-    return html.Div(
-        className="skeleton-layout",
-        children=[
-            skeleton_box("24px", "180px", "skeleton-title"),
-            html.Div(style={"marginTop": "1.5rem"}, children=[skeleton_box("14px", "200px", "skeleton-subtitle"), skeleton_chart("650px")]),
-            html.Div(style={"marginTop": "1.5rem"}, children=[skeleton_box("14px", "280px", "skeleton-subtitle"), skeleton_table(12, 6)]),
-        ],
-    )
+    return html.Div(className="skeleton-layout", children=[
+        skeleton_box("24px", "180px", "skeleton-title"),
+        html.Div(style={"marginTop": "1.5rem"}, children=[skeleton_box("14px", "200px", "skeleton-subtitle"), skeleton_chart("650px")]),
+        html.Div(style={"marginTop": "1.5rem"}, children=[skeleton_box("14px", "280px", "skeleton-subtitle"), skeleton_table(12, 6)]),
+    ])
 
-c_map = ChartWidget(f"{PREFIX}_map", OpsMapStrategy(SCREEN_ID, "routes_map", "Mapa de Rutas Activas", icon="tabler:map-2", color="indigo", has_detail=True, layout_config={"height": 650}))
-t_main = TableWidget(f"{PREFIX}_main", OpsTableStrategy(SCREEN_ID, "main_routes", title="Detalle de Rutas"))
+c_map = ChartWidget("or_map", OpsMapStrategy(SCREEN_ID, "routes_map", "Mapa de Rutas Activas", icon="tabler:map-2", color="indigo", has_detail=True, layout_config={"height": 650}))
+t_main = TableWidget("or_main", OpsTableStrategy(SCREEN_ID, "main_routes", title="Detalle de Rutas"))
 
 def _render_ops_routes_body(ctx):
     theme = session.get("theme", "dark")

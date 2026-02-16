@@ -17,12 +17,12 @@ dash.register_page(__name__, path="/operational-performance", title="Rendimiento
 SCREEN_ID = "operational-performance"
 PREFIX = "op"
 
-w_kms_lt = SmartWidget(f"{PREFIX}_kms_lt", OpsGaugeStrategy(screen_id=SCREEN_ID, kpi_key="real_yield", title="Rendimiento (Kms/Lt)", icon="tabler:gauge", color="green", has_detail=True, layout_config={"height": 300}))
-w_kms_re = SmartWidget(f"{PREFIX}_kms_tot", OpsGaugeStrategy(screen_id=SCREEN_ID, kpi_key="real_kilometers", title="Kms Reales", icon="tabler:route", color="blue", has_detail=True, layout_config={"height": 300}))
-w_litros = SmartWidget(f"{PREFIX}_litros", OpsGaugeStrategy(screen_id=SCREEN_ID, kpi_key="liters_consumed", title="Litros Consumidos", icon="tabler:droplet", color="orange", has_detail=True, layout_config={"height": 300}))
+w_kms_lt = SmartWidget(f"{PREFIX}_kms_lt", OpsGaugeStrategy(screen_id=SCREEN_ID, key="real_yield", title="Rendimiento (Kms/Lt)", icon="tabler:gauge", color="green", has_detail=True, layout_config={"height": 300}))
+w_kms_re = SmartWidget(f"{PREFIX}_kms_tot", OpsGaugeStrategy(screen_id=SCREEN_ID, key="real_kilometers", title="Kms Reales", icon="tabler:route", color="blue", has_detail=True, layout_config={"height": 300}))
+w_litros = SmartWidget(f"{PREFIX}_litros", OpsGaugeStrategy(screen_id=SCREEN_ID, key="liters_consumed", title="Litros Consumidos", icon="tabler:droplet", color="orange", has_detail=True, layout_config={"height": 300}))
 
-c_trend = ChartWidget(f"{PREFIX}_trend", OpsTrendChartStrategy(screen_id=SCREEN_ID, chart_key="yield_trends", title="Tendencia Rendimiento Real (Kms/Lt)", icon="tabler:timeline", color="indigo", has_detail=True, layout_config={"height": 340}))
-c_mix = ChartWidget(f"{PREFIX}_mix", OpsDonutChartStrategy(screen_id=SCREEN_ID, chart_key="yield_by_operation", title="Distribución de Rendimiento por Operación", icon="tabler:chart-pie-2", color="green", has_detail=True, layout_config={"height": 340}))
+c_trend = ChartWidget(f"{PREFIX}_trend", OpsTrendChartStrategy(screen_id=SCREEN_ID, key="yield_trends", title="Tendencia Rendimiento Real (Kms/Lt)", icon="tabler:timeline", color="indigo", has_detail=True, layout_config={"height": 340}))
+c_mix = ChartWidget(f"{PREFIX}_mix", OpsDonutChartStrategy(screen_id=SCREEN_ID, key="yield_by_operation", title="Distribución de Rendimiento por Operación", icon="tabler:chart-pie-2", color="green", has_detail=True, layout_config={"height": 340}))
 
 t_unit = TableWidget(f"{PREFIX}_unit", OpsTableStrategy(SCREEN_ID, "performance_by_unit", title="Rendimiento por Unidad"))
 t_oper = TableWidget(f"{PREFIX}_oper", OpsTableStrategy(SCREEN_ID, "operator_performance", title="Rendimiento por Operador"))
@@ -30,22 +30,19 @@ t_oper = TableWidget(f"{PREFIX}_oper", OpsTableStrategy(SCREEN_ID, "operator_per
 def _render_ops_performance_body(ctx):
     theme = session.get("theme", "dark")
 
-    def _card(widget_content, h=None):
-        return dmc.Paper(p="xs", radius="md", withBorder=True, shadow=None, style={"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}, children=widget_content)
-
     return html.Div([
         html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(280px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
-            _card(w_kms_lt.render(ctx, theme=theme)),
-            _card(w_kms_re.render(ctx, theme=theme)),
-            _card(w_litros.render(ctx, theme=theme)),
+            w_kms_lt.render(ctx, theme=theme),
+            w_kms_re.render(ctx, theme=theme),
+            w_litros.render(ctx, theme=theme),
         ]),
         html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(350px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
-            _card(c_trend.render(ctx, theme=theme)),
-            _card(c_mix.render(ctx, theme=theme)),
+            c_trend.render(ctx, theme=theme),
+            c_mix.render(ctx, theme=theme),
         ]),
         dmc.Grid(gutter="md", children=[
-            dmc.GridCol(span={"base": 12, "md": 5}, children=[_card(t_unit.render(ctx, theme=theme), h=330)]), # type: ignore
-            dmc.GridCol(span={"base": 12, "md": 7}, children=[_card(t_oper.render(ctx, theme=theme), h=330)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 5}, children=[html.Div(style={"height": "330px", "overflowY": "auto"}, children=[t_unit.render(ctx, theme=theme)])]), # type: ignore
+            dmc.GridCol(span={"base": 12, "md": 7}, children=[html.Div(style={"height": "330px", "overflowY": "auto"}, children=[t_oper.render(ctx, theme=theme)])]), # type: ignore
         ]),
         dmc.Space(h=30),
     ])
@@ -64,9 +61,13 @@ def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
 
+
+    theme = session.get("theme", "dark")
+    
     refresh_components, _ = data_manager.dash_refresh_components(SCREEN_ID, interval_ms=60 * 60 * 1000, max_intervals=-1)
 
     filters = create_filter_section(
+        theme=theme,
         year_id="perf-year",
         month_id="perf-month",
         default_month="enero",

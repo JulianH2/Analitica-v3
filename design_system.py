@@ -141,6 +141,10 @@ class Colors:
     TRANSPARENT: Final[str] = "rgba(0,0,0,0)"
     WHITE: Final[str] = "#ffffff"
     
+    # Card borders for light/dark themes
+    CARD_BORDER_LIGHT: Final[str] = "1px solid #e5e7eb"
+    CARD_BORDER_DARK: Final[str] = "1px solid rgba(255,255,255,0.08)"
+    
     COLOR_MAP: Final[Dict[str, str]] = {
         "blue": NEXA_BLUE,
         "indigo": BRAND[5],
@@ -833,6 +837,8 @@ class DesignSystem:
     ORANGE = Colors.ORANGE
     TRANSPARENT = Colors.TRANSPARENT
     WHITE = Colors.WHITE
+    CARD_BORDER_LIGHT = Colors.CARD_BORDER_LIGHT
+    CARD_BORDER_DARK = Colors.CARD_BORDER_DARK
     COLOR_MAP = Colors.COLOR_MAP
     
 

@@ -34,8 +34,8 @@ class ChartWidget:
         return dmc.Paper(
             p=0,
             radius="md",
-            withBorder=False,
-            shadow=None,
+            withBorder=True,
+            shadow="xl",
             style={
                 "height": height_style,
                 "display": "flex",

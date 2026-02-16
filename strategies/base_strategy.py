@@ -4,7 +4,9 @@ from settings.theme import DesignSystem
 from utils.helpers import safe_get
 
 class KPIStrategy(ABC):
-    def __init__(self, title="", color="indigo", icon="tabler:chart-bar", has_detail=True, layout_config=None, variant=None):
+    def __init__(self, screen_id, key, title="", color="blue", icon="", has_detail=True, variant=None, layout_config=None):
+        self.screen_id = screen_id
+        self.key = key
         self.title = title
         self.color = color
         self.icon = icon
@@ -16,18 +18,29 @@ class KPIStrategy(ABC):
         if layout_config:
             self.layout.update(layout_config)
 
-    @abstractmethod
-    def get_card_config(self, data_context: Dict[str, Any]) -> dict:
-        pass
+    def set_layout(self, layout_config):
+        if layout_config:
+            self.layout.update(layout_config)
 
     @abstractmethod
-    def render_detail(self, data_context: Dict[str, Any]) -> Any:
+    def get_card_config(self, ctx: Dict[str, Any]) -> dict:
         pass
 
-    def get_figure(self, data_context: Dict[str, Any], theme: str = "dark") -> Optional[Any]:
+    def render(self, ctx: Dict[str, Any], mode: str = "dashboard", theme: str = "dark") -> Any:
+        if mode in ["analysis", "analyst"]:
+            return self._render_detailed_view(ctx, theme)
+        return self._render_standard_view(ctx, theme)
+
+    def _render_standard_view(self, ctx: Dict[str, Any], theme: str) -> Any:
         return None
 
-    def _resolve_kpi_data(self, data_context: Dict[str, Any], screen_id: str, kpi_key: str, variant: Optional[str] = None) -> Optional[Dict]:
+    def _render_detailed_view(self, ctx: Dict[str, Any], theme: str) -> Any:
+        return None
+
+    def get_figure(self, ctx: Dict[str, Any], theme: str = "dark") -> Optional[Any]:
+        return None
+
+    def _resolve_kpi_data(self, ctx: Dict[str, Any], screen_id: str, key: str, variant: Optional[str] = None) -> Optional[Dict]:
         try:
             from services.data_manager import data_manager
 
@@ -38,21 +51,21 @@ class KPIStrategy(ABC):
             variant_to_use = variant or self.variant
 
             if variant_to_use:
-                lookup_key = f"{kpi_key}_{variant_to_use}"
-                path = inject_paths.get(lookup_key) or inject_paths.get(kpi_key)
+                lookup_key = f"{key}_{variant_to_use}"
+                path = inject_paths.get(lookup_key) or inject_paths.get(key)
             else:
-                path = inject_paths.get(kpi_key)
+                path = inject_paths.get(key)
 
             if not path:
                 return None
 
-            return safe_get(data_context, path)
+            return safe_get(ctx, path)
 
         except Exception as e:
-            print(f"⚠️ Error en _resolve_kpi_data para {kpi_key}: {e}")
+            print(f"⚠️ Error en _resolve_kpi_data para {key}: {e}")
             return None
 
-    def _resolve_chart_data(self, data_context: Dict[str, Any], screen_id: str, chart_key: str, variant: Optional[str] = None) -> Optional[Dict]:
+    def _resolve_chart_data(self, ctx: Dict[str, Any], screen_id: str, key: str, variant: Optional[str] = None) -> Optional[Dict]:
         try:
             from services.data_manager import data_manager
 
@@ -63,24 +76,24 @@ class KPIStrategy(ABC):
             variant_to_use = variant or self.variant
 
             if variant_to_use:
-                lookup_key = f"{chart_key}_{variant_to_use}"
-                path = inject_paths.get(lookup_key) or inject_paths.get(chart_key)
+                lookup_key = f"{key}_{variant_to_use}"
+                path = inject_paths.get(lookup_key) or inject_paths.get(key)
             else:
-                path = inject_paths.get(chart_key)
+                path = inject_paths.get(key)
 
             if not path:
                 return None
 
-            return safe_get(data_context, path)
+            return safe_get(ctx, path)
 
         except Exception as e:
-            print(f"⚠️ Error en _resolve_chart_data para {chart_key}: {e}")
+            print(f"⚠️ Error en _resolve_chart_data para {key}: {e}")
             return None
 
     def _create_empty_figure(self, message: str = "Sin datos", theme: str = "dark"):
         import plotly.graph_objects as go
 
-        template = "zam_dark" if theme == "dark" else "zam_light"
+        template = "plotly_dark" if theme == "dark" else "plotly"
 
         fig = go.Figure()
         fig.update_layout(

@@ -77,35 +77,44 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
         return {"color": config["main"], "style": base_style, "bg": config["light"]}
 
     menu_structure = [
-        {"type": "link", "label": "Dashboard Principal", "href": "/", "icon": "tabler:layout-dashboard"},
-        {"type": "divider", "label": "Módulos"},
-        {
-            "type": "group", "label": "OPERACIONES", "icon": "tabler:steering-wheel",
-            "children": [
-                {"label": "Control Operativo", "href": "/ops-dashboard", "icon": "tabler:dashboard"},
-                {"label": "Rendimiento", "href": "/ops-performance", "icon": "tabler:gauge"},
-                {"label": "Costos", "href": "/ops-costs", "icon": "tabler:coin"},
-                {"label": "Rutas", "href": "/ops-routes", "icon": "tabler:map-pin"},
-            ]
-        },
-        {
-            "type": "group", "label": "MANTENIMIENTO", "icon": "tabler:tool",
-            "children": [
-                {"label": "Dashboard Taller", "href": "/taller-dashboard", "icon": "tabler:activity"},
-                {"label": "Disponibilidad", "href": "/taller-availability", "icon": "tabler:clock-play"},
-                {"label": "Compras", "href": "/taller-purchases", "icon": "tabler:shopping-cart"},
-                {"label": "Almacén", "href": "/taller-inventory", "icon": "tabler:packages"},
-            ]
-        },
-        {
-            "type": "group", "label": "ADMINISTRACIÓN", "icon": "tabler:building-bank",
-            "children": [
-                {"label": "Facturación", "href": "/admin-collection", "icon": "tabler:file-invoice"},
-                {"label": "Cuentas x Pagar", "href": "/admin-payables", "icon": "tabler:file-dollar"},
-                {"label": "Bancos", "href": "/admin-banks", "icon": "tabler:wallet"},
-            ]
-        }
-    ]
+    {"type": "link", "label": "Dashboard Principal", "href": "/", "icon": "tabler:layout-dashboard"},
+    {"type": "divider", "label": "Módulos"},
+    {
+        "type": "group",
+        "label": "OPERACIONES",
+        "icon": "tabler:steering-wheel",
+        "children": [
+            {"label": "Dashboard Operativo", "href": "/operational-dashboard", "icon": "tabler:dashboard"},
+            {"label": "Rendimiento", "href": "/operational-performance", "icon": "tabler:gauge"},
+            {"label": "Costos", "href": "/operational-costs", "icon": "tabler:coin"},
+            {"label": "Rutas", "href": "/operational-routes", "icon": "tabler:map-pin"},
+        ],
+    },
+
+    {
+        "type": "group",
+        "label": "MANTENIMIENTO",
+        "icon": "tabler:tool",
+        "children": [
+            {"label": "Dashboard Taller", "href": "/workshop-dashboard", "icon": "tabler:activity"},
+            {"label": "Disponibilidad", "href": "/workshop-availability", "icon": "tabler:clock-play"},
+            {"label": "Compras", "href": "/workshop-purchases", "icon": "tabler:shopping-cart"},
+            {"label": "Almacén", "href": "/workshop-inventory", "icon": "tabler:packages"},
+        ],
+    },
+
+    {
+        "type": "group",
+        "label": "ADMINISTRACIÓN",
+        "icon": "tabler:building-bank",
+        "children": [
+            {"label": "Facturación", "href": "/administration-receivables", "icon": "tabler:file-invoice"},
+            {"label": "Cuentas por Pagar", "href": "/administration-payables", "icon": "tabler:file-dollar"},
+            {"label": "Bancos", "href": "/administration-banks", "icon": "tabler:wallet"},
+        ],
+    },
+]
+
 
     def render_link(item):
         is_active = active_path == item["href"]

@@ -36,25 +36,48 @@ t_hist = TableWidget(f"{SCREEN_ID}-inventory_history", WorkshopTableStrategy(SCR
 
 def _render_taller_inventory_body(ctx):
     theme = session.get("theme", "dark")
-    def _card(widget_content, h=None): return dmc.Paper(p="xs", radius="md", withBorder=True, shadow=None, style={"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}, children=widget_content)
 
     return html.Div([
-        dmc.Paper(p="md", withBorder=True, mb="xl", shadow="sm", style={"backgroundColor": "transparent"}, children=[
-            dmc.Text("ECUACIÓN DE VALORIZACIÓN", size="xs", fw=700, c="dimmed", mb="sm"), # type: ignore
-            html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(180px, 1fr))", "gap": "0.6rem"}, children=[w_ini.render(ctx, theme=theme), w_ent.render(ctx, theme=theme), w_sal.render(ctx, theme=theme), w_his.render(ctx, theme=theme), w_act.render(ctx, theme=theme)])
-        ]),
-        _card(c_trend.render(ctx, theme=theme)),
+        dmc.Paper(
+            p="md",
+            withBorder=True,
+            mb="xl",
+            shadow="sm",
+            style={"backgroundColor": "transparent"},
+            children=[
+                dmc.Text("ECUACIÓN DE VALORIZACIÓN", size="xs", fw=700, c="dimmed", mb="sm"), # type: ignore
+                html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(180px, 1fr))", "gap": "0.6rem"}, children=[
+                    w_ini.render(ctx, theme=theme),
+                    w_ent.render(ctx, theme=theme),
+                    w_sal.render(ctx, theme=theme),
+                    w_his.render(ctx, theme=theme),
+                    w_act.render(ctx, theme=theme)
+                ])
+            ]
+        ),
+        c_trend.render(ctx, theme=theme),
         dmc.Space(h="xl"),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "0.6rem", "marginBottom": "1.5rem"}, children=[_card(w_cmp.render(ctx, theme=theme)), _card(w_reg.render(ctx, theme=theme)), _card(w_con.render(ctx, theme=theme)), _card(w_sin.render(ctx, theme=theme))]),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "0.6rem", "marginBottom": "1.5rem"}, children=[
+            w_cmp.render(ctx, theme=theme),
+            w_reg.render(ctx, theme=theme),
+            w_con.render(ctx, theme=theme),
+            w_sin.render(ctx, theme=theme)
+        ]),
         dmc.Grid(gutter="md", children=[
-            dmc.GridCol(span={"base": 12, "lg": 5}, children=[_card(c_area.render(ctx, theme=theme))]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 7}, children=[dmc.Paper(p="md", withBorder=True, style={"height": "100%", "backgroundColor": "transparent"}, children=[ # type: ignore
-                dmc.Tabs(value="fam", children=[
-                    dmc.TabsList([dmc.TabsTab("Por Familia", value="fam"), dmc.TabsTab("Historial Detallado", value="hist")]),
+            dmc.GridCol(span={"base": 12, "lg": 5}, children=[c_area.render(ctx, theme=theme)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 7}, children=[dmc.Paper( # type: ignore
+                p="md",
+                withBorder=True,
+                style={"height": "100%", "backgroundColor": "transparent"},
+                children=[dmc.Tabs(value="fam", children=[
+                    dmc.TabsList([
+                        dmc.TabsTab("Por Familia", value="fam"),
+                        dmc.TabsTab("Historial Detallado", value="hist")
+                    ]),
                     dmc.TabsPanel(dmc.ScrollArea(h=390, children=[t_fam.render(ctx, theme=theme)]), value="fam", pt="xs"),
                     dmc.TabsPanel(dmc.ScrollArea(h=390, children=[t_hist.render(ctx, theme=theme)]), value="hist", pt="xs"),
-                ])
-            ])]),
+                ])]
+            )]),
         ]),
         dmc.Space(h=50),
     ])
@@ -67,9 +90,16 @@ WIDGET_REGISTRY = {
 }
 
 def layout():
-    if not session.get("user"): return dmc.Text("No autorizado...")
+    if not session.get("user"):
+        return dmc.Text("No autorizado...")
     refresh, _ = data_manager.dash_refresh_components(SCREEN_ID, interval_ms=60 * 60 * 1000, max_intervals=-1)
-    return dmc.Container(fluid=True, px="md", children=[dcc.Store(id="inv-load-trigger", data={"loaded": True}), *refresh, create_smart_drawer("inv-drawer"), create_workshop_filters(prefix="inv"), html.Div(id="taller-inv-body", children=get_skeleton(SCREEN_ID))])
+    return dmc.Container(fluid=True, px="md", children=[
+        dcc.Store(id="inv-load-trigger", data={"loaded": True}),
+        *refresh,
+        create_smart_drawer("inv-drawer"),
+        create_workshop_filters(prefix="inv"),
+        html.Div(id="taller-inv-body", children=get_skeleton(SCREEN_ID))
+    ])
 
 FILTER_IDS = ["inv-year", "inv-month"]
 

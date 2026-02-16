@@ -1,4 +1,5 @@
 import datetime
+import math
 import plotly.graph_objects as go
 from design_system import ChartColors, Colors, ComponentSizes, GaugeConfig, Typography
 from services.time_service import TimeService
@@ -21,6 +22,19 @@ def safe_float(val, default=0.0):
 def safe_max(*args):
     valid = [safe_float(v) for v in args if v is not None]
     return max(valid) if valid else 0.0
+
+
+def clean_series(x_data, y_data):
+    x_clean, y_clean = [], []
+    for x, y in zip(x_data or [], y_data or []):
+        y_val = safe_float(y)
+        if not math.isnan(y_val):
+            x_clean.append(x)
+            y_clean.append(y_val)
+        else:
+            x_clean.append(x)
+            y_clean.append(0)
+    return x_clean, y_clean
 
 
 class ChartEngine:
@@ -284,5 +298,371 @@ class ChartEngine:
             xaxis=dict(showgrid=True, zeroline=False, tickformat="$,.0f", side="top"),
             yaxis=dict(type="category", autorange="reversed", automargin=True),
             bargap=0.8,
+        )
+        return fig
+
+    @staticmethod
+    def render_line_chart(node, theme="dark", layout_config=None, current_month_only=False):
+        layout_config = layout_config or {}
+    
+        if not node:
+            return None
+    
+        data_source = node.get("data", node)
+        all_categories = data_source.get("categories") or data_source.get("months") or []
+        series_list = data_source.get("series", [])
+    
+        if not all_categories or not series_list:
+            return None
+    
+        curr_month = len(all_categories)
+    
+        if current_month_only:
+            curr_month = datetime.date.today().month
+            categories = all_categories[:curr_month]
+        else:
+            categories = all_categories
+    
+        fig = go.Figure()
+    
+        for idx, s in enumerate(series_list):
+            s_type = s.get("type", "bar")
+            s_name = s.get("name", f"Serie {idx}")
+            s_data = s.get("data", [])
+    
+            if current_month_only:
+                s_data = s_data[:curr_month]
+    
+            s_color = s.get("color", ChartColors.DEFAULT[idx % len(ChartColors.DEFAULT)])
+    
+            if s_type == "line" or "Meta" in s_name:
+                fig.add_trace(go.Scatter(
+                    x=categories,
+                    y=s_data,
+                    name=s_name,
+                    mode="lines+markers",
+                    line=dict(color=s_color, width=3, dash="dot" if "Meta" in s_name else "solid"),
+                    marker=dict(size=6),
+                ))
+            else:
+                fig.add_trace(go.Bar(
+                    x=categories,
+                    y=s_data,
+                    name=s_name,
+                    marker_color=s_color
+                ))
+    
+        height_val = layout_config.get("height", 350)
+        plotly_height = height_val if isinstance(height_val, int) else None
+    
+        fig.update_layout(
+            template="plotly_dark" if theme == "dark" else "plotly",
+            margin=dict(t=30, b=40, l=50, r=30),
+            height=plotly_height,
+            autosize=True,
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                font=dict(size=11),
+            ),
+            barmode="group",
+            hovermode="x unified",
+            xaxis=dict(tickangle=-45, tickfont=dict(size=10)),
+            yaxis=dict(tickfont=dict(size=10)),
+        )
+    
+        return fig
+    
+    @staticmethod
+    def render_stacked_bar(node, theme="dark", layout_config=None):
+        layout_config = layout_config or {}
+
+        if not node:
+            return None
+
+        data_source = node.get("data", node)
+        categories = data_source.get("categories", [])
+        series_list = data_source.get("series", [])
+
+        if not categories or not series_list:
+            return None
+
+        fig = go.Figure()
+
+        for idx, s in enumerate(series_list):
+            s_name = s.get("name", "")
+            s_data = s.get("data", [])
+            base_color = ChartColors.CHART_COLORS[idx % len(ChartColors.CHART_COLORS)]
+
+            fig.add_trace(go.Bar(
+                x=categories,
+                y=s_data,
+                name=s_name,
+                marker=dict(color=base_color, cornerradius=6),
+            ))
+
+        h_val = layout_config.get("height")
+        plot_height = h_val if isinstance(h_val, (int, float)) else ComponentSizes.CHART_HEIGHT_BASE
+
+        fig.update_layout(
+            template="plotly_dark" if theme == "dark" else "plotly",
+            height=plot_height,
+            barmode="stack",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
+        )
+        return fig
+
+    @staticmethod
+    def render_cash_flow(node, theme="dark", layout_config=None):
+        layout_config = layout_config or {}
+
+        if not node:
+            return None
+
+        data_source = node.get("data", node)
+        categories = data_source.get("categories", [])
+        ingresos = data_source.get("ingresos", [])
+        egresos = data_source.get("egresos", [])
+
+        if not categories:
+            return None
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=categories, y=ingresos, name="Ingresos", marker=dict(color=Colors.POSITIVE, cornerradius=6)))
+        fig.add_trace(go.Bar(x=categories, y=[-e for e in egresos], name="Egresos", marker=dict(color=Colors.NEGATIVE, cornerradius=6)))
+
+        h_val = layout_config.get("height")
+        plot_height = h_val if isinstance(h_val, (int, float)) else ComponentSizes.CHART_HEIGHT_BASE
+
+        fig.update_layout(
+            template="plotly_dark" if theme == "dark" else "plotly",
+            height=plot_height,
+            barmode="relative",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
+        )
+        return fig
+
+    @staticmethod
+    def render_multi_line(node, theme="dark", layout_config=None, forecast_mode=False):
+        layout_config = layout_config or {}
+
+        if not node:
+            return None
+
+        data_source = node.get("data", node)
+        categories = data_source.get("categories", [])
+        series_list = data_source.get("series", [])
+
+        if not categories or not series_list:
+            return None
+
+        fig = go.Figure()
+
+        for idx, s in enumerate(series_list):
+            s_name = s.get("name", "")
+            s_data = s.get("data", [])
+            is_forecast = forecast_mode and ("Forecast" in s_name or "Proyección" in s_name)
+            base_color = ChartColors.LINE_TRENDS[idx % len(ChartColors.LINE_TRENDS)]
+
+            fig.add_trace(go.Scatter(
+                x=categories,
+                y=s_data,
+                name=s_name,
+                mode="lines+markers",
+                line=dict(color=base_color, width=2, dash="dash" if is_forecast else "solid"),
+                marker=dict(size=5 if is_forecast else 6),
+            ))
+
+        h_val = layout_config.get("height")
+        plot_height = h_val if isinstance(h_val, (int, float)) else ComponentSizes.CHART_HEIGHT_BASE
+
+        fig.update_layout(
+            template="plotly_dark" if theme == "dark" else "plotly",
+            height=plot_height,
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
+        )
+        return fig
+
+    @staticmethod
+    def render_bar_chart(node, theme="dark", layout_config=None):
+        layout_config = layout_config or {}
+
+        if not node:
+            return None
+
+        data_source = node.get("data", node)
+        categories = data_source.get("categories", [])
+        series_list = data_source.get("series", [])
+
+        if not categories:
+            return None
+
+        fig = go.Figure()
+
+        for serie in series_list:
+            s_name = serie.get("name", "Valor")
+            s_data = serie.get("data", [])
+            s_color = serie.get("color", ChartColors.CHART_COLORS[0])
+            fig.add_trace(go.Bar(x=categories, y=s_data, name=s_name, marker_color=s_color))
+
+        fig.update_layout(
+            template="plotly_dark" if theme == "dark" else "plotly",
+            height=layout_config.get("height", 350),
+            margin=dict(t=30, b=40, l=40, r=20),
+            showlegend=len(series_list) > 1,
+        )
+        return fig
+
+    @staticmethod
+    def render_combo_chart(node, theme="dark", layout_config=None):
+        layout_config = layout_config or {}
+
+        if not node:
+            return None
+
+        data_source = node.get("data", node)
+        categories = data_source.get("categories", [])
+        series_list = data_source.get("series", [])
+
+        if not categories or not series_list:
+            return None
+
+        fig = go.Figure()
+
+        for serie in series_list:
+            s_name = serie.get("name", "")
+            s_data = serie.get("data", [])
+            s_color = serie.get("color", ChartColors.CHART_COLORS[0])
+            s_type = serie.get("type", "bar")
+
+            if s_type == "line":
+                fig.add_trace(go.Scatter(
+                    x=categories,
+                    y=s_data,
+                    name=s_name,
+                    mode="lines+markers",
+                    line=dict(color=s_color, width=3),
+                    marker=dict(size=6),
+                    yaxis="y2",
+                ))
+            else:
+                fig.add_trace(go.Bar(x=categories, y=s_data, name=s_name, marker_color=s_color))
+
+        fig.update_layout(
+            template="plotly_dark" if theme == "dark" else "plotly",
+            height=layout_config.get("height", 350),
+            margin=dict(t=30, b=40, l=40, r=40),
+            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
+            hovermode="x unified",
+            yaxis=dict(title=""),
+            yaxis2=dict(title="", overlaying="y", side="right"),
+        )
+        return fig
+
+    @staticmethod
+    def render_map(node, theme="dark", layout_config=None):
+        layout_config = layout_config or {}
+        is_dark = theme == "dark"
+
+        if not node:
+            return None
+
+        data_source = node.get("data", node)
+        routes = data_source.get("routes", [])
+
+        if not routes:
+            return None
+
+        fig = go.Figure()
+
+        for route in routes:
+            lats = route.get("lat", [])
+            lons = route.get("lon", [])
+            name = route.get("name", "Ruta")
+            color = route.get("color", Colors.CHART_BLUE)
+
+            if lats and lons:
+                fig.add_trace(go.Scattermapbox(
+                    lat=lats,
+                    lon=lons,
+                    mode="lines+markers",
+                    name=name,
+                    line=dict(width=3, color=color),
+                    marker=dict(size=8, color=color),
+                ))
+
+        center_lat, center_lon = 20.5937, -100.3897
+        all_lats = [lat for r in routes for lat in (r.get("lat", []) or [])]
+        all_lons = [lon for r in routes for lon in (r.get("lon", []) or [])]
+
+        if all_lats and all_lons:
+            center_lat = sum(all_lats) / len(all_lats)
+            center_lon = sum(all_lons) / len(all_lons)
+
+        legend_bg = "rgba(98,104,110,0.9)" if is_dark else "rgba(255,255,255,0.9)"
+
+        fig.update_layout(
+            mapbox=dict(style="open-street-map", center=dict(lat=center_lat, lon=center_lon), zoom=10),
+            margin=dict(l=0, r=0, t=0, b=0),
+            height=layout_config.get("height", ComponentSizes.CHART_HEIGHT_LG),
+            showlegend=True,
+            font=dict(family=Typography.FAMILY, size=Typography.SM, color=Colors.TEXT_DARK if is_dark else Colors.TEXT_LIGHT),
+            legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, bgcolor=legend_bg, font=dict(size=Typography.XS, family=Typography.FAMILY)),
+        )
+        return fig
+
+    @staticmethod
+    def render_table(node, theme="dark"):
+        is_dark = theme == "dark"
+
+        if not node:
+            return None
+
+        data_source = node.get("data", node)
+        headers = data_source.get("headers", [])
+        rows = data_source.get("rows", [])
+
+        if not headers:
+            return None
+
+        cols = list(map(list, zip(*rows))) if rows else [[] for _ in headers]
+
+        header_bg = Colors.BG_DARK_CARD if is_dark else Colors.SLATE[1]
+        header_color = Colors.TEXT_DARK if is_dark else Colors.SLATE[7]
+        cell_bg = Colors.BG_DARK if is_dark else "white"
+        cell_color = Colors.TEXT_DARK if is_dark else Colors.SLATE[6]
+        line_color = Colors.SLATE[5] if is_dark else Colors.SLATE[2]
+
+        fig = go.Figure(data=[go.Table(
+            header=dict(
+                values=[f"<b>{h}</b>" for h in headers],
+                fill_color=header_bg,
+                align="left",
+                font=dict(color=header_color, size=Typography.TABLE_HEADER),
+                height=30,
+            ),
+            cells=dict(
+                values=cols,
+                fill_color=cell_bg,
+                align="left",
+                font=dict(color=cell_color, size=Typography.TABLE),
+                height=25,
+                line_color=line_color,
+            ),
+        )])
+
+        fig.update_layout(
+            template="plotly_dark" if theme == "dark" else "plotly",
+            margin=dict(t=10, b=10, l=10, r=10),
+            height=None,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
         )
         return fig

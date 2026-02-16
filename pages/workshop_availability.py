@@ -28,18 +28,15 @@ t_detail = TableWidget(f"{PREFIX}_detail", WorkshopTableStrategy(SCREEN_ID, "ava
 def _render_taller_availability_body(ctx):
     theme = session.get("theme", "dark")
 
-    def _card(widget_content, h=None):
-        return dmc.Paper(p="xs", radius="md", withBorder=True, shadow=None, style={"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}, children=widget_content)
-
     return html.Div([
-        html.Div(
-            style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"},
-            children=[_card(w_disp.render(ctx, theme=theme)), _card(w_entries.render(ctx, theme=theme))],
-        ),
-        html.Div(
-            style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(400px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"},
-            children=[_card(c_trend.render(ctx, h=420, theme=theme)), _card(c_combo.render(ctx, h=420, theme=theme))],
-        ),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
+            w_disp.render(ctx, theme=theme),
+            w_entries.render(ctx, theme=theme)
+        ]),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(400px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
+            c_trend.render(ctx, h=420, theme=theme),
+            c_combo.render(ctx, h=420, theme=theme)
+        ]),
         dmc.Paper(
             p="md",
             withBorder=True,

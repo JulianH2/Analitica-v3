@@ -1,10 +1,3 @@
-"""
-Drawer Data Service - COMPLETO Y BLINDADO
-✅ safe_fmt con prefix/suffix en TODOS los métodos
-✅ Manejo correcto de None/errores
-✅ Datos reales sin fake data
-"""
-
 from typing import Any, Dict
 
 import pandas as pd
@@ -66,12 +59,12 @@ class DrawerDataService:
 
         try:
             screen_id = getattr(strategy, "screen_id", "")
-            kpi_key = getattr(strategy, "kpi_key", "")
+            key = getattr(strategy, "key", "")
 
-            if not screen_id or not kpi_key:
-                raise ValueError("No screen_id or kpi_key")
+            if not screen_id or not key:
+                raise ValueError("No screen_id or key")
 
-            kpi_data = strategy._resolve_kpi_data(ctx, screen_id, kpi_key)
+            kpi_data = strategy._resolve_kpi_data(ctx, screen_id, key)
 
             if not kpi_data:
                 raise ValueError("No kpi_data returned")
@@ -325,8 +318,8 @@ class DrawerDataService:
     def _create_kpi_data_table(strategy, ctx, theme):
         try:
             screen_id = getattr(strategy, "screen_id", "")
-            kpi_key = getattr(strategy, "kpi_key", "")
-            kpi_data = strategy._resolve_kpi_data(ctx, screen_id, kpi_key)
+            key = getattr(strategy, "key", "")
+            kpi_data = strategy._resolve_kpi_data(ctx, screen_id, key)
 
             if not kpi_data:
                 return dmc.Alert("No hay datos disponibles", color="gray")
@@ -500,9 +493,9 @@ class DrawerDataService:
             # --- SOPORTE PARA ESTRATEGIAS ANTIGUAS (Legacy) ---
             elif hasattr(strategy, "_resolve_chart_data"):
                 screen_id = getattr(strategy, "screen_id", "")
-                table_key = getattr(strategy, "table_key", "")
-                if screen_id and table_key:
-                    table_data = strategy._resolve_chart_data(ctx, screen_id, table_key)
+                key = getattr(strategy, "key", "")
+                if screen_id and key:
+                    table_data = strategy._resolve_chart_data(ctx, screen_id, key)
                     if table_data:
                         data_source = table_data.get("data", table_data)
                         rows = data_source.get("rows", [])

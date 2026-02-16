@@ -58,7 +58,7 @@ class TableWidget:
         return dmc.Paper(
             p=0,
             radius="md",
-            withBorder=False,
+            withBorder=True,
             shadow=None,
             style={
                 "height": "100%",

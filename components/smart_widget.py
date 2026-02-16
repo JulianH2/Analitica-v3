@@ -110,10 +110,12 @@ class SmartWidget:
             p="sm",
             radius="md",
             withBorder=False,
-            shadow="sm",
+            shadow=None,
             style={
                 "height": height,
                 "backgroundColor": DS.TRANSPARENT,
+                "border": DS.CARD_BORDER_LIGHT if theme != "dark" else DS.CARD_BORDER_DARK,
+                "boxShadow": "none",
                 "overflow": "hidden",
                 "display": "flex",
                 "flexDirection": "column",
@@ -235,6 +237,8 @@ class SmartWidget:
             style={
                 "height": height,
                 "backgroundColor": Colors.TRANSPARENT,
+                "border": DS.CARD_BORDER_LIGHT if theme != "dark" else DS.CARD_BORDER_DARK,
+                "boxShadow": "none",
                 "overflow": "hidden",
                 "display": "flex",
                 "flexDirection": "column",
@@ -290,6 +294,8 @@ class SmartWidget:
             style={
                 "height": height,
                 "backgroundColor": DS.TRANSPARENT,
+                "border": DS.CARD_BORDER_LIGHT if theme != "dark" else DS.CARD_BORDER_DARK,
+                "boxShadow": "none",
                 "overflow": "hidden",
                 "display": "flex",
                 "flexDirection": "column",
@@ -381,6 +387,8 @@ class SmartWidget:
             style={
                 "height": height,
                 "backgroundColor": DS.TRANSPARENT,
+                "border": DS.CARD_BORDER_LIGHT if theme != "dark" else DS.CARD_BORDER_DARK,
+                "boxShadow": "none",
                 "overflow": "hidden",
                 "display": "flex",
                 "flexDirection": "column",

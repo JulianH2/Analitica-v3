@@ -1,21 +1,19 @@
 import math
-from datetime import datetime
 import dash_mantine_components as dmc
 import plotly.graph_objects as go
 from design_system import DesignSystem, SemanticColors
-from utils.helpers import format_value, safe_get
+from utils.helpers import safe_get
 from .base_strategy import KPIStrategy
 from .chart_engine import ChartEngine
 
+
 class WorkshopKPIStrategy(KPIStrategy):
-    def __init__(self, screen_id, kpi_key, title, icon, color, has_detail=True, layout_config=None, inverse=False, variant=None):
-        super().__init__(title=title, color=color, icon=icon, has_detail=has_detail, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.kpi_key = kpi_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="", has_detail=True, variant=None, inverse=False, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
         self.inverse = inverse
 
-    def get_card_config(self, data_context):
-        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
+    def get_card_config(self, ctx):
+        raw_node = self._resolve_kpi_data(ctx, self.screen_id, self.key)
         if isinstance(raw_node, (int, float, str)) and raw_node is not None:
             node = {"value": raw_node}
         elif raw_node is None:
@@ -26,6 +24,9 @@ class WorkshopKPIStrategy(KPIStrategy):
         config = {
             "title": self.title,
             "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": False,
             "color": self.color,
             "inverse": self.inverse,
             "value": node.get("value_formatted", "---"),
@@ -42,6 +43,7 @@ class WorkshopKPIStrategy(KPIStrategy):
             "ytd_delta_formatted": node.get("ytd_delta_formatted"),
             "status": node.get("status"),
             "status_color": node.get("status_color") or self.color,
+            "raw_data": node,
         }
 
         if node.get("percentage_of_total"):
@@ -49,15 +51,13 @@ class WorkshopKPIStrategy(KPIStrategy):
 
         return config
 
-    def render_detail(self, data_context):
+    def _render_standard_view(self, ctx, theme):
         return dmc.Text("Detalle de métrica de mantenimiento.", size="sm", c=SemanticColors.TEXT_MUTED) # type: ignore
 
 
 class WorkshopGaugeStrategy(KPIStrategy):
-    def __init__(self, screen_id, kpi_key, title, color="indigo", icon="tabler:gauge", has_detail=True, layout_config=None, use_needle=False, variant=None):
-        super().__init__(title=title, color=color, icon=icon, has_detail=has_detail, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.kpi_key = kpi_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:gauge", has_detail=True, variant=None, use_needle=False, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
         self.use_needle = use_needle
         self.gauge_params = {
             "range_max_mult": 1.15,
@@ -68,8 +68,8 @@ class WorkshopGaugeStrategy(KPIStrategy):
             "font_size": 18,
         }
 
-    def get_card_config(self, data_context):
-        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
+    def get_card_config(self, ctx):
+        raw_node = self._resolve_kpi_data(ctx, self.screen_id, self.key)
         if isinstance(raw_node, (int, float)):
             node = {"value": raw_node}
         elif raw_node is None:
@@ -80,6 +80,9 @@ class WorkshopGaugeStrategy(KPIStrategy):
         return {
             "title": self.title,
             "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": False,
             "value": node.get("value_formatted", "---"),
             "vs_last_year_formatted": node.get("vs_last_year_formatted"),
             "vs_last_year_delta": node.get("vs_last_year_delta"),
@@ -87,10 +90,11 @@ class WorkshopGaugeStrategy(KPIStrategy):
             "label_prev_year": node.get("label_prev_year"),
             "target_formatted": node.get("target_formatted"),
             "meta_text": f"Meta: {node.get('target_formatted')}" if node.get("target_formatted") else "",
+            "raw_data": node,
         }
 
-    def get_figure(self, data_context, theme="light"):
-        raw_node = self._resolve_kpi_data(data_context, self.screen_id, self.kpi_key)
+    def get_figure(self, ctx, theme="light"):
+        raw_node = self._resolve_kpi_data(ctx, self.screen_id, self.key)
 
         if self.use_needle:
             if isinstance(raw_node, (int, float)):
@@ -149,225 +153,179 @@ class WorkshopGaugeStrategy(KPIStrategy):
         )
         return fig
 
-    def render_detail(self, data_context):
+    def _render_standard_view(self, ctx, theme):
         return dmc.Text("Análisis de eficiencia de mantenimiento.", size="sm", c=SemanticColors.TEXT_MUTED) # type: ignore
 
 
 class WorkshopTrendChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-line", color="indigo", layout_config=None, variant=None):
-        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-line", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon}
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "raw_data": {},
+        }
 
-    def get_figure(self, data_context, theme="light"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
-        if not node:
+    def get_figure(self, ctx, theme="light"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
+        fig = ChartEngine.render_trend(node, theme, self.layout)
+        if fig is None:
             return self._create_empty_figure(theme=theme)
-
-        data_source = node.get("data", node)
-        categories = data_source.get("categories") or data_source.get("months") or []
-        series_list = data_source.get("series", [])
-        if not categories or not series_list:
-            return self._create_empty_figure("Sin datos", theme=theme)
-
-        fig = go.Figure()
-
-        for idx, serie in enumerate(series_list):
-            s_name = serie.get("name", f"Serie {idx}")
-            s_data = serie.get("data", [])
-            s_color = serie.get("color", DesignSystem.BRAND[5])
-            s_type = serie.get("type", "bar")
-            is_dashed = serie.get("dashed", False) or "Meta" in s_name
-
-            if s_type == "line" or is_dashed:
-                fig.add_trace(go.Scatter(
-                    x=categories,
-                    y=s_data,
-                    name=s_name,
-                    mode="lines+markers",
-                    line=dict(color=s_color, width=3, dash="dot" if is_dashed else "solid"),
-                    marker=dict(size=6),
-                ))
-            else:
-                fig.add_trace(go.Bar(x=categories, y=s_data, name=s_name, marker_color=s_color))
-
-        fig.update_layout(
-            template="zam_light" if theme == "light" else "zam_dark",
-            barmode="group",
-            height=350,
-            margin=dict(t=40, b=50, l=40, r=20),
-            legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
-            hovermode="x unified",
-        )
         return fig
-
-    def render_detail(self, data_context):
-        return None
 
 
 class WorkshopDonutChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-pie", color="indigo", layout_config=None, variant=None):
-        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-pie", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon}
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "raw_data": {},
+        }
 
-    def get_figure(self, data_context, theme="light"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+    def get_figure(self, ctx, theme="light"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
         fig = ChartEngine.render_donut(node, theme, self.layout)
         if fig is None:
             return self._create_empty_figure(theme=theme)
         return fig
 
-    def render_detail(self, data_context):
-        return None
-
 
 class WorkshopHorizontalBarStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-bar", color="indigo", layout_config=None, variant=None):
-        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-bar", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon}
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "raw_data": {},
+        }
 
-    def get_figure(self, data_context, theme="light"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
+    def get_figure(self, ctx, theme="light"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
         fig = ChartEngine.render_horizontal_bar(node, theme, self.layout)
         if fig is None:
             return self._create_empty_figure(theme=theme)
         return fig
 
-    def render_detail(self, data_context):
-        return None
-
 
 class WorkshopBarChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-bar", color="indigo", layout_config=None, variant=None):
-        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-bar", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon}
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "raw_data": {},
+        }
 
-    def get_figure(self, data_context, theme="light"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
-        if not node:
+    def get_figure(self, ctx, theme="light"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
+        fig = ChartEngine.render_bar_chart(node, theme, self.layout)
+        if fig is None:
             return self._create_empty_figure(theme=theme)
-
-        data_source = node.get("data", node)
-        categories = data_source.get("categories", [])
-        series_list = data_source.get("series", [])
-        if not categories:
-            return self._create_empty_figure("Sin categorías", theme=theme)
-
-        fig = go.Figure()
-
-        for serie in series_list:
-            s_name = serie.get("name", "Valor")
-            s_data = serie.get("data", [])
-            s_color = serie.get("color", self.hex_color)
-            fig.add_trace(go.Bar(x=categories, y=s_data, name=s_name, marker_color=s_color))
-
-        fig.update_layout(
-            template="zam_light" if theme == "light" else "zam_dark",
-            height=350,
-            margin=dict(t=30, b=40, l=40, r=20),
-            showlegend=len(series_list) > 1,
-        )
         return fig
-
-    def render_detail(self, data_context):
-        return None
 
 
 class WorkshopComboChartStrategy(KPIStrategy):
-    def __init__(self, screen_id, chart_key, title, icon="tabler:chart-line", color="indigo", layout_config=None, variant=None):
-        super().__init__(title=title, color=color, icon=icon, layout_config=layout_config, variant=variant)
-        self.screen_id = screen_id
-        self.chart_key = chart_key
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-line", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
 
-    def get_card_config(self, data_context):
-        return {"title": self.title, "icon": self.icon}
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "raw_data": {},
+        }
 
-    def get_figure(self, data_context, theme="light"):
-        node = self._resolve_chart_data(data_context, self.screen_id, self.chart_key)
-        if not node:
+    def get_figure(self, ctx, theme="light"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
+        fig = ChartEngine.render_combo_chart(node, theme, self.layout)
+        if fig is None:
             return self._create_empty_figure(theme=theme)
-
-        data_source = node.get("data", node)
-        categories = data_source.get("categories", [])
-        series_list = data_source.get("series", [])
-        if not categories or not series_list:
-            return self._create_empty_figure("Sin datos", theme=theme)
-
-        fig = go.Figure()
-
-        for serie in series_list:
-            s_name = serie.get("name", "")
-            s_data = serie.get("data", [])
-            s_color = serie.get("color", self.hex_color)
-            s_type = serie.get("type", "bar")
-
-            if s_type == "line":
-                fig.add_trace(go.Scatter(
-                    x=categories,
-                    y=s_data,
-                    name=s_name,
-                    mode="lines+markers",
-                    line=dict(color=s_color, width=3),
-                    marker=dict(size=6),
-                    yaxis="y2",
-                ))
-            else:
-                fig.add_trace(go.Bar(x=categories, y=s_data, name=s_name, marker_color=s_color))
-
-        fig.update_layout(
-            template="zam_light" if theme == "light" else "zam_dark",
-            height=350,
-            margin=dict(t=30, b=40, l=40, r=40),
-            legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
-            hovermode="x unified",
-            yaxis=dict(title=""),
-            yaxis2=dict(title="", overlaying="y", side="right"),
-        )
         return fig
-
-    def render_detail(self, data_context):
-        return None
 
 
 class WorkshopTableStrategy:
-    def __init__(self, screen_id, table_key, variant=None):
+    def __init__(self, screen_id, key, title="", color="gray", icon="tabler:table", has_detail=True, variant=None):
         self.screen_id = screen_id
-        self.table_key = table_key
+        self.key = key
+        self.title = title
+        self.icon = icon
+        self.color = color
+        self.has_detail = has_detail
         self.variant = variant
 
-    def _resolve_table_data(self, data_context):
+    def _get_data(self, ctx):
         from services.data_manager import data_manager
 
-        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {}) # type: ignore
+        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {})
         inject_paths = screen_config.get("inject_paths", {})
 
         if self.variant:
-            lookup_key = f"{self.table_key}_{self.variant}"
-            path = inject_paths.get(lookup_key) or inject_paths.get(self.table_key)
+            lookup_key = f"{self.key}_{self.variant}"
+            path = inject_paths.get(lookup_key) or inject_paths.get(self.key)
         else:
-            path = inject_paths.get(self.table_key)
+            path = inject_paths.get(self.key)
 
         if not path:
-            return None
-        return safe_get(data_context, path)
+            return None, None
+        
+        node = safe_get(ctx, path)
+        if not node:
+            return None, None
 
-    def render(self, data_context, **kwargs):
-        node = self._resolve_table_data(data_context)
+        data_source = node.get("data", node)
+        headers = data_source.get("headers", [])
+        rows = data_source.get("rows", [])
+        
+        return headers, rows
+
+    def get_card_config(self, ctx):
+        headers, rows = self._get_data(ctx)
+        
+        export_data = []
+        if headers and rows:
+            for row in rows:
+                if isinstance(row, (list, tuple)):
+                    row_dict = {headers[i]: row[i] for i in range(min(len(headers), len(row)))}
+                else:
+                    row_dict = row
+                export_data.append(row_dict)
+        
+        return {
+            "title": self.title or self.key,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": True,
+            "is_chart": False,
+            "main_value": f"{len(rows)} registros" if rows else "0",
+            "raw_data": export_data,
+        }
+
+    def render(self, ctx, mode="dashboard", theme="light"):
+        node = self._resolve_table_data(ctx)
         if not node:
             return dmc.Text("Sin datos de tabla", c="dimmed", ta="center", py="xl") # type: ignore
 
@@ -412,8 +370,24 @@ class WorkshopTableStrategy:
                 ])),
                 dmc.TableTbody(table_body),
             ],
-            striped=True, # type: ignore
+            striped="odd",
             highlightOnHover=True,
             withTableBorder=True,
             withColumnBorders=True,
         )
+
+    def _resolve_table_data(self, ctx):
+        from services.data_manager import data_manager
+
+        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {})
+        inject_paths = screen_config.get("inject_paths", {})
+
+        if self.variant:
+            lookup_key = f"{self.key}_{self.variant}"
+            path = inject_paths.get(lookup_key) or inject_paths.get(self.key)
+        else:
+            path = inject_paths.get(self.key)
+
+        if not path:
+            return None
+        return safe_get(ctx, path)

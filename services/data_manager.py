@@ -29,7 +29,7 @@ class CacheEntry:
 
 class DataManager:
     _instance: Optional["DataManager"] = None
-    SCREEN_MAP: Optional[Dict[str, Dict[str, Any]]] = None
+    SCREEN_MAP: Dict[str, Dict[str, Any]] = {}
     
     def __new__(cls) -> "DataManager":
         if cls._instance is None:

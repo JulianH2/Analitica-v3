@@ -35,14 +35,32 @@ c_entry = ChartWidget(f"{PREFIX}_entry", WorkshopHorizontalBarStrategy(SCREEN_ID
 
 def _render_taller_dashboard_body(ctx):
     theme = session.get("theme", "dark")
-    def _card(widget_content, h=None): return dmc.Paper(p="xs", radius="md", withBorder=True, shadow=None, style={"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}, children=widget_content)
 
     return html.Div([
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "0.6rem", "marginBottom": "1rem"}, children=[_card(w_int.render(ctx, theme=theme)), _card(w_ext.render(ctx, theme=theme)), _card(w_lla.render(ctx, theme=theme)), _card(w_tot.render(ctx, theme=theme))]),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[_card(w_disp.render(ctx, theme=theme)), _card(w_ckm.render(ctx, theme=theme))]),
-        dmc.Grid(gutter="md", mb="xl", children=[dmc.GridCol(span={"base": 12, "lg": 7}, children=[_card(c_trend.render(ctx, h=420, theme=theme))]), dmc.GridCol(span={"base": 12, "lg": 5}, children=[_card(c_type.render(ctx, h=420, theme=theme))])]), # type: ignore
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[_card(c_fam.render(ctx, h=420, theme=theme)), _card(c_fleet.render(ctx, h=420, theme=theme)), _card(c_op.render(ctx, h=420, theme=theme))]),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem"}, children=[_card(c_unit.render(ctx, h=420, theme=theme)), _card(c_brand.render(ctx, h=420, theme=theme)), _card(c_entry.render(ctx, h=420, theme=theme))]),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "0.6rem", "marginBottom": "1rem"}, children=[
+            w_int.render(ctx, theme=theme),
+            w_ext.render(ctx, theme=theme),
+            w_lla.render(ctx, theme=theme),
+            w_tot.render(ctx, theme=theme)
+        ]),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
+            w_disp.render(ctx, theme=theme),
+            w_ckm.render(ctx, theme=theme)
+        ]),
+        dmc.Grid(gutter="md", mb="xl", children=[
+            dmc.GridCol(span={"base": 12, "lg": 7}, children=[c_trend.render(ctx, h=420, theme=theme)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 5}, children=[c_type.render(ctx, h=420, theme=theme)]) # type: ignore
+        ]),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
+            c_fam.render(ctx, h=420, theme=theme),
+            c_fleet.render(ctx, h=420, theme=theme),
+            c_op.render(ctx, h=420, theme=theme)
+        ]),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem"}, children=[
+            c_unit.render(ctx, h=420, theme=theme),
+            c_brand.render(ctx, h=420, theme=theme),
+            c_entry.render(ctx, h=420, theme=theme)
+        ]),
         dmc.Space(h=50),
     ])
 
@@ -54,9 +72,16 @@ WIDGET_REGISTRY = {
 }
 
 def layout():
-    if not session.get("user"): return dmc.Text("No autorizado...")
+    if not session.get("user"):
+        return dmc.Text("No autorizado...")
     refresh_components, _ = data_manager.dash_refresh_components(SCREEN_ID, interval_ms=60 * 60 * 1000, max_intervals=-1)
-    return dmc.Container(fluid=True, px="md", children=[dcc.Store(id="taller-load-trigger", data={"loaded": True}), *refresh_components, create_smart_drawer("taller-drawer"), create_workshop_filters(prefix="taller"), html.Div(id="taller-dashboard-body", children=get_skeleton(SCREEN_ID))])
+    return dmc.Container(fluid=True, px="md", children=[
+        dcc.Store(id="taller-load-trigger", data={"loaded": True}),
+        *refresh_components,
+        create_smart_drawer("taller-drawer"),
+        create_workshop_filters(prefix="taller"),
+        html.Div(id="taller-dashboard-body", children=get_skeleton(SCREEN_ID))
+    ])
 
 FILTER_IDS = ["taller-year", "taller-month", "taller-empresa", "taller-unidad", "taller-tipo-op", "taller-clasificacion", "taller-razon", "taller-motor"]
 

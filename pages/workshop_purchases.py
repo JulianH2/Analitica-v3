@@ -33,26 +33,38 @@ t_sup = TableWidget(f"{SCREEN_ID}-top_suppliers", WorkshopTableStrategy(SCREEN_I
 
 def _render_taller_purchases_body(ctx):
     theme = session.get("theme", "dark")
-    def _card(widget_content, h=None): return dmc.Paper(p="xs", radius="md", withBorder=True, shadow=None, style={"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}, children=widget_content)
 
     return html.Div([
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "0.6rem", "marginBottom": "1.5rem"}, children=[_card(w_tot.render(ctx, theme=theme)), _card(w_die.render(ctx, theme=theme)), _card(w_par.render(ctx, theme=theme)), _card(w_tir.render(ctx, theme=theme))]),
-        dmc.Grid(gutter="md", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "lg": 8}, children=[_card(c_trend.render(ctx, theme=theme))]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 4}, children=[_card(c_type.render(ctx, theme=theme))]), # type: ignore
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "0.6rem", "marginBottom": "1.5rem"}, children=[
+            w_tot.render(ctx, theme=theme),
+            w_die.render(ctx, theme=theme),
+            w_par.render(ctx, theme=theme),
+            w_tir.render(ctx, theme=theme)
         ]),
         dmc.Grid(gutter="md", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "lg": 6}, children=[_card(c_area.render(ctx, theme=theme))]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 6}, children=[_card(c_prov.render(ctx, theme=theme))]), # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 8}, children=[c_trend.render(ctx, theme=theme)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 4}, children=[c_type.render(ctx, theme=theme)]), # type: ignore
         ]),
-        dmc.Paper(p="md", withBorder=True, mb="lg", style={"backgroundColor": "transparent"}, children=[
-            dmc.Tabs(value="ordenes", children=[
-                dmc.TabsList([dmc.TabsTab("Órdenes de Compra", value="ordenes"), dmc.TabsTab("Detalle de Insumos", value="insumos"), dmc.TabsTab("Proveedores Detalle", value="prov")]),
+        dmc.Grid(gutter="md", mb="xl", children=[
+            dmc.GridCol(span={"base": 12, "lg": 6}, children=[c_area.render(ctx, theme=theme)]), # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 6}, children=[c_prov.render(ctx, theme=theme)]), # type: ignore
+        ]),
+        dmc.Paper(
+            p="md",
+            withBorder=True,
+            mb="lg",
+            style={"backgroundColor": "transparent"},
+            children=[dmc.Tabs(value="ordenes", children=[
+                dmc.TabsList([
+                    dmc.TabsTab("Órdenes de Compra", value="ordenes"),
+                    dmc.TabsTab("Detalle de Insumos", value="insumos"),
+                    dmc.TabsTab("Proveedores Detalle", value="prov")
+                ]),
                 dmc.TabsPanel(dmc.ScrollArea(h=400, pt="md", children=[t_ord.render(ctx, theme=theme)]), value="ordenes"),
                 dmc.TabsPanel(dmc.ScrollArea(h=400, pt="md", children=[t_inp.render(ctx, theme=theme)]), value="insumos"),
                 dmc.TabsPanel(dmc.ScrollArea(h=400, pt="md", children=[t_sup.render(ctx, theme=theme)]), value="prov"),
-            ])
-        ]),
+            ])]
+        ),
         dmc.Space(h=50),
     ])
 
@@ -63,9 +75,16 @@ WIDGET_REGISTRY = {
 }
 
 def layout():
-    if not session.get("user"): return dmc.Text("No autorizado...")
+    if not session.get("user"):
+        return dmc.Text("No autorizado...")
     refresh, _ = data_manager.dash_refresh_components(SCREEN_ID, interval_ms=60 * 60 * 1000, max_intervals=-1)
-    return dmc.Container(fluid=True, px="md", children=[dcc.Store(id="pur-load-trigger", data={"loaded": True}), *refresh, create_smart_drawer("pur-drawer"), create_workshop_filters(prefix="pur"), html.Div(id="taller-purchases-body", children=get_skeleton(SCREEN_ID))])
+    return dmc.Container(fluid=True, px="md", children=[
+        dcc.Store(id="pur-load-trigger", data={"loaded": True}),
+        *refresh,
+        create_smart_drawer("pur-drawer"),
+        create_workshop_filters(prefix="pur"),
+        html.Div(id="taller-purchases-body", children=get_skeleton(SCREEN_ID))
+    ])
 
 FILTER_IDS = ["pur-year", "pur-month"]
 

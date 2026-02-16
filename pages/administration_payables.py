@@ -9,11 +9,7 @@ from components.visual_widget import ChartWidget
 from components.table_widget import TableWidget
 from components.drawer_manager import create_smart_drawer, register_drawer_callback
 from components.filter_manager import create_filter_section
-from strategies.administration import (
-    AdminKPIStrategy, AdminGaugeStrategy,
-    AdminTrendChartStrategy, AdminHistoricalForecastLineStrategy,
-    AdminDonutChartStrategy, AdminStackedBarStrategy, AdminTableStrategy
-)
+from strategies.administration import AdminKPIStrategy, AdminGaugeStrategy, AdminTrendChartStrategy, AdminHistoricalForecastLineStrategy, AdminDonutChartStrategy, AdminStackedBarStrategy, AdminTableStrategy
 
 dash.register_page(__name__, path="/administration-payables", title="Cuentas por Pagar")
 
@@ -55,26 +51,39 @@ c_forecast = ChartWidget(f"{PREFIX}_forecast", AdminHistoricalForecastLineStrate
 def _render_payables_body(ctx):
     theme = session.get("theme", "dark")
 
-    def _card(widget_content, h=None):
-        return dmc.Paper(p="xs", radius="md", withBorder=True, shadow=None, style={"overflow": "hidden", "height": h or "100%", "backgroundColor": "transparent"}, children=widget_content)
-
     return html.Div([
         dmc.Title("Administración - Cuentas por Pagar", order=3, mb="lg", c="dimmed"), # type: ignore
         html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(4, 1fr)", "gap": "0.6rem", "marginBottom": "1rem"}, children=[
-            _card(k_init.render(ctx, theme=theme)), _card(k_cxp.render(ctx, theme=theme)), _card(k_debit.render(ctx, theme=theme)), _card(k_credit.render(ctx, theme=theme)),
-            _card(k_adv.render(ctx, theme=theme)), _card(k_total.render(ctx, theme=theme)), _card(k_pay.render(ctx, theme=theme)), _card(k_bal.render(ctx, theme=theme)),
+            k_init.render(ctx, theme=theme),
+            k_cxp.render(ctx, theme=theme),
+            k_debit.render(ctx, theme=theme),
+            k_credit.render(ctx, theme=theme),
+            k_adv.render(ctx, theme=theme),
+            k_total.render(ctx, theme=theme),
+            k_pay.render(ctx, theme=theme),
+            k_bal.render(ctx, theme=theme),
         ]),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[_card(g_eff.render(ctx, theme=theme)), _card(g_days.render(ctx, theme=theme))]),
-        _card(c_mix.render(ctx, h=400, theme=theme)),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
+            g_eff.render(ctx, theme=theme),
+            g_days.render(ctx, theme=theme)
+        ]),
+        c_mix.render(ctx, h=400, theme=theme),
         dmc.Space(h="md"),
         dmc.Grid(gutter="lg", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "lg": 6}, children=[_card(t_aging.render(ctx, theme=theme), h=500)]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 6}, children=[_card(c_stack.render(ctx, h=500, theme=theme))]) # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 6}, children=[html.Div(style={"height": "500px", "overflowY": "auto"}, children=[t_aging.render(ctx, theme=theme)])]), # type: ignore
+            dmc.GridCol(span={"base": 12, "lg": 6}, children=[c_stack.render(ctx, h=500, theme=theme)]) # type: ignore
         ]),
         dmc.Paper(
-            p="md", withBorder=True, shadow="sm", style={"backgroundColor": "transparent"},
+            p="md",
+            withBorder=True,
+            shadow="sm",
+            style={"backgroundColor": "transparent"},
             children=[dmc.Tabs(value="cuentas_x_pagar", children=[
-                dmc.TabsList([dmc.TabsTab("Cuentas x Pagar", value="cuentas_x_pagar"), dmc.TabsTab("Pago Proveedores", value="pago_proveedores"), dmc.TabsTab("Pronóstico Pago Prov", value="pronostico_pago_prov")]),
+                dmc.TabsList([
+                    dmc.TabsTab("Cuentas x Pagar", value="cuentas_x_pagar"),
+                    dmc.TabsTab("Pago Proveedores", value="pago_proveedores"),
+                    dmc.TabsTab("Pronóstico Pago Prov", value="pronostico_pago_prov")
+                ]),
                 dmc.TabsPanel(dmc.Box(c_comp.render(ctx, h=400, theme=theme), pt="md"), value="cuentas_x_pagar"),
                 dmc.TabsPanel(dmc.Box(c_paid.render(ctx, h=400, theme=theme), pt="md"), value="pago_proveedores"),
                 dmc.TabsPanel(dmc.Box(c_forecast.render(ctx, h=400, theme=theme), pt="md"), value="pronostico_pago_prov"),
