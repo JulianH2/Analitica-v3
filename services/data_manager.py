@@ -719,9 +719,16 @@ class DataManager:
     def register_dash_refresh_callbacks(self, *, screen_id: str, body_output_id: str, render_body: Callable[[Json], Any], prefix: Optional[str] = None, filter_ids: Optional[List[str]] = None) -> Dict[str, str]:
         from dash import callback, Input, Output
         ids = self.dash_ids(screen_id, prefix=prefix)
+        inputs = [
+            Input(ids["auto_interval"], "n_intervals"),
+            Input("selected-db-store", "data")
+        ]
+    
+        if filter_ids:
+            inputs.extend([Input(fid, "value") for fid in filter_ids])
 
-        @callback(Output(ids["token_store"], "data"), [Input(ids["auto_interval"], "n_intervals")] + ([Input(fid, "value") for fid in filter_ids] if filter_ids else []), prevent_initial_call=False)
-        async def _auto_refresh(n_intervals, *filter_values):
+        @callback(Output(ids["token_store"], "data"), inputs, prevent_initial_call=False)
+        async def _auto_refresh(n_intervals, selected_db, *filter_values):
             filters = {}
             if filter_ids:
                 for i, fid in enumerate(filter_ids):

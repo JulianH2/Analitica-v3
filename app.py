@@ -172,16 +172,41 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
     if trigger_id == "btn-sidebar-toggle":
         return dash.no_update, not is_collapsed, dash.no_update
     if trigger_id == "db-selector" and db_value:
+        from dashboard_core.db_helper import reset_db_failures, validate_db_quick, get_db_status
+        
         previous_db = session.get("current_db")
         databases = session.get("databases", [])
         selected_db_info = next((d for d in databases if d.get("base_de_datos") == db_value), None)
         client_name = selected_db_info.get("nombre_cliente") if selected_db_info else "Desconocido"
         user_email = session.get("user", {}).get("email", "Desconocido")
-        logger.info("Cambio de base de datos | usuario=%s anterior=%s nueva=%s cliente=%s", user_email, previous_db, db_value, client_name)
-        session["current_db"] = db_value
-        session["current_client_logo"] = (selected_db_info.get("url_logo") if selected_db_info else None)
+        
+        db_status = get_db_status(db_value)
+        if db_status["blocked"]:
+            logger.warning(
+                f"⚠️ Usuario {user_email} intentó cambiar a BD bloqueada: {db_value}. "
+                f"Manteniendo BD actual: {previous_db}"
+            )
+            return dash.no_update, dash.no_update, dash.no_update
+        logger.info(f"🔍 Validando acceso a BD: {db_value}")
+        is_valid = validate_db_quick(db_value)
+        
+        if not is_valid:
+            logger.error(
+                f"❌ Validación falló para {db_value}. Usuario {user_email} "
+                f"permanecerá en: {previous_db}"
+            )
+            return dash.no_update, dash.no_update, dash.no_update
+        logger.info(
+            f"✅ Validación exitosa. Cambio de BD | "
+            f"usuario={user_email} anterior={previous_db} nueva={db_value} cliente={client_name}"
+        )
+        reset_db_failures(previous_db) # type: ignore
+        reset_db_failures(db_value)
         reset_engine()
         data_manager.cache.clear()
+        session["current_db"] = db_value
+        session["current_client_logo"] = (selected_db_info.get("url_logo") if selected_db_info else None)
+        
         return dash.no_update, dash.no_update, db_value
     return dash.no_update, dash.no_update, dash.no_update
 
@@ -233,7 +258,7 @@ def change_chat_mode(drawer_clicks, sidebar_clicks, float_clicks, is_open):
         "chat-mode-sidebar": "sidebar",
         "chat-mode-float": "float",
     }
-    new_mode = mode_map.get(triggered, "drawer")
+    new_mode = mode_map.get(triggered, "drawer") # type: ignore
     sidebar_active = (new_mode == "sidebar" and is_open)
     return new_mode, sidebar_active
 

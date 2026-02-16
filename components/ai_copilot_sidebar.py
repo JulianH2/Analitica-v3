@@ -9,7 +9,7 @@ import time
 def get_ai_toggle_button():
     return dmc.Affix(
         position={"bottom": 30, "right": 30},
-        zIndex=1000,
+        zIndex=1000, # type: ignore
         children=dmc.ActionIcon(
             id="ai-copilot-toggle",
             radius="xl",
@@ -59,7 +59,7 @@ def create_message_bubble(message: dict, is_dark: bool):
             dmc.Text(
                 message.get("timestamp", ""),
                 size="xs",
-                c="dimmed",
+                c="dimmed", # type: ignore
                 mt=4,
                 style={"fontSize": "10px"},
             ),
@@ -113,8 +113,8 @@ def create_chat_header(mode: str, is_dark: bool):
                                 dmc.Text(
                                     "Zamy AI",
                                     size="lg",
-                                    fw=700,
-                                    c=DS.TEXT_DARK if is_dark else DS.TEXT_LIGHT,
+                                    fw=700, # type: ignore
+                                    c=DS.TEXT_DARK if is_dark else DS.TEXT_LIGHT, # type: ignore
                                 ),
                                 dmc.Group(
                                     gap=4,
@@ -127,7 +127,7 @@ def create_chat_header(mode: str, is_dark: bool):
                                                 "backgroundColor": DS.POSITIVE,
                                             }
                                         ),
-                                        dmc.Text("En línea", size="xs", c="dimmed"),
+                                        dmc.Text("En línea", size="xs", c="dimmed"), # type: ignore
                                     ],
                                 ),
                             ]),
@@ -238,14 +238,14 @@ def create_chat_content(messages: list, quick_actions: list, is_dark: bool):
                             dmc.Text(
                                 "¡Hola! Soy Zamy",
                                 size="xl",
-                                fw=700,
-                                c=DS.TEXT_DARK if is_dark else DS.TEXT_LIGHT,
+                                fw=700, # type: ignore
+                                c=DS.TEXT_DARK if is_dark else DS.TEXT_LIGHT, # type: ignore
                                 mb="xs",
                             ),
                             dmc.Text(
                                 "Tu asistente de analítica inteligente",
                                 size="sm",
-                                c="dimmed",
+                                c="dimmed", # type: ignore
                                 mb="xl",
                             ),
                         ],
@@ -276,9 +276,9 @@ def create_chat_content(messages: list, quick_actions: list, is_dark: bool):
                     dmc.Text(
                         "Acciones rápidas:",
                         size="xs",
-                        c="dimmed",
+                        c="dimmed", # type: ignore
                         mb="sm",
-                        fw=600,
+                        fw=600, # type: ignore
                     ),
                     dmc.Stack(
                         gap="xs",
@@ -357,7 +357,7 @@ def render_ai_copilot(is_open=False, theme="light", mode="drawer", messages=None
             id="ai-copilot-container",
             opened=is_open,
             position="right",
-            size="450px",
+            size="450px", # type: ignore
             padding=0,
             zIndex=1100,
             withCloseButton=False,
@@ -442,7 +442,7 @@ def render_ai_copilot(is_open=False, theme="light", mode="drawer", messages=None
         id="ai-copilot-container",
         opened=is_open,
         position="right",
-        size="450px",
+        size="450px", # type: ignore
         padding=0,
         zIndex=1100,
         withCloseButton=False,
