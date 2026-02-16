@@ -102,6 +102,7 @@ class UserService:
         }
         
         session["databases"] = databases
+        databases.sort(key=lambda x: x.get('base_de_datos') != 'PowerZAM_tinsadb')
         session["role_id"] = id_tipo_usuario
         
         tinsa_db = None

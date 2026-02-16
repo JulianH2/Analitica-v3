@@ -134,13 +134,18 @@ def _execute_dynamic_query_sync(db_name: str, query: str):
             "Timeout",
             "timed out"
         ])
+        if "42S02" in error_msg or "Invalid object name" in error_msg:
+            print(f"🚫 Error de esquema (tabla no existe). Bloqueando {db_name} inmediatamente.")
+            state["count"] = MAX_FAILS 
+        else:
+            state["count"] += 1
 
         if is_schema_error:
             logger.error(f"❌ Error de esquema en {db_name}: {error_msg[:200]}")
         elif is_timeout:
             logger.warning(f"⏱️ Timeout en {db_name} después de {elapsed:.2f}s")
         else:
-            logger.error(f"❌ Error SQL en {db_name}: {error_msg[:200]}")
+            logger.error(f"❌ Error SQL en {db_name}: {error_msg[:200]}")          
 
         state["count"] += 1
 

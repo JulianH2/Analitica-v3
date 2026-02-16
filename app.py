@@ -100,7 +100,7 @@ def get_app_shell():
             dcc.Location(id="url", refresh=False),
             dcc.Store(id="theme-store", storage_type="local"),
             dcc.Store(id="sidebar-store", storage_type="local"),
-            dcc.Store(id="selected-db-store", storage_type="local", data="db_1"),
+            dcc.Store(id="selected-db-store", storage_type="session"),
             create_chat_stores(),
             dmc.AppShell(
                 id="app-shell",
@@ -167,10 +167,6 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
 
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
-    if trigger_id == "db-selector":
-        if not db_value or db_value == current_db:
-            return dash.no_update, dash.no_update, dash.no_update
-
     if trigger_id == "theme-toggle":
         new_theme = "light" if (current_theme or "dark") == "dark" else "dark"
         session["theme"] = new_theme
@@ -180,44 +176,28 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
         return dash.no_update, not is_collapsed, dash.no_update
 
     if trigger_id == "db-selector" and db_value:
+        if db_value == current_db:
+            return dash.no_update, dash.no_update, dash.no_update
+
         from dashboard_core.db_helper import reset_db_failures, validate_db_quick, get_db_status
-        
-        previous_db = session.get("current_db")
-        databases = session.get("databases", [])
-        selected_db_info = next((d for d in databases if d.get("base_de_datos") == db_value), None)
-        client_name = selected_db_info.get("nombre_cliente") if selected_db_info else "Desconocido"
-        user_email = session.get("user", {}).get("email", "Desconocido")
         
         db_status = get_db_status(db_value)
         if db_status["blocked"]:
-            logger.warning(
-                f"⚠️ Usuario {user_email} intentó cambiar a BD bloqueada: {db_value}. "
-                f"Manteniendo BD actual: {previous_db}"
-            )
             return dash.no_update, dash.no_update, dash.no_update
 
-        logger.info(f"🔍 Validando acceso a BD: {db_value}")
-        is_valid = validate_db_quick(db_value)
-        
-        if not is_valid:
-            logger.error(
-                f"❌ Validación falló para {db_value}. Usuario {user_email} "
-                f"permanecerá en: {previous_db}"
-            )
+        if not validate_db_quick(db_value):
             return dash.no_update, dash.no_update, dash.no_update
 
-        logger.info(
-            f"✅ Validación exitosa. Cambio de BD | "
-            f"usuario={user_email} anterior={previous_db} nueva={db_value} cliente={client_name}"
-        )
-
-        reset_db_failures(previous_db) # type: ignore
-        reset_db_failures(db_value)
         reset_engine()
+        reset_db_failures(db_value)
         data_manager.cache.clear()
+        
+        databases = session.get("databases", [])
+        selected_info = next((d for d in databases if d.get("base_de_datos") == db_value), None)
+        
         session["current_db"] = db_value
+        session["current_client_logo"] = selected_info.get("url_logo") if selected_info else None
         session.modified = True
-        session["current_client_logo"] = (selected_db_info.get("url_logo") if selected_db_info else None)
         
         return dash.no_update, dash.no_update, db_value
 

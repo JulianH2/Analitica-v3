@@ -290,6 +290,9 @@ class DataManager:
                     if build and "query" in build:
                         rows = await execute_dynamic_query(db_config, build["query"])
                         if not rows and db_config: return data
+                        if rows is None or (not rows and db_config):
+                            print(f"🛑 Abortando carga de {screen_id}: BD no disponible o error crítico.")
+                            break
                         if rows:
 
                             for k, v in rows[0].items():
