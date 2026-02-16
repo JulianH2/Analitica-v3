@@ -164,13 +164,21 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
     ctx = callback_context
     if not ctx.triggered:
         return dash.no_update, dash.no_update, dash.no_update
+
     trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+    if trigger_id == "db-selector":
+        if not db_value or db_value == current_db:
+            return dash.no_update, dash.no_update, dash.no_update
+
     if trigger_id == "theme-toggle":
         new_theme = "light" if (current_theme or "dark") == "dark" else "dark"
         session["theme"] = new_theme
         return new_theme, dash.no_update, dash.no_update
+
     if trigger_id == "btn-sidebar-toggle":
         return dash.no_update, not is_collapsed, dash.no_update
+
     if trigger_id == "db-selector" and db_value:
         from dashboard_core.db_helper import reset_db_failures, validate_db_quick, get_db_status
         
@@ -187,6 +195,7 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
                 f"Manteniendo BD actual: {previous_db}"
             )
             return dash.no_update, dash.no_update, dash.no_update
+
         logger.info(f"🔍 Validando acceso a BD: {db_value}")
         is_valid = validate_db_quick(db_value)
         
@@ -196,10 +205,12 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
                 f"permanecerá en: {previous_db}"
             )
             return dash.no_update, dash.no_update, dash.no_update
+
         logger.info(
             f"✅ Validación exitosa. Cambio de BD | "
             f"usuario={user_email} anterior={previous_db} nueva={db_value} cliente={client_name}"
         )
+
         reset_db_failures(previous_db) # type: ignore
         reset_db_failures(db_value)
         reset_engine()
@@ -209,6 +220,7 @@ def update_stores(n_theme, n_sidebar, db_value, current_theme, is_collapsed, cur
         session["current_client_logo"] = (selected_db_info.get("url_logo") if selected_db_info else None)
         
         return dash.no_update, dash.no_update, db_value
+
     return dash.no_update, dash.no_update, dash.no_update
 
 @app.callback(

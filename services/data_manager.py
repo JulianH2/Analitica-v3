@@ -220,7 +220,7 @@ class DataManager:
         except Exception:
             return 0.0
 
-    async def refresh_screen(self, screen_id: str, filters: Optional[Dict] = None, *, use_cache: bool = True) -> Json:
+    async def refresh_screen(self, screen_id: str, filters: Optional[Dict] = None, *, use_cache: bool = True, db_config: Any = None) -> Json:
         cfg = self.SCREEN_MAP.get(screen_id) if self.SCREEN_MAP else {}
         if not cfg:
             return {}
@@ -237,7 +237,9 @@ class DataManager:
         keys = cfg.get("section_keys") or [cfg.get("section_key")]
         data = {k: base.get(k, {}) for k in keys if k}
         
-        db_config = session.get("current_db")
+        if not db_config:
+            db_config = session.get("current_db")
+            
         if not db_config:
             if use_cache:
                 self.cache[cache_key] = CacheEntry(data=data, ts=time.time())
@@ -742,7 +744,7 @@ class DataManager:
                     key = key.replace("__", ".")
                     if val:
                         filters[key] = val
-            await self.refresh_screen(screen_id, filters=filters, use_cache=True)
+            await self.refresh_screen(screen_id, filters=filters, use_cache=True, db_config=selected_db)
             return json.dumps(filters)
 
         @callback(Output(body_output_id, "children"), Input(ids["token_store"], "data"))
