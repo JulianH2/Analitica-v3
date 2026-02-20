@@ -1,3 +1,4 @@
+from design_system import dmc as _dmc
 import dash_mantine_components as dmc
 from utils.helpers import format_value
 from .base_strategy import KPIStrategy
@@ -68,9 +69,7 @@ class ExecutiveKPIStrategy(KPIStrategy):
         return config
 
     def _render_standard_view(self, ctx, theme):
-        return dmc.Text("Detalle no disponible", c="dimmed") # type: ignore
-
-
+        return dmc.Text("Detalle no disponible", c=_dmc("dimmed"))
 class ExecutiveMiniKPIStrategy(KPIStrategy):
     def __init__(self, screen_id, key, title="", color="blue", icon="", has_detail=True, variant=None, layout_config=None):
         super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)

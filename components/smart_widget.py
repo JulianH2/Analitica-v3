@@ -12,6 +12,7 @@ from design_system import (
     SemanticColors,
     Space,
     Shadows,
+    dmc as _dmc,
 )
 from typing import Any
 import math
@@ -87,7 +88,7 @@ class SmartWidget:
                     align="center",
                     children=[
                         DashIconify(icon="tabler:chart-off", width=32, color="gray"),
-                        dmc.Text("Sin datos disponibles", size="xs", c="dimmed"), # type: ignore
+                        dmc.Text("Sin datos disponibles", size="xs", c=_dmc("dimmed"))
                     ],
                 ),
                 style={"flex": 1},
@@ -95,7 +96,7 @@ class SmartWidget:
         else:
             figure.update_layout(
                 template="zam_dark" if is_dark else "zam_light",
-                font=dict(color="white" if is_dark else "black"),
+                font=dict(color=Colors.TEXT_DARK if is_dark else Colors.TEXT_LIGHT),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
             )
@@ -109,7 +110,7 @@ class SmartWidget:
         return dmc.Paper(
             p="sm",
             radius="md",
-            withBorder=False,
+            withBorder=True,
             shadow=None,
             style={
                 "height": height,
@@ -164,9 +165,9 @@ class SmartWidget:
             children=[
                 dmc.Text(
                     title,
-                    size="9px", # type: ignore
-                    c="dimmed", # type: ignore
-                    fw=600, # type: ignore
+                    size=_dmc("9px"),
+                    c=_dmc("dimmed"),
+                    fw=_dmc(600),
                     tt="uppercase",
                     style={
                         "whiteSpace": "nowrap",
@@ -183,7 +184,7 @@ class SmartWidget:
                         dmc.ThemeIcon(
                             DashIconify(icon=icon, width=12),
                             variant="light",
-                            color=hex_color, # type: ignore
+                            color=_dmc(hex_color),
                             size="xs",
                             radius="sm",
                             style={"flexShrink": 0},
@@ -212,10 +213,10 @@ class SmartWidget:
             children=[
                 dmc.Text(
                     display_val,
-                    fw=700, # type: ignore
-                    fz="1.1rem", # type: ignore
-                    lh="1", # type: ignore
-                    c=main_text_color, # type: ignore
+                    fw=_dmc(700),
+                    fz=_dmc("1.1rem"),
+                    lh=_dmc("1"),
+                    c=_dmc(main_text_color),
                     style={
                         "whiteSpace": "nowrap",
                         "overflow": "hidden",
@@ -232,7 +233,7 @@ class SmartWidget:
         return dmc.Paper(
             p="xs",
             radius="md",
-            withBorder=False,
+            withBorder=True,
             shadow=None,
             style={
                 "height": height,
@@ -269,10 +270,10 @@ class SmartWidget:
             children=[
                 dmc.Text(
                     display_val,
-                    fw=700, # type: ignore
-                    size="1.8rem", # type: ignore
+                    fw=_dmc(700),
+                    size=_dmc("1.8rem"),
                     lh=1.1,
-                    c=main_text_color, # type: ignore
+                    c=_dmc(main_text_color),
                     style={
                         "whiteSpace": "nowrap",
                         "overflow": "hidden",
@@ -289,7 +290,7 @@ class SmartWidget:
         return dmc.Paper(
             p="sm",
             radius="md",
-            withBorder=False,
+            withBorder=True,
             shadow=None,
             style={
                 "height": height,
@@ -309,7 +310,8 @@ class SmartWidget:
         )
 
     def _render_combined(self, config, figure, height, theme):
-        main_text_color = Colors.TEXT_DARK if theme == "dark" else Colors.TEXT_LIGHT
+        is_dark = theme == "dark"
+        main_text_color = Colors.TEXT_DARK if is_dark else Colors.TEXT_LIGHT
         header = self._build_header(config)
 
         display_val = config.get("main_value") or config.get("value", "---")
@@ -326,10 +328,10 @@ class SmartWidget:
             children=[
                 dmc.Text(
                     display_val,
-                    fw=700, # type: ignore
-                    size="1.6rem", # type: ignore
+                    fw=_dmc(700),
+                    size=_dmc("1.6rem"),
                     lh=1,
-                    c=main_text_color, # type: ignore
+                    c=_dmc(main_text_color),
                     style={
                         "whiteSpace": "nowrap",
                         "overflow": "hidden",
@@ -341,24 +343,43 @@ class SmartWidget:
             ],
         )
 
-        figure.update_traces(
-            selector=dict(type="indicator"),
-            number=dict(font=dict(color=main_text_color)),
+        has_needle = any(
+            getattr(s, "type", "") == "path"
+            for s in (figure.layout.shapes or [])
         )
 
-        figure.update_layout(font=dict(color=main_text_color))
+        figure.update_traces(
+            selector=dict(type="indicator"),
+            number=dict(font=dict(size=1, color="rgba(0,0,0,0)")),
+        )
 
-        if figure.layout.annotations:
-            for ann in figure.layout.annotations:
-                ann.font = dict(color=main_text_color)
+        if is_dark and has_needle:
+            needle_color = "#e8eaed"
+            hub_color = "#1a1a2e"
+            for shape in (figure.layout.shapes or []):
+                if getattr(shape, "type", "") == "path":
+                    shape.fillcolor = needle_color
+                    shape.line = dict(color=needle_color, width=0)
+                elif getattr(shape, "type", "") == "circle":
+                    if getattr(shape, "fillcolor", "") == "#1a1a2e":
+                        shape.fillcolor = needle_color
+                        shape.line = dict(color=hub_color, width=2)
 
-        gauge_height = height * 0.7
+        figure.update_layout(
+            template="zam_dark" if is_dark else "zam_light",
+            font=dict(color=main_text_color),
+        )
 
-        figure.update_traces(domain={"x": [0, 1], "y": [0.05, 1]})
+        gauge_height = int(height * 0.50)
+
+        figure.update_traces(
+            selector=dict(type="indicator"),
+            domain={"x": [0.02, 0.98], "y": [0.0, 1.0]},
+        )
 
         figure.update_layout(
             height=gauge_height,
-            margin=dict(t=35, b=20, l=0, r=0),
+            margin=dict(t=5, b=5, l=10, r=10),
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
         )
@@ -370,10 +391,8 @@ class SmartWidget:
             style={
                 "height": f"{gauge_height}px",
                 "width": "100%",
-                "display": "flex",
-                "justifyContent": "center",
-                "alignItems": "center",
-                "overflow": "hidden",
+                "overflow": "visible",
+                "flexShrink": 0,
             },
         )
 
@@ -382,7 +401,7 @@ class SmartWidget:
         return dmc.Paper(
             p="sm",
             radius="md",
-            withBorder=False,
+            withBorder=True,
             shadow=None,
             style={
                 "height": height,
@@ -421,9 +440,9 @@ class SmartWidget:
                         DashIconify(icon=icon, width=18, color=hex_color),
                         dmc.Text(
                             title,
-                            size="10px", # type: ignore
-                            c="dimmed", # type: ignore
-                            fw=700, # type: ignore
+                            size=_dmc("10px"),
+                            c=_dmc("dimmed"),
+                            fw=_dmc(700),
                             tt="uppercase",
                             style={"whiteSpace": "nowrap"},
                         ),
@@ -468,7 +487,7 @@ class SmartWidget:
         if badge_text:
             return dmc.Badge(
                 badge_text,
-                color=badge_color, # type: ignore
+                color=_dmc(badge_color),
                 variant="light",
                 size="xs",
                 style={"padding": "0 3px", "height": "16px", "fontSize": "9px"},
@@ -496,8 +515,8 @@ class SmartWidget:
             gap=3,
             wrap="nowrap",
             children=[
-                dmc.Text(label, size="8px", style={"color": label_color}), # type: ignore
-                dmc.Text(str(value), size="8px", fw=600, style={"color": value_color}), # type: ignore
+                dmc.Text(label, size=_dmc("8px"), style={"color": label_color}),
+                dmc.Text(str(value), size=_dmc("8px"), fw=_dmc(600), style={"color": value_color}),
             ],
         )
 
@@ -565,7 +584,7 @@ class SmartWidget:
 
                 badge = dmc.Badge(
                     badge_text,
-                    color=badge_color, # type: ignore
+                    color=_dmc(badge_color),
                     variant="light",
                     size="xs",
                     style={"padding": "0 4px", "height": "16px", "fontSize": "9px"},
@@ -577,15 +596,15 @@ class SmartWidget:
                 wrap="nowrap",
                 style={"minHeight": "16px"},
                 children=[
-                    dmc.Text(label, size="9px", fw=500, style={"color": label_color}), # type: ignore
+                    dmc.Text(label, size=_dmc("9px"), fw=_dmc(500), style={"color": label_color}),
                     dmc.Group(
                         gap=2,
                         wrap="nowrap",
                         children=[
                             dmc.Text(
                                 str(value),
-                                size="9px", # type: ignore
-                                fw=600, # type: ignore
+                                size=_dmc("9px"),
+                                fw=_dmc(600),
                                 style={"color": value_color},
                             ),
                             badge if badge else html.Div(),
@@ -603,12 +622,14 @@ class SmartWidget:
         if prev_row and len(footer_items) < max_items:
             footer_items.append(prev_row)
 
-        meta_row = make_row(
-            config.get("label_target", "Meta"),
-            config.get("target_formatted"),
-            config.get("target_delta"),
-            config.get("target_delta_formatted"),
-        )
+        meta_row = None
+        if not config.get("hide_meta", False):
+            meta_row = make_row(
+                config.get("label_target", "Meta"),
+                config.get("target_formatted"),
+                config.get("target_delta"),
+                config.get("target_delta_formatted"),
+            )
         if meta_row and len(footer_items) < max_items:
             footer_items.append(meta_row)
 

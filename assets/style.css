@@ -4,8 +4,8 @@
   --text-light: #1d1d1b;
   --text-light-secondary: #808080;
 
-  --bg-dark: #0080ff;
-  --bg-dark-secondary: #3b4249;
+  --bg-dark: #1d1d1b;
+  --bg-dark-secondary: #2c2e33;
   --text-dark: #e8eaed;
   --text-dark-secondary: #9ca3af;
 
@@ -24,7 +24,6 @@
   --zam-warning: #facc15;
   --zam-danger: #ef4444;
 }
-
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -402,4 +401,82 @@
 
 .drag-handle {
     cursor: move;
+}
+
+.zam-pill {
+  height: 34px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Nexa', 'Montserrat', 'Inter', sans-serif;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  cursor: default;
+}
+
+[data-mantine-color-scheme="dark"] .zam-pill {
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: #f2f2f2;
+}
+
+[data-mantine-color-scheme="light"] .zam-pill {
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(0,0,0,0.04);
+  color: #1d1d1b;
+}
+
+.zam-pill-btn {
+  cursor: pointer !important;
+}
+
+[data-mantine-color-scheme="dark"] .zam-pill-btn:hover {
+  background: rgba(255,255,255,0.09) !important;
+}
+
+[data-mantine-color-scheme="light"] .zam-pill-btn:hover {
+  background: rgba(0,0,0,0.07) !important;
+}
+
+.zam-pill-active {
+  border: 1px solid rgba(65,140,223,0.4) !important;
+  background: rgba(65,140,223,0.10) !important;
+  color: #418cdf !important;
+}
+
+.zam-pill-divider {
+  width: 1px;
+  height: 20px;
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+[data-mantine-color-scheme="dark"] .zam-pill-divider {
+  background: rgba(255,255,255,0.12);
+}
+
+[data-mantine-color-scheme="light"] .zam-pill-divider {
+  background: rgba(0,0,0,0.12);
+}
+
+.zam-filter-label {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 5px;
+  display: block;
+  font-family: 'Nexa', 'Montserrat', 'Inter', sans-serif !important;
+}
+
+[data-mantine-color-scheme="dark"] .zam-filter-label {
+  color: #bec4c6 !important;
+}
+
+[data-mantine-color-scheme="light"] .zam-filter-label {
+  color: #64748b !important;
 }

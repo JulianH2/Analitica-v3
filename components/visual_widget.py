@@ -1,8 +1,8 @@
-import dash_mantine_components as dmc
+import dash_mantine_components as mantine
 from dash import dcc, html
 from dash_iconify import DashIconify
 from typing import Any
-from design_system import DesignSystem as DS, Typography, ComponentSizes
+from design_system import DesignSystem as DS, Typography, ComponentSizes, dmc as ds_token
 import math
 
 
@@ -25,23 +25,25 @@ class ChartWidget:
 
         if valid_fig:
             self._configure_figure(fig, fig_height)
-            graph_content = self._create_graph_component(fig, height_style)
+            graph_content = self._create_graph_component(fig, fig_height)
         else:
             graph_content = self._create_empty_state()
 
         is_dark = theme == "dark"
+        is_pie = valid_fig and any(getattr(t, "type", "") == "pie" for t in fig.data) if fig else False
 
-        return dmc.Paper(
+        return mantine.Paper(
             p=0,
             radius="md",
             withBorder=True,
-            shadow="xl",
+            shadow=None,
             style={
                 "height": height_style,
                 "display": "flex",
                 "flexDirection": "column",
                 "backgroundColor": "transparent",
-                "overflow": "hidden",
+                "border": DS.CARD_BORDER_DARK if is_dark else DS.CARD_BORDER_LIGHT,
+                "overflow": "visible" if is_pie else "hidden",
             },
             children=[
                 self._create_header(config_data, icon_color, is_dark),
@@ -51,7 +53,7 @@ class ChartWidget:
                         "minHeight": 0,
                         "width": "100%",
                         "position": "relative",
-                        "overflow": "hidden",
+                        "overflow": "visible" if is_pie else "hidden",
                     },
                     children=graph_content,
                 ),
@@ -96,29 +98,18 @@ class ChartWidget:
     def _configure_figure(self, fig, fig_height):
         is_pie = any(getattr(trace, "type", "") == "pie" for trace in fig.data)
 
+        HEADER_HEIGHT = 40
+        plotly_height = (fig_height - HEADER_HEIGHT) if isinstance(fig_height, int) else None
+
         fig.update_layout(
             autosize=True,
-            height=None,
+            height=plotly_height,
             template="zam_dark" if self.theme == "dark" else "zam_light",
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
         )
 
-        if is_pie:
-            fig.update_traces(domain=dict(x=[0, 0.55], y=[0, 1]))
-            fig.update_layout(
-                margin=dict(t=10, b=10, l=10, r=10),
-                showlegend=True,
-                legend=dict(
-                    orientation="v",
-                    yanchor="middle",
-                    y=0.5,
-                    xanchor="left",
-                    x=0.6,
-                    itemsizing="constant",
-                ),
-            )
-        else:
+        if not is_pie:
             fig.update_layout(
                 margin=dict(t=5, b=25, l=40, r=10),
                 legend=dict(
@@ -131,8 +122,10 @@ class ChartWidget:
             )
             fig.update_xaxes(automargin=True)
             fig.update_yaxes(automargin=True)
+        else:
+            fig.update_layout(showlegend=False)
 
-    def _create_graph_component(self, fig, height_style):
+    def _create_graph_component(self, fig, fig_height):
         return dcc.Graph(
             id={"type": "interactive-graph", "index": self.widget_id},
             figure=fig,
@@ -146,16 +139,16 @@ class ChartWidget:
         )
 
     def _create_empty_state(self):
-        return dmc.Center(
-            dmc.Stack(
+        return mantine.Center(
+            mantine.Stack(
                 gap=5,
                 align="center",
                 children=[
                     DashIconify(icon="tabler:chart-off", width=24, color=DS.NEXA_GRAY),
-                    dmc.Text(
+                    mantine.Text(
                         "Sin datos disponibles",
                         size="xs",
-                        c="dimmed", # type: ignore
+                        c=ds_token("dimmed"),
                         style={"fontSize": f"{Typography.XS}px"},
                     ),
                 ],
@@ -166,14 +159,14 @@ class ChartWidget:
     def _create_header(self, config_data, icon_color, is_dark):
         has_detail = getattr(self.strategy, "has_detail", False)
 
-        return dmc.Group(
+        return mantine.Group(
             justify="space-between",
             px="sm",
             pt="xs",
             mb=5,
             wrap="nowrap",
             children=[
-                dmc.Group(
+                mantine.Group(
                     gap=8,
                     wrap="nowrap",
                     children=[
@@ -185,20 +178,20 @@ class ChartWidget:
                             color=icon_color,
                             width=18,
                         ),
-                        dmc.Text(
+                        mantine.Text(
                             config_data.get(
                                 "title",
                                 getattr(self.strategy, "title", "Gráfica"),
                             ),
-                            fw=700, # type: ignore
+                            fw=ds_token(700),
                             size="xs",
-                            c="dimmed", # type: ignore
+                            c=ds_token("dimmed"),
                             tt="uppercase",
                             style={"fontSize": "10px"},
                         ),
                     ],
                 ),
-                dmc.ActionIcon(
+                mantine.ActionIcon(
                     DashIconify(icon="tabler:layers-linked", width=16),
                     variant="subtle",
                     color="gray",

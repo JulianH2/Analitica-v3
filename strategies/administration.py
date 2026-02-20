@@ -2,7 +2,7 @@ import dash_ag_grid as dag
 import dash_mantine_components as dmc
 from dash import html
 from dash_iconify import DashIconify
-from design_system import Colors, ComponentSizes, Space, Typography
+from design_system import Colors, ComponentSizes, Space, Typography, dmc as _dmc
 from utils.helpers import safe_get
 from .base_strategy import KPIStrategy
 from .chart_engine import ChartEngine
@@ -48,9 +48,7 @@ class AdminKPIStrategy(KPIStrategy):
         }
 
     def _render_standard_view(self, ctx, theme):
-        return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
-
-
+        return dmc.Text("Detalle de métrica administrativa.", size="sm", c=_dmc("dimmed"))
 class AdminGaugeStrategy(KPIStrategy):
     def __init__(self, screen_id, key, title="", color="blue", icon="tabler:gauge", has_detail=True, variant=None, layout_config=None):
         super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
@@ -94,9 +92,7 @@ class AdminGaugeStrategy(KPIStrategy):
         return fig
 
     def _render_standard_view(self, ctx, theme):
-        return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
-
-
+        return dmc.Text("Detalle de métrica administrativa.", size="sm", c=_dmc("dimmed"))
 class AdminDonutChartStrategy(KPIStrategy):
     def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-pie", has_detail=True, variant=None, layout_config=None):
         super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
@@ -119,9 +115,7 @@ class AdminDonutChartStrategy(KPIStrategy):
         return fig
 
     def _render_standard_view(self, ctx, theme):
-        return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
-
-
+        return dmc.Text("Detalle de métrica administrativa.", size="sm", c=_dmc("dimmed"))
 class AdminTrendChartStrategy(KPIStrategy):
     def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-line", has_detail=True, variant=None, layout_config=None):
         super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
@@ -145,9 +139,7 @@ class AdminTrendChartStrategy(KPIStrategy):
         return fig
 
     def _render_standard_view(self, ctx, theme):
-        return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
-
-
+        return dmc.Text("Detalle de métrica administrativa.", size="sm", c=_dmc("dimmed"))
 class AdminHorizontalBarStrategy(KPIStrategy):
     def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-bar", has_detail=True, variant=None, layout_config=None):
         super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
@@ -193,9 +185,7 @@ class AdminHistoricalForecastLineStrategy(KPIStrategy):
         return fig
 
     def _render_standard_view(self, ctx, theme):
-        return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
-
-
+        return dmc.Text("Detalle de métrica administrativa.", size="sm", c=_dmc("dimmed"))
 class AdminStackedBarStrategy(KPIStrategy):
     def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-bar", has_detail=True, variant=None, layout_config=None):
         super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
@@ -219,8 +209,33 @@ class AdminStackedBarStrategy(KPIStrategy):
         return fig
 
     def _render_standard_view(self, ctx, theme):
-        return dmc.Text("Detalle de métrica administrativa.", size="sm", c="dimmed") # type: ignore
+        return dmc.Text("Detalle de métrica administrativa.", size="sm", c=_dmc("dimmed"))
 
+class AdminBarChartStrategy(KPIStrategy):
+    """Vertical bar chart strategy (non-stacked)."""
+    def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-bar", has_detail=True, variant=None, layout_config=None):
+        super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
+
+    def get_card_config(self, ctx):
+        return {
+            "title": self.title,
+            "icon": self.icon,
+            "has_detail": self.has_detail,
+            "is_table": False,
+            "is_chart": True,
+            "color": self.color,
+            "raw_data": {},
+        }
+
+    def get_figure(self, ctx, theme="dark"):
+        node = self._resolve_chart_data(ctx, self.screen_id, self.key)
+        fig = ChartEngine.render_bar_chart(node, theme, self.layout)
+        if fig is None:
+            return self._create_empty_figure(theme=theme)
+        return fig
+
+    def _render_standard_view(self, ctx, theme):
+        return dmc.Text("Detalle de métrica administrativa.", size="sm", c=_dmc("dimmed"))
 
 class AdminMultiLineStrategy(KPIStrategy):
     def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-line", has_detail=True, variant=None, layout_config=None):
@@ -339,7 +354,7 @@ class AdminTableStrategy:
                         gap=Space.XS,
                         children=[
                             DashIconify(icon="tabler:table-off", width=40, color=Colors.NEXA_GRAY),
-                            dmc.Text("Sin datos disponibles", size="xs", c="dimmed", style={"fontFamily": Typography.FAMILY}), # type: ignore
+                            dmc.Text("Sin datos disponibles", size="xs", c=_dmc("dimmed"), style={"fontFamily": Typography.FAMILY}),
                         ],
                     )
                 ],

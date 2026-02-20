@@ -1,6 +1,14 @@
-from typing import Any, Dict, Final, List, Literal, TypedDict, Union, Callable
+from typing import Any, Dict, Final, List, Literal, Optional, TypedDict, Union, Callable, cast
 import plotly.graph_objects as go
 import plotly.io as pio
+
+
+def dmc(v: object) -> Any:
+    """DMC prop cast — bypasses Pylance false-positives for dash-mantine-components
+    props supported at runtime but missing from library type stubs.
+    Examples: fw=dmc(700), c=dmc("dimmed"), span=dmc({"base": 12, "lg": 7})."""
+    return cast(Any, v)
+
 
 FontWeight = Literal[400, 500, 600, 700, 800, 900]
 FontSize = Union[int, float, Literal["xs", "sm", "md", "lg", "xl"]]
@@ -16,14 +24,14 @@ class Breakpoints:
     XXL: Final[int] = 1600
     
     @staticmethod
-    def get_cols_config(xs: int = 1, sm: int = 2, md: int = 3, lg: int = 4, xl: int = None) -> Dict[str, int]: # type: ignore
+    def get_cols_config(xs: int = 1, sm: int = 2, md: int = 3, lg: int = 4, xl: Optional[int] = None) -> Dict[str, int]:
         config = {"base": xs, "sm": sm, "md": md, "lg": lg}
         if xl is not None:
             config["xl"] = xl
         return config
     
     @staticmethod
-    def get_span_config(xs: int = 12, sm: int = 6, md: int = 4, lg: int = 3, xl: int = None) -> Dict[str, int]: # type: ignore
+    def get_span_config(xs: int = 12, sm: int = 6, md: int = 4, lg: int = 3, xl: Optional[int] = None) -> Dict[str, int]:
         config = {"base": xs, "sm": sm, "md": md, "lg": lg}
         if xl is not None:
             config["xl"] = xl
@@ -53,7 +61,6 @@ class Colors:
     BG_LIGHT: Final[str] = "#F8FAFC"
     BG_LIGHT_SECONDARY: Final[str] = "#FFFFFF"
     BG_LIGHT_CARD: Final[str] = "#FFFFFF"
-
 
 
     BG_DARK: Final[str] = "#1d1d1b"       
@@ -141,7 +148,6 @@ class Colors:
     TRANSPARENT: Final[str] = "rgba(0,0,0,0)"
     WHITE: Final[str] = "#ffffff"
     
-    # Card borders for light/dark themes
     CARD_BORDER_LIGHT: Final[str] = "1px solid #e5e7eb"
     CARD_BORDER_DARK: Final[str] = "1px solid rgba(255,255,255,0.08)"
     
@@ -255,7 +261,6 @@ class BorderRadius:
 class Shadows:
     
     
-
     SM: Final[str] = "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
     MD: Final[str] = "0 1px 3px 0 rgba(0, 0, 0, 0.08)"
     LG: Final[str] = "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
@@ -271,16 +276,15 @@ class Shadows:
 class ComponentSizes:
     
     
-
     KPI_HEIGHT_COMPACT: Final[int] = 110
     KPI_HEIGHT_NORMAL: Final[int] = 160
     KPI_HEIGHT_GAUGE: Final[int] = 195
     
 
-    CHART_HEIGHT_SM: Final[int] = 200
-    CHART_HEIGHT_MD: Final[int] = 280
-    CHART_HEIGHT_BASE: Final[int] = 320
-    CHART_HEIGHT_LG: Final[int] = 450
+    CHART_HEIGHT_SM: Final[int] = 240
+    CHART_HEIGHT_MD: Final[int] = 340
+    CHART_HEIGHT_BASE: Final[int] = 420
+    CHART_HEIGHT_LG: Final[int] = 520
     
 
     GAUGE_HEIGHT: Final[int] = 195
@@ -318,7 +322,6 @@ class ComponentSizes:
 class SemanticColors:
     
     
-
     INGRESO: Final[str] = Colors.NEXA_GREEN
     EGRESO: Final[str] = Colors.NEXA_RED
     PROFIT: Final[str] = Colors.NEXA_BLUE
@@ -418,15 +421,6 @@ class BadgeConfig:
     
     @staticmethod
     def get_comparison_badge(diff_percentage: float) -> Dict[str, str]:
-        """
-        Obtiene configuración de badge según porcentaje de diferencia
-        
-        Args:
-            diff_percentage: Diferencia porcentual (ej: -68.0, +71.0)
-        
-        Returns:
-            Dict con background, text, icon, label
-        """
         if diff_percentage > 0:
             return {
                 **BadgeConfig.get_positive_badge(),
@@ -449,15 +443,6 @@ class GaugeConfig:
     
     @staticmethod
     def get_gauge_color(percentage: float) -> str:
-        """
-        Determina color del gauge según porcentaje vs meta
-        
-        Args:
-            percentage: Porcentaje alcanzado (0-100)
-        
-        Returns:
-            Color hex string
-        """
         if percentage >= 80:
             return Colors.POSITIVE
         elif percentage >= 60:
@@ -467,12 +452,6 @@ class GaugeConfig:
     
     @staticmethod
     def get_gauge_colors(percentage: float) -> Dict[str, str]:
-        """
-        Obtiene todos los colores necesarios para un gauge
-        
-        Returns:
-            Dict con gauge_color, background, text
-        """
         gauge_color = GaugeConfig.get_gauge_color(percentage)
         
         if percentage >= 80:
@@ -494,15 +473,6 @@ class TableStatusConfig:
     
     @staticmethod
     def get_status_badge(status: str) -> Dict[str, str]:
-        """
-        Obtiene configuración de badge según estado
-        
-        Args:
-            status: "dentro_del_rango", "atencion", "fuera_del_rango"
-        
-        Returns:
-            Dict con background, text, label
-        """
         status_map = {
             "dentro_del_rango": {
                 "background": Colors.POSITIVE_BG,
@@ -524,17 +494,6 @@ class TableStatusConfig:
     
     @staticmethod
     def determine_status(current: float, min_val: float, max_val: float) -> str:
-        """
-        Determina el estado según valor actual y rango MinMax
-        
-        Args:
-            current: Valor actual
-            min_val: Valor mínimo aceptable
-            max_val: Valor máximo aceptable
-        
-        Returns:
-            Status string: "dentro_del_rango", "atencion", "fuera_del_rango"
-        """
         if min_val <= current <= max_val:
             return "dentro_del_rango"
         elif current > max_val * 1.2 or current < min_val * 0.8:
@@ -565,12 +524,6 @@ class PlotlyConfig:
     
     @staticmethod
     def get_base_layout(theme: str = "light") -> Dict[str, Any]:
-        """
-        Layout base para todas las gráficas
-        
-        Args:
-            theme: "light" o "dark"
-        """
         is_dark = theme == "dark"
         
         return dict(
@@ -768,26 +721,15 @@ class MantineTheme:
         return theme
 
 
-
 PlotlyConfig.setup_templates()
 
 class DesignSystem:
     
 
-
     TEXT_LIGHT = Colors.TEXT_LIGHT
     TEXT_LIGHT_SECONDARY = Colors.TEXT_LIGHT_SECONDARY
     TEXT_DARK = Colors.TEXT_DARK
     TEXT_DARK_SECONDARY = Colors.TEXT_DARK_SECONDARY
-    
-
-
-    """
-    Sistema de diseño unificado para Analítica Gerencial ZAM
-    
-    Basado en análisis de mockups AnaliticaZAM-V4.pdf (tema claro)
-    y nocturno_AnaliticaZAM-V4.pdf (tema oscuro)
-    """
     
 
     NEXA_ORANGE = Colors.NEXA_ORANGE
@@ -980,7 +922,6 @@ class DesignSystem:
     }
     
 
-    
     @staticmethod
     def get_mantine_theme(scheme: str = "light") -> Dict[str, Any]:
         

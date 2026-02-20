@@ -2,7 +2,7 @@ import dash
 from dash import html, callback, Input, Output, ALL, State, no_update, dcc, ctx as dash_ctx
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
-from design_system import DesignSystem as DS, Typography
+from design_system import DesignSystem as DS, Typography, dmc as _dmc
 from services.drawer_data_service import DrawerDataService
 from flask import session
 
@@ -21,7 +21,7 @@ def create_smart_drawer(drawer_id: str = "smart-drawer"):
             dmc.Drawer(
                 id=drawer_id,
                 position="right",
-                size="65%",  # type: ignore
+                size=_dmc("65%"),
                 padding=0,
                 withCloseButton=False,
                 opened=False,
@@ -124,13 +124,13 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
                                         dmc.Text(
                                             drawer_data.get("title", "Detalle"),
                                             size="xl",
-                                            fw=700,  # type: ignore
-                                            c=text_color,  # type: ignore
+                                            fw=_dmc(700),
+                                            c=_dmc(text_color),
                                         ),
                                         dmc.Text(
                                             drawer_data.get("subtitle", ""),
                                             size="sm",
-                                            c="dimmed",  # type: ignore
+                                            c=_dmc("dimmed"),
                                             mt=4,
                                         ),
                                     ]
@@ -178,7 +178,7 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
                                     gap="xs",
                                     children=[
                                         DashIconify(icon=icon, width=16, color="white" if key == "tab_insights" else icon_color),
-                                        dmc.Text(label, size="sm", fw=600),  # type: ignore
+                                        dmc.Text(label, size="sm", fw=_dmc(600)),
                                     ],
                                 ),
                                 value=key,
@@ -212,7 +212,7 @@ def _create_drawer_content(drawer_id: str, theme: str, drawer_data: dict):
     )
 
 
-def register_drawer_callback(drawer_id: str, widget_registry: dict, screen_id: str, filter_ids: list = None):  # type: ignore
+def register_drawer_callback(drawer_id: str, widget_registry: dict, screen_id: str, filter_ids: list | None = None):
     from services.data_manager import data_manager
 
     f_ids = filter_ids or []
@@ -266,9 +266,7 @@ def register_drawer_callback(drawer_id: str, widget_registry: dict, screen_id: s
 
             theme = session.get("theme", "dark")
 
-            drawer_data = DrawerDataService.get_widget_drawer_data(
-                widget_id=widget_id, widget=widget, ctx=ctx, theme=theme  # type: ignore
-            )
+            drawer_data = DrawerDataService.get_widget_drawer_data(widget_id=str(widget_id), widget=widget, ctx=ctx, theme=theme)
 
             content = _create_drawer_content(drawer_id, theme, drawer_data)
             return True, content

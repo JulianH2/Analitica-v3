@@ -364,6 +364,10 @@
       "meta_litros_combustible": "decimal",
       "meta_promedio_dias_cartera": "decimal",
       "meta_promedio_dias_pago": "decimal",
+      "meta_costo_tallerinterno": "decimal",
+      "meta_costo_tallerexterno": "decimal",
+      "meta_costo_tallerllantas": "decimal",
+      "meta_costo_mtto_x_km": "decimal",
       "fecha": "date"
     }
   },
@@ -560,6 +564,185 @@
     "fields": {
       "id_proveedor": "integer",
       "nombre_proveedor": "string"
+    }
+  },
+  "d_banco": {
+    "table_name": "d_banco",
+    "type": "dim",
+    "pk": "id_banco",
+    "label_column": "descripcion_banco",
+    "fields": {
+      "id_banco": "integer",
+      "descripcion_banco": "string",
+      "id_institucion_bancaria": "integer",
+      "id_tipo_moneda": "integer"
+    },
+    "joins": {
+      "institucion": { 
+        "target_table": "d_banco_sat", 
+        "type": "INNER", 
+        "on": "d_banco.id_institucion_bancaria = d_banco_sat.id_bancosat" 
+      }
+    }
+  },
+  "h_bancos_saldos": {
+    "table_name": "h_bancos_saldos",
+    "type": "fact",
+    "pk": "pk_bancos_saldos",
+    "date_column": "fecha_periodo",
+    "fields": {
+      "saldo_inicial_consolidado": "decimal",
+      "saldo_inicial_pesos": "decimal",
+      "saldo_inicial_dlls": "decimal",
+      "ingresos_consolidado": "decimal",
+      "egresos_consolidado": "decimal",
+      "saldo_final_consolidado": "decimal",
+      "fecha_periodo": "date",
+      "id_banco": "integer",
+      "id_areacont": "integer"
+    },
+    "joins": {
+      "banco": { "target_table": "d_banco", "type": "INNER", "on": "h_bancos_saldos.id_banco = d_banco.id_banco" },
+      "area": { "target_table": "d_area", "type": "INNER", "on": "h_bancos_saldos.id_areacont = d_area.id_area" }
+    }
+  },
+  "h_bancos_movimientos": {
+    "table_name": "h_bancos_movimientos",
+    "type": "fact",
+    "pk": "num_documento",
+    "date_column": "fecha_movimiento",
+    "fields": {
+      "ingresos_consolidado": "decimal",
+      "egresos_consolidado": "decimal",
+      "ingresos_pesos": "decimal",
+      "egresos_pesos": "decimal",
+      "ingresos_dlls": "decimal",
+      "egresos_dlls": "decimal",
+      "fecha_movimiento": "date",
+      "id_banco": "integer",
+      "id_areacont": "integer",
+      "id_concepto": "integer"
+    },
+    "joins": {
+      "banco": { "target_table": "d_banco", "type": "INNER", "on": "h_bancos_movimientos.id_banco = d_banco.id_banco" },
+      "area": { "target_table": "d_area", "type": "INNER", "on": "h_bancos_movimientos.id_areacont = d_area.id_areacont" },
+      "concepto": { "target_table": "d_banco_concepto", "type": "INNER", "on": "h_bancos_movimientos.id_concepto = d_banco_concepto.id_concepto" }
+    }
+  },
+  "d_banco_sat": {
+    "table_name": "d_banco_sat",
+    "type": "dim",
+    "pk": "id_bancosat",
+    "fields": {
+      "id_bancosat": "integer",
+      "descripcion": "string",
+      "clave_sat": "string",
+      "razon_social": "string"
+    }
+  },
+  "d_banco_concepto": {
+    "table_name": "d_banco_concepto",
+    "type": "dim",
+    "pk": "id_concepto",
+    "fields": {
+      "id_concepto": "integer",
+      "descripcion": "string"
+    }
+  },
+  "d_orden_servicio": {
+    "table_name": "d_orden_servicio",
+    "type": "dim",
+    "pk": "id_orden_servicio",
+    "date_column": "fecha_cierre",
+    "fields": {
+      "id_orden": "integer",
+      "fecha_cierre": "date"
+    },
+    "joins": {
+      "mo_orden": { "target_table": "d_mo_orden", "type": "LEFT", "on": "d_orden_servicio.id_orden = d_mo_orden.id_orden" },
+      "refacciones": { "target_table": "h_taller_gasto_refacciones", "type": "LEFT", "on": "d_orden_servicio.id_orden = h_taller_gasto_refacciones.id_orden" },
+      "gasto_ext": { "target_table": "h_taller_gasto_taller_externo", "type": "LEFT", "on": "d_orden_servicio.id_orden = h_taller_gasto_taller_externo.id_orden" },
+      "llantas_nuevas": { "target_table": "h_llantas_nueva", "type": "LEFT", "on": "d_orden_servicio.id_orden = h_llantas_nueva.id_orden" },
+      "llantas_renovadas": { "target_table": "h_llantas_renovada", "type": "LEFT", "on": "d_orden_servicio.id_orden = h_llantas_renovada.id_orden" }
+    }
+  },
+  "d_mo_orden": {
+    "table_name": "d_mo_orden",
+    "type": "fact",
+    "pk": "id_mo_orden",
+    "fields": {
+      "duracion": "decimal",
+      "costo": "decimal",
+      "id_orden": "integer"
+    },
+    "joins": {
+      "servicio": { "target_table": "d_orden_servicio", "type": "INNER", "on": "d_mo_orden.id_orden = d_orden_servicio.id_orden" }
+    }
+  },
+  "h_taller_gasto_refacciones": {
+    "table_name": "h_taller_gasto_refacciones",
+    "type": "fact",
+    "pk": "id_gasto_refaccion",
+    "fields": {
+      "monto_gto_ref": "decimal",
+      "id_orden": "integer"
+    },
+    "joins": {
+      "servicio": { "target_table": "d_orden_servicio", "type": "INNER", "on": "h_taller_gasto_refacciones.id_orden = d_orden_servicio.id_orden" }
+    }
+  },
+  "h_taller_gasto_taller_externo": {
+    "table_name": "h_taller_gasto_taller_externo",
+    "type": "fact",
+    "pk": "fk_pbi_orden_servicio",
+    "fields": {
+      "costo_mano_obra_ext": "decimal",
+      "costo_refacciones_ext": "decimal",
+      "id_orden": "integer"
+    },
+    "joins": {
+      "servicio": {
+        "target_table": "d_orden_servicio",
+        "type": "INNER",
+        "on": "h_taller_gasto_taller_externo.id_orden = d_orden_servicio.id_orden"
+      }
+    }
+  },
+  "h_llantas_nueva": {
+    "table_name": "h_llantas_nueva",
+    "type": "dim",
+    "pk": "id_orden",
+    "fields": {
+      "monto_llantas_nva": "decimal",
+      "id_orden": "integer"
+    }
+  },
+  "h_llantas_renovada": {
+    "table_name": "h_llantas_renovada",
+    "type": "dim",
+    "pk": "id_orden",
+    "fields": {
+      "monto_llantas_ren": "decimal",
+      "id_orden": "integer"
+    }
+  },
+  "h_unidad_indicadores_mes_diario": {
+    "table_name": "h_unidad_indicadores_mes_diario",
+    "type": "fact",
+    "date_column": "fecha_fin",
+    "fields": {
+      "dias_disponibles": "decimal",
+      "dias_mes": "decimal",
+      "id_unidad": "string"
+    }
+  },
+  "d_unidad_kilometros_diarios": {
+    "table_name": "d_unidad_kilometros_diarios",
+    "type": "fact",
+    "date_column": "fecha",
+    "fields": {
+      "kms_recorridos": "decimal",
+      "id_unidad": "string"
     }
   }
 }

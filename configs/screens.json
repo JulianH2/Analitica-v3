@@ -2539,26 +2539,59 @@
           "d_plaza_georeferencia_destino.lonpos"
         ],
         "metrics": [
-          ["viajes_real", "kilometros", "costo_liquidacion", "sueldo_operador", "costo_viaje_total"]
+          [
+            "viajes_real",
+            "kms_viaje_ruta",
+            "sueldo_operador"
+          ]
         ],
         "fixed_filters": {
           "d_viaje.ind_cargado": 0
         },
         "columns": [
-          { "key": "d_ruta.id_ruta", "label": "No.", "format": "integer" },
-          { "key": "d_ruta.ruta", "label": "Ruta", "format": "text" },
-          { "key": "viajes_real", "label": "Viajes", "format": "integer" },
-          { "key": "kilometros", "label": "Kms Viaje", "format": "integer" },
-          { "key": "costo_viaje_total", "label": "Costo Total", "format": "currency", "formula": "lambda r: (r.get('costo_liquidacion', 0) or 0) + (r.get('sueldo_operador', 0) or 0)" },
-          { "key": "d_plaza_origen.plaza", "label": "Origen", "format": "text" },
-          { "key": "d_plaza_destino.plaza", "label": "Destino", "format": "text" },
-          { 
-            "label": "Pos. Origen", 
+          {
+            "key": "d_ruta.id_ruta",
+            "label": "No.",
+            "format": "integer"
+          },
+          {
+            "key": "d_ruta.ruta",
+            "label": "Ruta",
+            "format": "text"
+          },
+          {
+            "key": "viajes_real",
+            "label": "Viajes",
+            "format": "integer"
+          },
+          {
+            "key": "kms_viaje_ruta",
+            "label": "Kms Viaje",
+            "format": "integer"
+          },
+          {
+            "key": "costo_viaje_total",
+            "label": "Costo Total",
+            "format": "currency",
+            "formula": "lambda r: r.get('sueldo_operador', 0) or 0"
+          },
+          {
+            "key": "d_plaza_origen.plaza",
+            "label": "Origen",
+            "format": "text"
+          },
+          {
+            "key": "d_plaza_destino.plaza",
+            "label": "Destino",
+            "format": "text"
+          },
+          {
+            "label": "Pos. Origen",
             "formula": "lambda r: f\"{r.get('d_plaza_georeferencia_origen.latpos','')},{r.get('d_plaza_georeferencia_origen.lonpos','')}\"",
             "format": "text"
           },
-          { 
-            "label": "Pos. Destino", 
+          {
+            "label": "Pos. Destino",
             "formula": "lambda r: f\"{r.get('d_plaza_georeferencia_destino.latpos','')},{r.get('d_plaza_georeferencia_destino.lonpos','')}\"",
             "format": "text"
           }
@@ -2583,27 +2616,165 @@
   "administration-banks": {
     "section_key": "administration",
     "ttl_seconds": 3600,
-    "kpi_roadmap": {},
-    "chart_roadmap": {},
+    "kpi_roadmap": {
+      "opening_balance_consolidated": { "metrics": [["saldo_inicial_consolidado"]], "columns": [{ "target": "value", "key": "saldo_inicial_consolidado" }] },
+      "revenues_consolidated": { "metrics": [["ingresos_consolidado"]], "columns": [{ "target": "value", "key": "ingresos_consolidado" }] },
+      "expenses_consolidated": { "metrics": [["egresos_consolidado"]], "columns": [{ "target": "value", "key": "egresos_consolidado" }] },
+      "closing_balance_consolidated": { "metrics": [["saldo_final_consolidado"]], "columns": [{ "target": "value", "key": "saldo_final_consolidado" }] },
+
+      "opening_balance_mxn": { "metrics": [["saldo_inicial_mxn"]], "columns": [{ "target": "value", "key": "saldo_inicial_mxn" }] },
+      "revenues_mxn": { "metrics": [["ingresos_mxn"]], "columns": [{ "target": "value", "key": "ingresos_mxn" }] },
+      "expenses_mxn": { "metrics": [["egresos_mxn"]], "columns": [{ "target": "value", "key": "egresos_mxn" }] },
+      "closing_balance_mxn": { "metrics": [["saldo_final_mxn"]], "columns": [{ "target": "value", "key": "saldo_final_mxn" }] },
+
+      "opening_balance_usd": { "metrics": [["saldo_inicial_usd"]], "columns": [{ "target": "value", "key": "saldo_inicial_usd" }] },
+      "revenues_usd": { "metrics": [["ingresos_usd"]], "columns": [{ "target": "value", "key": "ingresos_usd" }] },
+      "expenses_usd": { "metrics": [["egresos_usd"]], "columns": [{ "target": "value", "key": "egresos_usd" }] },
+      "closing_balance_usd": { "metrics": [["saldo_final_usd"]], "columns": [{ "target": "value", "key": "saldo_final_usd" }] }
+    },
+    "chart_roadmap": {
+      "daily_cash_flow_con": {
+        "dimensions": ["__date__"],
+        "metrics": ["ingresos_mov_consolidado", "egresos_mov_consolidado"],
+        "columns": [
+          { "key": "__date__", "role": "label" },
+          { "key": "ingresos_mov_consolidado", "series": "Ingresos" },
+          { "key": "egresos_mov_consolidado", "series": "Egresos" }
+        ]
+      },
+      "daily_cash_flow_mxn": {
+        "dimensions": ["__date__"],
+        "metrics": ["ingresos_mov_mxn", "egresos_mov_mxn"],
+        "columns": [
+          { "key": "__date__", "role": "label" },
+          { "key": "ingresos_mov_mxn", "series": "Ingresos" },
+          { "key": "egresos_mov_mxn", "series": "Egresos" }
+        ]
+      },
+      "daily_cash_flow_usd": {
+        "dimensions": ["__date__"],
+        "metrics": ["ingresos_mov_usd", "egresos_mov_usd"],
+        "columns": [
+          { "key": "__date__", "role": "label" },
+          { "key": "ingresos_mov_usd", "series": "Ingresos" },
+          { "key": "egresos_mov_usd", "series": "Egresos" }
+        ]
+      }
+    },
+    "categorical_roadmap": {
+      "balance_by_bank_con": {
+        "title": "Saldo por Institución Bancaria (Consolidado)",
+        "dimensions": ["d_banco_sat.descripcion"],
+        "metrics": ["saldo_final_consolidado"],
+        "columns": [
+          { "key": "d_banco_sat.descripcion", "role": "label" },
+          { "key": "saldo_final_consolidado", "role": "value", "format": "currency" },
+          { "key": "pct_saldo_con", "label": "% Total", "format": "percent", "is_total_ratio": true, "numerator_key": "saldo_final_consolidado" }
+        ]
+      },
+      "balance_by_bank_mxn": {
+        "dimensions": ["d_banco_sat.descripcion"],
+        "metrics": ["saldo_final_mxn"],
+        "columns": [
+          { "key": "d_banco_sat.descripcion", "role": "label" },
+          { "key": "saldo_final_mxn", "role": "value", "format": "currency" },
+          { "key": "pct_saldo_mxn", "label": "% Total", "format": "percent", "is_total_ratio": true, "numerator_key": "saldo_final_mxn" }
+        ]
+      },
+      "balance_by_bank_usd": {
+        "dimensions": ["d_banco_sat.descripcion"],
+        "metrics": ["saldo_final_usd"],
+        "columns": [
+          { "key": "d_banco_sat.descripcion", "role": "label" },
+          { "key": "saldo_final_usd", "role": "value", "format": "currency" },
+          { "key": "pct_saldo_usd", "label": "% Total", "format": "percent", "is_total_ratio": true, "numerator_key": "saldo_final_usd" }
+        ]
+      }
+    },
+    "table_roadmap": {
+      "income_expense_concepts_con": {
+        "title": "Detalle por Concepto (Global)",
+        "dimensions": ["d_banco_concepto.descripcion"],
+        "metrics": [
+          "ingresos_mov_mxn", "egresos_mov_mxn",
+          "ingresos_mov_usd", "egresos_mov_usd",
+          "ingresos_mov_consolidado", "egresos_mov_consolidado"
+        ],
+        "columns": [
+          { "key": "d_banco_concepto.descripcion", "label": "Concepto", "sortable": true },
+          { "key": "ingresos_mov_mxn", "label": "Ingresos MXN", "format": "currency" },
+          { "key": "egresos_mov_mxn", "label": "Egresos MXN", "format": "currency" },
+          { "key": "ingresos_mov_usd", "label": "Ingresos USD", "format": "currency" },
+          { "key": "egresos_mov_usd", "label": "Egresos USD", "format": "currency" },
+          { "key": "ingresos_mov_consolidado", "label": "Ingresos Totales", "format": "currency" },
+          { "key": "egresos_mov_consolidado", "label": "Egresos Totales", "format": "currency" }
+        ]
+      },
+      "income_expense_concepts_mxn": {
+        "title": "Detalle por Concepto (MXN)",
+        "dimensions": ["d_banco_concepto.descripcion"],
+        "metrics": ["ingresos_mov_mxn", "egresos_mov_mxn"],
+        "columns": [
+          { "key": "d_banco_concepto.descripcion", "label": "Concepto", "sortable": true },
+          { "key": "ingresos_mov_mxn", "label": "Ingresos MXN", "format": "currency", "sortable": true },
+          { "key": "egresos_mov_mxn", "label": "Egresos MXN", "format": "currency", "sortable": true }
+        ]
+      },
+      "income_expense_concepts_usd": {
+        "title": "Detalle por Concepto (USD)",
+        "dimensions": ["d_banco_concepto.descripcion"],
+        "metrics": ["ingresos_mov_usd", "egresos_mov_usd"],
+        "columns": [
+          { "key": "d_banco_concepto.descripcion", "label": "Concepto", "sortable": true },
+          { "key": "ingresos_mov_usd", "label": "Ingresos USD", "format": "currency", "sortable": true },
+          { "key": "egresos_mov_usd", "label": "Egresos USD", "format": "currency", "sortable": true }
+        ]
+      }
+    },
     "inject_paths": {
-      "initial_balance_consolidado": ["administration", "dashboard", "consolidado", "kpis", "initial_balance"],
-      "total_income_consolidado": ["administration", "dashboard", "consolidado", "kpis", "total_income"],
-      "total_expenses_consolidado": ["administration", "dashboard", "consolidado", "kpis", "total_expenses"],
-      "final_balance_consolidado": ["administration", "dashboard", "consolidado", "kpis", "final_balance"],
+      "opening_balance_consolidated.value": ["administration", "dashboard", "consolidado", "kpis", "opening_balance_consolidated", "value"],
+      "revenues_consolidated.value": ["administration", "dashboard", "consolidado", "kpis", "revenues_consolidated", "value"],
+      "expenses_consolidated.value": ["administration", "dashboard", "consolidado", "kpis", "expenses_consolidated", "value"],
+      "closing_balance_consolidated.value": ["administration", "dashboard", "consolidado", "kpis", "closing_balance_consolidated", "value"],
+      "opening_balance_mxn.value": ["administration", "dashboard", "pesos", "kpis", "opening_balance_mxn", "value"],
+      "revenues_mxn.value": ["administration", "dashboard", "pesos", "kpis", "revenues_mxn", "value"],
+      "expenses_mxn.value": ["administration", "dashboard", "pesos", "kpis", "expenses_mxn", "value"],
+      "closing_balance_mxn.value": ["administration", "dashboard", "pesos", "kpis", "closing_balance_mxn", "value"],
+      "opening_balance_usd.value": ["administration", "dashboard", "dolares", "kpis", "opening_balance_usd", "value"],
+      "revenues_usd.value": ["administration", "dashboard", "dolares", "kpis", "revenues_usd", "value"],
+      "expenses_usd.value": ["administration", "dashboard", "dolares", "kpis", "expenses_usd", "value"],
+      "closing_balance_usd.value": ["administration", "dashboard", "dolares", "kpis", "closing_balance_usd", "value"],
+
+      "daily_cash_flow_con": ["administration", "dashboard", "consolidado", "charts", "daily_cash_flow"],
+      "daily_cash_flow_mxn": ["administration", "dashboard", "pesos", "charts", "daily_cash_flow"],
+      "daily_cash_flow_usd": ["administration", "dashboard", "dolares", "charts", "daily_cash_flow"],
+      
+      "balance_by_bank_con": ["administration", "dashboard", "consolidado", "charts", "balance_by_bank"],
+      "balance_by_bank_mxn": ["administration", "dashboard", "pesos", "charts", "balance_by_bank"],
+      "balance_by_bank_usd": ["administration", "dashboard", "dolares", "charts", "balance_by_bank"],
+
+      "income_expense_concepts_con": ["administration", "dashboard", "consolidado", "tables", "income_expense_concepts"],
+      "income_expense_concepts_mxn": ["administration", "dashboard", "pesos", "tables", "income_expense_concepts"],
+      "income_expense_concepts_usd": ["administration", "dashboard", "dolares", "tables", "income_expense_concepts"],
+
+      "initial_balance_consolidado": ["administration", "dashboard", "consolidado", "kpis", "opening_balance_consolidated"],
+      "total_income_consolidado": ["administration", "dashboard", "consolidado", "kpis", "revenues_consolidated"],
+      "total_expenses_consolidado": ["administration", "dashboard", "consolidado", "kpis", "expenses_consolidated"],
+      "final_balance_consolidado": ["administration", "dashboard", "consolidado", "kpis", "closing_balance_consolidated"],
       "daily_cash_flow_consolidado": ["administration", "dashboard", "consolidado", "charts", "daily_cash_flow"],
       "balance_by_bank_consolidado": ["administration", "dashboard", "consolidado", "charts", "balance_by_bank"],
       "income_expense_concepts_consolidado": ["administration", "dashboard", "consolidado", "tables", "income_expense_concepts"],
-      "initial_balance_pesos": ["administration", "dashboard", "pesos", "kpis", "initial_balance"],
-      "total_income_pesos": ["administration", "dashboard", "pesos", "kpis", "total_income"],
-      "total_expenses_pesos": ["administration", "dashboard", "pesos", "kpis", "total_expenses"],
-      "final_balance_pesos": ["administration", "dashboard", "pesos", "kpis", "final_balance"],
+      "initial_balance_pesos": ["administration", "dashboard", "pesos", "kpis", "opening_balance_mxn"],
+      "total_income_pesos": ["administration", "dashboard", "pesos", "kpis", "revenues_mxn"],
+      "total_expenses_pesos": ["administration", "dashboard", "pesos", "kpis", "expenses_mxn"],
+      "final_balance_pesos": ["administration", "dashboard", "pesos", "kpis", "closing_balance_mxn"],
       "daily_cash_flow_pesos": ["administration", "dashboard", "pesos", "charts", "daily_cash_flow"],
       "balance_by_bank_pesos": ["administration", "dashboard", "pesos", "charts", "balance_by_bank"],
       "income_expense_concepts_pesos": ["administration", "dashboard", "pesos", "tables", "income_expense_concepts"],
-      "initial_balance_dolares": ["administration", "dashboard", "dolares", "kpis", "initial_balance"],
-      "total_income_dolares": ["administration", "dashboard", "dolares", "kpis", "total_income"],
-      "total_expenses_dolares": ["administration", "dashboard", "dolares", "kpis", "total_expenses"],
-      "final_balance_dolares": ["administration", "dashboard", "dolares", "kpis", "final_balance"],
+      "initial_balance_dolares": ["administration", "dashboard", "dolares", "kpis", "opening_balance_usd"],
+      "total_income_dolares": ["administration", "dashboard", "dolares", "kpis", "revenues_usd"],
+      "total_expenses_dolares": ["administration", "dashboard", "dolares", "kpis", "expenses_usd"],
+      "final_balance_dolares": ["administration", "dashboard", "dolares", "kpis", "closing_balance_usd"],
       "daily_cash_flow_dolares": ["administration", "dashboard", "dolares", "charts", "daily_cash_flow"],
       "balance_by_bank_dolares": ["administration", "dashboard", "dolares", "charts", "balance_by_bank"],
       "income_expense_concepts_dolares": ["administration", "dashboard", "dolares", "tables", "income_expense_concepts"]
@@ -3464,20 +3635,251 @@
   },
   "workshop-dashboard": {
     "section_key": "workshop",
-    "ttl_seconds": 30,
+    "ttl_seconds": 3600,
     "kpi_roadmap": {
-      "internal_cost": "internal_cost",
-      "external_cost": "external_cost",
-      "tire_cost": "tire_cost",
-      "total_maintenance": "total_maintenance",
-      "availability_percent": "availability_percent",
-      "cost_per_km": "maintenance_cost_per_km",
-      "workshop_entries": "workshop_entries",
-      "corrective_cost": "corrective_cost",
-      "preventive_cost": "preventive_cost",
-      "avg_repair_time": "avg_repair_time",
-      "units_in_workshop": "units_in_workshop",
-      "pending_orders": "pending_orders"
+      "internal_cost": {
+        "metrics": [
+          ["costo_mo_interno"],
+          ["costo_refacciones_interno"],
+          ["costo_mo_interno_anterior"],
+          ["costo_refacciones_interno_anterior"],
+          ["meta_costo_mtto_interno"],
+          ["costo_mo_interno_ytd"],
+          ["costo_refacciones_interno_ytd"],
+          ["meta_costo_mtto_interno_ytd"]
+        ],
+        "columns": [
+          {
+            "target": "value",
+            "formula": "lambda r: r.get('costo_mo_interno', 0) + r.get('costo_refacciones_interno', 0)"
+          },
+          { "target": "target", "key": "meta_costo_mtto_interno" },
+          {
+            "target": "vs_last_year_value",
+            "formula": "lambda r: r.get('costo_mo_interno_anterior', 0) + r.get('costo_refacciones_interno_anterior', 0)"
+          },
+          {
+            "target": "ytd_value",
+            "formula": "lambda r: r.get('costo_mo_interno_ytd', 0) + r.get('costo_refacciones_interno_ytd', 0)"
+          },
+          {
+            "target": "vs_last_year_delta",
+            "formula": "lambda r: ((r.get('costo_mo_interno', 0) + r.get('costo_refacciones_interno', 0)) - (r.get('costo_mo_interno_anterior', 0) + r.get('costo_refacciones_interno_anterior', 0))) / (r.get('costo_mo_interno_anterior', 0) + r.get('costo_refacciones_interno_anterior', 0)) if (r.get('costo_mo_interno_anterior', 0) + r.get('costo_refacciones_interno_anterior', 0)) else 0"
+          },
+          {
+            "target": "ytd_delta",
+            "formula": "lambda r: ((r.get('costo_mo_interno_ytd', 0) + r.get('costo_refacciones_interno_ytd', 0)) - r.get('meta_costo_mtto_interno_ytd', 0)) / r['meta_costo_mtto_interno_ytd'] if r.get('meta_costo_mtto_interno_ytd') else 0"
+          }
+        ]
+      },
+      "external_cost": {
+        "metrics": [
+          ["costo_mo_externo"],
+          ["costo_refacciones_externo"],
+          ["costo_mo_externo_anterior"],
+          ["costo_refacciones_externo_anterior"],
+          ["meta_costo_mtto_externo"],
+          ["costo_mo_externo_ytd"],
+          ["costo_refacciones_externo_ytd"],
+          ["meta_costo_mtto_externo_ytd"]
+        ],
+        "columns": [
+          {
+            "target": "value",
+            "formula": "lambda r: r.get('costo_mo_externo', 0) + r.get('costo_refacciones_externo', 0)"
+          },
+          { "target": "target", "key": "meta_costo_mtto_externo" },
+          {
+            "target": "vs_last_year_value",
+            "formula": "lambda r: r.get('costo_mo_externo_anterior', 0) + r.get('costo_refacciones_externo_anterior', 0)"
+          },
+          {
+            "target": "ytd_value",
+            "formula": "lambda r: r.get('costo_mo_externo_ytd', 0) + r.get('costo_refacciones_externo_ytd', 0)"
+          },
+          {
+            "target": "vs_last_year_delta",
+            "formula": "lambda r: ((r.get('costo_mo_externo', 0) + r.get('costo_refacciones_externo', 0)) - (r.get('costo_mo_externo_anterior', 0) + r.get('costo_refacciones_externo_anterior', 0))) / (r.get('costo_mo_externo_anterior', 0) + r.get('costo_refacciones_externo_anterior', 0)) if (r.get('costo_mo_externo_anterior', 0) + r.get('costo_refacciones_externo_anterior', 0)) else 0"
+          },
+          {
+            "target": "ytd_delta",
+            "formula": "lambda r: ((r.get('costo_mo_externo_ytd', 0) + r.get('costo_refacciones_externo_ytd', 0)) - r.get('meta_costo_mtto_externo_ytd', 0)) / r['meta_costo_mtto_externo_ytd'] if r.get('meta_costo_mtto_externo_ytd') else 0"
+          }
+        ]
+      },
+      "tire_cost": {
+        "metrics": [
+          ["costo_llantas_nuevas"], 
+          ["costo_llantas_renovadas"],
+          ["costo_llantas_nuevas_anterior"], 
+          ["costo_llantas_renovadas_anterior"],
+          ["meta_costo_mtto_llantas"],
+          ["costo_llantas_nuevas_ytd"], 
+          ["costo_llantas_renovadas_ytd"],
+          ["meta_costo_mtto_llantas_ytd"]
+        ],
+        "columns": [
+          {
+            "target": "value",
+            "formula": "lambda r: (r.get('costo_llantas_nuevas', 0) or 0) + (r.get('costo_llantas_renovadas', 0) or 0)"
+          },
+          {
+            "target": "target",
+            "key": "meta_costo_mtto_llantas"
+          },
+          {
+            "target": "vs_last_year_value",
+            "formula": "lambda r: (r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0)"
+          },
+          {
+            "target": "ytd_value",
+            "formula": "lambda r: (r.get('costo_llantas_nuevas_ytd', 0) or 0) + (r.get('costo_llantas_renovadas_ytd', 0) or 0)"
+          },
+          {
+            "target": "vs_last_year_delta",
+            "formula": "lambda r: (((r.get('costo_llantas_nuevas', 0) or 0) + (r.get('costo_llantas_renovadas', 0) or 0)) - ((r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0))) / ((r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0)) if ((r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0)) else 0"
+          },
+          {
+            "target": "ytd_delta",
+            "formula": "lambda r: (((r.get('costo_llantas_nuevas_ytd', 0) or 0) + (r.get('costo_llantas_renovadas_ytd', 0) or 0)) - (r.get('meta_costo_mtto_llantas_ytd', 0) or 0)) / r['meta_costo_mtto_llantas_ytd'] if r.get('meta_costo_mtto_llantas_ytd') else 0"
+          }
+        ]
+      },
+      "total_maintenance": {
+        "metrics": [
+          ["costo_mo_interno"], ["costo_refacciones_interno"],
+          ["costo_mo_externo"], ["costo_refacciones_externo"],
+          ["costo_llantas_nuevas"], ["costo_llantas_renovadas"],
+
+          ["costo_mo_interno_anterior"], ["costo_refacciones_interno_anterior"],
+          ["costo_mo_externo_anterior"], ["costo_refacciones_externo_anterior"],
+          ["costo_llantas_nuevas_anterior"], ["costo_llantas_renovadas_anterior"],
+
+          ["costo_mo_interno_ytd"], ["costo_refacciones_interno_ytd"],
+          ["costo_mo_externo_ytd"], ["costo_refacciones_externo_ytd"],
+          ["costo_llantas_nuevas_ytd"], ["costo_llantas_renovadas_ytd"],
+
+          ["meta_costo_mtto_interno"], ["meta_costo_mtto_externo"], ["meta_costo_mtto_llantas"],
+          ["meta_costo_mtto_interno_ytd"], ["meta_costo_mtto_externo_ytd"], ["meta_costo_mtto_llantas_ytd"]
+        ],
+        "columns": [
+          {
+            "target": "value",
+            "formula": "lambda r: (r.get('costo_mo_interno', 0) or 0) + (r.get('costo_refacciones_interno', 0) or 0) + (r.get('costo_mo_externo', 0) or 0) + (r.get('costo_refacciones_externo', 0) or 0) + (r.get('costo_llantas_nuevas', 0) or 0) + (r.get('costo_llantas_renovadas', 0) or 0)"
+          },
+          {
+            "target": "target",
+            "formula": "lambda r: (r.get('meta_costo_mtto_interno', 0) or 0) + (r.get('meta_costo_mtto_externo', 0) or 0) + (r.get('meta_costo_mtto_llantas', 0) or 0)"
+          },
+          {
+            "target": "vs_last_year_value",
+            "formula": "lambda r: (r.get('costo_mo_interno_anterior', 0) or 0) + (r.get('costo_refacciones_interno_anterior', 0) or 0) + (r.get('costo_mo_externo_anterior', 0) or 0) + (r.get('costo_refacciones_externo_anterior', 0) or 0) + (r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0)"
+          },
+          {
+            "target": "ytd_value",
+            "formula": "lambda r: (r.get('costo_mo_interno_ytd', 0) or 0) + (r.get('costo_refacciones_interno_ytd', 0) or 0) + (r.get('costo_mo_externo_ytd', 0) or 0) + (r.get('costo_refacciones_externo_ytd', 0) or 0) + (r.get('costo_llantas_nuevas_ytd', 0) or 0) + (r.get('costo_llantas_renovadas_ytd', 0) or 0)"
+          },
+          {
+            "target": "vs_last_year_delta",
+            "formula": "lambda r: (((r.get('costo_mo_interno', 0) or 0) + (r.get('costo_refacciones_interno', 0) or 0) + (r.get('costo_mo_externo', 0) or 0) + (r.get('costo_refacciones_externo', 0) or 0) + (r.get('costo_llantas_nuevas', 0) or 0) + (r.get('costo_llantas_renovadas', 0) or 0)) - ((r.get('costo_mo_interno_anterior', 0) or 0) + (r.get('costo_refacciones_interno_anterior', 0) or 0) + (r.get('costo_mo_externo_anterior', 0) or 0) + (r.get('costo_refacciones_externo_anterior', 0) or 0) + (r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0))) / ((r.get('costo_mo_interno_anterior', 0) or 0) + (r.get('costo_refacciones_interno_anterior', 0) or 0) + (r.get('costo_mo_externo_anterior', 0) or 0) + (r.get('costo_refacciones_externo_anterior', 0) or 0) + (r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0)) if ((r.get('costo_mo_interno_anterior', 0) or 0) + (r.get('costo_refacciones_interno_anterior', 0) or 0) + (r.get('costo_mo_externo_anterior', 0) or 0) + (r.get('costo_refacciones_externo_anterior', 0) or 0) + (r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0)) else 0"
+          },
+          {
+            "target": "ytd_delta",
+            "formula": "lambda r: (((r.get('costo_mo_interno_ytd', 0) or 0) + (r.get('costo_refacciones_interno_ytd', 0) or 0) + (r.get('costo_mo_externo_ytd', 0) or 0) + (r.get('costo_refacciones_externo_ytd', 0) or 0) + (r.get('costo_llantas_nuevas_ytd', 0) or 0) + (r.get('costo_llantas_renovadas_ytd', 0) or 0)) - ((r.get('meta_costo_mtto_interno_ytd', 0) or 0) + (r.get('meta_costo_mtto_externo_ytd', 0) or 0) + (r.get('meta_costo_mtto_llantas_ytd', 0) or 0))) / ((r.get('meta_costo_mtto_interno_ytd', 0) or 0) + (r.get('meta_costo_mtto_externo_ytd', 0) or 0) + (r.get('meta_costo_mtto_llantas_ytd', 0) or 0)) if ((r.get('meta_costo_mtto_interno_ytd', 0) or 0) + (r.get('meta_costo_mtto_externo_ytd', 0) or 0) + (r.get('meta_costo_mtto_llantas_ytd', 0) or 0)) else 0"
+          }
+        ]
+      },
+      "availability_percent": {
+        "metrics": [
+          ["dias_disponibles", "dias_mes"]
+        ],
+        "columns": [
+          {
+            "target": "gauge_value",
+            "formula": "lambda r: (r.get('dias_disponibles', 0) / r.get('dias_mes', 1)) if r.get('dias_mes', 0) > 0 else 0"
+          },
+          {
+            "target": "gauge_target",
+            "formula": "lambda r: 1"
+          },
+          {
+            "target": "gauge_pct",
+            "formula": "lambda r: ((r.get('dias_disponibles', 0) / r.get('dias_mes', 1)) * 100) if r.get('dias_mes', 0) > 0 else 0"
+          },
+          {
+            "target": "range_1",
+            "formula": "lambda r: 0"
+          },
+          {
+            "target": "range_2",
+            "formula": "lambda r: 0.71"
+          },
+          {
+            "target": "range_3",
+            "formula": "lambda r: 0.91"
+          },
+          {
+            "target": "range_4",
+            "formula": "lambda r: 1"
+          }
+        ]
+      },
+      "cost_per_km": {
+        "metrics": [
+          ["costo_mo_interno"], ["costo_refacciones_interno"],
+          ["costo_mo_externo"], ["costo_refacciones_externo"],
+          ["costo_llantas_nuevas"], ["costo_llantas_renovadas"],
+          ["kms_recorridos"], ["meta_costo_mtto_x_km"],
+
+          ["costo_mo_interno_anterior"], ["costo_refacciones_interno_anterior"],
+          ["costo_mo_externo_anterior"], ["costo_refacciones_externo_anterior"],
+          ["costo_llantas_nuevas_anterior"], ["costo_llantas_renovadas_anterior"],
+          ["kms_recorridos_anterior"],
+
+          ["costo_mo_interno_ytd"], ["costo_refacciones_interno_ytd"],
+          ["costo_mo_externo_ytd"], ["costo_refacciones_externo_ytd"],
+          ["costo_llantas_nuevas_ytd"], ["costo_llantas_renovadas_ytd"],
+          ["kms_recorridos_ytd"], ["meta_costo_mtto_x_km_ytd"]
+        ],
+        "columns": [
+          {
+            "target": "value",
+            "formula": "lambda r: ((r.get('costo_mo_interno', 0) or 0) + (r.get('costo_refacciones_interno', 0) or 0) + (r.get('costo_mo_externo', 0) or 0) + (r.get('costo_refacciones_externo', 0) or 0) + (r.get('costo_llantas_nuevas', 0) or 0) + (r.get('costo_llantas_renovadas', 0) or 0)) / r['kms_recorridos'] if r.get('kms_recorridos') else 0"
+          },
+          {
+            "target": "target",
+            "key": "meta_costo_mtto_x_km"
+          },
+          {
+            "target": "vs_last_year_value",
+            "formula": "lambda r: ((r.get('costo_mo_interno_anterior', 0) or 0) + (r.get('costo_refacciones_interno_anterior', 0) or 0) + (r.get('costo_mo_externo_anterior', 0) or 0) + (r.get('costo_refacciones_externo_anterior', 0) or 0) + (r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0)) / r['kms_recorridos_anterior'] if r.get('kms_recorridos_anterior') else 0"
+          },
+          {
+            "target": "ytd_value",
+            "formula": "lambda r: ((r.get('costo_mo_interno_ytd', 0) or 0) + (r.get('costo_refacciones_interno_ytd', 0) or 0) + (r.get('costo_mo_externo_ytd', 0) or 0) + (r.get('costo_refacciones_externo_ytd', 0) or 0) + (r.get('costo_llantas_nuevas_ytd', 0) or 0) + (r.get('costo_llantas_renovadas_ytd', 0) or 0)) / r['kms_recorridos_ytd'] if r.get('kms_recorridos_ytd') else 0"
+          },
+          {
+            "target": "vs_last_year_delta",
+            "formula": "lambda r: ( (((r.get('costo_mo_interno', 0) or 0) + (r.get('costo_refacciones_interno', 0) or 0) + (r.get('costo_mo_externo', 0) or 0) + (r.get('costo_refacciones_externo', 0) or 0) + (r.get('costo_llantas_nuevas', 0) or 0) + (r.get('costo_llantas_renovadas', 0) or 0)) / r.get('kms_recorridos', 1)) - (((r.get('costo_mo_interno_anterior', 0) or 0) + (r.get('costo_refacciones_interno_anterior', 0) or 0) + (r.get('costo_mo_externo_anterior', 0) or 0) + (r.get('costo_refacciones_externo_anterior', 0) or 0) + (r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0)) / r.get('kms_recorridos_anterior', 1)) ) / (((r.get('costo_mo_interno_anterior', 0) or 0) + (r.get('costo_refacciones_interno_anterior', 0) or 0) + (r.get('costo_mo_externo_anterior', 0) or 0) + (r.get('costo_refacciones_externo_anterior', 0) or 0) + (r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0)) / r.get('kms_recorridos_anterior', 1)) if r.get('kms_recorridos_anterior') and ((r.get('costo_mo_interno_anterior', 0) or 0) + (r.get('costo_refacciones_interno_anterior', 0) or 0) + (r.get('costo_mo_externo_anterior', 0) or 0) + (r.get('costo_refacciones_externo_anterior', 0) or 0) + (r.get('costo_llantas_nuevas_anterior', 0) or 0) + (r.get('costo_llantas_renovadas_anterior', 0) or 0)) else 0"
+          },
+          {
+            "target": "ytd_delta",
+            "formula": "lambda r: ( (((r.get('costo_mo_interno_ytd', 0) or 0) + (r.get('costo_refacciones_interno_ytd', 0) or 0) + (r.get('costo_mo_externo_ytd', 0) or 0) + (r.get('costo_refacciones_externo_ytd', 0) or 0) + (r.get('costo_llantas_nuevas_ytd', 0) or 0) + (r.get('costo_llantas_renovadas_ytd', 0) or 0)) / r.get('kms_recorridos_ytd', 1)) - r.get('meta_costo_mtto_x_km_ytd', 0) ) / r.get('meta_costo_mtto_x_km_ytd', 1) if r.get('meta_costo_mtto_x_km_ytd') and r.get('kms_recorridos_ytd') else 0"
+          },
+          {
+            "target": "gauge_value",
+            "formula": "lambda r: ((r.get('costo_mo_interno', 0) or 0) + (r.get('costo_refacciones_interno', 0) or 0) + (r.get('costo_mo_externo', 0) or 0) + (r.get('costo_refacciones_externo', 0) or 0) + (r.get('costo_llantas_nuevas', 0) or 0) + (r.get('costo_llantas_renovadas', 0) or 0)) / r['kms_recorridos'] if r.get('kms_recorridos') else 0"
+          },
+          {
+            "target": "gauge_target",
+            "key": "meta_costo_mtto_x_km"
+          },
+          {
+            "target": "gauge_pct",
+            "formula": "lambda r: ((r.get('costo_mo_interno', 0) or 0) + (r.get('costo_refacciones_interno', 0) or 0) + (r.get('costo_mo_externo', 0) or 0) + (r.get('costo_refacciones_externo', 0) or 0) + (r.get('costo_llantas_nuevas', 0) or 0) + (r.get('costo_llantas_renovadas', 0) or 0)) / r.get('kms_recorridos', 1) / r.get('meta_costo_mtto_x_km', 1) * 100 if r.get('kms_recorridos') and r.get('meta_costo_mtto_x_km') else 0"
+          }
+        ]
+      }
     },
     "chart_roadmap": {
       "maintenance_costs_trend": {
@@ -3539,42 +3941,58 @@
       }
     },
     "inject_paths": {
-      "internal_cost": [
-        "workshop",
-        "dashboard",
-        "kpis",
-        "internal_cost"
-      ],
-      "external_cost": [
-        "workshop",
-        "dashboard",
-        "kpis",
-        "external_cost"
-      ],
-      "tire_cost": [
-        "workshop",
-        "dashboard",
-        "kpis",
-        "tire_cost"
-      ],
-      "total_maintenance": [
-        "workshop",
-        "dashboard",
-        "kpis",
-        "total_maintenance"
-      ],
-      "availability_percent": [
-        "workshop",
-        "dashboard",
-        "kpis",
-        "availability_percent"
-      ],
-      "cost_per_km": [
-        "workshop",
-        "dashboard",
-        "kpis",
-        "cost_per_km"
-      ],
+      "internal_cost.value": ["workshop", "dashboard", "kpis", "internal_cost", "value"],
+      "internal_cost.target": ["workshop", "dashboard", "kpis", "internal_cost", "target"],
+      "internal_cost.vs_last_year_value": ["workshop", "dashboard", "kpis", "internal_cost", "vs_last_year_value"],
+      "internal_cost.ytd_value": ["workshop", "dashboard", "kpis", "internal_cost", "ytd_value"],
+      "internal_cost.vs_last_year_delta": ["workshop", "dashboard", "kpis", "internal_cost", "vs_last_year_delta"],
+      "internal_cost.ytd_delta": ["workshop", "dashboard", "kpis", "internal_cost", "ytd_delta"],
+
+      "internal_cost": ["workshop", "dashboard", "kpis", "internal_cost"],
+      "external_cost.value": ["workshop", "dashboard", "kpis", "external_cost", "value"],
+      "external_cost.target": ["workshop", "dashboard", "kpis", "external_cost", "target"],
+      "external_cost.vs_last_year_value": ["workshop", "dashboard", "kpis", "external_cost", "vs_last_year_value"],
+      "external_cost.ytd_value": ["workshop", "dashboard", "kpis", "external_cost", "ytd_value"],
+      "external_cost.vs_last_year_delta": ["workshop", "dashboard", "kpis", "external_cost", "vs_last_year_delta"],
+      "external_cost.ytd_delta": ["workshop", "dashboard", "kpis", "external_cost", "ytd_delta"],
+
+      "external_cost": ["workshop", "dashboard", "kpis", "external_cost"],
+      "tire_cost.value": ["workshop", "dashboard", "kpis", "tire_cost", "value"],
+      "tire_cost.target": ["workshop", "dashboard", "kpis", "tire_cost", "target"],
+      "tire_cost.vs_last_year_value": ["workshop", "dashboard", "kpis", "tire_cost", "vs_last_year_value"],
+      "tire_cost.ytd_value": ["workshop", "dashboard", "kpis", "tire_cost", "ytd_value"],
+      "tire_cost.vs_last_year_delta": ["workshop", "dashboard", "kpis", "tire_cost", "vs_last_year_delta"],
+      "tire_cost.ytd_delta": ["workshop", "dashboard", "kpis", "tire_cost", "ytd_delta"],
+
+      "tire_cost": ["workshop", "dashboard", "kpis", "tire_cost"],
+      "total_maintenance.value": ["workshop", "dashboard", "kpis", "total_maintenance", "value"],
+      "total_maintenance.target": ["workshop", "dashboard", "kpis", "total_maintenance", "target"],
+      "total_maintenance.vs_last_year_value": ["workshop", "dashboard", "kpis", "total_maintenance", "vs_last_year_value"],
+      "total_maintenance.ytd_value": ["workshop", "dashboard", "kpis", "total_maintenance", "ytd_value"],
+      "total_maintenance.vs_last_year_delta": ["workshop", "dashboard", "kpis", "total_maintenance", "vs_last_year_delta"],
+      "total_maintenance.ytd_delta": ["workshop", "dashboard", "kpis", "total_maintenance", "ytd_delta"],
+
+      "total_maintenance": ["workshop", "dashboard", "kpis", "total_maintenance"],
+      "availability_percent.gauge_value": ["workshop", "dashboard", "kpis", "availability_percent", "value"],
+      "availability_percent.gauge_target": ["workshop", "dashboard", "kpis", "availability_percent", "target"],
+      "availability_percent.gauge_pct": ["workshop", "dashboard", "kpis", "availability_percent", "gauge_pct"],
+      "availability_percent.range_1": ["workshop", "dashboard", "kpis", "availability_percent", "range_1"],
+      "availability_percent.range_2": ["workshop", "dashboard", "kpis", "availability_percent", "range_2"],
+      "availability_percent.range_3": ["workshop", "dashboard", "kpis", "availability_percent", "range_3"],
+      "availability_percent.range_4": ["workshop", "dashboard", "kpis", "availability_percent", "range_4"],
+
+      "availability_percent": ["workshop", "dashboard", "kpis", "availability_percent"],
+      "cost_per_km.value": ["workshop", "dashboard", "kpis", "cost_per_km", "value"],
+      "cost_per_km.target": ["workshop", "dashboard", "kpis", "cost_per_km", "target"],
+      "cost_per_km.vs_last_year_value": ["workshop", "dashboard", "kpis", "cost_per_km", "vs_last_year_value"],
+      "cost_per_km.ytd_value": ["workshop", "dashboard", "kpis", "cost_per_km", "ytd_value"],
+      "cost_per_km.vs_last_year_delta": ["workshop", "dashboard", "kpis", "cost_per_km", "vs_last_year_delta"],
+      "cost_per_km.ytd_delta": ["workshop", "dashboard", "kpis", "cost_per_km", "ytd_delta"],
+      "cost_per_km.gauge_value": ["workshop", "dashboard", "kpis", "cost_per_km", "gauge_value"],
+      "cost_per_km.gauge_target": ["workshop", "dashboard", "kpis", "cost_per_km", "gauge_target"],
+      "cost_per_km.gauge_pct": ["workshop", "dashboard", "kpis", "cost_per_km", "gauge_pct"],
+
+      "cost_per_km": ["workshop", "dashboard", "kpis", "cost_per_km"],
       "workshop_entries": [
         "workshop",
         "dashboard",

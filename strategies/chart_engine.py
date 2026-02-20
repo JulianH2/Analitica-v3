@@ -37,6 +37,46 @@ def clean_series(x_data, y_data):
     return x_clean, y_clean
 
 
+def _sanitize_donut_data(labels, values, colors):
+    """
+    Sanitize donut data so all values are non-negative for correct rendering.
+    - Positive values: kept as-is (label, value, color).
+    - Negative values: same category/label (e.g. "BANREGIO"), slice size = abs(value),
+      color = NEGATIVE, real value shown in hover via customdata.
+    - Zero/None: excluded from the donut.
+    Returns (labels_sanitized, values_sanitized, colors_sanitized, customdata_for_hover).
+    """
+    n = min(len(labels or []), len(values or []))
+    if n == 0:
+        return [], [], [], []
+
+    colors = colors or []
+    if len(colors) < n:
+        colors = list(colors) + [ChartColors.DONUT[i % len(ChartColors.DONUT)] for i in range(len(colors), n)]
+
+    out_labels = []
+    out_values = []
+    out_colors = []
+    customdata = []
+
+    for i in range(n):
+        lbl = labels[i] if i < len(labels) else "N/A"
+        try:
+            val = float(values[i]) if values[i] is not None else 0.0
+        except (TypeError, ValueError):
+            val = 0.0
+        if val == 0:
+            continue
+        color = colors[i] if i < len(colors) else ChartColors.DONUT[i % len(ChartColors.DONUT)]
+
+        out_labels.append(lbl)
+        out_values.append(abs(val))
+        out_colors.append(Colors.NEGATIVE if val < 0 else color)
+        customdata.append(val)
+
+    return out_labels, out_values, out_colors, customdata
+
+
 class ChartEngine:
     @staticmethod
     def render_donut(node, theme="dark", layout_config=None):
@@ -52,31 +92,58 @@ class ChartEngine:
         if not labels or not values:
             return None
 
+        labels, values, colors, customdata = _sanitize_donut_data(labels, values, colors)
+        if not labels or not values:
+            return None
+
         if not colors:
             colors = [ChartColors.DONUT[i % len(ChartColors.DONUT)] for i in range(len(labels))]
 
         fig_height = layout_config.get("height", 260)
-        max_index = max(range(len(values)), key=lambda i: values[i])
+        max_index = max(range(len(values)), key=lambda i: values[i]) if values else 0
+
+        # Formatear valores para labels externos
+        total_val = sum(values) if values else 1
+        text_labels = []
+        for i, (lbl, val) in enumerate(zip(labels, values)):
+            pct = val / total_val * 100 if total_val > 0 else 0
+            # Abreviar nombre si es muy largo
+            short = lbl[:14] + "…" if len(lbl) > 14 else lbl
+            if val >= 1e6:
+                text_labels.append(f"{short}<br>{val/1e6:.1f}M ({pct:.0f}%)")
+            elif val >= 1e3:
+                text_labels.append(f"{short}<br>{val/1e3:.0f}k ({pct:.0f}%)")
+            else:
+                text_labels.append(f"{short}<br>{val:,.0f} ({pct:.0f}%)")
 
         fig = go.Figure(data=[
             go.Pie(
                 labels=labels,
                 values=values,
-                hole=0.65,
+                customdata=customdata,
+                hole=0.55,
                 marker=dict(
                     colors=colors,
                     line=dict(color=Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT, width=2),
                 ),
-                textinfo="none",
-                hovertemplate="<b>%{label}</b><br>%{value:,.0f}<br>%{percent}<extra></extra>",
-                pull=[0.05 if i == max_index else 0 for i in range(len(values))],
+                text=text_labels,
+                textinfo="text",
+                textposition="outside",
+                textfont=dict(
+                    size=Typography.XS,
+                    family=Typography.FAMILY,
+                    color=Colors.TEXT_DARK if is_dark else Colors.TEXT_LIGHT,
+                ),
+                hovertemplate="<b>%{label}</b><br>%{customdata:,.0f}<br>%{percent}<extra></extra>",
+                pull=[0.03 if i == max_index else 0 for i in range(len(values))],
+                rotation=90,
             )
         ])
 
         if total:
             fig.add_annotation(
                 text=f"<b>Total</b><br>{total}",
-                x=0.30,
+                x=0.5,
                 y=0.5,
                 showarrow=False,
                 font=dict(
@@ -88,14 +155,15 @@ class ChartEngine:
                 yref="paper",
             )
 
-        fig.update_traces(domain=dict(x=[0.0, 0.60], y=[0.0, 1.0]))
+        fig.update_traces(domain=dict(x=[0.15, 0.85], y=[0.05, 0.95]))
 
         fig.update_layout(
             template="plotly_dark" if theme == "dark" else "plotly",
             height=fig_height,
-            margin=dict(t=30, b=20, l=10, r=10),
-            showlegend=True,
-            legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=0.65, itemsizing="constant"),
+            margin=dict(t=45, b=45, l=75, r=75),
+            showlegend=False,
+            uniformtext_minsize=8,
+            uniformtext_mode="hide",
         )
         return fig
 
@@ -192,7 +260,11 @@ class ChartEngine:
         vs_last_year = safe_float(raw_node.get("vs_last_year")) if raw_node.get("vs_last_year") else None
 
         percentage = (current / target * 100) if target and target > 0 else 0
-        gauge_color = GaugeConfig.get_gauge_color(percentage) if target else (hex_color or Colors.BAR_BLUE)
+        # Color dinámico: si hay meta, basado en % alcanzado; si no, usar el color del widget
+        if target and target > 0:
+            gauge_color = GaugeConfig.get_gauge_color(percentage)
+        else:
+            gauge_color = hex_color or Colors.BAR_BLUE
 
         max_val = safe_max(current, target or 0, vs_last_year or 0, 100)
 
@@ -200,7 +272,7 @@ class ChartEngine:
         fig.add_trace(go.Indicator(
             mode="gauge+number",
             value=current,
-            number={"font": {"size": Typography.KPI_MEDIUM, "family": Typography.FAMILY}, "valueformat": ",.0f"},
+            number={"font": {"size": Typography.KPI_SMALL, "family": Typography.FAMILY}, "valueformat": ",.0f"},
             gauge={
                 "axis": {"range": [0, max_val * 1.1], "tickwidth": 1},
                 "bar": {"color": gauge_color},
@@ -217,7 +289,7 @@ class ChartEngine:
         if target:
             fig.add_annotation(
                 x=0.5,
-                y=-0.15,
+                y=0.18,
                 text=f"<b>META:</b> {target:,.0f}",
                 showarrow=False,
                 font=dict(size=Typography.BADGE, color=Colors.CHART_TARGET, family=Typography.FAMILY),
@@ -228,7 +300,7 @@ class ChartEngine:
         if vs_last_year:
             fig.add_annotation(
                 x=0.5,
-                y=-0.30,
+                y=0.05,
                 text=f"Año {prev_year}: {vs_last_year:,.0f}",
                 showarrow=False,
                 font=dict(size=Typography.XS, color=Colors.CHART_PREVIOUS, family=Typography.FAMILY),
@@ -239,7 +311,7 @@ class ChartEngine:
         fig.update_layout(
             template="plotly_dark" if theme == "dark" else "plotly",
             height=layout_config.get("height", ComponentSizes.KPI_HEIGHT_NORMAL),
-            margin=dict(l=25, r=25, t=30, b=50),
+            margin=dict(l=15, r=15, t=25, b=5),
             hovermode=False,
         )
         return fig
@@ -260,7 +332,7 @@ class ChartEngine:
             return None
 
         num_bars = len(categories)
-        calculated_height = max(layout_config.get("height", 340), num_bars * 50 + 100)
+        calculated_height = max(layout_config.get("height", 600), num_bars * 50 + 100)
         avg_value = sum(values) / len(values) if values else 0
 
         fig = go.Figure()
@@ -293,7 +365,7 @@ class ChartEngine:
         fig.update_layout(
             template="plotly_dark" if theme == "dark" else "plotly",
             height=calculated_height,
-            margin=dict(t=50, b=40, l=120, r=80),
+            margin=dict(t=50, b=40, l=10, r=80),
             showlegend=False,
             xaxis=dict(showgrid=True, zeroline=False, tickformat="$,.0f", side="top"),
             yaxis=dict(type="category", autorange="reversed", automargin=True),
@@ -352,7 +424,7 @@ class ChartEngine:
                     marker_color=s_color
                 ))
     
-        height_val = layout_config.get("height", 350)
+        height_val = layout_config.get("height", ComponentSizes.CHART_HEIGHT_MD)
         plotly_height = height_val if isinstance(height_val, int) else None
     
         fig.update_layout(
@@ -514,7 +586,7 @@ class ChartEngine:
 
         fig.update_layout(
             template="plotly_dark" if theme == "dark" else "plotly",
-            height=layout_config.get("height", 350),
+            height=layout_config.get("height", ComponentSizes.CHART_HEIGHT_MD),
             margin=dict(t=30, b=40, l=40, r=20),
             showlegend=len(series_list) > 1,
         )
@@ -557,7 +629,7 @@ class ChartEngine:
 
         fig.update_layout(
             template="plotly_dark" if theme == "dark" else "plotly",
-            height=layout_config.get("height", 350),
+            height=layout_config.get("height", ComponentSizes.CHART_HEIGHT_MD),
             margin=dict(t=30, b=40, l=40, r=40),
             legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
             hovermode="x unified",
@@ -570,51 +642,41 @@ class ChartEngine:
     def render_map(node, theme="dark", layout_config=None):
         layout_config = layout_config or {}
         is_dark = theme == "dark"
-
-        if not node:
-            return None
-
+        if not node: return None
+    
         data_source = node.get("data", node)
         routes = data_source.get("routes", [])
-
-        if not routes:
-            return None
-
+        if not routes: return None
+    
         fig = go.Figure()
-
+        all_lats, all_lons = [], []
+    
         for route in routes:
-            lats = route.get("lat", [])
-            lons = route.get("lon", [])
-            name = route.get("name", "Ruta")
-            color = route.get("color", Colors.CHART_BLUE)
-
+            lats, lons = route.get("lat", []), route.get("lon", [])
             if lats and lons:
+                all_lats.extend(lats); all_lons.extend(lons)
                 fig.add_trace(go.Scattermapbox(
-                    lat=lats,
-                    lon=lons,
-                    mode="lines+markers",
-                    name=name,
-                    line=dict(width=3, color=color),
-                    marker=dict(size=8, color=color),
+                    lat=lats, lon=lons, mode="lines+markers",
+                    name=route.get("name", "Ruta"),
+                    line=dict(width=3, color=route.get("color", "#4C6EF5")),
+                    marker=dict(size=8)
                 ))
-
-        center_lat, center_lon = 20.5937, -100.3897
-        all_lats = [lat for r in routes for lat in (r.get("lat", []) or [])]
-        all_lons = [lon for r in routes for lon in (r.get("lon", []) or [])]
-
+    
+        # CÁLCULO DINÁMICO DE ZOOM Y CENTRO
         if all_lats and all_lons:
-            center_lat = sum(all_lats) / len(all_lats)
-            center_lon = sum(all_lons) / len(all_lons)
-
-        legend_bg = "rgba(98,104,110,0.9)" if is_dark else "rgba(255,255,255,0.9)"
-
+            center_lat = (min(all_lats) + max(all_lats)) / 2
+            center_lon = (min(all_lons) + max(all_lons)) / 2
+            # Ajuste de zoom basado en la dispersión
+            lat_range = max(all_lats) - min(all_lats)
+            zoom = 5 if lat_range > 5 else 7 if lat_range > 2 else 9
+        else:
+            center_lat, center_lon, zoom = 23.6345, -102.5528, 4
+    
         fig.update_layout(
-            mapbox=dict(style="open-street-map", center=dict(lat=center_lat, lon=center_lon), zoom=10),
+            mapbox=dict(style="open-street-map", center=dict(lat=center_lat, lon=center_lon), zoom=zoom),
             margin=dict(l=0, r=0, t=0, b=0),
-            height=layout_config.get("height", ComponentSizes.CHART_HEIGHT_LG),
-            showlegend=True,
-            font=dict(family=Typography.FAMILY, size=Typography.SM, color=Colors.TEXT_DARK if is_dark else Colors.TEXT_LIGHT),
-            legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01, bgcolor=legend_bg, font=dict(size=Typography.XS, family=Typography.FAMILY)),
+            height=layout_config.get("height", 650), # Altura fija para evitar que se encoja
+            autosize=True
         )
         return fig
 

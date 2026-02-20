@@ -14,7 +14,7 @@ class KPIStrategy(ABC):
         self.variant = variant
         self.hex_color = DesignSystem.COLOR_MAP.get(color, DesignSystem.BRAND[5])
 
-        self.layout = {"height": 165, "span": 2, "value_format": "abbreviated"}
+        self.layout = {"height": 165, "span": 4, "value_format": "abbreviated"}
         if layout_config:
             self.layout.update(layout_config)
 

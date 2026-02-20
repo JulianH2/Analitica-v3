@@ -1,7 +1,14 @@
+from design_system import dmc as _dmc
 from flask import session
 import dash
 from dash import html, dcc
 import dash_mantine_components as dmc
+from services.time_service import TimeService
+
+_ts = TimeService()
+
+def get_dynamic_title(base_title: str) -> str:
+    return f"{base_title} {_ts.current_year} vs. {_ts.previous_year}"
 
 from components.table_widget import TableWidget
 from services.data_manager import data_manager
@@ -9,7 +16,7 @@ from components.smart_widget import SmartWidget
 from components.visual_widget import ChartWidget
 from components.drawer_manager import create_smart_drawer, register_drawer_callback
 from components.skeleton import get_skeleton
-from components.filter_manager import create_filter_section
+from components.filter_manager import create_filter_section, register_filter_modal_callback
 from strategies.operational import OpsGaugeStrategy, OpsTrendChartStrategy, OpsHorizontalBarStrategy, OpsTableStrategy
 
 dash.register_page(__name__, path="/operational-costs", title="Costos Operaciones")
@@ -17,12 +24,21 @@ dash.register_page(__name__, path="/operational-costs", title="Costos Operacione
 SCREEN_ID = "operational-costs"
 PREFIX = "oc"
 
-w_profit = SmartWidget(f"{PREFIX}_profit", OpsGaugeStrategy(screen_id=SCREEN_ID, key="profit_per_trip", title="Utilidad Viaje", icon="tabler:trending-up", color="teal", has_detail=True, layout_config={"height": 290}))
-w_total = SmartWidget(f"{PREFIX}_total", OpsGaugeStrategy(screen_id=SCREEN_ID, key="total_trip_cost", title="Costo Viaje Total", icon="tabler:calculator", color="red", has_detail=True, layout_config={"height": 300}))
+w_profit = SmartWidget(f"{PREFIX}_profit", OpsGaugeStrategy(screen_id=SCREEN_ID, key="profit_per_trip", title="Utilidad Viaje", icon="tabler:trending-up", color="teal", has_detail=True, layout_config={"height": 220}))
+w_total = SmartWidget(f"{PREFIX}_total", OpsGaugeStrategy(screen_id=SCREEN_ID, key="total_trip_cost", title="Costo Viaje Total", icon="tabler:calculator", color="red", has_detail=True, layout_config={"height": 220}))
 
-c_stack = ChartWidget(f"{PREFIX}_stack", OpsTrendChartStrategy(screen_id=SCREEN_ID, key="cost_and_profit_trends", title="Costo y Utilidad", has_detail=True, layout_config={"height": "100%"}))
-c_break = ChartWidget(f"{PREFIX}_break", OpsHorizontalBarStrategy(screen_id=SCREEN_ID, key="cost_by_concept", title="Costos por Concepto", has_detail=True, layout_config={"height": 360}))
-c_comp = ChartWidget(f"{PREFIX}_comp", OpsTrendChartStrategy(screen_id=SCREEN_ID, key="cost_breakdown", title="Costo Viaje Total 2025 vs 2024", icon="tabler:chart-line", color="red", has_detail=True, layout_config={"height": 360}))
+c_stack = ChartWidget(f"{PREFIX}_stack", OpsTrendChartStrategy(screen_id=SCREEN_ID, key="cost_and_profit_trends", title="Costo Viaje Total y Monto Utilidad", has_detail=True, layout_config={"height": 420}))
+c_break = ChartWidget(f"{PREFIX}_break", OpsHorizontalBarStrategy(screen_id=SCREEN_ID, key="cost_by_concept", title="Costo Viaje Total por Clasificación Concepto y Concepto", has_detail=True, layout_config={"height": 360}))
+class DynamicCostTrendStrategy(OpsTrendChartStrategy):
+    def __init__(self, screen_id, key, base_title, icon="tabler:chart-line", color="red", has_detail=True, layout_config=None):
+        self.base_title = base_title
+        super().__init__(screen_id, key, get_dynamic_title(base_title), icon, color, has_detail, layout_config=layout_config)
+    def get_card_config(self, ctx):
+        config = super().get_card_config(ctx)
+        config["title"] = get_dynamic_title(self.base_title)
+        return config
+
+c_comp = ChartWidget(f"{PREFIX}_comp", DynamicCostTrendStrategy(screen_id=SCREEN_ID, key="cost_breakdown", base_title="Costo Viaje Total", icon="tabler:chart-line", color="red", has_detail=True, layout_config={"height": 360}))
 
 t_route = TableWidget(f"{PREFIX}_route", OpsTableStrategy(SCREEN_ID, "margin_by_route", title="Margen por Ruta"))
 t_unit = TableWidget(f"{PREFIX}_unit", OpsTableStrategy(SCREEN_ID, "margin_by_unit", title="Margen por Unidad"))
@@ -57,15 +73,15 @@ def _render_ops_costs_body(ctx):
 
     return html.Div([
         dmc.Grid(gutter="md", mb="lg", align="stretch", children=[
-            dmc.GridCol(span={"base": 12, "lg": 4}, children=[html.Div(style={"display": "grid", "gridTemplateRows": "1fr 1fr", "gap": "0.8rem", "height": "100%"}, children=[ # type: ignore
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 4}), children=[html.Div(style={"display": "grid", "gridTemplateRows": "1fr 1fr", "gap": "0.8rem", "height": "100%"}, children=[
                 w_profit.render(ctx, theme=theme),
                 w_total.render(ctx, theme=theme)
             ])]),
-            dmc.GridCol(span={"base": 12, "lg": 8}, children=[c_stack.render(ctx, theme=theme)]) # type: ignore
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 8}), children=[c_stack.render(ctx, h=420, theme=theme)])
         ]),
         html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(350px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
-            c_break.render(ctx, theme=theme),
-            c_comp.render(ctx, theme=theme)
+            c_break.render(ctx, h=400, theme=theme),
+            c_comp.render(ctx, h=400, theme=theme)
         ]),
         dmc.Divider(my="lg", label="Análisis de Margen", labelPosition="center"),
         _render_cost_tabs(ctx),
@@ -87,13 +103,14 @@ def layout():
     filters = create_filter_section(
         year_id="cost-year",
         month_id="cost-month",
-        default_month="enero",
         additional_filters=[
-            {"id": "cost-empresa", "label": "Empresa Área", "data": ["Todas"], "value": "Todas"},
-            {"id": "cost-clasificacion", "label": "Clasificación", "data": ["Todas"], "value": "Todas"},
-            {"id": "cost-concepto", "label": "Concepto Costo", "data": ["Todos"], "value": "Todos"},
+            {"id": "cost-empresa", "label": "Empresa\\Área", "data": ["Todas"], "value": "Todas"},
             {"id": "cost-unidad", "label": "Unidad", "data": ["Todas"], "value": "Todas"},
+            {"id": "cost-tipo-unidad", "label": "Tipo Unidad", "data": ["Todas"], "value": "Todas"},
+            {"id": "cost-no-viaje", "label": "No. Viaje", "data": ["Todas"], "value": "Todas"},
             {"id": "cost-operador", "label": "Operador", "data": ["Todas"], "value": "Todas"},
+            {"id": "cost-tipo-operacion", "label": "Tipo Operación", "data": ["Todas"], "value": "Todas"},
+            {"id": "cost-cliente", "label": "Cliente", "data": ["Todos"], "value": "Todos"},
         ],
     )
 
@@ -109,8 +126,10 @@ def layout():
         ],
     )
 
-FILTER_IDS = ["cost-year", "cost-month", "cost-empresa", "cost-clasificacion", "cost-concepto", "cost-unidad", "cost-operador"]
+FILTER_IDS = ["cost-year", "cost-month", "cost-empresa", "cost-unidad", "cost-tipo-unidad", "cost-no-viaje", "cost-operador", "cost-tipo-operacion", "cost-cliente"]
 
 data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="ops-costs-body", render_body=_render_ops_costs_body, filter_ids=FILTER_IDS)
 
 register_drawer_callback(drawer_id="costs-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
+
+register_filter_modal_callback("cost-year")

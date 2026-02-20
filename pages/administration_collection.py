@@ -1,3 +1,4 @@
+from design_system import dmc as _dmc
 from flask import session
 import dash
 from dash import html, dcc
@@ -8,10 +9,10 @@ from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
 from components.table_widget import TableWidget
 from components.drawer_manager import create_smart_drawer, register_drawer_callback
-from components.filter_manager import create_filter_section
-from strategies.administration import AdminKPIStrategy, AdminGaugeStrategy, AdminTrendChartStrategy, AdminHistoricalForecastLineStrategy, AdminDonutChartStrategy, AdminStackedBarStrategy, AdminTableStrategy
+from components.filter_manager import create_filter_section, register_filter_modal_callback
+from strategies.administration import AdminKPIStrategy, AdminGaugeStrategy, AdminTrendChartStrategy, AdminHistoricalForecastLineStrategy, AdminDonutChartStrategy, AdminBarChartStrategy, AdminTableStrategy
 
-dash.register_page(__name__, path="/administration-receivables", title="Cobranza")
+dash.register_page(__name__, path="/administration-receivables", title="Facturación y Cobranza")
 
 SCREEN_ID = "administration-receivables"
 PREFIX = "ar"
@@ -27,17 +28,17 @@ def skeleton_admin_collection():
         html.Div(style={"marginTop": "1.5rem"}, children=[html.Div(style={"display": "flex", "gap": "0.5rem", "marginBottom": "1rem", "borderBottom": "1px solid rgba(255,255,255,0.1)"}, children=[skeleton_box("32px", "120px") for _ in range(4)]), skeleton_chart("400px")]),
     ])
 
-k_billing = SmartWidget(f"{PREFIX}_billing", AdminKPIStrategy(SCREEN_ID, "billed_amount", "Facturado", "tabler:file-invoice", "indigo"))
-k_credit = SmartWidget(f"{PREFIX}_credit", AdminKPIStrategy(SCREEN_ID, "credit_notes", "Notas Crédito", "tabler:file-minus", "red"))
-k_debit = SmartWidget(f"{PREFIX}_debit", AdminKPIStrategy(SCREEN_ID, "debit_notes", "Notas Cargo Acumulado", "tabler:file-plus", "gray"))
-k_payments = SmartWidget(f"{PREFIX}_payments", AdminKPIStrategy(SCREEN_ID, "collected_amount", "Cobrado", "tabler:cash", "green"))
-k_portfolio = SmartWidget(f"{PREFIX}_portfolio", AdminKPIStrategy(SCREEN_ID, "accounts_receivable", "Cartera", "tabler:users", "yellow"))
+k_billing = SmartWidget(f"{PREFIX}_billing", AdminKPIStrategy(SCREEN_ID, "billed_amount", "Facturado Acumulado", "tabler:file-invoice", "indigo"))
+k_credit = SmartWidget(f"{PREFIX}_credit", AdminKPIStrategy(SCREEN_ID, "credit_notes", "Notas Crédito Acumulado", "tabler:file-minus", "red"))
+k_debit = SmartWidget(f"{PREFIX}_debit", AdminKPIStrategy(SCREEN_ID, "debit_notes", "Notas Cargo", "tabler:file-plus", "gray"))
+k_payments = SmartWidget(f"{PREFIX}_payments", AdminKPIStrategy(SCREEN_ID, "collected_amount", "Cobrado Acumulado", "tabler:cash", "green"))
+k_portfolio = SmartWidget(f"{PREFIX}_portfolio", AdminKPIStrategy(SCREEN_ID, "accounts_receivable", "Cartera de Clientes", "tabler:users", "yellow"))
 
-g_eff = SmartWidget(f"{PREFIX}_eff", AdminGaugeStrategy(SCREEN_ID, "collection_efficiency", "Facturado vs Cobrado", "indigo", icon="tabler:target", layout_config={"height": 300}))
-g_days = SmartWidget(f"{PREFIX}_days", AdminGaugeStrategy(SCREEN_ID, "average_collection_days", "Prom Días Cartera", "yellow", icon="tabler:calendar", layout_config={"height": 300}))
+g_eff = SmartWidget(f"{PREFIX}_eff", AdminGaugeStrategy(SCREEN_ID, "collection_efficiency", "Facturado vs Cobrado", "indigo", icon="tabler:target", layout_config={"height": 220}))
+g_days = SmartWidget(f"{PREFIX}_days", AdminGaugeStrategy(SCREEN_ID, "average_collection_days", "Prom Días Cartera", "yellow", icon="tabler:calendar", layout_config={"height": 220}))
 
 c_mix = ChartWidget(f"{PREFIX}_mix", AdminDonutChartStrategy(SCREEN_ID, "receivables_by_status", "Cartera M.N. por Clasificación", has_detail=True, layout_config={"height": 400}))
-c_stack = ChartWidget(f"{PREFIX}_stack", AdminStackedBarStrategy(SCREEN_ID, "debtors_by_range", "Cartera M.N. por cliente", has_detail=True, layout_config={"height": 480}))
+c_stack = ChartWidget(f"{PREFIX}_stack", AdminBarChartStrategy(SCREEN_ID, "debtors_by_range", "Cartera M.N. por cliente", has_detail=True, layout_config={"height": 480}))
 
 t_aging = TableWidget(f"{PREFIX}_aging", AdminTableStrategy(SCREEN_ID, "aging_by_client", "Antigüedad de Saldos", "tabler:clock", "orange"))
 
@@ -50,7 +51,7 @@ def _render_collection_body(ctx):
     theme = session.get("theme", "dark")
 
     return html.Div([
-        dmc.Title("Administración - Cobranza", order=3, mb="lg", c="dimmed"), # type: ignore
+        dmc.Title("Facturación y Cobranza", order=3, mb="lg", c=_dmc("dimmed")),
         html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(180px, 1fr))", "gap": "0.6rem", "marginBottom": "1rem"}, children=[
             k_billing.render(ctx, theme=theme),
             k_credit.render(ctx, theme=theme),
@@ -65,14 +66,14 @@ def _render_collection_body(ctx):
         c_mix.render(ctx, h=400, theme=theme),
         dmc.Space(h="md"),
         dmc.Grid(gutter="lg", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "lg": 7}, children=[html.Div(style={"height": "480px", "overflowY": "auto"}, children=[t_aging.render(ctx, theme=theme)])]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 5}, children=[c_stack.render(ctx, h=480, theme=theme)]) # type: ignore
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 7}), children=[html.Div(style={"height": "480px", "overflowY": "auto"}, children=[t_aging.render(ctx, theme=theme)])]),
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 5}), children=[c_stack.render(ctx, h=480, theme=theme)])
         ]),
         dmc.Paper(
             p="md",
-            withBorder=True,
+            withBorder=False,
             mb="xl",
-            shadow="sm",
+            shadow=None,
             style={"backgroundColor": "transparent"},
             children=[dmc.Tabs(value="facturado", children=[
                 dmc.TabsList([
@@ -108,9 +109,13 @@ def layout():
         year_id="col-year",
         month_id="col-month",
         additional_filters=[
-            {"id": "col-empresa", "label": "Empresa", "data": ["Todas"], "value": "Todas"},
-            {"id": "col-tipo-op", "label": "Tipo Op.", "data": ["Todas"], "value": "Todas"},
+            {"id": "col-empresa", "label": "Empresa\\Área", "data": ["Todas"], "value": "Todas"},
+            {"id": "col-tipo-op", "label": "Tipo Operación", "data": ["Todas"], "value": "Todas"},
             {"id": "col-cliente", "label": "Cliente", "data": ["Todas"], "value": "Todas"},
+            {"id": "col-estatus-cliente", "label": "Estatus Cliente", "data": ["Todas"], "value": "Todas"},
+            {"id": "col-factura", "label": "Factura", "data": ["Todas"], "value": "Todas"},
+            {"id": "col-serie-factura", "label": "Serie Factura", "data": ["Todas"], "value": "Todas"},
+            {"id": "col-estatus-serie", "label": "Estatus Serie", "data": ["Todas"], "value": "Todas"},
         ],
     )
 
@@ -126,8 +131,10 @@ def layout():
         ],
     )
 
-FILTER_IDS = ["col-year", "col-month", "col-empresa", "col-tipo-op", "col-cliente"]
+FILTER_IDS = ["col-year", "col-month", "col-empresa", "col-tipo-op", "col-cliente", "col-estatus-cliente", "col-factura", "col-serie-factura", "col-estatus-serie"]
 
 data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="administration-receivables-body", render_body=_render_collection_body, filter_ids=FILTER_IDS)
 
 register_drawer_callback(drawer_id="col-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
+
+register_filter_modal_callback("col-year")

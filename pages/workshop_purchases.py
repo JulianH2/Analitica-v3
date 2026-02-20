@@ -1,3 +1,4 @@
+from design_system import dmc as _dmc
 from flask import session
 import dash
 from dash import html, dcc
@@ -9,10 +10,16 @@ from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
 from components.drawer_manager import create_smart_drawer, register_drawer_callback
 from components.skeleton import get_skeleton
-from components.filter_manager import create_workshop_filters
+from components.filter_manager import create_filter_section, register_filter_modal_callback
 from strategies.workshop import WorkshopKPIStrategy, WorkshopTrendChartStrategy, WorkshopHorizontalBarStrategy, WorkshopDonutChartStrategy, WorkshopTableStrategy
+from services.time_service import TimeService
 
-dash.register_page(__name__, path="/workshop-purchases", title="Compras Taller")
+_ts = TimeService()
+
+def get_dynamic_title(base_title: str) -> str:
+    return f"{base_title} {_ts.current_year} vs. {_ts.previous_year}"
+
+dash.register_page(__name__, path="/workshop-purchases", title="Compras")
 
 SCREEN_ID = "workshop-purchases"
 PREFIX = "wp"
@@ -22,10 +29,19 @@ w_die = SmartWidget(f"{PREFIX}_die", WorkshopKPIStrategy(SCREEN_ID, "fuel_purcha
 w_par = SmartWidget(f"{PREFIX}_par", WorkshopKPIStrategy(SCREEN_ID, "parts_purchases", "Refacciones/Insumos", "tabler:box", "orange"))
 w_tir = SmartWidget(f"{PREFIX}_tir", WorkshopKPIStrategy(SCREEN_ID, "tire_purchases", "Llantas", "tabler:tire", "red"))
 
-c_trend = ChartWidget(f"{PREFIX}_trend", WorkshopTrendChartStrategy(SCREEN_ID, "purchases_trend", "Tendencia de Compras", has_detail=True, layout_config={"height": 400}))
-c_area = ChartWidget(f"{PREFIX}_area", WorkshopHorizontalBarStrategy(SCREEN_ID, "purchases_by_area", "Compras por Área", has_detail=True, layout_config={"height": 400}))
-c_type = ChartWidget(f"{PREFIX}_type", WorkshopDonutChartStrategy(SCREEN_ID, "purchases_by_type", "Distribución por Tipo", has_detail=True, layout_config={"height": 400}))
-c_prov = ChartWidget(f"{PREFIX}_prov", WorkshopHorizontalBarStrategy(SCREEN_ID, "top_suppliers_chart", "Top Proveedores", has_detail=True, layout_config={"height": 400}))
+class DynamicPurchaseTrendStrategy(WorkshopTrendChartStrategy):
+    def __init__(self, screen_id, key, base_title, has_detail=True, layout_config=None):
+        self.base_title = base_title
+        super().__init__(screen_id, key, get_dynamic_title(base_title), has_detail=has_detail, layout_config=layout_config)
+    def get_card_config(self, ctx):
+        config = super().get_card_config(ctx)
+        config["title"] = get_dynamic_title(self.base_title)
+        return config
+
+c_trend = ChartWidget(f"{PREFIX}_trend", DynamicPurchaseTrendStrategy(SCREEN_ID, "purchases_trend", "Compras", has_detail=True, layout_config={"height": 400}))
+c_area = ChartWidget(f"{PREFIX}_area", WorkshopHorizontalBarStrategy(SCREEN_ID, "purchases_by_area", "Total Compra por Área", has_detail=True, layout_config={"height": 400}))
+c_type = ChartWidget(f"{PREFIX}_type", WorkshopDonutChartStrategy(SCREEN_ID, "purchases_by_type", "Compras por Tipo Compra", has_detail=True, layout_config={"height": 400}))
+c_prov = ChartWidget(f"{PREFIX}_prov", WorkshopHorizontalBarStrategy(SCREEN_ID, "top_suppliers_chart", "Total Compra por Proveedor y por Tipo Compra", has_detail=True, layout_config={"height": 400}))
 
 t_ord = TableWidget(f"{SCREEN_ID}-purchase_orders_detail", WorkshopTableStrategy(SCREEN_ID, "purchase_orders_detail", title="Órdenes de Compra"))
 t_inp = TableWidget(f"{SCREEN_ID}-inventory_detail", WorkshopTableStrategy(SCREEN_ID, "inventory_detail", title="Detalle de Insumos"))
@@ -42,12 +58,12 @@ def _render_taller_purchases_body(ctx):
             w_tir.render(ctx, theme=theme)
         ]),
         dmc.Grid(gutter="md", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "lg": 8}, children=[c_trend.render(ctx, theme=theme)]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 4}, children=[c_type.render(ctx, theme=theme)]), # type: ignore
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 8}), children=[c_trend.render(ctx, h=420, theme=theme)]),
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 4}), children=[c_type.render(ctx, h=420, theme=theme)]),
         ]),
         dmc.Grid(gutter="md", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "lg": 6}, children=[c_area.render(ctx, theme=theme)]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 6}, children=[c_prov.render(ctx, theme=theme)]), # type: ignore
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 6}), children=[c_area.render(ctx, h=420, theme=theme)]),
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 6}), children=[c_prov.render(ctx, h=420, theme=theme)]),
         ]),
         dmc.Paper(
             p="md",
@@ -78,16 +94,29 @@ def layout():
     if not session.get("user"):
         return dmc.Text("No autorizado...")
     refresh, _ = data_manager.dash_refresh_components(SCREEN_ID, interval_ms=60 * 60 * 1000, max_intervals=-1)
+
+    filters = create_filter_section(
+        year_id="pur-year",
+        month_id="pur-month",
+        additional_filters=[
+            {"id": "pur-empresa", "label": "Empresa\\Área", "data": ["Todas"], "value": "Todas"},
+            {"id": "pur-tipo-compra", "label": "Tipo Compra", "data": ["Todas"], "value": "Todas"},
+            {"id": "pur-tipo-insumo", "label": "Tipo Insumo", "data": ["Todas"], "value": "Todas"},
+        ],
+    )
+
     return dmc.Container(fluid=True, px="md", children=[
         dcc.Store(id="pur-load-trigger", data={"loaded": True}),
         *refresh,
         create_smart_drawer("pur-drawer"),
-        create_workshop_filters(prefix="pur"),
+        filters,
         html.Div(id="taller-purchases-body", children=get_skeleton(SCREEN_ID))
     ])
 
-FILTER_IDS = ["pur-year", "pur-month"]
+FILTER_IDS = ["pur-year", "pur-month", "pur-empresa", "pur-tipo-compra", "pur-tipo-insumo"]
 
 data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="taller-purchases-body", render_body=_render_taller_purchases_body, filter_ids=FILTER_IDS)
 
 register_drawer_callback(drawer_id="pur-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
+
+register_filter_modal_callback("pur-year")

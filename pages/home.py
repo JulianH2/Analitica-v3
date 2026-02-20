@@ -1,3 +1,4 @@
+from design_system import dmc as _dmc
 from flask import session
 import dash_mantine_components as dmc
 from dash import html, dcc
@@ -62,9 +63,9 @@ def _render_home_body(ctx):
         style={"backgroundColor": "transparent"},
         children=[dmc.Stack(justify="center", align="center", h="100%", gap="md", children=[
             dmc.ThemeIcon(DashIconify(icon="tabler:truck-loading", width=48), size=80, radius="xl", variant="light", color="green"),
-            dmc.Text("Disponibilidad de Flota", size="sm", c="dimmed", fw=600, tt="uppercase", ta="center"), # type: ignore
+            dmc.Text("Disponibilidad de Flota", size="sm", c=_dmc("dimmed"), fw=_dmc(600), tt="uppercase", ta="center"),
             dmc.Progress(value=val_disp, color="green", h=28, radius="xl", style={"width": "90%"}, striped=True, animated=True),
-            dmc.Text(f"{val_disp}% Operativa", size="xl", fw=700, c="green", ta="center") # type: ignore
+            dmc.Text(f"{val_disp}% Operativa", size="xl", fw=_dmc(700), c="green", ta="center")
         ])]
     )
 
@@ -76,8 +77,8 @@ def _render_home_body(ctx):
             w_bank.render(ctx, theme=theme)
         ]),
         dmc.Grid(gutter="md", mb="xl", align="stretch", children=[
-            dmc.GridCol(span={"base": 12, "lg": 8}, children=[w_main_chart.render(ctx, theme=theme)]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 4}, children=[html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(2, 1fr)", "gridTemplateRows": "repeat(4, 1fr)", "gap": "0.5rem", "height": "100%"}, children=[ # type: ignore
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 8}), children=[w_main_chart.render(ctx, theme=theme)]),
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 4}), children=[html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(2, 1fr)", "gridTemplateRows": "repeat(4, 1fr)", "gap": "0.5rem", "height": "100%"}, children=[
                 w_yield.render(ctx, theme=theme),
                 w_km.render(ctx, theme=theme),
                 w_liters.render(ctx, theme=theme),

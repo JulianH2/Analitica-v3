@@ -3,7 +3,7 @@ from dash import html, callback, Input, Output, ALL, State, no_update, dcc
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
 import plotly.graph_objects as go
-from design_system import DesignSystem as DS, Typography, ComponentSizes, Space, BadgeConfig
+from design_system import DesignSystem as DS, Typography, ComponentSizes, Space, BadgeConfig, dmc as _dmc
 
 
 def create_smart_modal(modal_id: str = "smart-modal"):
@@ -41,7 +41,8 @@ def register_modal_callback(modal_id: str, widget_registry: dict, screen_id: str
         if not dash.ctx.triggered or not any(n_clicks):
             return no_update, no_update, no_update, no_update
 
-        widget_id = dash.ctx.triggered_id.get("index") # type: ignore
+        triggered = dash.ctx.triggered_id
+        widget_id = triggered.get("index") if isinstance(triggered, dict) else None
         if not widget_id:
             return no_update, no_update, no_update, no_update
 
@@ -105,14 +106,14 @@ def _build_modal_header(cfg, icon, color):
                                 dmc.Text(
                                     cfg.get("title", "Detalle"),
                                     size="xl",
-                                    fw=Typography.WEIGHT_BOLD, # type: ignore
-                                    c="white", # type: ignore
+                                    fw=_dmc(Typography.WEIGHT_BOLD),
+                                    c=_dmc("white"),
                                 ),
                                 dmc.Text(
                                     "Análisis rápido",
                                     size="sm",
-                                    c="white", # type: ignore
-                                    opacity=0.9, # type: ignore
+                                    c=_dmc("white"),
+                                    opacity=_dmc(0.9),
                                 ),
                             ]
                         ),
@@ -137,7 +138,7 @@ def _build_modal_header(cfg, icon, color):
 
 def _build_modal_content(widget, ctx, cfg):
     main_section = dmc.SimpleGrid(
-        cols={"base": 1, "sm": 2, "md": 4}, # type: ignore
+        cols=_dmc({"base": 1, "sm": 2, "md": 4}),
         spacing="md",
         mb="xl",
         children=[
@@ -193,7 +194,7 @@ def _build_modal_content(widget, ctx, cfg):
                                 ),
                                 dmc.Text(
                                     "Tendencia Histórica",
-                                    fw=Typography.WEIGHT_SEMIBOLD, # type: ignore
+                                    fw=_dmc(Typography.WEIGHT_SEMIBOLD),
                                     size="lg",
                                 ),
                             ],
@@ -261,8 +262,8 @@ def _create_metric_card(label, value, icon, color, delta=None, size="md"):
                         dmc.Text(
                             label,
                             size="xs",
-                            c="dimmed", # type: ignore
-                            fw=Typography.WEIGHT_SEMIBOLD, # type: ignore
+                            c=_dmc("dimmed"),
+                            fw=_dmc(Typography.WEIGHT_SEMIBOLD),
                             tt="uppercase",
                             style={"fontSize": f"{Typography.XS}px"},
                         ),
@@ -275,8 +276,8 @@ def _create_metric_card(label, value, icon, color, delta=None, size="md"):
                 ),
                 dmc.Text(
                     str(value),
-                    size=size, # type: ignore
-                    fw=Typography.WEIGHT_BOLD, # type: ignore
+                    size=_dmc(size),
+                    fw=_dmc(Typography.WEIGHT_BOLD),
                     c=color,
                     style={
                         "lineHeight": Typography.LH_TIGHT,
@@ -302,7 +303,7 @@ def _build_insights_section(cfg):
                     DashIconify(icon="tabler:bulb", width=24, color=DS.CHART_BLUE),
                     dmc.Text(
                         "Análisis Rápido",
-                        fw=Typography.WEIGHT_SEMIBOLD, # type: ignore
+                        fw=_dmc(Typography.WEIGHT_SEMIBOLD),
                         size="lg",
                     ),
                 ],
@@ -359,7 +360,7 @@ def _build_actions_section():
                     DashIconify(icon="tabler:bolt", width=24, color=DS.CHART_BLUE),
                     dmc.Text(
                         "Acciones Rápidas",
-                        fw=Typography.WEIGHT_SEMIBOLD, # type: ignore
+                        fw=_dmc(Typography.WEIGHT_SEMIBOLD),
                         size="lg",
                     ),
                 ],

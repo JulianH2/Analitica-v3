@@ -5,6 +5,7 @@ import re
 import time
 import math
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, Callable
 
@@ -41,7 +42,8 @@ class DataManager:
         self.base_service = RealDataService()
         self.qb = SmartQueryBuilder()
         self.cache = {}
-        self.DEFAULT_TTL_SECONDS = 30
+        self.query_cache = {}
+        self.DEFAULT_TTL_SECONDS = 60
         self._load_screen_configs()
     
     def _load_screen_configs(self) -> None:
@@ -182,6 +184,34 @@ class DataManager:
         except Exception:
             return "N/A"
 
+    def _sql_cache_key(self, sql: str) -> str:
+        # Incluye fingerprint de la BD para evitar mezclar resultados entre conexiones
+        digest = hashlib.sha256(sql.encode("utf-8")).hexdigest()
+        return f"{self._db_fingerprint()}::sql::{digest}"
+
+    def _prune_query_cache(self) -> None:
+        # Limpieza simple para evitar crecimiento infinito
+        if len(self.query_cache) <= 500:
+            return
+        now = time.time()
+        stale_keys = [k for k, e in self.query_cache.items() if (now - e.ts) > (self.DEFAULT_TTL_SECONDS * 4)]
+        for k in stale_keys[:300]:
+            self.query_cache.pop(k, None)
+
+    async def _execute_query_cached(self, db_config: Any, sql: str, ttl: int) -> Any:
+        key = self._sql_cache_key(sql)
+
+        entry = self.query_cache.get(key)
+        if entry and self._is_fresh(entry, ttl):
+            return entry.data  # rows cacheados
+
+        rows = await execute_dynamic_query(db_config, sql)
+        # Guarda incluso [] para evitar repetir hits en queries que “no traen nada”
+        self.query_cache[key] = CacheEntry(data=rows, ts=time.time())
+
+        self._prune_query_cache()
+        return rows
+
     def get_screen(
         self,
         screen_id: str,
@@ -288,7 +318,8 @@ class DataManager:
                 try:
                     build = self.qb.get_dataframe_query(batch, dims, filters=combined_filters)
                     if build and "query" in build:
-                        rows = await execute_dynamic_query(db_config, build["query"])
+                        #print(f"🔍 Query de KPI {group_key}->{batch}: {build['query']}")
+                        rows = await self._execute_query_cached(db_config, build["query"], self.DEFAULT_TTL_SECONDS)
                         if not rows and db_config: return data
                         if rows is None or (not rows and db_config):
                             print(f"🛑 Abortando carga de {screen_id}: BD no disponible o error crítico.")
@@ -339,7 +370,8 @@ class DataManager:
                     is_count_kpi = kpi_key in ("total_trips", "total_kilometers", "units_used", "customers_served", "real_kilometers")
 
                     is_decimal_kpi = kpi_key in ("real_yield", "liters_consumed", "avg_collection_days", "average_payment_days")
-                    fmt = "integer" if is_count_kpi else ("decimal" if is_decimal_kpi else "currency")
+                    is_percent_kpi = kpi_key == "availability_percent"
+                    fmt = "integer" if is_count_kpi else ("percent" if is_percent_kpi else ("decimal" if is_decimal_kpi else "currency"))
                     if leaf == "value" or leaf == "current_value":
                         self._set_path(data, parent_path + ["value_formatted"], self._format_val(clean_val, fmt))
                     elif leaf == "target":
@@ -348,6 +380,10 @@ class DataManager:
                     if kpi_key in ("avg_collection_days", "average_payment_days"):
                         self._set_path(data, parent_path + ["vs_last_year_formatted"], "none")
                         self._set_path(data, parent_path + ["label_prev_year"], "Vs 2025")
+                    elif kpi_key == "availability_percent":
+                        self._set_path(data, parent_path + ["vs_last_year_formatted"], None)
+                        self._set_path(data, parent_path + ["vs_last_year_delta"], None)
+                        self._set_path(data, parent_path + ["vs_last_year_delta_formatted"], None)
                     elif leaf == "vs_last_year_value":
                         self._set_path(data, parent_path + ["vs_last_year_formatted"], self._format_val(clean_val, fmt))
                     elif leaf == "ytd_value":
@@ -397,7 +433,7 @@ class DataManager:
                     
                     build = self.qb.get_dataframe_query(batch, ["__month__"], filters=combined_filters)
                     if build and "query" in build:
-                        rows = await execute_dynamic_query(db_config, build["query"])
+                        rows = await self._execute_query_cached(db_config, build["query"], self.DEFAULT_TTL_SECONDS)
                         if not rows and db_config: return data
                         if rows:
                             for r in rows:
@@ -487,7 +523,7 @@ class DataManager:
                     else:
                         build = self.qb.get_dataframe_query(mets, dims, filters=combined_filters)
                         if build and "query" in build:
-                            rows = await execute_dynamic_query(db_config, build["query"])
+                            rows = await self._execute_query_cached(db_config, build["query"], self.DEFAULT_TTL_SECONDS)
                             if not rows and db_config: return data
                             if rows:
                                 has_data = True
@@ -519,7 +555,7 @@ class DataManager:
                     mets = [spec.get("kpi")] if isinstance(spec.get("kpi"), str) else mets
                     build = self.qb.get_dataframe_query(mets, dims, filters=combined_filters)
                     if build and "query" in build:
-                        rows = await execute_dynamic_query(db_config, build["query"])
+                        rows = await self._execute_query_cached(db_config, build["query"], self.DEFAULT_TTL_SECONDS)
                         if not rows and db_config: return data
                         if rows:
                             has_data = True
@@ -574,7 +610,7 @@ class DataManager:
                 try:
                     build = self.qb.get_dataframe_query(grp_mets, dims, filters=combined_filters)
                     if build and "query" in build:
-                        rows = await execute_dynamic_query(db_config, build["query"])
+                        rows = await self._execute_query_cached(db_config, build["query"], self.DEFAULT_TTL_SECONDS)
                         if not rows and db_config: return data
                         if rows:
                             has_data = True
@@ -737,16 +773,32 @@ class DataManager:
         if filter_ids:
             inputs.extend([Input(fid, "value") for fid in filter_ids])
 
+        _MONTH_NAMES = (
+            "enero", "febrero", "marzo", "abril", "mayo", "junio",
+            "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+        )
+
         @callback(Output(ids["token_store"], "data"), inputs, prevent_initial_call=False)
         async def _auto_refresh(n_intervals, selected_db, *filter_values):
             filters = {}
             if filter_ids:
                 for i, fid in enumerate(filter_ids):
+                    if i >= len(filter_values):
+                        break
                     val = filter_values[i]
                     key = fid.split("-")[-1] if "-" in fid else fid
                     key = key.replace("__", ".")
-                    if val:
+                    if key == "year":
+                        filters["year"] = val if val else str(datetime.now().year)
+                    elif key == "month":
+                        filters["month"] = val if val else _MONTH_NAMES[datetime.now().month - 1]
+                    elif val:
                         filters[key] = val
+                # Garantizar año y mes cuando la pantalla los usa (por si los componentes no devolvieron valor)
+                if any(f == "year" or f.endswith("-year") for f in filter_ids) and "year" not in filters:
+                    filters["year"] = str(datetime.now().year)
+                if any(f == "month" or f.endswith("-month") for f in filter_ids) and "month" not in filters:
+                    filters["month"] = _MONTH_NAMES[datetime.now().month - 1]
             await self.refresh_screen(screen_id, filters=filters, use_cache=True, db_config=selected_db)
             return json.dumps(filters)
 

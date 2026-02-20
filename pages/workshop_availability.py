@@ -1,3 +1,4 @@
+from design_system import dmc as _dmc
 from flask import session
 import dash
 from dash import html, dcc
@@ -9,10 +10,16 @@ from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
 from components.drawer_manager import create_smart_drawer, register_drawer_callback
 from components.skeleton import get_skeleton
-from components.filter_manager import create_workshop_filters
+from components.filter_manager import create_workshop_filters, register_filter_modal_callback
 from strategies.workshop import WorkshopKPIStrategy, WorkshopGaugeStrategy, WorkshopTrendChartStrategy, WorkshopComboChartStrategy, WorkshopTableStrategy
+from services.time_service import TimeService
 
-dash.register_page(__name__, path="/workshop-availability", title="Disponibilidad")
+_ts = TimeService()
+
+def get_dynamic_title(base_title: str) -> str:
+    return f"{base_title} {_ts.current_year} vs. {_ts.previous_year}"
+
+dash.register_page(__name__, path="/workshop-availability", title="Análisis de Disponibilidad")
 
 SCREEN_ID = "workshop-availability"
 PREFIX = "wa"
@@ -20,10 +27,19 @@ PREFIX = "wa"
 w_disp = SmartWidget(f"{PREFIX}_disp", WorkshopGaugeStrategy(SCREEN_ID, "availability_percent", "% Disponibilidad", "green", icon="tabler:gauge", use_needle=True, layout_config={"height": 300}))
 w_entries = SmartWidget(f"{PREFIX}_ent", WorkshopKPIStrategy(SCREEN_ID, "workshop_entries", "Entradas a Taller", "tabler:truck-loading", "indigo"))
 
-c_trend = ChartWidget(f"{PREFIX}_trend", WorkshopTrendChartStrategy(SCREEN_ID, "availability_trends", "Disponibilidad Mensual 2025 vs 2024", icon="tabler:calendar-stats", has_detail=True))
-c_combo = ChartWidget(f"{PREFIX}_combo", WorkshopComboChartStrategy(SCREEN_ID, "entries_and_km_by_unit", "Entradas vs Kilómetros Recorridos", icon="tabler:chart-arrows-vertical", has_detail=True))
+class DynamicAvailTrendStrategy(WorkshopTrendChartStrategy):
+    def __init__(self, screen_id, key, base_title, icon="tabler:calendar-stats", has_detail=True, layout_config=None):
+        self.base_title = base_title
+        super().__init__(screen_id, key, get_dynamic_title(base_title), icon=icon, has_detail=has_detail, layout_config=layout_config)
+    def get_card_config(self, ctx):
+        config = super().get_card_config(ctx)
+        config["title"] = get_dynamic_title(self.base_title)
+        return config
 
-t_detail = TableWidget(f"{PREFIX}_detail", WorkshopTableStrategy(SCREEN_ID, "availability_detail", title="Detalle de Disponibilidad"))
+c_trend = ChartWidget(f"{PREFIX}_trend", DynamicAvailTrendStrategy(SCREEN_ID, "availability_trends", "% Disponibilidad Unidades", icon="tabler:calendar-stats", has_detail=True))
+c_combo = ChartWidget(f"{PREFIX}_combo", WorkshopComboChartStrategy(SCREEN_ID, "entries_and_km_by_unit", "Entradas a Taller y Kms Recorridos por Unidad", icon="tabler:chart-arrows-vertical", has_detail=True))
+
+t_detail = TableWidget(f"{PREFIX}_detail", WorkshopTableStrategy(SCREEN_ID, "availability_detail", title="Detalle de Disponibilidad por Área/Tipo Operación/Unidad"))
 
 def _render_taller_availability_body(ctx):
     theme = session.get("theme", "dark")
@@ -43,7 +59,7 @@ def _render_taller_availability_body(ctx):
             radius="md",
             style={"backgroundColor": "transparent"},
             children=[
-                dmc.Text("DETALLE DE DISPONIBILIDAD POR ÁREA / UNIDAD", fw="bold", mb="md", size="xs", c="dimmed"), # type: ignore
+                dmc.Text("DETALLE DE DISPONIBILIDAD POR ÁREA / UNIDAD", fw="bold", mb="md", size="xs", c=_dmc("dimmed")),
                 dmc.ScrollArea(h=450, children=[t_detail.render(ctx, theme=theme)]),
             ],
         ),
@@ -76,8 +92,10 @@ def layout():
         ],
     )
 
-FILTER_IDS = ["avail-year", "avail-month"]
+FILTER_IDS = ["avail-year", "avail-month", "avail-empresa", "avail-unidad", "avail-tipo-op", "avail-clasificacion", "avail-razon", "avail-motor"]
 
 data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="taller-avail-body", render_body=_render_taller_availability_body, filter_ids=FILTER_IDS)
 
 register_drawer_callback(drawer_id="avail-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
+
+register_filter_modal_callback("avail-year")

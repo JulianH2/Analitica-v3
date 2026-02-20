@@ -1,15 +1,22 @@
+from design_system import dmc as _dmc
 from flask import session
 import dash
 from dash import html, dcc
 import dash_mantine_components as dmc
+from services.time_service import TimeService
+
+_ts = TimeService()
+
+def get_dynamic_title(base_title: str) -> str:
+    return f"{base_title} {_ts.current_year} vs. {_ts.previous_year}"
 
 from services.data_manager import data_manager
 from components.smart_widget import SmartWidget
 from components.visual_widget import ChartWidget
 from components.table_widget import TableWidget
 from components.drawer_manager import create_smart_drawer, register_drawer_callback
-from components.filter_manager import create_filter_section
-from strategies.administration import AdminKPIStrategy, AdminGaugeStrategy, AdminTrendChartStrategy, AdminHistoricalForecastLineStrategy, AdminDonutChartStrategy, AdminStackedBarStrategy, AdminTableStrategy
+from components.filter_manager import create_filter_section, register_filter_modal_callback
+from strategies.administration import AdminKPIStrategy, AdminGaugeStrategy, AdminTrendChartStrategy, AdminHistoricalForecastLineStrategy, AdminDonutChartStrategy, AdminBarChartStrategy, AdminTableStrategy
 
 dash.register_page(__name__, path="/administration-payables", title="Cuentas por Pagar")
 
@@ -36,24 +43,33 @@ k_total = SmartWidget(f"{PREFIX}_total", AdminKPIStrategy(SCREEN_ID, "payables_t
 k_pay = SmartWidget(f"{PREFIX}_pay", AdminKPIStrategy(SCREEN_ID, "supplier_payments", "Pago Proveedores", "tabler:truck-delivery", "red"))
 k_bal = SmartWidget(f"{PREFIX}_bal", AdminKPIStrategy(SCREEN_ID, "final_balance", "Saldo", "tabler:wallet", "yellow"))
 
-g_eff = SmartWidget(f"{PREFIX}_eff", AdminGaugeStrategy(SCREEN_ID, "payment_efficiency", "CXP vs Pagado", "red", icon="tabler:target", layout_config={"height": 300}))
-g_days = SmartWidget(f"{PREFIX}_days", AdminGaugeStrategy(SCREEN_ID, "average_payment_days", "Días Pago", "yellow", icon="tabler:calendar", layout_config={"height": 300}))
+g_eff = SmartWidget(f"{PREFIX}_eff", AdminGaugeStrategy(SCREEN_ID, "payment_efficiency", "CXP vs Pagado", "red", icon="tabler:target", layout_config={"height": 220}))
+g_days = SmartWidget(f"{PREFIX}_days", AdminGaugeStrategy(SCREEN_ID, "average_payment_days", "Promedio Días Pago", "yellow", icon="tabler:calendar", layout_config={"height": 220}))
 
-c_mix = ChartWidget(f"{PREFIX}_mix", AdminDonutChartStrategy(SCREEN_ID, "payables_by_status", "Distribución Saldo por Clasificación", has_detail=True, layout_config={"height": 400}))
-c_stack = ChartWidget(f"{PREFIX}_stack", AdminStackedBarStrategy(SCREEN_ID, "suppliers_by_range", "Saldo por Proveedor", has_detail=True, layout_config={"height": 500}))
+c_mix = ChartWidget(f"{PREFIX}_mix", AdminDonutChartStrategy(SCREEN_ID, "payables_by_status", "Saldo por Clasificación", has_detail=True, layout_config={"height": 400}))
+c_stack = ChartWidget(f"{PREFIX}_stack", AdminBarChartStrategy(SCREEN_ID, "suppliers_by_range", "Saldo por Proveedor", has_detail=True, layout_config={"height": 500}))
 
 t_aging = TableWidget(f"{PREFIX}_aging", AdminTableStrategy(SCREEN_ID, "aging_by_supplier", "Antigüedad de Saldos", "tabler:clock", "orange"))
 
-c_comp = ChartWidget(f"{PREFIX}_comp", AdminTrendChartStrategy(SCREEN_ID, "payables_trends", "Cuentas x Pagar 2025 vs. 2024", has_detail=True, color="red"))
-c_paid = ChartWidget(f"{PREFIX}_paid", AdminTrendChartStrategy(SCREEN_ID, "pago_proveedores_trends", "Pago Proveedores 2025 vs. 2024", has_detail=True, color="red"))
+class DynamicPayTrendStrategy(AdminTrendChartStrategy):
+    def __init__(self, screen_id, key, base_title, has_detail=True, color="red"):
+        self.base_title = base_title
+        super().__init__(screen_id, key, get_dynamic_title(base_title), has_detail=has_detail, color=color)
+    def get_card_config(self, data_context): # type: ignore
+        config = super().get_card_config(data_context)
+        config["title"] = get_dynamic_title(self.base_title)
+        return config
+
+c_comp = ChartWidget(f"{PREFIX}_comp", DynamicPayTrendStrategy(SCREEN_ID, "payables_trends", "Cuentas x Pagar", has_detail=True, color="red"))
+c_paid = ChartWidget(f"{PREFIX}_paid", DynamicPayTrendStrategy(SCREEN_ID, "pago_proveedores_trends", "Pago Proveedores", has_detail=True, color="red"))
 c_forecast = ChartWidget(f"{PREFIX}_forecast", AdminHistoricalForecastLineStrategy(SCREEN_ID, "pronostico_pago_proveedores", "Pago Proveedores Histórica vs Pronóstico", has_detail=True, color="red"))
 
 def _render_payables_body(ctx):
     theme = session.get("theme", "dark")
 
     return html.Div([
-        dmc.Title("Administración - Cuentas por Pagar", order=3, mb="lg", c="dimmed"), # type: ignore
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(4, 1fr)", "gap": "0.6rem", "marginBottom": "1rem"}, children=[
+        dmc.Title("Cuentas por Pagar", order=3, mb="lg", c=_dmc("dimmed")),
+        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(180px, 1fr))", "gap": "0.6rem", "marginBottom": "1rem"}, children=[
             k_init.render(ctx, theme=theme),
             k_cxp.render(ctx, theme=theme),
             k_debit.render(ctx, theme=theme),
@@ -70,13 +86,13 @@ def _render_payables_body(ctx):
         c_mix.render(ctx, h=400, theme=theme),
         dmc.Space(h="md"),
         dmc.Grid(gutter="lg", mb="xl", children=[
-            dmc.GridCol(span={"base": 12, "lg": 6}, children=[html.Div(style={"height": "500px", "overflowY": "auto"}, children=[t_aging.render(ctx, theme=theme)])]), # type: ignore
-            dmc.GridCol(span={"base": 12, "lg": 6}, children=[c_stack.render(ctx, h=500, theme=theme)]) # type: ignore
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 6}), children=[html.Div(style={"height": "500px", "overflowY": "auto"}, children=[t_aging.render(ctx, theme=theme)])]),
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 6}), children=[c_stack.render(ctx, h=500, theme=theme)])
         ]),
         dmc.Paper(
             p="md",
-            withBorder=True,
-            shadow="sm",
+            withBorder=False,
+            shadow=None,
             style={"backgroundColor": "transparent"},
             children=[dmc.Tabs(value="cuentas_x_pagar", children=[
                 dmc.TabsList([
@@ -110,8 +126,10 @@ def layout():
         year_id="pay-year",
         month_id="pay-month",
         additional_filters=[
-            {"id": "pay-empresa", "label": "Empresa", "data": ["Todas"], "value": "Todas"},
+            {"id": "pay-empresa", "label": "Empresa\\Área", "data": ["Todas"], "value": "Todas"},
             {"id": "pay-proveedor", "label": "Proveedor", "data": ["Todas"], "value": "Todas"},
+            {"id": "pay-tipo-proveedor", "label": "Tipo Proveedor", "data": ["Todas"], "value": "Todas"},
+            {"id": "pay-concepto-proveedor", "label": "Concepto Proveedor", "data": ["Todas"], "value": "Todas"},
         ],
     )
 
@@ -127,8 +145,10 @@ def layout():
         ],
     )
 
-FILTER_IDS = ["pay-year", "pay-month", "pay-empresa", "pay-proveedor"]
+FILTER_IDS = ["pay-year", "pay-month", "pay-empresa", "pay-proveedor", "pay-tipo-proveedor", "pay-concepto-proveedor"]
 
 data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="admin-payables-body", render_body=_render_payables_body, filter_ids=FILTER_IDS)
 
 register_drawer_callback(drawer_id="pay-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
+
+register_filter_modal_callback("pay-year")

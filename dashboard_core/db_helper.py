@@ -108,6 +108,7 @@ def _execute_dynamic_query_sync(db_name: str, query: str):
             return statement, params
 
         with engine.connect() as connection:
+            connection.execute(text("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED"))
             result = connection.execute(text(query))
             keys = result.keys()
             rows = [dict(zip(keys, row)) for row in result.fetchall()]

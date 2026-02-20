@@ -122,7 +122,10 @@ class SmartQueryBuilder:
             m_table = recipe.get('table')
             col = recipe.get('column')
             agg = recipe.get('aggregation', 'SUM')
-            is_expression = isinstance(col, str) and "(" in col
+            # Expression: contains operators, parens, or spaces (e.g. "duracion * costo"); metadata stays table-agnostic
+            is_expression = isinstance(col, str) and (
+                "(" in col or "*" in col or "+" in col or "-" in col or "/" in col or (" " in col and "." not in col)
+            )
 
             def get_agg_expr(table_alias, column_name, aggregation_type):
                 if is_expression:
@@ -148,6 +151,15 @@ class SmartQueryBuilder:
                 expr = get_agg_expr(fact_alias, col, agg)
                 selects.append(f"{expr} as {m_key}")
 
+        # If fact has no date_column, add join to a linked table that has one (e.g. d_mo_orden -> d_orden_servicio)
+        if not fact_def.get('date_column'):
+            for j_key, j_def in fact_def.get('joins', {}).items():
+                target_table = j_def.get('target_table')
+                if target_table:
+                    t_def = self.tables.get(target_table)
+                    if t_def and t_def.get('date_column'):
+                        joins_needed.add(target_table)
+                        break
 
         joins_sql = ""
         processed_joins = set()
@@ -189,9 +201,19 @@ class SmartQueryBuilder:
                 target_year = int(filters['year'])
     
             if filters.get('month'):
-                m_name = filters['month'].lower()
-                if hasattr(self, 'MONTH_MAP') and m_name in self.MONTH_MAP:
-                    target_month = self.MONTH_MAP[m_name]
+                m_val = filters['month']
+                try:
+                    target_month = int(m_val)
+                    if 1 <= target_month <= 12:
+                        pass
+                    else:
+                        target_month = None
+                except (TypeError, ValueError):
+                    m_name = str(m_val).lower()
+                    if hasattr(self, 'MONTH_MAP') and m_name in self.MONTH_MAP:
+                        target_month = self.MONTH_MAP[m_name]
+                    else:
+                        target_month = None
         
 
         time_modifier = None
@@ -224,9 +246,9 @@ class SmartQueryBuilder:
                 group_bys.insert(0, f"MONTH({date_col_to_use})")
 
             wheres.append(f"YEAR({date_col_to_use}) = {target_year}")
-            if target_month and not group_by_month:
-
-                wheres.append(f"MONTH({date_col_to_use}) {month_operator} {target_month}")
+            if target_month is not None and not group_by_month:
+                op = month_operator if month_operator else "="
+                wheres.append(f"MONTH({date_col_to_use}) {op} {target_month}")
 
 
         if filters:

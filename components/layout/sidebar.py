@@ -1,3 +1,4 @@
+from design_system import dmc as _dmc
 from flask import session
 import dash_mantine_components as dmc
 from dash import html, dcc
@@ -73,7 +74,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
             "borderLeft": f"5px solid {config['main']}",
             "background": f"linear-gradient(90deg, {config['light']} 0%, rgba(0,0,0,0) 100%)",
             "fontWeight": 700
-        })  # type: ignore
+        }) # type: ignore
         return {"color": config["main"], "style": base_style, "bg": config["light"]}
 
     menu_structure = [
@@ -123,7 +124,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
             gap="sm",
             children=[
                 DashIconify(icon=item["icon"], width=20, color=cfg["color"] if is_active else "inherit"),
-                dmc.Text(item["label"], size="sm", fw=700 if is_active else 400) if not collapsed else None  # type: ignore
+                dmc.Text(item["label"], size="sm", fw=_dmc(700 if is_active else 400)) if not collapsed else None
             ]
         )
         
@@ -149,7 +150,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
                 gap="sm",
                 children=[
                     DashIconify(icon=child["icon"], width=18, color=child_cfg["color"] if is_child_active else "inherit"),
-                    dmc.Text(child["label"], size="sm", fw=700 if is_child_active else 400)  # type: ignore
+                    dmc.Text(child["label"], size="sm", fw=_dmc(700 if is_child_active else 400))
                 ]
             )
             
@@ -168,7 +169,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
             opened=is_group_active and not collapsed,
             active="exact" if is_group_active else None,
             variant="light" if is_group_active else "subtle",
-            color=cfg["color"] if isinstance(cfg["color"], str) else "gray",  # type: ignore
+            color=_dmc(cfg["color"] if isinstance(cfg["color"], str) else "gray"),
         )
 
         if collapsed:
@@ -214,7 +215,7 @@ def render_sidebar(collapsed=False, current_theme="dark", current_db="db_1", act
 
     db_selector = dmc.Select(
         id="db-selector",
-        data=db_options,  # type: ignore
+        data=_dmc(db_options),
         value=final_value,
         leftSection=DashIconify(icon="tabler:database", width=16),
         size="xs", radius="md", variant="filled",

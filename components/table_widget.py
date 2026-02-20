@@ -1,7 +1,7 @@
 import dash_mantine_components as dmc
 from dash import html
 from dash_iconify import DashIconify
-from design_system import DesignSystem as DS
+from design_system import DesignSystem as DS, dmc as _dmc
 
 
 class TableWidget:
@@ -11,6 +11,7 @@ class TableWidget:
 
     def render(self, ctx, theme="dark", mode="dashboard"):
         has_detail = getattr(self.strategy, "has_detail", False)
+        is_dark = theme == "dark"
 
         config = self.strategy.get_card_config(ctx)
         title = config.get("title", "Tabla")
@@ -33,9 +34,9 @@ class TableWidget:
                         DashIconify(icon=icon, color=icon_color, width=18),
                         dmc.Text(
                             title,
-                            fw=700, # type: ignore
+                            fw=_dmc(700),
                             size="xs",
-                            c="dimmed", # type: ignore
+                            c=_dmc("dimmed"),
                             tt="uppercase",
                             style={"fontSize": "10px"},
                         ),
@@ -65,6 +66,7 @@ class TableWidget:
                 "display": "flex",
                 "flexDirection": "column",
                 "backgroundColor": "transparent",
+                "border": DS.CARD_BORDER_DARK if is_dark else DS.CARD_BORDER_LIGHT,
                 "overflow": "hidden",
             },
             children=[

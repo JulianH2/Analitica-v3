@@ -2,14 +2,14 @@ import dash_mantine_components as dmc
 from dash import html, dcc
 from dash_iconify import DashIconify
 import dash_draggable
-from design_system import DesignSystem as DS
+from design_system import DesignSystem as DS, dmc as _dmc
 import time
 
 
 def get_ai_toggle_button():
     return dmc.Affix(
         position={"bottom": 30, "right": 30},
-        zIndex=1000, # type: ignore
+        zIndex=_dmc(1000),
         children=dmc.ActionIcon(
             id="ai-copilot-toggle",
             radius="xl",
@@ -59,7 +59,7 @@ def create_message_bubble(message: dict, is_dark: bool):
             dmc.Text(
                 message.get("timestamp", ""),
                 size="xs",
-                c="dimmed", # type: ignore
+                c=_dmc("dimmed"),
                 mt=4,
                 style={"fontSize": "10px"},
             ),
@@ -113,8 +113,8 @@ def create_chat_header(mode: str, is_dark: bool):
                                 dmc.Text(
                                     "Zamy AI",
                                     size="lg",
-                                    fw=700, # type: ignore
-                                    c=DS.TEXT_DARK if is_dark else DS.TEXT_LIGHT, # type: ignore
+                                    fw=_dmc(700),
+                                    c=_dmc(DS.TEXT_DARK if is_dark else DS.TEXT_LIGHT),
                                 ),
                                 dmc.Group(
                                     gap=4,
@@ -127,7 +127,7 @@ def create_chat_header(mode: str, is_dark: bool):
                                                 "backgroundColor": DS.POSITIVE,
                                             }
                                         ),
-                                        dmc.Text("En línea", size="xs", c="dimmed"), # type: ignore
+                                        dmc.Text("En línea", size="xs", c=_dmc("dimmed")),
                                     ],
                                 ),
                             ]),
@@ -238,14 +238,14 @@ def create_chat_content(messages: list, quick_actions: list, is_dark: bool):
                             dmc.Text(
                                 "¡Hola! Soy Zamy",
                                 size="xl",
-                                fw=700, # type: ignore
-                                c=DS.TEXT_DARK if is_dark else DS.TEXT_LIGHT, # type: ignore
+                                fw=_dmc(700),
+                                c=_dmc(DS.TEXT_DARK if is_dark else DS.TEXT_LIGHT),
                                 mb="xs",
                             ),
                             dmc.Text(
                                 "Tu asistente de analítica inteligente",
                                 size="sm",
-                                c="dimmed", # type: ignore
+                                c=_dmc("dimmed"),
                                 mb="xl",
                             ),
                         ],
@@ -276,9 +276,9 @@ def create_chat_content(messages: list, quick_actions: list, is_dark: bool):
                     dmc.Text(
                         "Acciones rápidas:",
                         size="xs",
-                        c="dimmed", # type: ignore
+                        c=_dmc("dimmed"),
                         mb="sm",
-                        fw=600, # type: ignore
+                        fw=_dmc(600),
                     ),
                     dmc.Stack(
                         gap="xs",
@@ -357,7 +357,7 @@ def render_ai_copilot(is_open=False, theme="light", mode="drawer", messages=None
             id="ai-copilot-container",
             opened=is_open,
             position="right",
-            size="450px", # type: ignore
+            size=_dmc("450px"),
             padding=0,
             zIndex=1100,
             withCloseButton=False,
@@ -442,7 +442,7 @@ def render_ai_copilot(is_open=False, theme="light", mode="drawer", messages=None
         id="ai-copilot-container",
         opened=is_open,
         position="right",
-        size="450px", # type: ignore
+        size=_dmc("450px"),
         padding=0,
         zIndex=1100,
         withCloseButton=False,

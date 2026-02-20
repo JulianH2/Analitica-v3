@@ -251,7 +251,7 @@ def change_chat_mode(drawer_clicks, sidebar_clicks, float_clicks, is_open):
         "chat-mode-sidebar": "sidebar",
         "chat-mode-float": "float",
     }
-    new_mode = mode_map.get(triggered, "drawer") # type: ignore
+    new_mode = mode_map.get(str(triggered), "drawer") if triggered else "drawer"
     sidebar_active = (new_mode == "sidebar" and is_open)
     return new_mode, sidebar_active
 

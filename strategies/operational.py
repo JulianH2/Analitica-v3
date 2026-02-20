@@ -3,7 +3,7 @@ import dash_ag_grid as dag
 import dash_mantine_components as dmc
 from dash import html
 from dash_iconify import DashIconify
-from design_system import Colors, ComponentSizes, Space, Typography
+from design_system import Colors, ComponentSizes, Space, Typography, dmc as _dmc
 from utils.helpers import safe_get
 from .base_strategy import KPIStrategy
 from .chart_engine import ChartEngine
@@ -51,9 +51,7 @@ class OpsKPIStrategy(KPIStrategy):
         }
 
     def _render_standard_view(self, ctx, theme):
-        return dmc.Text("Detalle de métrica operacional.", size="sm", c="dimmed") # type: ignore
-
-
+        return dmc.Text("Detalle de métrica operacional.", size="sm", c=_dmc("dimmed"))
 class OpsGaugeStrategy(KPIStrategy):
     def __init__(self, screen_id, key, title="", color="blue", icon="tabler:gauge", has_detail=True, variant=None, layout_config=None):
         super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
@@ -272,7 +270,7 @@ class OpsTableStrategy:
             return dmc.Center(style={"height": 200}, children=[
                 dmc.Stack(align="center", gap=Space.XS, children=[
                     DashIconify(icon="tabler:table-off", width=40, color=Colors.NEXA_GRAY),
-                    dmc.Text("Sin datos disponibles", size="xs", c="dimmed", style={"fontFamily": Typography.FAMILY}), # type: ignore
+                    dmc.Text("Sin datos disponibles", size="xs", c=_dmc("dimmed"), style={"fontFamily": Typography.FAMILY}),
                 ])
             ])
 
@@ -333,7 +331,7 @@ class OpsTableStrategy:
                     "color": Colors.TEXT_DARK if is_dark else Colors.TEXT_LIGHT,
                 }},
             ),
-            dmc.Text(f"{len(row_data)} registros", size="xs", c="dimmed", style={"fontSize": f"{Typography.XS}px", "fontFamily": Typography.FAMILY}), # type: ignore
+            dmc.Text(f"{len(row_data)} registros", size="xs", c=_dmc("dimmed"), style={"fontSize": f"{Typography.XS}px", "fontFamily": Typography.FAMILY}),
         ])
 
         return html.Div(style={"height": "100%", "display": "flex", "flexDirection": "column"}, children=[

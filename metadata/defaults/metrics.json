@@ -921,5 +921,315 @@
       "time_modifier": "previous_year",
       "format": "currency"
     }
+  },
+  "saldo_inicial_consolidado": {
+    "name": "Saldo Inicial Consolidado",
+    "recipe": { "table": "h_bancos_saldos", "column": "saldo_inicial_consolidado", "aggregation": "SUM", "format": "currency" }
+  },
+  "ingresos_consolidado": {
+    "name": "Ingresos Consolidado",
+    "recipe": { "table": "h_bancos_saldos", "column": "ingresos_consolidado", "aggregation": "SUM", "format": "currency" }
+  },
+  "egresos_consolidado": {
+    "name": "Egresos Consolidado",
+    "recipe": { "table": "h_bancos_saldos", "column": "egresos_consolidado", "aggregation": "SUM", "format": "currency" }
+  },
+  "saldo_final_consolidado": {
+    "name": "Saldo Final Consolidado",
+    "recipe": { "table": "h_bancos_saldos", "column": "saldo_final_consolidado", "aggregation": "SUM", "format": "currency" }
+  },
+
+  "saldo_inicial_mxn": {
+    "name": "Saldo Inicial MXN",
+    "recipe": { "table": "h_bancos_saldos", "column": "saldo_inicial_pesos", "aggregation": "SUM", "format": "currency" }
+  },
+  "ingresos_mxn": {
+    "name": "Ingresos MXN",
+    "recipe": { "table": "h_bancos_saldos", "column": "ingresos_pesos", "aggregation": "SUM", "format": "currency" }
+  },
+  "egresos_mxn": {
+    "name": "Egresos MXN",
+    "recipe": { "table": "h_bancos_saldos", "column": "egresos_pesos", "aggregation": "SUM", "format": "currency" }
+  },
+  "saldo_final_mxn": {
+    "name": "Saldo Final MXN",
+    "recipe": { "table": "h_bancos_saldos", "column": "saldo_final_pesos", "aggregation": "SUM", "format": "currency" }
+  },
+
+  "saldo_inicial_usd": {
+    "name": "Saldo Inicial USD",
+    "recipe": { "table": "h_bancos_saldos", "column": "saldo_inicial_dlls", "aggregation": "SUM", "format": "currency" }
+  },
+  "ingresos_usd": {
+    "name": "Ingresos USD",
+    "recipe": { "table": "h_bancos_saldos", "column": "ingresos_dlls", "aggregation": "SUM", "format": "currency" }
+  },
+  "egresos_usd": {
+    "name": "Egresos USD",
+    "recipe": { "table": "h_bancos_saldos", "column": "egresos_dlls", "aggregation": "SUM", "format": "currency" }
+  },
+  "saldo_final_usd": {
+    "name": "Saldo Final USD",
+    "recipe": { "table": "h_bancos_saldos", "column": "saldo_final_dlls", "aggregation": "SUM", "format": "currency" }
+  },
+  "ingresos_mov_consolidado": {
+    "name": "Ingresos Consolidado",
+    "recipe": { "table": "h_bancos_movimientos", "column": "ingresos_consolidado", "aggregation": "SUM", "format": "currency" }
+  },
+  "egresos_mov_consolidado": {
+    "name": "Egresos Consolidado",
+    "recipe": { "table": "h_bancos_movimientos", "column": "egresos_consolidado", "aggregation": "SUM", "format": "currency" }
+  },
+
+  "ingresos_mov_mxn": {
+    "name": "Ingresos MXN",
+    "recipe": { "table": "h_bancos_movimientos", "column": "ingresos_pesos", "aggregation": "SUM", "format": "currency" }
+  },
+  "egresos_mov_mxn": {
+    "name": "Egresos MXN",
+    "recipe": { "table": "h_bancos_movimientos", "column": "egresos_pesos", "aggregation": "SUM", "format": "currency" }
+  },
+
+  "ingresos_mov_usd": {
+    "name": "Ingresos USD",
+    "recipe": { "table": "h_bancos_movimientos", "column": "ingresos_dlls", "aggregation": "SUM", "format": "currency" }
+  },
+  "egresos_mov_usd": {
+    "name": "Egresos USD",
+    "recipe": { "table": "h_bancos_movimientos", "column": "egresos_dlls", "aggregation": "SUM", "format": "currency" }
+  },
+  "kms_viaje_ruta": {
+    "name": "Kms Viaje",
+    "recipe": {
+      "table": "d_viaje",
+      "column": "kms_viaje",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+  "costo_mo_interno": {
+    "name": "Costo Mano de Obra Interno",
+    "description": "Costo calculado: Duración * Costo Hora",
+    "recipe": {
+      "table": "d_mo_orden",
+      "column": "duracion * costo",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "costo_refacciones_interno": {
+    "name": "Costo Refacciones Interno",
+    "recipe": {
+      "table": "h_taller_gasto_refacciones",
+      "column": "monto_gto_ref",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "costo_mtto_interno": {
+    "name": "Costo Mtto Interno",
+    "description": "Suma de MO + Refacciones (Interno)",
+    "type": "derived",
+    "formula": "costo_mo_interno + costo_refacciones_interno",
+    "format": "currency"
+  },
+
+  "costo_mo_interno_anterior": {
+    "name": "Costo MO Interno Año Anterior",
+    "recipe": {
+      "table": "d_mo_orden",
+      "column": "duracion * costo",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    }
+  },
+  "costo_refacciones_interno_anterior": {
+    "name": "Costo Refacciones Interno Año Anterior",
+    "recipe": {
+      "table": "h_taller_gasto_refacciones",
+      "column": "monto_gto_ref",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    }
+  },
+  "costo_mtto_interno_anterior": {
+    "name": "Costo Mtto Interno Año Anterior",
+    "type": "derived",
+    "formula": "costo_mo_interno_anterior + costo_refacciones_interno_anterior",
+    "format": "currency"
+  },
+
+  "costo_mo_interno_ytd": {
+    "name": "Costo MO Interno Acumulado",
+    "recipe": {
+      "table": "d_mo_orden",
+      "column": "duracion * costo",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    }
+  },
+  "costo_refacciones_interno_ytd": {
+    "name": "Costo Refacciones Interno Acumulado",
+    "recipe": {
+      "table": "h_taller_gasto_refacciones",
+      "column": "monto_gto_ref",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    }
+  },
+  "costo_mtto_interno_ytd": {
+    "name": "Costo Mtto Interno Acumulado",
+    "type": "derived",
+    "formula": "costo_mo_interno_ytd + costo_refacciones_interno_ytd",
+    "format": "currency"
+  },
+
+  "meta_costo_mtto_interno": {
+    "name": "Meta Costo Mtto Interno",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_costo_tallerinterno",
+      "aggregation": "SUM",
+      "format": "currency"
+    }
+  },
+  "meta_costo_mtto_interno_ytd": {
+    "name": "Meta Costo Mtto Interno Acumulado",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_costo_tallerinterno",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    }
+  },
+  "costo_mo_externo": {
+    "name": "Costo Mano de Obra Externo",
+    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_mano_obra_ext", "aggregation": "SUM", "format": "currency" }
+  },
+  "costo_refacciones_externo": {
+    "name": "Costo Refacciones Externo",
+    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_refacciones_ext", "aggregation": "SUM", "format": "currency" }
+  },
+  "costo_mtto_externo": {
+    "name": "Costo Mtto Externo",
+    "description": "Suma de MO + Refacciones (Externo)",
+    "type": "derived",
+    "formula": "costo_mo_externo + costo_refacciones_externo",
+    "format": "currency"
+  },
+  "costo_mo_externo_anterior": {
+    "name": "Costo MO Externo Año Anterior",
+    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_mano_obra_ext", "aggregation": "SUM", "time_modifier": "previous_year", "format": "currency" }
+  },
+  "costo_refacciones_externo_anterior": {
+    "name": "Costo Refacciones Externo Año Anterior",
+    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_refacciones_ext", "aggregation": "SUM", "time_modifier": "previous_year", "format": "currency" }
+  },
+  "costo_mtto_externo_anterior": {
+    "name": "Costo Mtto Externo Año Anterior",
+    "type": "derived",
+    "formula": "costo_mo_externo_anterior + costo_refacciones_externo_anterior",
+    "format": "currency"
+  },
+
+  "costo_mo_externo_ytd": {
+    "name": "Costo MO Externo Acumulado",
+    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_mano_obra_ext", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+  },
+  "costo_refacciones_externo_ytd": {
+    "name": "Costo Refacciones Externo Acumulado",
+    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_refacciones_ext", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+  },
+  "costo_mtto_externo_ytd": {
+    "name": "Costo Mtto Externo Acumulado",
+    "type": "derived",
+    "formula": "costo_mo_externo_ytd + costo_refacciones_externo_ytd",
+    "format": "currency"
+  },
+  "meta_costo_mtto_externo": {
+    "name": "Meta Costo Mtto Externo",
+    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_tallerexterno", "aggregation": "SUM", "format": "currency" }
+  },
+  "meta_costo_mtto_externo_ytd": {
+    "name": "Meta Costo Mtto Externo Acumulado",
+    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_tallerexterno", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+  },
+  "costo_llantas_nuevas": {
+    "name": "Costo Llantas Nuevas",
+    "recipe": { "table": "h_llantas_nueva", "column": "monto_llantas_nva", "aggregation": "SUM", "format": "currency" }
+  },
+  "costo_llantas_renovadas": {
+    "name": "Costo Llantas Renovadas",
+    "recipe": { "table": "h_llantas_renovada", "column": "monto_llantas_ren", "aggregation": "SUM", "format": "currency" }
+  },
+  "costo_llantas_nuevas_anterior": {
+    "name": "Costo Llantas Nuevas Año Anterior",
+    "recipe": { "table": "h_llantas_nueva", "column": "monto_llantas_nva", "aggregation": "SUM", "time_modifier": "previous_year", "format": "currency" }
+  },
+  "costo_llantas_renovadas_anterior": {
+    "name": "Costo Llantas Renovadas Año Anterior",
+    "recipe": { "table": "h_llantas_renovada", "column": "monto_llantas_ren", "aggregation": "SUM", "time_modifier": "previous_year", "format": "currency" }
+  },
+  "costo_llantas_nuevas_ytd": {
+    "name": "Costo Llantas Nuevas Acumulado",
+    "recipe": { "table": "h_llantas_nueva", "column": "monto_llantas_nva", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+  },
+  "costo_llantas_renovadas_ytd": {
+    "name": "Costo Llantas Renovadas Acumulado",
+    "recipe": { "table": "h_llantas_renovada", "column": "monto_llantas_ren", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+  },
+  "meta_costo_mtto_llantas": {
+    "name": "Meta Costo Mtto Llantas",
+    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_tallerllantas", "aggregation": "SUM", "format": "currency" }
+  },
+  "meta_costo_mtto_llantas_ytd": {
+    "name": "Meta Costo Mtto Llantas Acumulado",
+    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_tallerllantas", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+  },
+  "dias_disponibles": {
+    "name": "Días Disponibles",
+    "description": "Suma de días disponibles de las unidades",
+    "recipe": {
+      "table": "h_unidad_indicadores_mes_diario",
+      "column": "dias_disponibles",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+  "dias_mes": {
+    "name": "Días del Mes",
+    "description": "Suma de días totales del mes para las unidades",
+    "recipe": {
+      "table": "h_unidad_indicadores_mes_diario",
+      "column": "dias_mes",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+  "kms_recorridos": {
+    "name": "Kilómetros Recorridos",
+    "recipe": { "table": "d_unidad_kilometros_diarios", "column": "kms_recorridos", "aggregation": "SUM", "format": "decimal" }
+  },
+  "kms_recorridos_anterior": {
+    "name": "Kms Recorridos Año Anterior",
+    "recipe": { "table": "d_unidad_kilometros_diarios", "column": "kms_recorridos", "aggregation": "SUM", "time_modifier": "previous_year", "format": "decimal" }
+  },
+  "kms_recorridos_ytd": {
+    "name": "Kms Recorridos Acumulado",
+    "recipe": { "table": "d_unidad_kilometros_diarios", "column": "kms_recorridos", "aggregation": "SUM", "time_modifier": "ytd", "format": "decimal" }
+  },
+
+  "meta_costo_mtto_x_km": {
+    "name": "Meta Costo Mtto x Km",
+    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_mtto_x_km", "aggregation": "SUM", "format": "currency" }
+  },
+  "meta_costo_mtto_x_km_ytd": {
+    "name": "Meta Costo Mtto x Km Acumulado",
+    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_mtto_x_km", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
   }
 }
