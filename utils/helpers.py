@@ -27,6 +27,9 @@ def format_value(val: float, prefix: str = "", format_type: str = "abbreviated")
     
     if format_type == "full":
         return f"{prefix}{val:,.2f}"
+    if format_type == "smart":
+        # Muestra decimales solo si el valor no es entero
+        return f"{prefix}{int(val):,}" if val == int(val) else f"{prefix}{val:,.2f}"
     if format_type == "integer":
         return f"{prefix}{int(val):,}"
     if format_type == "percent":
@@ -37,15 +40,15 @@ def format_value(val: float, prefix: str = "", format_type: str = "abbreviated")
             return f"{prefix}{val/1_000_000_000:,.1f}B"
         if abs_val >= 1_000_000:
             return f"{prefix}{val/1_000_000:,.1f}M"
-        if abs_val >= 10_000:
-            return f"{prefix}{val/1_000:,.1f}k"
+        if abs_val >= 1_000:
+            return f"{prefix}{val/1_000:,.1f}m"
         return f"{prefix}{val:,.0f}"
-    
+
     abs_val = abs(val)
     if abs_val >= 1_000_000_000:
         return f"{prefix}{val/1_000_000_000:,.2f}B"
     if abs_val >= 1_000_000:
         return f"{prefix}{val/1_000_000:,.2f}M"
-    if abs_val >= 10_000:
-        return f"{prefix}{val/1_000:,.1f}k"
+    if abs_val >= 1_000:
+        return f"{prefix}{val/1_000:,.1f}m"
     return f"{prefix}{val:,.2f}"

@@ -94,7 +94,10 @@ def layout():
 
 FILTER_IDS = ["avail-year", "avail-month", "avail-empresa", "avail-unidad", "avail-tipo-op", "avail-clasificacion", "avail-razon", "avail-motor"]
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="taller-avail-body", render_body=_render_taller_availability_body, filter_ids=FILTER_IDS)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID, body_output_id="taller-avail-body", render_body=_render_taller_availability_body, filter_ids=FILTER_IDS,
+    global_token_output_id="current-page-token-store",
+)
 
 register_drawer_callback(drawer_id="avail-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
 

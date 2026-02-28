@@ -2,6 +2,7 @@ import dash_mantine_components as dmc
 from dash import html
 from dash_iconify import DashIconify
 from design_system import DesignSystem as DS, dmc as _dmc
+from components.card_wrapper import make_card
 
 
 class TableWidget:
@@ -20,11 +21,28 @@ class TableWidget:
 
         table_content = self.strategy.render(ctx, mode=mode, theme=theme)
 
+        # Search input — placed in the header before the expand icon
+        # Only added when the strategy uses AgGrid (has screen_id + key attrs)
+        screen_id = getattr(self.strategy, "screen_id", None)
+        key = getattr(self.strategy, "key", None)
+        search_input = html.Div()
+        if screen_id and key:
+            search_input = dmc.TextInput(
+                id={"type": "ag-quick-search", "index": f"{screen_id}-{key}"},
+                placeholder="Buscar...",
+                size="xs",
+                radius="xl",
+                leftSection=DashIconify(icon="tabler:search", width=14),
+                style={"width": "180px"},
+                styles={"input": {
+                    "backgroundColor": "rgba(255,255,255,0.05)" if is_dark else "rgba(0,0,0,0.03)",
+                }},
+            )
+
         header = dmc.Group(
             justify="space-between",
-            px="sm",
-            pt="xs",
-            mb="sm",
+            p="sm",
+            mb=4,
             wrap="nowrap",
             children=[
                 dmc.Group(
@@ -32,43 +50,31 @@ class TableWidget:
                     wrap="nowrap",
                     children=[
                         DashIconify(icon=icon, color=icon_color, width=18),
-                        dmc.Text(
-                            title,
-                            fw=_dmc(700),
-                            size="xs",
-                            c=_dmc("dimmed"),
-                            tt="uppercase",
-                            style={"fontSize": "10px"},
-                        ),
+                        search_input,
                     ],
                 ),
-                dmc.ActionIcon(
-                    DashIconify(icon="tabler:zoom-in", width=16),
-                    variant="subtle",
-                    color="blue",
-                    size="sm",
-                    n_clicks=0,
-                    id={"type": "open-smart-drawer", "index": self.widget_id},
-                    style={"flexShrink": 0}
-                )
-                if has_detail
-                else html.Div(),
+                dmc.Group(
+                    gap=6,
+                    wrap="nowrap",
+                    children=[
+                        
+                        dmc.ActionIcon(
+                            DashIconify(icon="tabler:zoom-in", width=16),
+                            variant="subtle",
+                            color="blue",
+                            size="sm",
+                            n_clicks=0,
+                            id={"type": "open-smart-drawer", "index": self.widget_id},
+                            style={"flexShrink": 0},
+                        )
+                        if has_detail
+                        else html.Div(),
+                    ],
+                ),
             ],
         )
 
-        return dmc.Paper(
-            p=0,
-            radius="md",
-            withBorder=True,
-            shadow=None,
-            style={
-                "height": "100%",
-                "display": "flex",
-                "flexDirection": "column",
-                "backgroundColor": "transparent",
-                "border": DS.CARD_BORDER_DARK if is_dark else DS.CARD_BORDER_LIGHT,
-                "overflow": "hidden",
-            },
+        return make_card(
             children=[
                 header,
                 html.Div(
@@ -82,6 +88,8 @@ class TableWidget:
                     children=table_content,
                 ),
             ],
+            height="100%",
+            is_dark=is_dark,
         )
 
     def _get_icon_color(self) -> str:

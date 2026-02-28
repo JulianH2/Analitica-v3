@@ -130,6 +130,9 @@ def layout():
         ],
     )
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="hb", render_body=_render_home_body)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID, body_output_id="hb", render_body=_render_home_body,
+    global_token_output_id="current-page-token-store",
+)
 
 register_drawer_callback(drawer_id="home-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID)

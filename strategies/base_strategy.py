@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
-from settings.theme import DesignSystem
+from flask import session
+from design_system import DesignSystem, Colors
 from utils.helpers import safe_get
 
 class KPIStrategy(ABC):
@@ -44,7 +45,7 @@ class KPIStrategy(ABC):
         try:
             from services.data_manager import data_manager
 
-            screen_map = data_manager.SCREEN_MAP or {}
+            screen_map = data_manager.get_screen_map(session.get("current_db")) or {}
             screen_config = screen_map.get(screen_id) or {}
             inject_paths = screen_config.get("inject_paths") or {}
 
@@ -69,7 +70,7 @@ class KPIStrategy(ABC):
         try:
             from services.data_manager import data_manager
 
-            screen_map = data_manager.SCREEN_MAP or {}
+            screen_map = data_manager.get_screen_map(session.get("current_db")) or {}
             screen_config = screen_map.get(screen_id) or {}
             inject_paths = screen_config.get("inject_paths") or {}
 
@@ -93,11 +94,12 @@ class KPIStrategy(ABC):
     def _create_empty_figure(self, message: str = "Sin datos", theme: str = "dark"):
         import plotly.graph_objects as go
 
-        template = "plotly_dark" if theme == "dark" else "plotly"
+        is_dark = theme == "dark"
+        _bg = Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT_CARD
 
         fig = go.Figure()
         fig.update_layout(
-            template=template,
+            template="zam_dark" if is_dark else "zam_light",
             xaxis=dict(visible=False),
             yaxis=dict(visible=False),
             annotations=[
@@ -112,7 +114,7 @@ class KPIStrategy(ABC):
                 )
             ],
             margin=dict(t=30, b=30, l=30, r=30),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor=_bg,
+            plot_bgcolor=_bg,
         )
         return fig

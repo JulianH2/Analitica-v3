@@ -195,9 +195,11 @@ class OpsTableStrategy:
         self.variant = variant
 
     def _get_data(self, ctx):
+        from flask import session
         from services.data_manager import data_manager
 
-        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {})
+        screen_map = data_manager.get_screen_map(session.get("current_db")) or {}
+        screen_config = screen_map.get(self.screen_id, {})
         inject_paths = screen_config.get("inject_paths", {})
 
         if self.variant:
@@ -279,7 +281,6 @@ class OpsTableStrategy:
         return self._render_dashboard(columns_config, row_data, theme)
 
     def _render_dashboard(self, columns_config, row_data, theme="dark"):
-        is_dark = theme == "dark"
         unique_key = f"{self.screen_id}-{self.key}"
 
         column_defs = []
@@ -298,6 +299,64 @@ class OpsTableStrategy:
                 col_def.update({"minWidth": 130, "flex": 1})
             column_defs.append(col_def)
 
+        # Build pinned TOTAL row by parsing pre-formatted strings back to numbers
+        def _parse_cell(v):
+            """Parse a formatted cell string (e.g. '$1.5M', '45.60%', '1,234') to float."""
+            if isinstance(v, (int, float)):
+                return float(v) if v == v else None
+            if not isinstance(v, str):
+                return None
+            s = v.strip()
+            if s in ("", "---", "-"):
+                return None
+            neg = s.startswith("-")
+            s = s.lstrip("+-$").strip()
+            mult = 1.0
+            if s.endswith("B"):
+                mult = 1e9; s = s[:-1]
+            elif s.endswith("M"):
+                mult = 1e6; s = s[:-1]
+            elif s.endswith("m"):
+                mult = 1e3; s = s[:-1]
+            elif s.upper().endswith("K"):
+                mult = 1e3; s = s[:-1]
+            elif s.endswith("%"):
+                return None  # skip percent columns
+            try:
+                num = float(s.replace(",", "")) * mult
+                return -num if neg else num
+            except ValueError:
+                return None
+
+        total_row = {}
+        for i, col in enumerate(columns_config):
+            field = col["field"]
+            if i == 0:
+                total_row[field] = "TOTAL"
+                continue
+            vals = [r.get(field, "") for r in row_data]
+            nums = [_parse_cell(v) for v in vals]
+            valid = [n for n in nums if n is not None]
+            if valid and len(valid) == len(vals):
+                s = sum(valid)
+                # Detect format from first non-empty cell
+                first = str(vals[0]).strip().lstrip("-")
+                is_currency = first.startswith("$")
+                a = abs(s)
+                if is_currency:
+                    if a >= 1e9:
+                        total_row[field] = f"${s/1e9:.1f}B"
+                    elif a >= 1e6:
+                        total_row[field] = f"${s/1e6:.1f}M"
+                    elif a >= 1e3:
+                        total_row[field] = f"${s/1e3:.1f}m"
+                    else:
+                        total_row[field] = f"${s:,.0f}"
+                else:
+                    total_row[field] = f"{int(s):,}" if s == int(s) else f"{s:,.2f}"
+            else:
+                total_row[field] = ""
+
         grid = dag.AgGrid(
             id={"type": "ag-grid-dashboard", "index": unique_key},
             rowData=row_data,
@@ -310,33 +369,14 @@ class OpsTableStrategy:
                 "headerHeight": ComponentSizes.TABLE_HEADER_HEIGHT,
                 "suppressFieldDotNotation": True,
                 "quickFilterText": "",
+                "pinnedBottomRowData": [total_row],
             },
             style={"height": "100%", "width": "100%"},
             className="ag-theme-alpine compact",
         )
 
-        search_bar = dmc.Group(justify="space-between", mt=Space.SM, children=[
-            dmc.TextInput(
-                id={"type": "ag-quick-search", "index": unique_key},
-                placeholder="Buscar...",
-                leftSection=DashIconify(icon="tabler:search", width=ComponentSizes.ICON_SM),
-                size="xs",
-                radius="xl",
-                style={"width": "220px"},
-                styles={"input": {
-                    "fontSize": f"{Typography.SM}px",
-                    "height": f"{ComponentSizes.BUTTON_HEIGHT_SM}px",
-                    "fontFamily": Typography.FAMILY,
-                    "backgroundColor": "rgba(255,255,255,0.05)" if is_dark else "rgba(0,0,0,0.03)",
-                    "color": Colors.TEXT_DARK if is_dark else Colors.TEXT_LIGHT,
-                }},
-            ),
-            dmc.Text(f"{len(row_data)} registros", size="xs", c=_dmc("dimmed"), style={"fontSize": f"{Typography.XS}px", "fontFamily": Typography.FAMILY}),
-        ])
-
         return html.Div(style={"height": "100%", "display": "flex", "flexDirection": "column"}, children=[
             html.Div(style={"flex": 1, "minHeight": "250px", "overflow": "hidden"}, children=grid),
-            search_bar,
         ])
 
     def _render_analyst(self, columns_config, row_data, theme="dark"):

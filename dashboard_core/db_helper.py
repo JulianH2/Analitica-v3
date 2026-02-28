@@ -130,25 +130,40 @@ def _execute_dynamic_query_sync(db_name: str, query: str):
             "not exist"
         ])
 
+        # SQL programming errors (bad query structure, unbound identifiers, invalid functions)
+        # These won't be fixed by waiting — don't count them toward the block counter
+        is_programming_error = (
+            "42000" in error_msg
+            or "could not be bound" in error_msg
+            or "not a recognized built-in function" in error_msg
+            or "ProgrammingError" in error_msg
+            or "Incorrect syntax" in error_msg
+        ) and "42S02" not in error_msg  # 42S02 = table not found → should still block
+
         is_timeout = any(x in error_msg for x in [
             "timeout",
             "Timeout",
             "timed out"
         ])
+
+        if is_programming_error:
+            # Log but don't penalise the DB — this is a query design issue
+            logger.error(f"❌ Error SQL en {db_name}: {error_msg}")
+            FAILURES[db_name] = state
+            return []
+
         if "42S02" in error_msg or "Invalid object name" in error_msg:
             print(f"🚫 Error de esquema (tabla no existe). Bloqueando {db_name} inmediatamente.")
-            state["count"] = MAX_FAILS 
+            state["count"] = MAX_FAILS
         else:
-            state["count"] += 1
+            state["count"] += 1  # increment only once
 
         if is_schema_error:
-            logger.error(f"❌ Error de esquema en {db_name}: {error_msg[:200]}")
+            logger.error(f"❌ Error de esquema en {db_name}: {error_msg}")
         elif is_timeout:
             logger.warning(f"⏱️ Timeout en {db_name} después de {elapsed:.2f}s")
         else:
-            logger.error(f"❌ Error SQL en {db_name}: {error_msg[:200]}")          
-
-        state["count"] += 1
+            logger.error(f"❌ Error SQL en {db_name}: {error_msg}")
 
         if state["count"] >= MAX_FAILS:
             state["blocked_until"] = time.time() + BLOCK_SECONDS

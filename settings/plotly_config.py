@@ -7,6 +7,7 @@ UBICACIÓN: settings/plotly_config.py
 
 import plotly.graph_objects as go
 import plotly.io as pio
+from design_system import Colors
 
 
 class PlotlyConfig:
@@ -79,9 +80,8 @@ class PlotlyConfig:
         # === TEMPLATE TEMA CLARO ===
         pio.templates["zam_light"] = go.layout.Template(
             layout=go.Layout(
-                # Fondos transparentes (el Paper de Mantine maneja el fondo)
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor=Colors.BG_LIGHT_CARD,
+                plot_bgcolor=Colors.BG_LIGHT_CARD,
                 
                 # Tipografía
                 font=dict(
@@ -171,9 +171,8 @@ class PlotlyConfig:
         # === TEMPLATE TEMA OSCURO ===
         pio.templates["zam_dark"] = go.layout.Template(
             layout=go.Layout(
-                # Fondos transparentes
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor=Colors.BG_DARK_CARD,
+                plot_bgcolor=Colors.BG_DARK_CARD,
                 
                 # Tipografía
                 font=dict(
@@ -282,10 +281,11 @@ class PlotlyConfig:
         """
         template = "zam_dark" if theme == "dark" else "zam_light"
         
+        is_dark = theme == "dark"
         return {
             "template": template,
-            "paper_bgcolor": "rgba(0,0,0,0)",
-            "plot_bgcolor": "rgba(0,0,0,0)",
+            "paper_bgcolor": Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT_CARD,
+            "plot_bgcolor": Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT_CARD,
         }
     
     @staticmethod

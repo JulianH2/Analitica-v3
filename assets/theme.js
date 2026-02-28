@@ -1,6 +1,12 @@
 window.dash_clientside = Object.assign({}, window.dash_clientside, {
   clientside: {
-    switch_graph_theme: function (theme, ids, figures) {
+    search_table: function (searchValue, currentOptions) {
+      if (searchValue === undefined || searchValue === null) return window.dash_clientside.no_update;
+      var opts = Object.assign({}, currentOptions || {});
+      opts.quickFilterText = searchValue || "";
+      return opts;
+    },
+    switch_graph_theme: function (theme, _ids, figures) {
       const currentTheme = theme || "dark";
 
       if (!figures || !Array.isArray(figures)) {
@@ -9,6 +15,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
 
       const isDark = currentTheme === "dark";
       const templateName = isDark ? "zam_dark" : "zam_light";
+      const cardBg = isDark ? "#62686e" : "#ffffff";
 
       const colors = {
         dark: {
@@ -30,14 +37,14 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
       const c = isDark ? colors.dark : colors.light;
 
       return figures.map((fig) => {
-        if (!fig) return null;
+        if (!fig || Object.keys(fig).length === 0) return window.dash_clientside.no_update;
 
         const newFig = JSON.parse(JSON.stringify(fig));
         if (!newFig.layout) newFig.layout = {};
 
         newFig.layout.template = templateName;
-        newFig.layout.paper_bgcolor = "rgba(0,0,0,0)";
-        newFig.layout.plot_bgcolor = "rgba(0,0,0,0)";
+        newFig.layout.paper_bgcolor = cardBg;
+        newFig.layout.plot_bgcolor = cardBg;
 
         newFig.layout.font = {
           color: c.text,
@@ -67,6 +74,8 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
           }));
         }
 
+        const isHBar = newFig.data && Array.isArray(newFig.data) && newFig.data.some((t) => t && t.orientation === "h");
+
         if (newFig.layout.xaxis) {
           newFig.layout.xaxis = {
             ...newFig.layout.xaxis,
@@ -84,6 +93,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             color: c.text,
             tickfont: { color: c.secondary },
             titlefont: { color: c.text },
+            ...(isHBar ? { type: "category", autorange: "reversed" } : {}),
           };
         }
 
@@ -199,13 +209,31 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
         }
 
         if (newFig.layout.shapes && Array.isArray(newFig.layout.shapes)) {
-          newFig.layout.shapes = newFig.layout.shapes.map((shape) => ({
-            ...shape,
-            line: {
-              ...shape.line,
-              color: shape.line?.color || c.gridColor,
-            },
-          }));
+          const hasIndicator = newFig.data && newFig.data.some((t) => t.type === "indicator");
+          const needleColors = new Set(["#e8eaed", "#1a1a2e"]);
+          const needleColor = isDark ? "#e8eaed" : "#1a1a2e";
+          const hubColor = isDark ? "#1a1a2e" : "#e8eaed";
+
+          newFig.layout.shapes = newFig.layout.shapes.map((shape) => {
+            const s = { ...shape, line: { ...(shape.line || {}) } };
+            if (hasIndicator && needleColors.has(s.fillcolor)) {
+              if (s.type === "path") {
+                s.fillcolor = needleColor;
+                s.line.color = needleColor;
+              } else if (s.type === "circle") {
+                if (s.fillcolor === (s.line.color || "")) {
+                  s.fillcolor = hubColor;
+                  s.line.color = hubColor;
+                } else {
+                  s.fillcolor = needleColor;
+                  s.line.color = hubColor;
+                }
+              }
+            } else {
+              s.line.color = s.line?.color || c.gridColor;
+            }
+            return s;
+          });
         }
 
         return newFig;

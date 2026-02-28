@@ -10,6 +10,7 @@ from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
 from components.drawer_manager import create_smart_drawer, register_drawer_callback
 from components.filter_manager import create_filter_section, register_filter_modal_callback
+from dash_iconify import DashIconify
 from strategies.administration import AdminKPIStrategy, AdminTrendChartStrategy, AdminDonutChartStrategy, AdminTableStrategy
 
 dash.register_page(__name__, path="/administration-banks", title="Bancos")
@@ -76,7 +77,9 @@ def _banks_tab_content(ctx, variant, theme):
         dmc.Space(h="md"),
         dmc.Grid(gutter="lg", children=[
             dmc.GridCol(span=_dmc({"base": 12, "md": 5}), children=[c2.render(ctx, h=400, theme=theme)]),
-            dmc.GridCol(span=_dmc({"base": 12, "md": 7}), children=[html.Div(style={"height": "400px", "overflowY": "auto"}, children=[t1.render(ctx, theme=theme)])])
+            dmc.GridCol(span=_dmc({"base": 12, "md": 7}), children=[
+                html.Div(style={"height": "400px", "overflowY": "auto"}, children=[t1.render(ctx, theme=theme)])
+            ])
         ])
     ]
 
@@ -140,7 +143,10 @@ def layout():
 
 FILTER_IDS = ["bank-year", "bank-month", "bank-empresa", "bank-institucion", "bank-cuenta"]
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="admin-banks-body", render_body=_render_admin_banks_body, filter_ids=FILTER_IDS)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID, body_output_id="admin-banks-body", render_body=_render_admin_banks_body, filter_ids=FILTER_IDS,
+    global_token_output_id="current-page-token-store",
+)
 
 register_drawer_callback(drawer_id="bank-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
 

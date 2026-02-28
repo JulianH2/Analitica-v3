@@ -12,12 +12,12 @@ from components.visual_widget import ChartWidget
 from components.smart_widget import SmartWidget
 from components.drawer_manager import create_smart_drawer, register_drawer_callback
 from components.skeleton import get_skeleton
-from components.filter_manager import create_operational_filters
+from components.filter_manager import create_operational_filters, register_filter_modal_callback
 from strategies.operational import (
     OpsKPIStrategy, OpsTrendChartStrategy, OpsDonutChartStrategy,
     OpsHorizontalBarStrategy, OpsTableStrategy, OpsGaugeStrategy,
 )
-from settings.theme import DesignSystem
+from design_system import DesignSystem
 from utils.helpers import safe_get
 
 dash.register_page(__name__, path="/operational-dashboard", title="Control Operativo")
@@ -37,19 +37,19 @@ w_inc = SmartWidget(
     f"{PREFIX}_inc",
     OpsGaugeStrategy(screen_id=SCREEN_ID, key="revenue_total", title="Ingreso Viaje",
                      icon="tabler:cash", color="indigo", has_detail=True,
-                     layout_config={"height": 220}),
+                     layout_config={"height": 300}),
 )
 w_tri = SmartWidget(
     f"{PREFIX}_tri",
     OpsGaugeStrategy(screen_id=SCREEN_ID, key="total_trips", title="Viajes",
                      icon="tabler:truck", color="green", has_detail=True,
-                     layout_config={"height": 220}),
+                     layout_config={"height": 300}),
 )
 w_kms = SmartWidget(
     f"{PREFIX}_kms",
     OpsGaugeStrategy(screen_id=SCREEN_ID, key="total_kilometers", title="Kilómetros",
                      icon="tabler:route", color="yellow", has_detail=True,
-                     layout_config={"height": 220}),
+                     layout_config={"height": 300}),
 )
 
 # ── Fila 2: 4 KPIs de promedios ──────────────────────────────────────────────
@@ -72,8 +72,10 @@ class DynamicTrendChartStrategy(OpsTrendChartStrategy):
     def __init__(self, screen_id, key, base_title, icon="tabler:chart-line",
                  color="indigo", has_detail=True, layout_config=None):
         self.base_title = base_title
-        super().__init__(screen_id, key, get_dynamic_title(base_title),
-                         icon, color, has_detail, layout_config)
+        super().__init__(
+            screen_id, key, get_dynamic_title(base_title),
+            color=color, icon=icon, has_detail=has_detail, layout_config=layout_config
+        )
 
     def get_card_config(self, ctx):
         config = super().get_card_config(ctx)
@@ -86,14 +88,14 @@ c_inc = ChartWidget(
     DynamicTrendChartStrategy(screen_id=SCREEN_ID, key="revenue_trends",
                               base_title="Ingresos", icon="tabler:chart-line",
                               color="indigo", has_detail=True,
-                              layout_config={"height": 640}),
+                              layout_config={"height": 320}),
 )
 c_trips = ChartWidget(
     f"{PREFIX}_trips_comp",
     DynamicTrendChartStrategy(screen_id=SCREEN_ID, key="trips_trends",
                               base_title="Viajes", icon="tabler:chart-line",
                               color="green", has_detail=True,
-                              layout_config={"height": 640}),
+                              layout_config={"height": 320}),
 )
 
 # ── Fila 4: Donut + Barras ───────────────────────────────────────────────────
@@ -102,13 +104,25 @@ c_mix = ChartWidget(
     OpsDonutChartStrategy(screen_id=SCREEN_ID, key="revenue_by_operation_type",
                           title="Ingreso Viaje Por Tipo Operación/Ruta/Área",
                           color="indigo", has_detail=True,
-                          layout_config={"height": 420}),
+                          layout_config={"height": 460}),
 )
 c_unit = ChartWidget(
     f"{PREFIX}_unit_bal",
     OpsHorizontalBarStrategy(screen_id=SCREEN_ID, key="revenue_by_unit",
                              title="Balanceo Ingresos por Unidad",
-                             has_detail=True, layout_config={"height": 400}),
+                             has_detail=True, layout_config={"height": 560}),
+)
+c_op_bar = ChartWidget(
+    f"{PREFIX}_op_bar",
+    OpsHorizontalBarStrategy(screen_id=SCREEN_ID, key="revenue_by_operator",
+                             title="Ingreso por Operador",
+                             has_detail=False, layout_config={"height": 560}),
+)
+c_client_bar = ChartWidget(
+    f"{PREFIX}_client_bar",
+    OpsHorizontalBarStrategy(screen_id=SCREEN_ID, key="revenue_by_client",
+                             title="Ingreso por Cliente",
+                             has_detail=False, layout_config={"height": 560}),
 )
 
 # ── Tablas ────────────────────────────────────────────────────────────────────
@@ -226,50 +240,66 @@ def _render_body(ctx):
             ]),
         ]),
 
-        # ── Fila 4: Donut + Barras (izq) | Tablas ingreso (der) ────
-        dmc.Grid(gutter="md", mb="lg", children=[
-            # Izquierda: Donut + Barras apilados
-            dmc.GridCol(span=_dmc({"base": 12, "lg": 5}), children=[
-                html.Div(
-                    style={"display": "flex", "flexDirection": "column", "gap": "0.8rem"},
-                    children=[
-                        c_mix.render(ctx, theme=theme),
-                        c_unit.render(ctx, theme=theme),
-                    ],
-                ),
-            ]),
-            # Derecha: Tablas Ingreso (Unidad → Operador → Cliente)
-            dmc.GridCol(span=_dmc({"base": 12, "lg": 7}), children=[
-                dmc.Paper(
-                    p=8, withBorder=True, radius="md",
-                    style={"height": "100%", "backgroundColor": "transparent"},
-                    children=[
-                        dmc.Tabs(value="ingreso_unidad", children=[
-                            dmc.TabsList([
-                                dmc.TabsTab("Ingreso Unidad", value="ingreso_unidad",
-                                            leftSection=DashIconify(icon="tabler:truck", width=14)),
-                                dmc.TabsTab("Ingreso Operador", value="ingreso_operador",
-                                            leftSection=DashIconify(icon="tabler:user", width=14)),
-                                dmc.TabsTab("Ingreso Cliente", value="ingreso_cliente",
-                                            leftSection=DashIconify(icon="tabler:building", width=14)),
+        # ── Fila 4: Tabs ingreso con gráfica+tabla — ancho completo ──
+        dmc.Paper(
+            p=8, withBorder=True, radius="md", mb="lg",
+            style={"backgroundColor": "transparent"},
+            children=[
+                dmc.Tabs(value="ingreso_unidad", children=[
+                    dmc.TabsList([
+                        dmc.TabsTab("Ingreso Unidad", value="ingreso_unidad",
+                                    leftSection=DashIconify(icon="tabler:truck", width=14)),
+                        dmc.TabsTab("Ingreso Operador", value="ingreso_operador",
+                                    leftSection=DashIconify(icon="tabler:user", width=14)),
+                        dmc.TabsTab("Ingreso Cliente", value="ingreso_cliente",
+                                    leftSection=DashIconify(icon="tabler:building", width=14)),
+                    ]),
+                    # Tab Unidad: gráfica balanceo (izq) + tabla (der)
+                    dmc.TabsPanel(
+                        dmc.Grid(gutter="sm", mt="xs", children=[
+                            dmc.GridCol(span=_dmc({"base": 12, "md": 5}), children=[
+                                c_unit.render(ctx, theme=theme),
                             ]),
-                            dmc.TabsPanel(
-                                html.Div(style={"height": "680px", "overflowY": "auto"},
+                            dmc.GridCol(span=_dmc({"base": 12, "md": 7}), children=[
+                                html.Div(style={"height": "580px", "overflowY": "auto"},
                                          children=[t_unit.render(ctx, theme=theme)]),
-                                value="ingreso_unidad"),
-                            dmc.TabsPanel(
-                                html.Div(style={"height": "680px", "overflowY": "auto"},
-                                         children=[t_op.render(ctx, theme=theme)]),
-                                value="ingreso_operador"),
-                            dmc.TabsPanel(
-                                html.Div(style={"height": "680px", "overflowY": "auto"},
-                                         children=[t_clients.render(ctx, theme=theme)]),
-                                value="ingreso_cliente"),
+                            ]),
                         ]),
-                    ],
-                ),
-            ]),
-        ]),
+                        value="ingreso_unidad",
+                    ),
+                    # Tab Operador: gráfica barras operador (izq) + tabla (der)
+                    dmc.TabsPanel(
+                        dmc.Grid(gutter="sm", mt="xs", children=[
+                            dmc.GridCol(span=_dmc({"base": 12, "md": 5}), children=[
+                                c_op_bar.render(ctx, theme=theme),
+                            ]),
+                            dmc.GridCol(span=_dmc({"base": 12, "md": 7}), children=[
+                                html.Div(style={"height": "580px", "overflowY": "auto"},
+                                         children=[t_op.render(ctx, theme=theme)]),
+                            ]),
+                        ]),
+                        value="ingreso_operador",
+                    ),
+                    # Tab Cliente: gráfica barras cliente (izq) + tabla (der)
+                    dmc.TabsPanel(
+                        dmc.Grid(gutter="sm", mt="xs", children=[
+                            dmc.GridCol(span=_dmc({"base": 12, "md": 5}), children=[
+                                c_client_bar.render(ctx, theme=theme),
+                            ]),
+                            dmc.GridCol(span=_dmc({"base": 12, "md": 7}), children=[
+                                html.Div(style={"height": "580px", "overflowY": "auto"},
+                                         children=[t_clients.render(ctx, theme=theme)]),
+                            ]),
+                        ]),
+                        value="ingreso_cliente",
+                    ),
+                ]),
+            ],
+        ),
+
+        # ── Fila 5: Donut — ancho completo al final ───────────────────
+        dmc.Divider(my="sm", label="Distribución de Ingresos por Tipo", labelPosition="center"),
+        c_mix.render(ctx, theme=theme),
 
         dmc.Space(h=30),
     ])
@@ -284,6 +314,7 @@ WIDGET_REGISTRY = {
     f"{PREFIX}_units": w_units_qty, f"{PREFIX}_customers": w_customers,
     f"{PREFIX}_inc_comp": c_inc, f"{PREFIX}_trips_comp": c_trips,
     f"{PREFIX}_mix": c_mix, f"{PREFIX}_unit_bal": c_unit,
+    f"{PREFIX}_op_bar": c_op_bar, f"{PREFIX}_client_bar": c_client_bar,
     f"{PREFIX}_routes_loaded": t_loaded, f"{PREFIX}_routes_empty": t_empty,
     f"{PREFIX}_top_clients": t_clients, f"{PREFIX}_income_op": t_op,
     f"{PREFIX}_income_unit": t_unit,
@@ -291,8 +322,7 @@ WIDGET_REGISTRY = {
 
 FILTER_IDS = [
     "ops-year", "ops-month", "ops-empresa", "ops-unidad", "ops-tipo-unidad",
-    "ops-no-viaje", "ops-operador", "ops-tipo-operacion", "ops-clasificacion",
-    "ops-cliente",
+    "ops-no-viaje", "ops-operador", "ops-tipo-operacion", "ops-cliente",
 ]
 
 
@@ -314,6 +344,21 @@ def layout():
     )
 
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="ops-body", render_body=_render_body, filter_ids=FILTER_IDS)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID, body_output_id="ops-body", render_body=_render_body, filter_ids=FILTER_IDS,
+    global_token_output_id="current-page-token-store",
+)
 
 register_drawer_callback(drawer_id="ops-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
+
+register_filter_modal_callback("ops-year")
+
+data_manager.register_filter_options_callback(
+    screen_id=SCREEN_ID,
+    year_id="ops-year",
+    month_id="ops-month",
+    filter_ids=[
+        "ops-empresa", "ops-unidad", "ops-tipo-unidad",
+        "ops-no-viaje", "ops-operador", "ops-tipo-operacion", "ops-cliente",
+    ],
+)

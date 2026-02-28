@@ -47,6 +47,6 @@ class Config:
             f"PWD={cls.SQL_PASSWORD};"
             "Encrypt=yes;"
             "TrustServerCertificate=yes;"
-            "Connection Timeout=30;"
+            "Connection Timeout=8;"
         )
         return f"mssql+pyodbc:///?odbc_connect={quote_plus(params)}"

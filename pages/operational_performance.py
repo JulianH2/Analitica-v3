@@ -24,9 +24,9 @@ dash.register_page(__name__, path="/operational-performance", title="Rendimiento
 SCREEN_ID = "operational-performance"
 PREFIX = "op"
 
-w_kms_lt = SmartWidget(f"{PREFIX}_kms_lt", OpsGaugeStrategy(screen_id=SCREEN_ID, key="real_yield", title="Kms. Viaje/Lt", icon="tabler:gauge", color="green", has_detail=True, layout_config={"height": 220}))
-w_kms_re = SmartWidget(f"{PREFIX}_kms_tot", OpsGaugeStrategy(screen_id=SCREEN_ID, key="real_kilometers", title="Kms. Real", icon="tabler:route", color="blue", has_detail=True, layout_config={"height": 220}))
-w_litros = SmartWidget(f"{PREFIX}_litros", OpsGaugeStrategy(screen_id=SCREEN_ID, key="liters_consumed", title="Litros", icon="tabler:droplet", color="orange", has_detail=True, layout_config={"height": 220}))
+w_kms_lt = SmartWidget(f"{PREFIX}_kms_lt", OpsGaugeStrategy(screen_id=SCREEN_ID, key="real_yield", title="Rendimiento Kms/Lt", icon="tabler:gauge", color="green", has_detail=True, layout_config={"height": 300}))
+w_kms_re = SmartWidget(f"{PREFIX}_kms_tot", OpsGaugeStrategy(screen_id=SCREEN_ID, key="real_kilometers", title="Kms. Real", icon="tabler:route", color="blue", has_detail=True, layout_config={"height": 300}))
+w_litros = SmartWidget(f"{PREFIX}_litros", OpsGaugeStrategy(screen_id=SCREEN_ID, key="liters_consumed", title="Litros", icon="tabler:droplet", color="orange", has_detail=True, layout_config={"height": 300}))
 
 class DynamicPerfTrendStrategy(OpsTrendChartStrategy):
     def __init__(self, screen_id, key, base_title, icon="tabler:timeline", color="indigo", has_detail=True, layout_config=None):
@@ -47,11 +47,15 @@ def _render_ops_performance_body(ctx):
     theme = session.get("theme", "dark")
 
     return html.Div([
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(280px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
-            w_kms_lt.render(ctx, theme=theme),
-            w_kms_re.render(ctx, theme=theme),
-            w_litros.render(ctx, theme=theme),
-        ]),
+        # Fila 1: 3 KPIs iguales
+        html.Div(
+            style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(260px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"},
+            children=[
+                w_kms_lt.render(ctx, theme=theme),
+                w_kms_re.render(ctx, theme=theme),
+                w_litros.render(ctx, theme=theme),
+            ],
+        ),
         html.Div(style={"marginBottom": "1.5rem"}, children=[
             c_trend.render(ctx, h=420, theme=theme),
         ]),
@@ -105,13 +109,21 @@ def layout():
             *refresh_components,
             create_smart_drawer("perf-drawer"),
             filters,
-            html.Div(id="ops-performance-body", children=get_skeleton(SCREEN_ID)),
+            dcc.Loading(
+                id="perf-loading",
+                type="dot",
+                color="#228be6",
+                children=html.Div(id="ops-performance-body", children=get_skeleton(SCREEN_ID)),
+            ),
         ],
     )
 
 FILTER_IDS = ["perf-year", "perf-month", "perf-empresa", "perf-unidad", "perf-tipo-unidad", "perf-no-viaje", "perf-operador", "perf-tipo-operacion", "perf-cliente"]
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="ops-performance-body", render_body=_render_ops_performance_body, filter_ids=FILTER_IDS)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID, body_output_id="ops-performance-body", render_body=_render_ops_performance_body, filter_ids=FILTER_IDS,
+    global_token_output_id="current-page-token-store",
+)
 
 register_drawer_callback(drawer_id="perf-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
 

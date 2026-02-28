@@ -6,7 +6,8 @@
       "column": "subtotal",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Subtotal de ingresos por viaje (flete y conceptos) en el periodo."
   },
   "ingreso_viaje_anterior": {
     "name": "Ingreso Viaje Año Anterior",
@@ -16,7 +17,8 @@
       "aggregation": "SUM",
       "time_modifier": "previous_year",
       "format": "currency"
-    }
+    },
+    "description": "Ingreso por viaje del mismo periodo del año anterior."
   },
   "ingreso_viaje_acumulado": {
     "name": "Ingreso Viaje Acumulado (YTD)",
@@ -26,7 +28,8 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "currency"
-    }
+    },
+    "description": "Ingreso por viaje acumulado de enero a la fecha (YTD)."
   },
   "meta_ingreso_viaje": {
     "name": "Meta Ingreso Viaje",
@@ -35,7 +38,8 @@
       "column": "meta_ingreso_viaje",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Meta o presupuesto de ingreso por viaje para el periodo."
   },
   "ingreso_esperado": {
     "name": "Ingreso Esperado",
@@ -51,13 +55,15 @@
     "name": "% Desviación Ingreso vs Anterior",
     "type": "derived",
     "formula": "(ingreso_viaje - ingreso_viaje_anterior) / ingreso_viaje_anterior",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de variación del ingreso vs mismo periodo año anterior."
   },
   "pct_desviacion_ingreso_acumulado": {
     "name": "% Desviación Ingreso Acumulado",
     "type": "derived",
     "formula": "(ingreso_viaje_acumulado - meta_ingreso_viaje_acumulado) / meta_ingreso_viaje_acumulado",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de variación del ingreso acumulado vs meta acumulada."
   },
   "viajes": {
     "name": "Viajes",
@@ -66,7 +72,8 @@
       "column": "no_viaje",
       "aggregation": "COUNT",
       "format": "integer"
-    }
+    },
+    "description": "Cantidad de viajes realizados en el periodo."
   },
   "viajes_anterior": {
     "name": "Viajes Año Anterior",
@@ -76,7 +83,8 @@
       "aggregation": "COUNT",
       "time_modifier": "previous_year",
       "format": "integer"
-    }
+    },
+    "description": "Cantidad de viajes del mismo periodo del año anterior."
   },
   "viajes_acumulado": {
     "name": "Viajes Acumulado (YTD)",
@@ -86,7 +94,8 @@
       "aggregation": "COUNT",
       "time_modifier": "ytd",
       "format": "integer"
-    }
+    },
+    "description": "Viajes acumulados de enero a la fecha (YTD)."
   },
   "meta_viajes": {
     "name": "Meta Viaje",
@@ -95,7 +104,8 @@
       "column": "meta_viajes",
       "aggregation": "SUM",
       "format": "integer"
-    }
+    },
+    "description": "Meta o presupuesto de cantidad de viajes para el periodo."
   },
   "viajes_esperado": {
     "name": "Viajes Esperado",
@@ -115,25 +125,29 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "integer"
-    }
+    },
+    "description": "Meta de viajes acumulada (YTD)."
   },
   "diff_viajes_vs_anterior": {
     "name": "Viajes vs Anterior",
     "type": "derived",
     "formula": "viajes - viajes_anterior",
-    "format": "integer"
+    "format": "integer",
+    "description": "Diferencia absoluta de viajes vs año anterior."
   },
   "pct_desviacion_viajes_vs_anterior": {
     "name": "% Desviación Viajes vs Anterior",
     "type": "derived",
     "formula": "(viajes - viajes_anterior) / viajes_anterior",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de variación de viajes vs año anterior."
   },
   "pct_desviacion_viajes_acumulado": {
     "name": "% Desviación Viajes Acumulado",
     "type": "derived",
     "formula": "(viajes_acumulado - meta_viajes_acumulado) / meta_viajes_acumulado",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de variación de viajes acumulados vs meta."
   },
   "kilometros": {
     "name": "Kms Recorridos",
@@ -142,7 +156,8 @@
       "column": "kms_viaje",
       "aggregation": "SUM",
       "format": "integer"
-    }
+    },
+    "description": "Kilómetros recorridos (según tarifa/viaje) en el periodo."
   },
   "kilometros_anterior": {
     "name": "Kms Recorridos Año Anterior",
@@ -152,7 +167,8 @@
       "aggregation": "SUM",
       "time_modifier": "previous_year",
       "format": "integer"
-    }
+    },
+    "description": "Kilómetros del mismo periodo del año anterior."
   },
   "kilometros_acumulado": {
     "name": "Kms Recorridos Acumulado (YTD)",
@@ -162,7 +178,8 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "integer"
-    }
+    },
+    "description": "Kilómetros acumulados YTD."
   },
   "meta_kilometros": {
     "name": "Meta Kms Real",
@@ -171,7 +188,8 @@
       "column": "meta_kms_recorridos",
       "aggregation": "SUM",
       "format": "integer"
-    }
+    },
+    "description": "Meta de kilómetros real para el periodo."
   },
   "kilometros_esperado": {
     "name": "Kilómetros Esperado",
@@ -191,7 +209,8 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "currency"
-    }
+    },
+    "description": "Meta de ingreso por viaje acumulada YTD."
   },
   "meta_kilometros_acumulado": {
     "name": "Meta Kms Real Acumulado (YTD)",
@@ -201,19 +220,22 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "integer"
-    }
+    },
+    "description": "Meta de kilómetros acumulada YTD."
   },
   "pct_desviacion_kilometros_vs_anterior": {
     "name": "% Desviación Kms Real vs Anterior",
     "type": "derived",
     "formula": "(kilometros - kilometros_anterior) / kilometros_anterior",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de variación de km vs año anterior."
   },
   "pct_desviacion_kilometros_acumulado": {
     "name": "% Desviación Kms Real Acumulado",
     "type": "derived",
     "formula": "(kilometros_acumulado - meta_kilometros_acumulado) / meta_kilometros_acumulado",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de variación de km acumulados vs meta."
   },
   "costo_viaje": {
     "name": "Costo Viaje Total",
@@ -222,7 +244,8 @@
       "column": "monto_concepto",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Suma de montos de conceptos de gasto liquidados por viaje."
   },
   "flete": {
     "name": "Flete",
@@ -231,7 +254,8 @@
       "column": "flete",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Monto cobrado a los clientes por el servicio de transporte de carga; es el ingreso principal que genera cada viaje."
   },
   "otros_costos": {
     "name": "Otros Costos",
@@ -240,7 +264,8 @@
       "column": "otros",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Otros costos registrados en el viaje."
   },
   "kms_viaje": {
     "name": "Kms Viaje",
@@ -250,13 +275,14 @@
       "aggregation": "SUM",
       "format": "integer"
     },
-    "description": "Justificación KB: d_viaje[kms_viaje] (cite: 140)"
+    "description": "Kilómetros de ruta pactados o tarifados para cada viaje; base para indicadores de ingreso o costo por kilómetro."
   },
   "otros_ingresos": {
     "name": "Otros Ingresos",
     "type": "derived",
     "formula": "ingreso_viaje - flete",
-    "format": "currency"
+    "format": "currency",
+    "description": "Diferencia entre ingreso total e ingreso por flete."
   },
   "sueldo_operador": {
     "name": "Sueldo Operador",
@@ -265,7 +291,8 @@
       "column": "sueldo_operador",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Sueldo del operador asociado al viaje."
   },
   "costo_liquidacion": {
     "name": "Costo Liquidación",
@@ -274,19 +301,22 @@
       "column": "monto_concepto",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Suma de montos de conceptos liquidados (gastos de viaje)."
   },
   "ingreso_x_km": {
     "name": "Ingreso x Km",
     "type": "derived",
     "formula": "ingreso_viaje / kms_viaje if kms_viaje else 0",
-    "format": "currency"
+    "format": "currency",
+    "description": "Ingreso por kilómetro recorrido (ingreso / kms)."
   },
   "ingreso_x_viaje": {
     "name": "Ingreso x Viaje",
     "type": "derived",
     "formula": "ingreso_viaje / viajes if viajes else 0",
-    "format": "currency"
+    "format": "currency",
+    "description": "Ingreso promedio por viaje."
   },
   "costo_viaje_total": {
     "name": "Costo Viaje Total",
@@ -299,19 +329,22 @@
     "name": "Monto Utilidad",
     "type": "derived",
     "formula": "ingreso_viaje - costo_viaje_total",
-    "format": "currency"
+    "format": "currency",
+    "description": "Utilidad bruta por viaje (ingreso - costo total)."
   },
   "margen_utilidad": {
     "name": "% Margen Utilidad Viaje",
     "type": "derived",
     "formula": "(ingreso_viaje - costo_viaje_total) / ingreso_viaje if ingreso_viaje else 0",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de margen sobre ingreso (utilidad / ingreso)."
   },
   "costo_x_km": {
     "name": "Costo Viaje x Km",
     "type": "derived",
     "formula": "costo_viaje_total / kms_viaje if kms_viaje else 0",
-    "format": "currency"
+    "format": "currency",
+    "description": "Costo por kilómetro (costo total / kms)."
   },
   "combustible": {
     "name": "Combustible",
@@ -320,7 +353,8 @@
       "column": "monto_combustible",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Gasto en combustible liquidado en viajes."
   },
   "caseta_iave": {
     "name": "Caseta IAVE",
@@ -329,7 +363,8 @@
       "column": "monto_caseta_iave",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Gasto en casetas (IAVE) liquidado."
   },
   "caseta_efectivo": {
     "name": "Caseta Efectivo",
@@ -338,7 +373,8 @@
       "column": "monto_caseta_efectivo",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Gasto en casetas en efectivo liquidado."
   },
   "unidades_utilizadas": {
     "name": "Unidades Utilizadas",
@@ -347,7 +383,8 @@
       "column": "id_unidad",
       "aggregation": "DISTINCTCOUNT"
     },
-    "format": "integer"
+    "format": "integer",
+    "description": "Cantidad de unidades distintas que realizaron al menos un viaje."
   },
   "unidades_utilizadas_anterior": {
     "name": "Unidades Utilizadas Año Anterior",
@@ -357,31 +394,36 @@
       "aggregation": "DISTINCTCOUNT",
       "time_modifier": "previous_year"
     },
-    "format": "integer"
+    "format": "integer",
+    "description": "Unidades utilizadas en el mismo periodo del año anterior."
   },
   "pct_desviacion_unidades_vs_anterior": {
     "name": "% Desviación Unidades Utilizadas vs Anterior",
     "type": "derived",
     "formula": "(unidades_utilizadas - unidades_utilizadas_anterior) / unidades_utilizadas_anterior",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de variación de unidades utilizadas vs año anterior."
   },
   "ingreso_unit": {
     "name": "Ingreso por Tractocamión",
     "type": "derived",
     "formula": "ingreso_viaje / unidades_utilizadas",
-    "format": "currency"
+    "format": "currency",
+    "description": "Ingreso por tractocamión (unidad) en el periodo."
   },
   "ingreso_unit_anterior": {
     "name": "Ingreso por Unidad Año Anterior",
     "type": "derived",
     "formula": "ingreso_viaje_anterior / unidades_utilizadas_anterior",
-    "format": "currency"
+    "format": "currency",
+    "description": "Ingreso por unidad en el mismo periodo del año anterior."
   },
   "pct_desviacion_ingreso_unit_anterior": {
     "name": "% Desviación Ingreso x Unidad vs Anterior",
     "type": "derived",
     "formula": "(ingreso_unit - ingreso_unit_anterior) / ingreso_unit_anterior",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de variación del ingreso por unidad vs año anterior."
   },
   "clientes_servidos": {
     "name": "Clientes Servidos",
@@ -390,7 +432,8 @@
       "column": "id_cliente",
       "aggregation": "DISTINCTCOUNT"
     },
-    "format": "integer"
+    "format": "integer",
+    "description": "Cantidad de clientes distintos con al menos una guía en el periodo."
   },
   "clientes_servidos_anterior": {
     "name": "Clientes Servidos Año Anterior",
@@ -400,13 +443,15 @@
       "aggregation": "DISTINCTCOUNT",
       "time_modifier": "previous_year"
     },
-    "format": "integer"
+    "format": "integer",
+    "description": "Clientes servidos en el mismo periodo del año anterior."
   },
   "pct_desviacion_clientes_vs_anterior": {
     "name": "% Desviación Clientes vs Anterior",
     "type": "derived",
     "formula": "(clientes_servidos - clientes_servidos_anterior) / clientes_servidos_anterior",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de variación de clientes servidos vs año anterior."
   },
   "viajes_cargados": {
     "name": "Viajes con Carga",
@@ -415,19 +460,22 @@
       "column": "ind_cargado",
       "aggregation": "SUM"
     },
-    "format": "integer"
+    "format": "integer",
+    "description": "Viajes con indicador de carga (ind_cargado)."
   },
   "utilizacion_flota": {
     "name": "Porcentaje de Carga",
     "type": "derived",
     "formula": "(viajes_cargados / viajes) * 100",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de viajes con carga sobre total de viajes."
   },
   "ingreso_x_viaje_anterior": {
     "name": "Ingreso x Viaje Anterior",
     "type": "derived",
     "formula": "ingreso_viaje_anterior / viajes_anterior if viajes_anterior else 0",
-    "format": "currency"
+    "format": "currency",
+    "description": "Ingreso por viaje del año anterior."
   },
   "kms_real": {
     "name": "Kms Reales",
@@ -436,7 +484,8 @@
       "column": "kms_real",
       "aggregation": "SUM",
       "format": "integer"
-    }
+    },
+    "description": "Kilómetros realmente recorridos por las unidades en los viajes."
   },
   "litros_real": {
     "name": "Litros Reales",
@@ -445,7 +494,8 @@
       "column": "lts_real",
       "aggregation": "SUM",
       "format": "integer"
-    }
+    },
+    "description": "Litros de combustible realmente consumidos en los viajes."
   },
   "kms_anterior": {
     "name": "Kms Año Anterior",
@@ -455,7 +505,8 @@
       "aggregation": "SUM",
       "time_modifier": "previous_year",
       "format": "integer"
-    }
+    },
+    "description": "Kilómetros reales del año anterior."
   },
   "litros_anterior": {
     "name": "Litros Año Anterior",
@@ -465,7 +516,8 @@
       "aggregation": "SUM",
       "time_modifier": "previous_year",
       "format": "integer"
-    }
+    },
+    "description": "Litros reales del año anterior."
   },
   "kms_acumulado": {
     "name": "Kms Acumulado YTD",
@@ -475,7 +527,8 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "integer"
-    }
+    },
+    "description": "Kilómetros reales acumulados YTD."
   },
   "litros_acumulado": {
     "name": "Litros Acumulado YTD",
@@ -485,7 +538,8 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "integer"
-    }
+    },
+    "description": "Litros reales acumulados YTD."
   },
   "meta_kms": {
     "name": "Meta Kms",
@@ -494,7 +548,8 @@
       "column": "meta_kms_recorridos",
       "aggregation": "SUM",
       "format": "integer"
-    }
+    },
+    "description": "Meta de kilómetros para el periodo."
   },
   "meta_rendimiento_real": {
     "name": "Meta Rendimiento Real",
@@ -503,7 +558,8 @@
       "column": "meta_rendimiento_combustible",
       "aggregation": "SUM",
       "format": "integer"
-    }
+    },
+    "description": "Meta de rendimiento de combustible (litros/km)."
   },
   "meta_kms_acumulado": {
     "name": "Meta Kms YTD",
@@ -513,7 +569,8 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "integer"
-    }
+    },
+    "description": "Meta de kilómetros acumulada YTD."
   },
   "meta_litros_acumulado": {
     "name": "Meta Litros YTD",
@@ -523,51 +580,124 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "integer"
-    }
+    },
+    "description": "Meta de litros acumulada YTD."
   },
   "viajes_real": {
     "name": "Cantidad Viajes",
-    "recipe": { "table": "d_viaje", "column": "no_viaje", "aggregation": "COUNT", "format": "integer" }
+    "recipe": {
+      "table": "d_viaje",
+      "column": "no_viaje",
+      "aggregation": "COUNT",
+      "format": "integer"
+    },
+    "description": "Cantidad de viajes (conteo desde d_viaje)."
   },
   "litros_viaje": {
     "name": "Litros Viaje",
-    "recipe": { "table": "d_viaje", "column": "lts_viaje", "aggregation": "SUM", "format": "integer" }
+    "recipe": {
+      "table": "d_viaje",
+      "column": "lts_viaje",
+      "aggregation": "SUM",
+      "format": "integer"
+    },
+    "description": "Litros según tarifa/viaje."
   },
   "meta_litros": {
     "name": "Meta Litros Total",
-    "recipe": { "table": "d_meta_tiempo", "column": "meta_litros_combustible", "aggregation": "SUM", "format": "integer" }
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_litros_combustible",
+      "aggregation": "SUM",
+      "format": "integer"
+    },
+    "description": "Meta de litros de combustible para el periodo."
   },
   "litros_real_anterior": {
     "name": "Litros Real Año Anterior",
-    "recipe": { "table": "d_viaje", "column": "lts_real", "aggregation": "SUM", "time_modifier": "previous_year", "format": "integer" }
+    "recipe": {
+      "table": "d_viaje",
+      "column": "lts_real",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    },
+    "description": "Litros reales del año anterior."
   },
   "litros_viaje_anterior": {
     "name": "Litros Viaje Año Anterior",
-    "recipe": { "table": "d_viaje", "column": "lts_viaje", "aggregation": "SUM", "time_modifier": "previous_year", "format": "integer" }
+    "recipe": {
+      "table": "d_viaje",
+      "column": "lts_viaje",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    },
+    "description": "Litros viaje del año anterior."
   },
   "litros_real_acumulado": {
     "name": "Litros Real Acumulado",
-    "recipe": { "table": "d_viaje", "column": "lts_real", "aggregation": "SUM", "time_modifier": "ytd", "format": "integer" }
+    "recipe": {
+      "table": "d_viaje",
+      "column": "lts_real",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    },
+    "description": "Litros reales acumulados YTD."
   },
   "litros_viaje_acumulado": {
     "name": "Litros Viaje Acumulado",
-    "recipe": { "table": "d_viaje", "column": "lts_viaje", "aggregation": "SUM", "time_modifier": "ytd", "format": "integer" }
+    "recipe": {
+      "table": "d_viaje",
+      "column": "lts_viaje",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    },
+    "description": "Litros viaje acumulados YTD."
   },
   "meta_ingreso": {
     "name": "Meta Ingreso",
-    "recipe": { "table": "d_meta_tiempo", "column": "meta_ingreso_viaje", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_ingreso_viaje",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Meta de ingreso (presupuesto) para el periodo."
   },
   "meta_costo": {
     "name": "Meta Costo",
-    "recipe": { "table": "d_meta_tiempo", "column": "meta_costos_viaje", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_costos_viaje",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Meta de costo (presupuesto) para el periodo."
   },
   "meta_ingreso_acumulado": {
     "name": "Meta Ingreso YTD",
-    "recipe": { "table": "d_meta_tiempo", "column": "meta_ingreso_viaje", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_ingreso_viaje",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Meta de ingreso acumulada YTD."
   },
   "meta_costo_acumulado": {
     "name": "Meta Costo YTD",
-    "recipe": { "table": "d_meta_tiempo", "column": "meta_costos_viaje", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_costos_viaje",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Meta de costo acumulada YTD."
   },
   "costo_anterior": {
     "name": "Costo Año Anterior",
@@ -577,7 +707,8 @@
       "aggregation": "SUM",
       "time_modifier": "previous_year",
       "format": "currency"
-    }
+    },
+    "description": "Costo de liquidación del mismo periodo del año anterior."
   },
   "costo_acumulado": {
     "name": "Costo Acumulado YTD",
@@ -587,7 +718,8 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "currency"
-    }
+    },
+    "description": "Costo de liquidación acumulado YTD."
   },
   "meta_utilidad_acumulada": {
     "name": "Meta Utilidad YTD",
@@ -597,7 +729,8 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "currency"
-    }
+    },
+    "description": "Meta de utilidad acumulada YTD."
   },
   "sueldo_operador_anterior": {
     "name": "Sueldo Operador Año Anterior",
@@ -607,7 +740,8 @@
       "aggregation": "SUM",
       "time_modifier": "previous_year",
       "format": "currency"
-    }
+    },
+    "description": "Sueldo de operador del año anterior."
   },
   "facturado_mes": {
     "name": "Facturado Mes",
@@ -616,7 +750,8 @@
       "column": "monto_facturado_mx",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Monto facturado en el periodo (CxC)."
   },
   "facturado_acumulado": {
     "name": "Facturado Acumulado",
@@ -625,7 +760,8 @@
       "column": "monto_facturado_mx",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Monto facturado acumulado."
   },
   "notas_credito_mes": {
     "name": "Notas Crédito mes",
@@ -634,7 +770,8 @@
       "column": "monto_ncred_mx",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Monto de notas de crédito en el periodo."
   },
   "notas_credito_acumulado": {
     "name": "Notas Crédito Acumulado",
@@ -644,7 +781,8 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "currency"
-    }
+    },
+    "description": "Monto de notas de crédito acumulado."
   },
   "notas_cargo_mes": {
     "name": "Notas Cargo Mes",
@@ -653,7 +791,8 @@
       "column": "monto_ncargo_mx",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Monto de notas de cargo en el periodo."
   },
   "notas_cargo_acumulado": {
     "name": "Notas Cargo Acumulado",
@@ -662,7 +801,8 @@
       "column": "monto_ncargo_acum_mx",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Monto de notas de cargo acumulado."
   },
   "cobrado_mes": {
     "name": "Cobrado Mes",
@@ -671,7 +811,8 @@
       "column": "monto_cobrado_mx",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Monto cobrado en el periodo."
   },
   "cobrado_acumulado": {
     "name": "Cobrado Acumulado",
@@ -680,7 +821,8 @@
       "column": "monto_cobrado_acum_mx",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Monto cobrado acumulado."
   },
   "cartera_clientes": {
     "name": "Cartera de Clientes",
@@ -689,7 +831,8 @@
       "column": "monto_saldo_acum_mx",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Saldo de cartera (cuentas por cobrar) a la fecha."
   },
   "nc_monto": {
     "name": "Monto Nota Crédito",
@@ -698,7 +841,8 @@
       "column": "monto_credito",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Monto de notas de crédito (catálogo)."
   },
   "nc_retencion": {
     "name": "Retención Nota Crédito",
@@ -707,7 +851,8 @@
       "column": "monto_retencion",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Retención asociada a notas de crédito."
   },
   "nca_monto": {
     "name": "Monto Nota Cargo",
@@ -716,7 +861,8 @@
       "column": "monto_cargo",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Monto de notas de cargo (catálogo)."
   },
   "nca_retencion": {
     "name": "Retención Nota Cargo",
@@ -725,7 +871,8 @@
       "column": "monto_retencion",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Retención asociada a notas de cargo."
   },
   "monto_cobrado_directo": {
     "name": "Monto Cobrado Directo",
@@ -734,7 +881,8 @@
       "column": "monto_cobrado",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Monto cobrado (movimientos de cobro)."
   },
   "dias_cartera_promedio": {
     "name": "Promedio Días Cartera",
@@ -743,7 +891,8 @@
       "column": "DATEDIFF(day, fecha_factura, GETDATE())",
       "aggregation": "AVG",
       "format": "decimal"
-    }
+    },
+    "description": "Promedio de días de antigüedad de la cartera (desde fecha factura)."
   },
   "dias_cartera_anterior": {
     "name": "Días Cartera Año Anterior",
@@ -753,7 +902,8 @@
       "aggregation": "AVG",
       "time_modifier": "previous_year",
       "format": "decimal"
-    }
+    },
+    "description": "Promedio días cartera del año anterior."
   },
   "meta_dias_cartera": {
     "name": "Meta Días Cartera",
@@ -762,7 +912,8 @@
       "column": "meta_promedio_dias_cartera",
       "aggregation": "SUM",
       "format": "decimal"
-    }
+    },
+    "description": "Meta de días promedio de cartera."
   },
   "cartera_vencida": {
     "name": "Cartera Vencida",
@@ -771,7 +922,8 @@
       "column": "monto_saldo_acum_mx",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Saldo de cartera vencida (por vencer o vencido)."
   },
   "facturado_mes_anterior": {
     "name": "Facturado Mes Año Anterior",
@@ -781,7 +933,8 @@
       "aggregation": "SUM",
       "time_modifier": "previous_year",
       "format": "currency"
-    }
+    },
+    "description": "Monto facturado en el mismo periodo del año anterior."
   },
   "monto_cobrado": {
     "name": "Monto Cobrado Real",
@@ -800,7 +953,8 @@
       "column": "saldo_inicial",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Saldo inicial de cuentas por pagar con proveedores."
   },
   "cxp_proveedores": {
     "name": "CxP del Periodo",
@@ -809,7 +963,8 @@
       "column": "cxp",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Cuentas por pagar generadas en el periodo."
   },
   "notas_cargo_proveedores": {
     "name": "Notas de Cargo Proveedores",
@@ -818,7 +973,8 @@
       "column": "notas_cargo",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Notas de cargo de proveedores en el periodo."
   },
   "notas_credito_proveedores": {
     "name": "Notas de Crédito Proveedores",
@@ -827,7 +983,8 @@
       "column": "notas_credito",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Notas de crédito de proveedores en el periodo."
   },
   "anticipos_proveedores": {
     "name": "Anticipos a Proveedores",
@@ -836,7 +993,8 @@
       "column": "monto_anticipo",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Anticipos aplicados a proveedores."
   },
   "cxp_total_proveedores": {
     "name": "CxP Total",
@@ -845,7 +1003,8 @@
       "column": "cxp_total",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "CxP total (periodo)."
   },
   "pago_proveedores": {
     "name": "Pago a Proveedores",
@@ -854,7 +1013,8 @@
       "column": "pago_proveedores",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Pagos realizados a proveedores en el periodo."
   },
   "saldo_final_proveedores": {
     "name": "Saldo Final Proveedores",
@@ -863,13 +1023,15 @@
       "column": "saldo_final",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Saldo final de CxP con proveedores."
   },
   "porcentaje_pagado_proveedores": {
     "name": "% Pagado a Proveedores",
     "type": "derived",
     "formula": "pago_proveedores / cxp_total_proveedores",
-    "format": "percent"
+    "format": "percent",
+    "description": "Porcentaje de CxP pagado (pago / CxP total)."
   },
   "promedio_dias_pago": {
     "name": "Promedio Días Pago",
@@ -888,7 +1050,8 @@
       "column": "meta_promedio_dias_pago",
       "aggregation": "SUM",
       "format": "integer"
-    }
+    },
+    "description": "Meta de días promedio de pago a proveedores."
   },
   "saldo_cxp": {
     "name": "Saldo CxP",
@@ -924,79 +1087,183 @@
   },
   "saldo_inicial_consolidado": {
     "name": "Saldo Inicial Consolidado",
-    "recipe": { "table": "h_bancos_saldos", "column": "saldo_inicial_consolidado", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "saldo_inicial_consolidado",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Saldo inicial de bancos (moneda consolidada)."
   },
   "ingresos_consolidado": {
     "name": "Ingresos Consolidado",
-    "recipe": { "table": "h_bancos_saldos", "column": "ingresos_consolidado", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "ingresos_consolidado",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Ingresos bancarios consolidados del periodo."
   },
   "egresos_consolidado": {
     "name": "Egresos Consolidado",
-    "recipe": { "table": "h_bancos_saldos", "column": "egresos_consolidado", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "egresos_consolidado",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Egresos bancarios consolidados del periodo."
   },
   "saldo_final_consolidado": {
     "name": "Saldo Final Consolidado",
-    "recipe": { "table": "h_bancos_saldos", "column": "saldo_final_consolidado", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "saldo_final_consolidado",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Saldo final de bancos consolidado."
   },
-
   "saldo_inicial_mxn": {
     "name": "Saldo Inicial MXN",
-    "recipe": { "table": "h_bancos_saldos", "column": "saldo_inicial_pesos", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "saldo_inicial_pesos",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Saldo inicial en pesos (MXN)."
   },
   "ingresos_mxn": {
     "name": "Ingresos MXN",
-    "recipe": { "table": "h_bancos_saldos", "column": "ingresos_pesos", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "ingresos_pesos",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Ingresos bancarios en pesos."
   },
   "egresos_mxn": {
     "name": "Egresos MXN",
-    "recipe": { "table": "h_bancos_saldos", "column": "egresos_pesos", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "egresos_pesos",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Egresos bancarios en pesos."
   },
   "saldo_final_mxn": {
     "name": "Saldo Final MXN",
-    "recipe": { "table": "h_bancos_saldos", "column": "saldo_final_pesos", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "saldo_final_pesos",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Saldo final en pesos."
   },
-
   "saldo_inicial_usd": {
     "name": "Saldo Inicial USD",
-    "recipe": { "table": "h_bancos_saldos", "column": "saldo_inicial_dlls", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "saldo_inicial_dlls",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Saldo inicial en dólares (USD)."
   },
   "ingresos_usd": {
     "name": "Ingresos USD",
-    "recipe": { "table": "h_bancos_saldos", "column": "ingresos_dlls", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "ingresos_dlls",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Ingresos bancarios en dólares."
   },
   "egresos_usd": {
     "name": "Egresos USD",
-    "recipe": { "table": "h_bancos_saldos", "column": "egresos_dlls", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "egresos_dlls",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Egresos bancarios en dólares."
   },
   "saldo_final_usd": {
     "name": "Saldo Final USD",
-    "recipe": { "table": "h_bancos_saldos", "column": "saldo_final_dlls", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_bancos_saldos",
+      "column": "saldo_final_dlls",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Saldo final en dólares."
   },
   "ingresos_mov_consolidado": {
-    "name": "Ingresos Consolidado",
-    "recipe": { "table": "h_bancos_movimientos", "column": "ingresos_consolidado", "aggregation": "SUM", "format": "currency" }
+    "name": "Ingresos por Movimientos (Consolidado)",
+    "recipe": {
+      "table": "h_bancos_movimientos",
+      "column": "ingresos_consolidado",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Ingresos por movimientos de banco (consolidado)."
   },
   "egresos_mov_consolidado": {
-    "name": "Egresos Consolidado",
-    "recipe": { "table": "h_bancos_movimientos", "column": "egresos_consolidado", "aggregation": "SUM", "format": "currency" }
+    "name": "Egresos por Movimientos (Consolidado)",
+    "recipe": {
+      "table": "h_bancos_movimientos",
+      "column": "egresos_consolidado",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Egresos por movimientos de banco (consolidado)."
   },
-
   "ingresos_mov_mxn": {
-    "name": "Ingresos MXN",
-    "recipe": { "table": "h_bancos_movimientos", "column": "ingresos_pesos", "aggregation": "SUM", "format": "currency" }
+    "name": "Ingresos por Movimientos MXN",
+    "recipe": {
+      "table": "h_bancos_movimientos",
+      "column": "ingresos_pesos",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Ingresos por movimientos en pesos."
   },
   "egresos_mov_mxn": {
-    "name": "Egresos MXN",
-    "recipe": { "table": "h_bancos_movimientos", "column": "egresos_pesos", "aggregation": "SUM", "format": "currency" }
+    "name": "Egresos por Movimientos MXN",
+    "recipe": {
+      "table": "h_bancos_movimientos",
+      "column": "egresos_pesos",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Egresos por movimientos en pesos."
   },
-
   "ingresos_mov_usd": {
-    "name": "Ingresos USD",
-    "recipe": { "table": "h_bancos_movimientos", "column": "ingresos_dlls", "aggregation": "SUM", "format": "currency" }
+    "name": "Ingresos por Movimientos USD",
+    "recipe": {
+      "table": "h_bancos_movimientos",
+      "column": "ingresos_dlls",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Ingresos por movimientos en dólares."
   },
   "egresos_mov_usd": {
-    "name": "Egresos USD",
-    "recipe": { "table": "h_bancos_movimientos", "column": "egresos_dlls", "aggregation": "SUM", "format": "currency" }
+    "name": "Egresos por Movimientos USD",
+    "recipe": {
+      "table": "h_bancos_movimientos",
+      "column": "egresos_dlls",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Egresos por movimientos en dólares."
   },
   "kms_viaje_ruta": {
     "name": "Kms Viaje",
@@ -1005,7 +1272,8 @@
       "column": "kms_viaje",
       "aggregation": "SUM",
       "format": "integer"
-    }
+    },
+    "description": "Kilómetros de ruta o tarifa del viaje para análisis de rendimiento y costos."
   },
   "costo_mo_interno": {
     "name": "Costo Mano de Obra Interno",
@@ -1024,7 +1292,8 @@
       "column": "monto_gto_ref",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Costo de refacciones en órdenes de taller interno."
   },
   "costo_mtto_interno": {
     "name": "Costo Mtto Interno",
@@ -1033,7 +1302,6 @@
     "formula": "costo_mo_interno + costo_refacciones_interno",
     "format": "currency"
   },
-
   "costo_mo_interno_anterior": {
     "name": "Costo MO Interno Año Anterior",
     "recipe": {
@@ -1042,7 +1310,8 @@
       "aggregation": "SUM",
       "time_modifier": "previous_year",
       "format": "currency"
-    }
+    },
+    "description": "Costo MO interno del año anterior."
   },
   "costo_refacciones_interno_anterior": {
     "name": "Costo Refacciones Interno Año Anterior",
@@ -1052,15 +1321,16 @@
       "aggregation": "SUM",
       "time_modifier": "previous_year",
       "format": "currency"
-    }
+    },
+    "description": "Costo refacciones interno del año anterior."
   },
   "costo_mtto_interno_anterior": {
     "name": "Costo Mtto Interno Año Anterior",
     "type": "derived",
     "formula": "costo_mo_interno_anterior + costo_refacciones_interno_anterior",
-    "format": "currency"
+    "format": "currency",
+    "description": "Costo mtto interno del año anterior."
   },
-
   "costo_mo_interno_ytd": {
     "name": "Costo MO Interno Acumulado",
     "recipe": {
@@ -1069,7 +1339,8 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "currency"
-    }
+    },
+    "description": "Costo MO interno acumulado YTD."
   },
   "costo_refacciones_interno_ytd": {
     "name": "Costo Refacciones Interno Acumulado",
@@ -1079,15 +1350,16 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "currency"
-    }
+    },
+    "description": "Costo refacciones interno acumulado YTD."
   },
   "costo_mtto_interno_ytd": {
     "name": "Costo Mtto Interno Acumulado",
     "type": "derived",
     "formula": "costo_mo_interno_ytd + costo_refacciones_interno_ytd",
-    "format": "currency"
+    "format": "currency",
+    "description": "Costo mtto interno acumulado YTD."
   },
-
   "meta_costo_mtto_interno": {
     "name": "Meta Costo Mtto Interno",
     "recipe": {
@@ -1095,7 +1367,8 @@
       "column": "meta_costo_tallerinterno",
       "aggregation": "SUM",
       "format": "currency"
-    }
+    },
+    "description": "Meta de costo de mantenimiento interno."
   },
   "meta_costo_mtto_interno_ytd": {
     "name": "Meta Costo Mtto Interno Acumulado",
@@ -1105,15 +1378,28 @@
       "aggregation": "SUM",
       "time_modifier": "ytd",
       "format": "currency"
-    }
+    },
+    "description": "Meta costo mtto interno acumulada YTD."
   },
   "costo_mo_externo": {
     "name": "Costo Mano de Obra Externo",
-    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_mano_obra_ext", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_taller_gasto_taller_externo",
+      "column": "costo_mano_obra_ext",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Costo de mano de obra en taller externo."
   },
   "costo_refacciones_externo": {
     "name": "Costo Refacciones Externo",
-    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_refacciones_ext", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_taller_gasto_taller_externo",
+      "column": "costo_refacciones_ext",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Costo de refacciones en taller externo."
   },
   "costo_mtto_externo": {
     "name": "Costo Mtto Externo",
@@ -1124,72 +1410,167 @@
   },
   "costo_mo_externo_anterior": {
     "name": "Costo MO Externo Año Anterior",
-    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_mano_obra_ext", "aggregation": "SUM", "time_modifier": "previous_year", "format": "currency" }
+    "recipe": {
+      "table": "h_taller_gasto_taller_externo",
+      "column": "costo_mano_obra_ext",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    },
+    "description": "Costo MO externo del año anterior."
   },
   "costo_refacciones_externo_anterior": {
     "name": "Costo Refacciones Externo Año Anterior",
-    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_refacciones_ext", "aggregation": "SUM", "time_modifier": "previous_year", "format": "currency" }
+    "recipe": {
+      "table": "h_taller_gasto_taller_externo",
+      "column": "costo_refacciones_ext",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    },
+    "description": "Costo refacciones externo del año anterior."
   },
   "costo_mtto_externo_anterior": {
     "name": "Costo Mtto Externo Año Anterior",
     "type": "derived",
     "formula": "costo_mo_externo_anterior + costo_refacciones_externo_anterior",
-    "format": "currency"
+    "format": "currency",
+    "description": "Costo mtto externo del año anterior."
   },
-
   "costo_mo_externo_ytd": {
     "name": "Costo MO Externo Acumulado",
-    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_mano_obra_ext", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+    "recipe": {
+      "table": "h_taller_gasto_taller_externo",
+      "column": "costo_mano_obra_ext",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Costo MO externo acumulado YTD."
   },
   "costo_refacciones_externo_ytd": {
     "name": "Costo Refacciones Externo Acumulado",
-    "recipe": { "table": "h_taller_gasto_taller_externo", "column": "costo_refacciones_ext", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+    "recipe": {
+      "table": "h_taller_gasto_taller_externo",
+      "column": "costo_refacciones_ext",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Costo refacciones externo acumulado YTD."
   },
   "costo_mtto_externo_ytd": {
     "name": "Costo Mtto Externo Acumulado",
     "type": "derived",
     "formula": "costo_mo_externo_ytd + costo_refacciones_externo_ytd",
-    "format": "currency"
+    "format": "currency",
+    "description": "Costo mtto externo acumulado YTD."
   },
   "meta_costo_mtto_externo": {
     "name": "Meta Costo Mtto Externo",
-    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_tallerexterno", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_costo_tallerexterno",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Meta de costo de taller externo."
   },
   "meta_costo_mtto_externo_ytd": {
     "name": "Meta Costo Mtto Externo Acumulado",
-    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_tallerexterno", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_costo_tallerexterno",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Meta costo mtto externo acumulada YTD."
   },
   "costo_llantas_nuevas": {
     "name": "Costo Llantas Nuevas",
-    "recipe": { "table": "h_llantas_nueva", "column": "monto_llantas_nva", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_llantas_nueva",
+      "column": "monto_llantas_nva",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Costo de llantas nuevas instaladas."
   },
   "costo_llantas_renovadas": {
     "name": "Costo Llantas Renovadas",
-    "recipe": { "table": "h_llantas_renovada", "column": "monto_llantas_ren", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "h_llantas_renovada",
+      "column": "monto_llantas_ren",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Costo de llantas renovadas instaladas."
   },
   "costo_llantas_nuevas_anterior": {
     "name": "Costo Llantas Nuevas Año Anterior",
-    "recipe": { "table": "h_llantas_nueva", "column": "monto_llantas_nva", "aggregation": "SUM", "time_modifier": "previous_year", "format": "currency" }
+    "recipe": {
+      "table": "h_llantas_nueva",
+      "column": "monto_llantas_nva",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    },
+    "description": "Costo llantas nuevas del año anterior."
   },
   "costo_llantas_renovadas_anterior": {
     "name": "Costo Llantas Renovadas Año Anterior",
-    "recipe": { "table": "h_llantas_renovada", "column": "monto_llantas_ren", "aggregation": "SUM", "time_modifier": "previous_year", "format": "currency" }
+    "recipe": {
+      "table": "h_llantas_renovada",
+      "column": "monto_llantas_ren",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    },
+    "description": "Costo llantas renovadas del año anterior."
   },
   "costo_llantas_nuevas_ytd": {
     "name": "Costo Llantas Nuevas Acumulado",
-    "recipe": { "table": "h_llantas_nueva", "column": "monto_llantas_nva", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+    "recipe": {
+      "table": "h_llantas_nueva",
+      "column": "monto_llantas_nva",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Costo llantas nuevas acumulado YTD."
   },
   "costo_llantas_renovadas_ytd": {
     "name": "Costo Llantas Renovadas Acumulado",
-    "recipe": { "table": "h_llantas_renovada", "column": "monto_llantas_ren", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+    "recipe": {
+      "table": "h_llantas_renovada",
+      "column": "monto_llantas_ren",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Costo llantas renovadas acumulado YTD."
   },
   "meta_costo_mtto_llantas": {
     "name": "Meta Costo Mtto Llantas",
-    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_tallerllantas", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_costo_tallerllantas",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Meta de costo de llantas."
   },
   "meta_costo_mtto_llantas_ytd": {
     "name": "Meta Costo Mtto Llantas Acumulado",
-    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_tallerllantas", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_costo_tallerllantas",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Meta costo llantas acumulada YTD."
   },
   "dias_disponibles": {
     "name": "Días Disponibles",
@@ -1213,23 +1594,507 @@
   },
   "kms_recorridos": {
     "name": "Kilómetros Recorridos",
-    "recipe": { "table": "d_unidad_kilometros_diarios", "column": "kms_recorridos", "aggregation": "SUM", "format": "decimal" }
+    "recipe": {
+      "table": "d_unidad_kilometros_diarios",
+      "column": "kms_recorridos",
+      "aggregation": "SUM",
+      "format": "decimal"
+    },
+    "description": "Kilómetros recorridos por unidad (registro diario)."
   },
   "kms_recorridos_anterior": {
     "name": "Kms Recorridos Año Anterior",
-    "recipe": { "table": "d_unidad_kilometros_diarios", "column": "kms_recorridos", "aggregation": "SUM", "time_modifier": "previous_year", "format": "decimal" }
+    "recipe": {
+      "table": "d_unidad_kilometros_diarios",
+      "column": "kms_recorridos",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "decimal"
+    },
+    "description": "Kilómetros recorridos del año anterior."
   },
   "kms_recorridos_ytd": {
     "name": "Kms Recorridos Acumulado",
-    "recipe": { "table": "d_unidad_kilometros_diarios", "column": "kms_recorridos", "aggregation": "SUM", "time_modifier": "ytd", "format": "decimal" }
+    "recipe": {
+      "table": "d_unidad_kilometros_diarios",
+      "column": "kms_recorridos",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "decimal"
+    },
+    "description": "Kilómetros recorridos acumulados YTD."
   },
-
   "meta_costo_mtto_x_km": {
     "name": "Meta Costo Mtto x Km",
-    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_mtto_x_km", "aggregation": "SUM", "format": "currency" }
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_costo_mtto_x_km",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Meta de costo de mantenimiento por kilómetro."
   },
   "meta_costo_mtto_x_km_ytd": {
     "name": "Meta Costo Mtto x Km Acumulado",
-    "recipe": { "table": "d_meta_tiempo", "column": "meta_costo_mtto_x_km", "aggregation": "SUM", "time_modifier": "ytd", "format": "currency" }
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_costo_mtto_x_km",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Meta costo mtto por km acumulada YTD."
+  },
+  "total_unidades": {
+    "name": "Total Unidades",
+    "description": "Conteo de unidades únicas en el periodo",
+    "recipe": {
+      "table": "d_unidad_kilometros_diarios",
+      "column": "id_unidad",
+      "aggregation": "DISTINCTCOUNT",
+      "format": "integer"
+    }
+  },
+  "cantidad_ordenes": {
+    "name": "Cantidad de Órdenes (Entradas)",
+    "description": "Cuenta órdenes de servicio con estatus A, C o L",
+    "recipe": {
+      "table": "d_orden_servicio",
+      "column": "CASE WHEN id_estatus_orden IN ('A', 'C', 'L') THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "format": "integer"
+    }
+  },
+  "meta_disponibilidad": {
+    "name": "Meta Disponibilidad",
+    "type": "cons",
+    "value": 1,
+    "description": "Constante para meta de disponibilidad (1 = 100%)."
+  },
+  "rango_1_ini": {
+    "name": "Rango 1 Inicio",
+    "type": "cons",
+    "value": 0,
+    "description": "Límite inferior rango 1 (disponibilidad)."
+  },
+  "rango_2_ini": {
+    "name": "Rango 2 Inicio",
+    "type": "cons",
+    "value": 0.71,
+    "description": "Límite inferior rango 2 (disponibilidad)."
+  },
+  "rango_3_ini": {
+    "name": "Rango 3 Inicio",
+    "type": "cons",
+    "value": 0.91,
+    "description": "Límite inferior rango 3 (disponibilidad)."
+  },
+  "rango_3_fin": {
+    "name": "Rango 3 Fin",
+    "type": "cons",
+    "value": 1,
+    "description": "Límite superior rango 3 (disponibilidad)."
+  },
+  "entradas_taller": {
+    "name": "Entradas a Taller",
+    "recipe": {
+      "table": "d_orden_servicio",
+      "column": "CASE WHEN id_estatus_orden IN ('A', 'C', 'L') THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "format": "integer"
+    },
+    "description": "Entradas a taller (órdenes con estatus A, C o L)."
+  },
+  "entradas_taller_anterior": {
+    "name": "Entradas a Taller Año Anterior",
+    "recipe": {
+      "table": "d_orden_servicio",
+      "column": "CASE WHEN id_estatus_orden IN ('A', 'C', 'L') THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    },
+    "description": "Entradas a taller del año anterior."
+  },
+  "entradas_taller_ytd": {
+    "name": "Entradas a Taller Acumulado",
+    "recipe": {
+      "table": "d_orden_servicio",
+      "column": "CASE WHEN id_estatus_orden IN ('A', 'C', 'L') THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    },
+    "description": "Entradas a taller acumuladas YTD."
+  },
+  "dias_disponibles_anterior": {
+    "name": "Días Disponibles Año Anterior",
+    "recipe": {
+      "table": "h_unidad_indicadores_mes_diario",
+      "column": "dias_disponibles",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    },
+    "description": "Días disponibles del año anterior."
+  },
+  "dias_mes_anterior": {
+    "name": "Días del Mes Año Anterior",
+    "recipe": {
+      "table": "h_unidad_indicadores_mes_diario",
+      "column": "dias_mes",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    },
+    "description": "Días del mes del año anterior."
+  },
+  "dias_taller": {
+    "name": "Días en Taller",
+    "recipe": {
+      "table": "h_unidad_indicadores_mes_diario",
+      "column": "dias_taller",
+      "aggregation": "SUM",
+      "format": "integer"
+    },
+    "description": "Días que las unidades estuvieron en taller."
+  },
+  "compras": {
+    "name": "Compras",
+    "recipe": {
+      "table": "h_orden_compra",
+      "column": "monto_subtotal_calc_mn",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Monto de órdenes de compra (refacciones/insumos)."
+  },
+  "compras_anterior": {
+    "name": "Compras Año Anterior",
+    "recipe": {
+      "table": "h_orden_compra",
+      "column": "monto_subtotal_calc_mn",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    },
+    "description": "Compras del año anterior."
+  },
+  "compras_ytd": {
+    "name": "Compras Acumulado",
+    "recipe": {
+      "table": "h_orden_compra",
+      "column": "monto_subtotal_calc_mn",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Compras acumuladas YTD."
+  },
+  "inventario_inicial": {
+    "name": "Inventario Inicial",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_inicio",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Valorización inicial de inventario (cierre mes)."
+  },
+  "inventario_inicial_anterior": {
+    "name": "Inventario Inicial Anterior",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_inicio",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    },
+    "description": "Inventario inicial del año anterior."
+  },
+  "inventario_inicial_ytd": {
+    "name": "Inventario Inicial Acumulado",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_inicio",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Inventario inicial acumulado YTD."
+  },
+  "entradas_inventario": {
+    "name": "Entradas de Inventario",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_entradas",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Entradas valorizadas al inventario en el periodo."
+  },
+  "entradas_inventario_anterior": {
+    "name": "Entradas de Inventario Anterior",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_entradas",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    },
+    "description": "Entradas inventario del año anterior."
+  },
+  "entradas_inventario_ytd": {
+    "name": "Entradas de Inventario Acumulado",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_entradas",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Entradas inventario acumuladas YTD."
+  },
+  "salidas_inventario": {
+    "name": "Salidas de Inventario",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_salidas",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Salidas valorizadas del inventario."
+  },
+  "salidas_inventario_anterior": {
+    "name": "Salidas de Inventario Anterior",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_salidas",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    },
+    "description": "Salidas inventario del año anterior."
+  },
+  "salidas_inventario_ytd": {
+    "name": "Salidas de Inventario Acumulado",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_salidas",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Salidas inventario acumuladas YTD."
+  },
+  "valorizacion_historica": {
+    "name": "Valorización Histórica",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_final",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Valorización de inventario al cierre (histórico)."
+  },
+  "valorizacion_historica_anterior": {
+    "name": "Valorización Histórica Anterior",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_final",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "currency"
+    },
+    "description": "Valorización histórica del año anterior."
+  },
+  "valorizacion_historica_ytd": {
+    "name": "Valorización Histórica Acumulada",
+    "recipe": {
+      "table": "h_inventario_cierre_mes",
+      "column": "costeo_final",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "currency"
+    },
+    "description": "Valorización histórica acumulada YTD."
+  },
+  "valorizacion_actual": {
+    "name": "Valorización Actual",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "valorizacion_actual",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Valorización actual del inventario en almacén."
+  },
+  "meta_valorizacion_almacen": {
+    "name": "Meta Valorización Almacen",
+    "recipe": {
+      "table": "d_meta_tiempo",
+      "column": "meta_valorizacion_almacen",
+      "aggregation": "SUM",
+      "format": "currency"
+    },
+    "description": "Meta de valorización de almacén."
+  },
+  "insumos_registrados": {
+    "name": "Insumos Registrados",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "pk_inv_almacen",
+      "aggregation": "COUNT",
+      "format": "integer"
+    },
+    "description": "Cantidad de registros de insumo en almacén."
+  },
+  "insumos_registrados_anterior": {
+    "name": "Insumos Registrados Año Anterior",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "pk_inv_almacen",
+      "aggregation": "COUNT",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    },
+    "description": "Insumos registrados del año anterior."
+  },
+  "insumos_registrados_ytd": {
+    "name": "Insumos Registrados YTD",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "pk_inv_almacen",
+      "aggregation": "COUNT",
+      "time_modifier": "ytd",
+      "format": "integer"
+    },
+    "description": "Insumos registrados YTD."
+  },
+  "insumos_con_existencia": {
+    "name": "Insumos con Existencia",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "CASE WHEN cantidad_insumo > 0 THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "format": "integer"
+    },
+    "description": "Insumos con cantidad mayor a cero."
+  },
+  "insumos_con_existencia_anterior": {
+    "name": "Insumos con Existencia Año Anterior",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "CASE WHEN cantidad_insumo > 0 THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    },
+    "description": "Insumos con existencia del año anterior."
+  },
+  "insumos_con_existencia_ytd": {
+    "name": "Insumos con Existencia YTD",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "CASE WHEN cantidad_insumo > 0 THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    },
+    "description": "Insumos con existencia YTD."
+  },
+  "insumos_sin_existencia": {
+    "name": "Insumos sin Existencia",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "CASE WHEN cantidad_insumo <= 0 THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "format": "integer"
+    },
+    "description": "Insumos con cantidad cero o negativa."
+  },
+  "insumos_sin_existencia_anterior": {
+    "name": "Insumos sin Existencia Año Anterior",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "CASE WHEN cantidad_insumo <= 0 THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    },
+    "description": "Insumos sin existencia del año anterior."
+  },
+  "insumos_sin_existencia_ytd": {
+    "name": "Insumos sin Existencia YTD",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "CASE WHEN cantidad_insumo <= 0 THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    },
+    "description": "Insumos sin existencia YTD."
+  },
+  "insumos_dentro_rango": {
+    "name": "Insumos Dentro del Rango",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "CASE WHEN cantidad_insumo >= cantidad_minima AND cantidad_insumo <= cantidad_maxima THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "format": "integer"
+    },
+    "description": "Insumos con cantidad entre mínima y máxima."
+  },
+  "insumos_dentro_rango_anterior": {
+    "name": "Insumos Dentro del Rango Año Anterior",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "CASE WHEN cantidad_insumo >= cantidad_minima AND cantidad_insumo <= cantidad_maxima THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "time_modifier": "previous_year",
+      "format": "integer"
+    },
+    "description": "Insumos dentro de rango del año anterior."
+  },
+  "insumos_dentro_rango_ytd": {
+    "name": "Insumos Dentro del Rango YTD",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "CASE WHEN cantidad_insumo >= cantidad_minima AND cantidad_insumo <= cantidad_maxima THEN 1 ELSE 0 END",
+      "aggregation": "SUM",
+      "time_modifier": "ytd",
+      "format": "integer"
+    },
+    "description": "Insumos dentro de rango YTD."
+  },
+  "cantidad_insumo": {
+    "name": "Cantidad Insumo",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "cantidad_insumo",
+      "aggregation": "SUM",
+      "format": "decimal"
+    },
+    "description": "Cantidad total de insumo en almacén."
+  },
+  "cantidad_minima": {
+    "name": "Cantidad Mínima",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "cantidad_minima",
+      "aggregation": "SUM",
+      "format": "decimal"
+    },
+    "description": "Suma de cantidades mínimas (punto de reorden)."
+  },
+  "cantidad_maxima": {
+    "name": "Cantidad Máxima",
+    "recipe": {
+      "table": "h_inventario_almacen",
+      "column": "cantidad_maxima",
+      "aggregation": "SUM",
+      "format": "decimal"
+    },
+    "description": "Suma de cantidades máximas configuradas."
   }
 }

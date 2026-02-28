@@ -23,13 +23,13 @@ dash.register_page(__name__, path="/workshop-dashboard", title="Mantenimiento")
 SCREEN_ID = "workshop-dashboard"
 PREFIX = "wd"
 
-w_int = SmartWidget(f"{PREFIX}_int", WorkshopKPIStrategy(SCREEN_ID, "internal_cost", "Costo Interno", "tabler:tools", "indigo"))
-w_ext = SmartWidget(f"{PREFIX}_ext", WorkshopKPIStrategy(SCREEN_ID, "external_cost", "Costo Externo", "tabler:truck-delivery", "yellow"))
-w_lla = SmartWidget(f"{PREFIX}_lla", WorkshopKPIStrategy(SCREEN_ID, "tire_cost", "Costo Llantas", "tabler:tire", "red"))
-w_tot = SmartWidget(f"{PREFIX}_tot", WorkshopKPIStrategy(SCREEN_ID, "total_maintenance", "Total Mantenimiento", "tabler:sum", "green"))
+w_int = SmartWidget(f"{PREFIX}_int", WorkshopKPIStrategy(SCREEN_ID, "internal_cost", "Costo Interno", "tabler:tools", "indigo"), height=150)
+w_ext = SmartWidget(f"{PREFIX}_ext", WorkshopKPIStrategy(SCREEN_ID, "external_cost", "Costo Externo", "tabler:truck-delivery", "yellow"), height=150)
+w_lla = SmartWidget(f"{PREFIX}_lla", WorkshopKPIStrategy(SCREEN_ID, "tire_cost", "Costo Llantas", "tabler:tire", "red"), height=150)
+w_tot = SmartWidget(f"{PREFIX}_tot", WorkshopKPIStrategy(SCREEN_ID, "total_maintenance", "Total Mantenimiento", "tabler:sum", "green"), height=150)
 
-w_disp = SmartWidget(f"{PREFIX}_disp", WorkshopGaugeStrategy(SCREEN_ID, "availability_percent", "% Disponibilidad", "green", icon="tabler:gauge", use_needle=True, layout_config={"height": 220}))
-w_ckm = SmartWidget(f"{PREFIX}_ckm", WorkshopGaugeStrategy(SCREEN_ID, "cost_per_km", "Costo por Km", "indigo", icon="tabler:route", use_needle=False, layout_config={"height": 220}))
+w_disp = SmartWidget(f"{PREFIX}_disp", WorkshopGaugeStrategy(SCREEN_ID, "availability_percent", "% Disponibilidad", "green", icon="tabler:gauge", use_needle=True, layout_config={"height": 320}))
+w_ckm = SmartWidget(f"{PREFIX}_ckm", WorkshopGaugeStrategy(SCREEN_ID, "cost_per_km", "Costo por Km", "indigo", icon="tabler:route", use_needle=False, layout_config={"height": 320}))
 
 class DynamicWorkshopTrendStrategy(WorkshopTrendChartStrategy):
     def __init__(self, screen_id, key, base_title, has_detail=True, layout_config=None):
@@ -53,30 +53,55 @@ def _render_taller_dashboard_body(ctx):
     theme = session.get("theme", "dark")
 
     return html.Div([
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "0.6rem", "marginBottom": "1rem"}, children=[
-            w_int.render(ctx, theme=theme),
-            w_ext.render(ctx, theme=theme),
-            w_lla.render(ctx, theme=theme),
-            w_tot.render(ctx, theme=theme)
-        ]),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
-            w_disp.render(ctx, theme=theme),
-            w_ckm.render(ctx, theme=theme)
-        ]),
+        # ── Fila 1: KPIs principales ─────────────────────────────────
+        html.Div(
+            style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(200px, 1fr))", "gap": "0.6rem", "marginBottom": "1rem"},
+            children=[
+                w_int.render(ctx, theme=theme),
+                w_ext.render(ctx, theme=theme),
+                w_lla.render(ctx, theme=theme),
+                w_tot.render(ctx, theme=theme),
+            ],
+        ),
+
+        # ── Fila 2: Gauges + Tendencia ───────────────────────────────
+        dmc.Divider(my="sm", label="Indicadores de Flota", labelPosition="center"),
+        html.Div(
+            style={"display": "grid", "gridTemplateColumns": "1fr 1fr 2fr", "gap": "0.8rem", "marginBottom": "1rem", "alignItems": "stretch"},
+            children=[
+                w_disp.render(ctx, theme=theme),
+                w_ckm.render(ctx, theme=theme),
+                c_trend.render(ctx, h=340, theme=theme),
+            ],
+        ),
+
+        # ── Fila 3: Donut + Barras por familia ───────────────────────
+        dmc.Divider(my="sm", label="Análisis por Clasificación", labelPosition="center"),
         dmc.Grid(gutter="md", mb="xl", children=[
-            dmc.GridCol(span=_dmc({"base": 12, "lg": 7}), children=[c_trend.render(ctx, h=420, theme=theme)]),
-            dmc.GridCol(span=_dmc({"base": 12, "lg": 5}), children=[c_type.render(ctx, h=420, theme=theme)])
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 5}), children=[c_type.render(ctx, h=420, theme=theme)]),
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 7}), children=[c_fam.render(ctx, h=420, theme=theme)]),
         ]),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
-            c_fam.render(ctx, h=420, theme=theme),
-            c_fleet.render(ctx, h=420, theme=theme),
-            c_op.render(ctx, h=420, theme=theme)
-        ]),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem"}, children=[
-            c_unit.render(ctx, h=420, theme=theme),
-            c_brand.render(ctx, h=420, theme=theme),
-            c_entry.render(ctx, h=420, theme=theme)
-        ]),
+
+        # ── Fila 4: Flota + Operación ────────────────────────────────
+        dmc.Divider(my="sm", label="Análisis por Flota y Operación", labelPosition="center"),
+        html.Div(
+            style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"},
+            children=[
+                c_fleet.render(ctx, h=420, theme=theme),
+                c_op.render(ctx, h=420, theme=theme),
+            ],
+        ),
+
+        # ── Fila 5: Costo por Km ─────────────────────────────────────
+        dmc.Divider(my="sm", label="Costo por Kilómetro", labelPosition="center"),
+        html.Div(
+            style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem"},
+            children=[
+                c_unit.render(ctx, h=420, theme=theme),
+                c_brand.render(ctx, h=420, theme=theme),
+                c_entry.render(ctx, h=420, theme=theme),
+            ],
+        ),
         dmc.Space(h=50),
     ])
 
@@ -101,7 +126,10 @@ def layout():
 
 FILTER_IDS = ["taller-year", "taller-month", "taller-empresa", "taller-unidad", "taller-tipo-op", "taller-clasificacion", "taller-razon", "taller-motor"]
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="taller-dashboard-body", render_body=_render_taller_dashboard_body, filter_ids=FILTER_IDS)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID, body_output_id="taller-dashboard-body", render_body=_render_taller_dashboard_body, filter_ids=FILTER_IDS,
+    global_token_output_id="current-page-token-store",
+)
 
 register_drawer_callback(drawer_id="taller-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
 

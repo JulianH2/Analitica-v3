@@ -41,11 +41,8 @@ class DynamicPurchaseTrendStrategy(WorkshopTrendChartStrategy):
 c_trend = ChartWidget(f"{PREFIX}_trend", DynamicPurchaseTrendStrategy(SCREEN_ID, "purchases_trend", "Compras", has_detail=True, layout_config={"height": 400}))
 c_area = ChartWidget(f"{PREFIX}_area", WorkshopHorizontalBarStrategy(SCREEN_ID, "purchases_by_area", "Total Compra por Área", has_detail=True, layout_config={"height": 400}))
 c_type = ChartWidget(f"{PREFIX}_type", WorkshopDonutChartStrategy(SCREEN_ID, "purchases_by_type", "Compras por Tipo Compra", has_detail=True, layout_config={"height": 400}))
-c_prov = ChartWidget(f"{PREFIX}_prov", WorkshopHorizontalBarStrategy(SCREEN_ID, "top_suppliers_chart", "Total Compra por Proveedor y por Tipo Compra", has_detail=True, layout_config={"height": 400}))
-
-t_ord = TableWidget(f"{SCREEN_ID}-purchase_orders_detail", WorkshopTableStrategy(SCREEN_ID, "purchase_orders_detail", title="Órdenes de Compra"))
-t_inp = TableWidget(f"{SCREEN_ID}-inventory_detail", WorkshopTableStrategy(SCREEN_ID, "inventory_detail", title="Detalle de Insumos"))
-t_sup = TableWidget(f"{SCREEN_ID}-top_suppliers", WorkshopTableStrategy(SCREEN_ID, "top_suppliers", title="Proveedores Detalle"))
+c_insumo = ChartWidget(f"{PREFIX}_insumo", WorkshopDonutChartStrategy(SCREEN_ID, "purchases_by_insumo_type", "Compras por Tipo Insumo", has_detail=True, layout_config={"height": 400}))
+t_prov = TableWidget(f"{PREFIX}_prov", WorkshopTableStrategy(SCREEN_ID, "top_suppliers", title="Total Compra por Proveedor y por Tipo Compra"))
 
 def _render_taller_purchases_body(ctx):
     theme = session.get("theme", "dark")
@@ -62,32 +59,22 @@ def _render_taller_purchases_body(ctx):
             dmc.GridCol(span=_dmc({"base": 12, "lg": 4}), children=[c_type.render(ctx, h=420, theme=theme)]),
         ]),
         dmc.Grid(gutter="md", mb="xl", children=[
-            dmc.GridCol(span=_dmc({"base": 12, "lg": 6}), children=[c_area.render(ctx, h=420, theme=theme)]),
-            dmc.GridCol(span=_dmc({"base": 12, "lg": 6}), children=[c_prov.render(ctx, h=420, theme=theme)]),
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 4}), children=[c_insumo.render(ctx, h=420, theme=theme)]),
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 4}), children=[c_area.render(ctx, h=420, theme=theme)]),
+            dmc.GridCol(span=_dmc({"base": 12, "lg": 4}), children=[
+                dmc.Paper(
+                    p=8, withBorder=True, radius="md",
+                    style={"height": "420px", "backgroundColor": "transparent"},
+                    children=[t_prov.render(ctx, theme=theme)],
+                )
+            ]),
         ]),
-        dmc.Paper(
-            p="md",
-            withBorder=True,
-            mb="lg",
-            style={"backgroundColor": "transparent"},
-            children=[dmc.Tabs(value="ordenes", children=[
-                dmc.TabsList([
-                    dmc.TabsTab("Órdenes de Compra", value="ordenes"),
-                    dmc.TabsTab("Detalle de Insumos", value="insumos"),
-                    dmc.TabsTab("Proveedores Detalle", value="prov")
-                ]),
-                dmc.TabsPanel(dmc.ScrollArea(h=400, pt="md", children=[t_ord.render(ctx, theme=theme)]), value="ordenes"),
-                dmc.TabsPanel(dmc.ScrollArea(h=400, pt="md", children=[t_inp.render(ctx, theme=theme)]), value="insumos"),
-                dmc.TabsPanel(dmc.ScrollArea(h=400, pt="md", children=[t_sup.render(ctx, theme=theme)]), value="prov"),
-            ])]
-        ),
         dmc.Space(h=50),
     ])
 
 WIDGET_REGISTRY = {
     f"{PREFIX}_tot": w_tot, f"{PREFIX}_die": w_die, f"{PREFIX}_par": w_par, f"{PREFIX}_tir": w_tir,
-    f"{PREFIX}_trend": c_trend, f"{PREFIX}_area": c_area, f"{PREFIX}_type": c_type, f"{PREFIX}_prov": c_prov,
-    f"{SCREEN_ID}-purchase_orders_detail": t_ord, f"{SCREEN_ID}-inventory_detail": t_inp, f"{SCREEN_ID}-top_suppliers": t_sup,
+    f"{PREFIX}_trend": c_trend, f"{PREFIX}_area": c_area, f"{PREFIX}_type": c_type, f"{PREFIX}_insumo": c_insumo, f"{PREFIX}_prov": t_prov,
 }
 
 def layout():
@@ -115,7 +102,10 @@ def layout():
 
 FILTER_IDS = ["pur-year", "pur-month", "pur-empresa", "pur-tipo-compra", "pur-tipo-insumo"]
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="taller-purchases-body", render_body=_render_taller_purchases_body, filter_ids=FILTER_IDS)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID, body_output_id="taller-purchases-body", render_body=_render_taller_purchases_body, filter_ids=FILTER_IDS,
+    global_token_output_id="current-page-token-store",
+)
 
 register_drawer_callback(drawer_id="pur-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
 

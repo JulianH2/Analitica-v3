@@ -2,14 +2,16 @@ import dash_mantine_components as mantine
 from dash import dcc, html
 from dash_iconify import DashIconify
 from typing import Any
-from design_system import DesignSystem as DS, Typography, ComponentSizes, dmc as ds_token
+from design_system import DesignSystem as DS, Colors, Typography, ComponentSizes, dmc as ds_token
+from components.card_wrapper import make_card
 import math
 
 
 class ChartWidget:
-    def __init__(self, widget_id: str, strategy: Any):
+    def __init__(self, widget_id: str, strategy: Any, height: int | None = None):
         self.widget_id = widget_id
         self.strategy = strategy
+        self._height = height
 
     def render(self, data_context: Any, h=None, theme="light"):
         self.theme = theme
@@ -17,7 +19,13 @@ class ChartWidget:
         config_data = self.strategy.get_card_config(data_context)
         layout = getattr(self.strategy, "layout", {})
 
-        fig_height = h if h else layout.get("height", ComponentSizes.CHART_HEIGHT_MD)
+        _HEADER_H = 42
+        fig_height = h if h else (self._height or layout.get("height", ComponentSizes.CHART_HEIGHT_MD))
+        if fig and hasattr(fig, "layout") and isinstance(fig.layout.height, (int, float)):
+            natural_h = int(fig.layout.height)
+            if isinstance(fig_height, int) and (natural_h + _HEADER_H) > fig_height:
+                fig_height = natural_h + _HEADER_H
+
         height_style = f"{fig_height}px" if isinstance(fig_height, int) else fig_height
 
         valid_fig = self._validate_figure(fig)
@@ -32,25 +40,15 @@ class ChartWidget:
         is_dark = theme == "dark"
         is_pie = valid_fig and any(getattr(t, "type", "") == "pie" for t in fig.data) if fig else False
 
-        return mantine.Paper(
-            p=0,
-            radius="md",
-            withBorder=True,
-            shadow=None,
-            style={
-                "height": height_style,
-                "display": "flex",
-                "flexDirection": "column",
-                "backgroundColor": "transparent",
-                "border": DS.CARD_BORDER_DARK if is_dark else DS.CARD_BORDER_LIGHT,
-                "overflow": "visible" if is_pie else "hidden",
-            },
+        content_h = (fig_height - _HEADER_H) if isinstance(fig_height, int) else None
+        content_height_style = f"{content_h}px" if content_h is not None else "calc(100% - 42px)"
+
+        return make_card(
             children=[
                 self._create_header(config_data, icon_color, is_dark),
                 html.Div(
                     style={
-                        "flex": 1,
-                        "minHeight": 0,
+                        "height": content_height_style,
                         "width": "100%",
                         "position": "relative",
                         "overflow": "visible" if is_pie else "hidden",
@@ -58,6 +56,9 @@ class ChartWidget:
                     children=graph_content,
                 ),
             ],
+            height=height_style,
+            is_dark=is_dark,
+            overflow="visible" if is_pie else "hidden",
         )
 
     def _validate_figure(self, fig) -> bool:
@@ -97,21 +98,60 @@ class ChartWidget:
 
     def _configure_figure(self, fig, fig_height):
         is_pie = any(getattr(trace, "type", "") == "pie" for trace in fig.data)
+        is_hbar = any(getattr(t, "orientation", "") == "h" for t in fig.data)
 
-        HEADER_HEIGHT = 40
-        plotly_height = (fig_height - HEADER_HEIGHT) if isinstance(fig_height, int) else None
+        _HEADER_H = 42
+        plotly_h = (fig_height - _HEADER_H) if isinstance(fig_height, int) else None
+        _is_dark = self.theme == "dark"
+        _tmpl = "zam_dark" if _is_dark else "zam_light"
+        _bg = Colors.BG_DARK_CARD if _is_dark else Colors.BG_LIGHT_CARD
 
-        fig.update_layout(
-            autosize=True,
-            height=plotly_height,
-            template="zam_dark" if self.theme == "dark" else "zam_light",
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-        )
-
-        if not is_pie:
+        if is_pie:
+            fig.layout.height = plotly_h
             fig.update_layout(
-                margin=dict(t=5, b=25, l=40, r=10),
+                autosize=True,
+                template=_tmpl,
+                paper_bgcolor=_bg,
+                plot_bgcolor=_bg,
+                showlegend=False,
+            )
+            return
+
+        current_t = getattr(fig.layout.margin, "t", None) or 0
+        current_r = getattr(fig.layout.margin, "r", None) or 0
+        current_l = getattr(fig.layout.margin, "l", None) or 0
+
+        if is_hbar:
+            current_b = getattr(fig.layout.margin, "b", None) or 25
+            fig.update_layout(
+                autosize=True,
+                template=_tmpl,
+                paper_bgcolor=_bg,
+                plot_bgcolor=_bg,
+                height=plotly_h,
+                margin=dict(
+                    t=max(20, current_t),
+                    b=max(25, current_b),
+                    l=max(10, current_l),
+                    r=max(80, current_r),
+                ),
+                yaxis=dict(type="category", autorange="reversed", automargin=True),
+                xaxis=dict(side="top", automargin=True, tickformat="$,.0f", showgrid=True, zeroline=False),
+            )
+            fig.layout.yaxis.type = "category"
+            fig.layout.yaxis.autorange = "reversed"
+        else:
+            fig.layout.height = plotly_h
+            existing_xtype = getattr(fig.layout.xaxis, "type", None)
+            xaxis_opts: dict = {"automargin": True}
+            if existing_xtype == "category":
+                xaxis_opts["type"] = "category"
+            fig.update_layout(
+                autosize=True,
+                template=_tmpl,
+                paper_bgcolor=_bg,
+                plot_bgcolor=_bg,
+                margin=dict(t=max(20, current_t), b=25, l=40, r=10),
                 legend=dict(
                     orientation="h",
                     yanchor="bottom",
@@ -119,11 +159,9 @@ class ChartWidget:
                     xanchor="center",
                     x=0.5,
                 ),
+                xaxis=xaxis_opts,
             )
-            fig.update_xaxes(automargin=True)
             fig.update_yaxes(automargin=True)
-        else:
-            fig.update_layout(showlegend=False)
 
     def _create_graph_component(self, fig, fig_height):
         return dcc.Graph(
@@ -161,9 +199,8 @@ class ChartWidget:
 
         return mantine.Group(
             justify="space-between",
-            px="sm",
-            pt="xs",
-            mb=5,
+            p="sm",
+            mb=4,
             wrap="nowrap",
             children=[
                 mantine.Group(

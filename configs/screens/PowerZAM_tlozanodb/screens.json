@@ -1,0 +1,122 @@
+{
+  "workshop-dashboard": {
+    "page_filter": [
+      { "field": "d_orden_servicio.id_razon", "operator": "<>", "value": 23 },
+      {
+        "field": "d_razon_reparacion.razon",
+        "operator": "NOT IN",
+        "value": [
+          "CARGA",
+          "MOVIMIENTOS INTERNOS",
+          "DESCARGA",
+          "LAVADO",
+          "MTTO PATIO",
+          "QUITAPON",
+          "LLANTAS",
+          "SPATIO"
+        ]
+      },
+      {
+        "field": "d_unidad.id_unidad",
+        "operator": "NOT IN",
+        "value": [
+          "MTTOPATIO",
+          "TLMD",
+          "SPATIO",
+          "SLLANTAS",
+          "RAM 2024"
+        ]
+      }
+    ]
+  },
+  "workshop-availability": {
+    "page_filter": [
+      { "field": "d_orden_servicio.id_razon", "operator": "<>", "value": 23 },
+      {
+        "field": "d_razon_reparacion.razon",
+        "operator": "NOT IN",
+        "value": [
+          "CARGA",
+          "MOVIMIENTOS INTERNOS",
+          "DESCARGA",
+          "LAVADO",
+          "MTTO PATIO",
+          "QUITAPON",
+          "LLANTAS",
+          "SPATIO"
+        ]
+      },
+      {
+        "field": "d_unidad.id_unidad",
+        "operator": "NOT IN",
+        "value": [
+          "MTTOPATIO",
+          "TLMD",
+          "SPATIO",
+          "SLLANTAS",
+          "RAM 2024"
+        ]
+      }
+    ]
+  },
+  "workshop-purchases": {
+    "page_filter": [
+      { "field": "d_orden_servicio.id_razon", "operator": "<>", "value": 23 },
+      {
+        "field": "d_razon_reparacion.razon",
+        "operator": "NOT IN",
+        "value": [
+          "CARGA",
+          "MOVIMIENTOS INTERNOS",
+          "DESCARGA",
+          "LAVADO",
+          "MTTO PATIO",
+          "QUITAPON",
+          "LLANTAS",
+          "SPATIO"
+        ]
+      },
+      {
+        "field": "d_unidad.id_unidad",
+        "operator": "NOT IN",
+        "value": [
+          "MTTOPATIO",
+          "TLMD",
+          "SPATIO",
+          "SLLANTAS",
+          "RAM 2024"
+        ]
+      }
+    ]
+  },
+  "workshop-inventory": {
+    "page_filter": [
+      { "field": "d_orden_servicio.id_razon", "operator": "<>", "value": 23 },
+      {
+        "field": "d_razon_reparacion.razon",
+        "operator": "NOT IN",
+        "value": [
+          "CARGA",
+          "MOVIMIENTOS INTERNOS",
+          "DESCARGA",
+          "LAVADO",
+          "MTTO PATIO",
+          "QUITAPON",
+          "LLANTAS",
+          "SPATIO"
+        ]
+      },
+      {
+        "field": "d_unidad.id_unidad",
+        "operator": "NOT IN",
+        "value": [
+          "MTTOPATIO",
+          "TLMD",
+          "SPATIO",
+          "SLLANTAS",
+          "RAM 2024"
+        ]
+      }
+    ]
+  }
+}

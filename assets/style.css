@@ -23,6 +23,32 @@
   --zam-success: #22c55e;
   --zam-warning: #facc15;
   --zam-danger: #ef4444;
+
+  /* Card / sidebar theme vars — light default */
+  --zam-card-bg: #ffffff;
+  --zam-card-border: 1px solid #e5e7eb;
+  --zam-card-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --zam-plot-bg: #ffffff;
+  --zam-app-bg: #f2f2f2;
+}
+
+[data-mantine-color-scheme="dark"] {
+  --zam-card-bg: #62686e;
+  --zam-card-border: 1px solid rgba(255, 255, 255, 0.08);
+  --zam-card-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
+  --zam-plot-bg: #62686e;
+  --zam-app-bg: #1d1d1b;
+}
+
+/* ── Page background ── */
+.mantine-AppShell-main {
+  background-color: var(--zam-app-bg);
+}
+
+/* ── Sidebar: same background as cards + orange right border ── */
+.mantine-AppShell-navbar {
+  background-color: var(--zam-card-bg) !important;
+  border-right: 3px solid #e27f08 !important;
 }
 
 ::-webkit-scrollbar {
@@ -125,6 +151,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .skeleton-chart-row {
@@ -141,6 +168,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .skeleton-chart-area {
@@ -183,6 +211,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .skeleton-table-header,
@@ -216,6 +245,7 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .skeleton-gauge-circle {
@@ -479,4 +509,65 @@
 
 [data-mantine-color-scheme="light"] .zam-filter-label {
   color: #64748b !important;
+}
+
+[data-mantine-color-scheme="dark"] .skeleton-kpi,
+[data-mantine-color-scheme="dark"] .skeleton-chart,
+[data-mantine-color-scheme="dark"] .skeleton-table,
+[data-mantine-color-scheme="dark"] .skeleton-gauge {
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* ── Zamy Markdown bubble reset ──────────────────────────────────────── */
+.zamy-markdown p {
+  margin: 0 0 6px 0;
+}
+.zamy-markdown p:last-child {
+  margin-bottom: 0;
+}
+.zamy-markdown ul,
+.zamy-markdown ol {
+  margin: 4px 0 4px 18px;
+  padding: 0;
+}
+.zamy-markdown li {
+  margin-bottom: 2px;
+}
+.zamy-markdown strong {
+  font-weight: 700;
+}
+.zamy-markdown code {
+  font-family: monospace;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+.zamy-markdown pre {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 12px;
+}
+.zamy-markdown h1,
+.zamy-markdown h2,
+.zamy-markdown h3 {
+  margin: 6px 0 4px 0;
+  font-size: inherit;
+  font-weight: 700;
+}
+
+/* ── Zamy typing-indicator bounce animation ─────────────────────────── */
+@keyframes zamyDot {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.7);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

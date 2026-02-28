@@ -1,5 +1,5 @@
 import dash_mantine_components as dmc
-from dash import html, Output, Input, State, callback
+from dash import html, Output, Input, State, callback, no_update
 from dash_iconify import DashIconify
 from design_system import Colors, Typography
 from datetime import datetime
@@ -28,45 +28,7 @@ def _month_abbr(month_lower: str) -> str:
         return "Ene"
 
 
-def _build_date_modal_content(year_id, month_id, year_options, default_year, default_month):
-    return dmc.Group(
-        gap="sm",
-        wrap="nowrap",
-        align="flex-end",
-        children=[
-            html.Div(children=[
-                html.Label("Año", className="zam-filter-label"),
-                dmc.Select(
-                    id=year_id,
-                    data=year_options,
-                    value=default_year,
-                    allowDeselect=False,
-                    size="sm",
-                    radius="md",
-                    w=110,
-                    styles={"input": {
-                        "fontWeight": 700,
-                        "border": f"2px solid {Colors.CHART_BLUE}",
-                    }},
-                ),
-            ]),
-            html.Div(children=[
-                html.Label("Mes", className="zam-filter-label"),
-                dmc.Select(
-                    id=month_id,
-                    data=MONTHS_FULL,
-                    value=default_month.lower(),
-                    allowDeselect=False,
-                    size="sm",
-                    radius="md",
-                    w=90,
-                ),
-            ]),
-        ],
-    )
-
-
-def _build_filters_modal_content(additional_filters, checkbox_filters):
+def _build_filters_modal_content(additional_filters, checkbox_filters, apply_btn_id=None):
     extra = []
     if additional_filters:
         for f in additional_filters:
@@ -113,15 +75,32 @@ def _build_filters_modal_content(additional_filters, checkbox_filters):
                 children=[
                     dmc.Checkbox(
                         label=cb["label"], id=cb["id"],
-                        color="blue", size="sm", radius="sm",
+                        color="blue", size="sm",
                     )
                     for cb in checkbox_filters
                 ],
             )
         ]
 
-    return html.Div(children=extra + checks)
+    apply_btn = []
+    if apply_btn_id:
+        apply_btn = [
+            dmc.Divider(my="md"),
+            dmc.Button(
+                id=apply_btn_id,
+                children=dmc.Group(gap=6, wrap="nowrap", children=[
+                    DashIconify(icon="tabler:search", width=15),
+                    html.Span("Aplicar filtros"),
+                ]),
+                fullWidth=True,
+                size="sm",
+                radius="md",
+                color="blue",
+                variant="filled",
+            ),
+        ]
 
+    return html.Div(children=extra + checks + apply_btn)
 
 
 def create_filter_section(
@@ -146,14 +125,11 @@ def create_filter_section(
     elif default_year not in year_options:
         year_options = [default_year] + list(year_options)
 
-    date_modal_id   = f"{year_id}-date-modal"
     filter_modal_id = f"{year_id}-filter-modal"
-    btn_mes_id      = f"{year_id}-btn-mes"
     btn_filtro_id   = f"{year_id}-btn-filtro"
-    date_label_id   = f"{year_id}-date-label"
 
-    n_extra = len(additional_filters) if additional_filters else 0
-    date_label_init = f"{_month_abbr(default_month)} · {default_year}"
+    n_extra      = len(additional_filters) if additional_filters else 0
+    apply_btn_id = f"{year_id}-apply-btn"
 
     _btn_styles = {
         "root": {
@@ -167,34 +143,59 @@ def create_filter_section(
         }
     }
 
+    # Inline select styles — unstyled so they blend into the pill container
+    _inline_input = {
+        "fontWeight": 700,
+        "fontSize": "13px",
+        "cursor": "pointer",
+        "padding": "0 2px",
+        "height": "22px",
+        "minHeight": "22px",
+        "border": "none",
+        "background": "transparent",
+        "fontFamily": Typography.FAMILY,
+    }
+
     toolbar = dmc.Group(
         justify="flex-end",
         gap="xs",
         mb="lg",
         children=[
+            # Date pill with inline year + month selects
             html.Div(
                 className="zam-pill",
+                style={
+                    "display": "flex",
+                    "alignItems": "center",
+                    "gap": "4px",
+                    "padding": "0 8px 0 10px",
+                },
                 children=[
                     DashIconify(icon="tabler:calendar", width=13, color=Colors.CHART_BLUE),
-                    html.Span(date_label_init, id=date_label_id),
+                    dmc.Select(
+                        id=year_id,
+                        data=year_options,
+                        value=default_year,
+                        allowDeselect=False,
+                        size="xs",
+                        w=62,
+                        variant="unstyled",
+                        comboboxProps={"zIndex": 9999},
+                        styles={"input": _inline_input},
+                    ),
+                    html.Span("·", style={"color": "#888", "fontSize": "12px", "userSelect": "none"}),
+                    dmc.Select(
+                        id=month_id,
+                        data=MONTHS_FULL,
+                        value=default_month.lower(),
+                        allowDeselect=False,
+                        size="xs",
+                        w=88,
+                        variant="unstyled",
+                        comboboxProps={"zIndex": 9999},
+                        styles={"input": {**_inline_input, "textTransform": "capitalize"}},
+                    ),
                 ],
-            ),
-            html.Div(className="zam-pill-divider"),
-            dmc.Button(
-                id=btn_mes_id,
-                variant="subtle",
-                size="xs",
-                radius="md",
-                className="zam-pill zam-pill-btn",
-                styles=_btn_styles,
-                children=dmc.Group(
-                    gap=5,
-                    wrap="nowrap",
-                    children=[
-                        html.Span("Mes"),
-                        DashIconify(icon="tabler:chevron-down", width=13),
-                    ],
-                ),
             ),
             html.Div(className="zam-pill-divider"),
             dmc.Button(
@@ -219,35 +220,13 @@ def create_filter_section(
         ],
     )
 
-    date_modal = dmc.Modal(
-        id=date_modal_id,
-        title=dmc.Group(
-            gap="xs",
-            children=[
-                DashIconify(icon="tabler:calendar", width=18, color=Colors.CHART_BLUE),
-                dmc.Text("Período", fw=700, size="sm"), # type: ignore
-            ]
-        ),
-        centered=True,
-        size="xs",
-        padding="xl",
-        radius="lg",
-        children=_build_date_modal_content(
-            year_id=year_id,
-            month_id=month_id,
-            year_options=year_options,
-            default_year=default_year,
-            default_month=default_month,
-        ),
-    )
-
     filter_modal = dmc.Modal(
         id=filter_modal_id,
         title=dmc.Group(
             gap="xs",
             children=[
                 DashIconify(icon="tabler:adjustments-horizontal", width=18, color=Colors.CHART_BLUE),
-                dmc.Text("Filtros", fw=700, size="sm"), # type: ignore
+                dmc.Text("Filtros", fw=700, size="sm"),  # type: ignore
             ]
         ),
         centered=True,
@@ -257,10 +236,11 @@ def create_filter_section(
         children=_build_filters_modal_content(
             additional_filters=additional_filters,
             checkbox_filters=checkbox_filters,
+            apply_btn_id=apply_btn_id,
         ),
     )
 
-    return html.Div([toolbar, date_modal, filter_modal])
+    return html.Div([toolbar, filter_modal])
 
 
 def create_operational_filters(prefix="ops", theme="dark", minimal=False):
@@ -274,7 +254,6 @@ def create_operational_filters(prefix="ops", theme="dark", minimal=False):
             {"id": f"{prefix}-tipo-unidad",    "label": "Tipo Unidad",       "data": ["Todas"], "value": "Todas"},
             {"id": f"{prefix}-no-viaje",       "label": "No. Viaje",         "data": ["Todas"], "value": "Todas"},
             {"id": f"{prefix}-tipo-operacion", "label": "Tipo Operación",    "data": ["Todas"], "value": "Todas"},
-            {"id": f"{prefix}-clasificacion",  "label": "Clasificación",     "data": ["Todas"], "value": "Todas"},
             {"id": f"{prefix}-cliente",        "label": "Cliente",           "data": ["Todos"], "value": "Todos"},
             {"id": f"{prefix}-unidad",         "label": "Unidad",            "data": ["Todas"], "value": "Todas"},
             {"id": f"{prefix}-operador",       "label": "Operador",          "data": ["Todas"], "value": "Todas"},
@@ -308,37 +287,45 @@ def get_filter_ids(year_id, month_id, additional_filters=None):
 
 def register_filter_modal_callback(year_id: str):
     month_id        = year_id.replace("-year", "-month")
-    date_modal_id   = f"{year_id}-date-modal"
     filter_modal_id = f"{year_id}-filter-modal"
-    btn_mes_id      = f"{year_id}-btn-mes"
     btn_filtro_id   = f"{year_id}-btn-filtro"
-    date_label_id   = f"{year_id}-date-label"
-
-    @callback(
-        Output(date_modal_id, "opened"),
-        Input(btn_mes_id, "n_clicks"),
-        State(date_modal_id, "opened"),
-        prevent_initial_call=True,
-    )
-    def _toggle_date_modal(n, is_open):
-        return True
+    apply_btn_id    = f"{year_id}-apply-btn"
 
     @callback(
         Output(filter_modal_id, "opened"),
         Input(btn_filtro_id, "n_clicks"),
+        Input(apply_btn_id, "n_clicks"),
         State(filter_modal_id, "opened"),
         prevent_initial_call=True,
     )
-    def _toggle_filter_modal(n, is_open):
+    def _toggle_filter_modal(n_open, n_apply, is_open):
+        from dash import ctx as dash_ctx
+        if dash_ctx.triggered_id == apply_btn_id:
+            return False
         return True
 
     @callback(
-        Output(date_label_id, "children"),
+        Output("global-date-filter", "data", allow_duplicate=True),
         Input(year_id, "value"),
         Input(month_id, "value"),
-        prevent_initial_call=False,
+        prevent_initial_call=True,
     )
-    def _update_label(year_val, month_val):
-        abbr = _month_abbr(month_val or _get_current_month())
-        yr   = year_val or _get_current_year()
-        return f"{abbr} · {yr}"
+    def _save_date(year_val, month_val):
+        if year_val or month_val:
+            return {
+                "year": year_val or _get_current_year(),
+                "month": month_val or _get_current_month(),
+            }
+        return no_update
+
+    @callback(
+        Output(year_id, "value"),
+        Output(month_id, "value"),
+        Input("url", "pathname"),
+        State("global-date-filter", "data"),
+        prevent_initial_call=True,
+    )
+    def _restore_date(pathname, store_data):
+        if store_data and store_data.get("year") and store_data.get("month"):
+            return store_data["year"], store_data["month"]
+        return _get_current_year(), _get_current_month()

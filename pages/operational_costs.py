@@ -1,4 +1,3 @@
-from design_system import dmc as _dmc
 from flask import session
 import dash
 from dash import html, dcc
@@ -24,27 +23,41 @@ dash.register_page(__name__, path="/operational-costs", title="Costos Operacione
 SCREEN_ID = "operational-costs"
 PREFIX = "oc"
 
-w_profit = SmartWidget(f"{PREFIX}_profit", OpsGaugeStrategy(screen_id=SCREEN_ID, key="profit_per_trip", title="Utilidad Viaje", icon="tabler:trending-up", color="teal", has_detail=True, layout_config={"height": 220}))
-w_total = SmartWidget(f"{PREFIX}_total", OpsGaugeStrategy(screen_id=SCREEN_ID, key="total_trip_cost", title="Costo Viaje Total", icon="tabler:calculator", color="red", has_detail=True, layout_config={"height": 220}))
-
-c_stack = ChartWidget(f"{PREFIX}_stack", OpsTrendChartStrategy(screen_id=SCREEN_ID, key="cost_and_profit_trends", title="Costo Viaje Total y Monto Utilidad", has_detail=True, layout_config={"height": 420}))
-c_break = ChartWidget(f"{PREFIX}_break", OpsHorizontalBarStrategy(screen_id=SCREEN_ID, key="cost_by_concept", title="Costo Viaje Total por Clasificación Concepto y Concepto", has_detail=True, layout_config={"height": 360}))
+# ── Dynamic trend strategy ────────────────────────────────────────────────────
 class DynamicCostTrendStrategy(OpsTrendChartStrategy):
     def __init__(self, screen_id, key, base_title, icon="tabler:chart-line", color="red", has_detail=True, layout_config=None):
         self.base_title = base_title
         super().__init__(screen_id, key, get_dynamic_title(base_title), icon, color, has_detail, layout_config=layout_config)
+
     def get_card_config(self, ctx):
         config = super().get_card_config(ctx)
         config["title"] = get_dynamic_title(self.base_title)
         return config
 
+
+# ── Fila 1: 2 KPIs principales ───────────────────────────────────────────────
+w_profit = SmartWidget(f"{PREFIX}_profit", OpsGaugeStrategy(screen_id=SCREEN_ID, key="profit_per_trip", title="Utilidad Viaje", icon="tabler:trending-up", color="teal", has_detail=True, layout_config={"height": 300}))
+w_total = SmartWidget(f"{PREFIX}_total", OpsGaugeStrategy(screen_id=SCREEN_ID, key="total_trip_cost", title="Costo Viaje Total", icon="tabler:calculator", color="red", has_detail=True, layout_config={"height": 300}))
+
+# ── Fila 2: Tendencia costo vs utilidad (full width) ─────────────────────────
+c_stack = ChartWidget(f"{PREFIX}_stack", DynamicCostTrendStrategy(
+    screen_id=SCREEN_ID, key="cost_and_profit_trends",
+    base_title="Costo y Utilidad",
+    icon="tabler:chart-bar", color="blue", has_detail=True,
+    layout_config={"height": 380},
+))
+
+# ── Fila 3: Desglose por concepto + comparativo mensual ──────────────────────
+c_break = ChartWidget(f"{PREFIX}_break", OpsHorizontalBarStrategy(screen_id=SCREEN_ID, key="cost_by_concept", title="Costo por Clasificación y Concepto", has_detail=True, layout_config={"height": 200}))
 c_comp = ChartWidget(f"{PREFIX}_comp", DynamicCostTrendStrategy(screen_id=SCREEN_ID, key="cost_breakdown", base_title="Costo Viaje Total", icon="tabler:chart-line", color="red", has_detail=True, layout_config={"height": 360}))
 
+# ── Fila 4: Tablas de margen ──────────────────────────────────────────────────
 t_route = TableWidget(f"{PREFIX}_route", OpsTableStrategy(SCREEN_ID, "margin_by_route", title="Margen por Ruta"))
 t_unit = TableWidget(f"{PREFIX}_unit", OpsTableStrategy(SCREEN_ID, "margin_by_unit", title="Margen por Unidad"))
 t_op = TableWidget(f"{PREFIX}_op", OpsTableStrategy(SCREEN_ID, "margin_by_operator", title="Margen por Operador"))
 t_trip = TableWidget(f"{PREFIX}_trip", OpsTableStrategy(SCREEN_ID, "margin_by_trip", title="Margen por Viaje"))
 t_client = TableWidget(f"{PREFIX}_client", OpsTableStrategy(SCREEN_ID, "margin_by_client", title="Margen por Cliente"))
+
 
 def _render_cost_tabs(ctx):
     theme = session.get("theme", "dark")
@@ -52,6 +65,7 @@ def _render_cost_tabs(ctx):
         p=8,
         withBorder=True,
         radius="md",
+        style={"backgroundColor": "transparent"},
         children=[dmc.Tabs(value="ruta", children=[
             dmc.TabsList([
                 dmc.TabsTab("Margen por Ruta", value="ruta"),
@@ -60,39 +74,66 @@ def _render_cost_tabs(ctx):
                 dmc.TabsTab("Margen por Viaje", value="viaje"),
                 dmc.TabsTab("Margen por Cliente", value="cliente"),
             ]),
-            dmc.TabsPanel(html.Div(style={"height": "380px", "overflowY": "auto"}, children=[t_route.render(ctx, theme=theme)]), value="ruta"),
-            dmc.TabsPanel(html.Div(style={"height": "380px", "overflowY": "auto"}, children=[t_unit.render(ctx, theme=theme)]), value="unidad"),
-            dmc.TabsPanel(html.Div(style={"height": "380px", "overflowY": "auto"}, children=[t_op.render(ctx, theme=theme)]), value="operador"),
-            dmc.TabsPanel(html.Div(style={"height": "380px", "overflowY": "auto"}, children=[t_trip.render(ctx, theme=theme)]), value="viaje"),
-            dmc.TabsPanel(html.Div(style={"height": "380px", "overflowY": "auto"}, children=[t_client.render(ctx, theme=theme)]), value="cliente"),
+            dmc.TabsPanel(html.Div(style={"height": "420px", "overflowY": "auto"}, children=[t_route.render(ctx, theme=theme)]), value="ruta"),
+            dmc.TabsPanel(html.Div(style={"height": "420px", "overflowY": "auto"}, children=[t_unit.render(ctx, theme=theme)]), value="unidad"),
+            dmc.TabsPanel(html.Div(style={"height": "420px", "overflowY": "auto"}, children=[t_op.render(ctx, theme=theme)]), value="operador"),
+            dmc.TabsPanel(html.Div(style={"height": "420px", "overflowY": "auto"}, children=[t_trip.render(ctx, theme=theme)]), value="viaje"),
+            dmc.TabsPanel(html.Div(style={"height": "420px", "overflowY": "auto"}, children=[t_client.render(ctx, theme=theme)]), value="cliente"),
         ])]
     )
 
+
 def _render_ops_costs_body(ctx):
     theme = session.get("theme", "dark")
+    _BREAK_H = 350
+    _STACK_H = 460
+    _COMP_H  = 490
 
     return html.Div([
-        dmc.Grid(gutter="md", mb="lg", align="stretch", children=[
-            dmc.GridCol(span=_dmc({"base": 12, "lg": 4}), children=[html.Div(style={"display": "grid", "gridTemplateRows": "1fr 1fr", "gap": "0.8rem", "height": "100%"}, children=[
-                w_profit.render(ctx, theme=theme),
-                w_total.render(ctx, theme=theme)
-            ])]),
-            dmc.GridCol(span=_dmc({"base": 12, "lg": 8}), children=[c_stack.render(ctx, h=420, theme=theme)])
-        ]),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(350px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
-            c_break.render(ctx, h=400, theme=theme),
-            c_comp.render(ctx, h=400, theme=theme)
-        ]),
+        # ── Bloque principal: izquierda KPIs + c_break / derecha tendencias ──
+        html.Div(
+            style={
+                "display": "grid",
+                "gridTemplateColumns": "minmax(280px, 1fr) minmax(400px, 2fr)",
+                "gap": "0.8rem",
+                "marginBottom": "1rem",
+                "alignItems": "start",
+            },
+            children=[
+                # Columna izquierda: KPIs apilados + c_break
+                html.Div(
+                    style={"display": "flex", "flexDirection": "column", "gap": "0.8rem"},
+                    children=[
+                        w_profit.render(ctx, theme=theme),
+                        w_total.render(ctx, theme=theme),
+                        c_break.render(ctx, h=_BREAK_H, theme=theme),
+                    ],
+                ),
+                # Columna derecha: c_stack + c_comp al mismo largo total
+                html.Div(
+                    style={"display": "flex", "flexDirection": "column", "gap": "0.8rem"},
+                    children=[
+                        c_stack.render(ctx, h=_STACK_H, theme=theme),
+                        c_comp.render(ctx, h=_COMP_H, theme=theme),
+                    ],
+                ),
+            ],
+        ),
+
+        # ── Tablas análisis de margen ─────────────────────────────────────
         dmc.Divider(my="lg", label="Análisis de Margen", labelPosition="center"),
         _render_cost_tabs(ctx),
         dmc.Space(h=30),
     ])
 
+
 WIDGET_REGISTRY = {
     f"{PREFIX}_profit": w_profit, f"{PREFIX}_total": w_total,
     f"{PREFIX}_stack": c_stack, f"{PREFIX}_break": c_break, f"{PREFIX}_comp": c_comp,
-    f"{PREFIX}_route": t_route, f"{PREFIX}_unit": t_unit, f"{PREFIX}_op": t_op, f"{PREFIX}_trip": t_trip, f"{PREFIX}_client": t_client,
+    f"{PREFIX}_route": t_route, f"{PREFIX}_unit": t_unit, f"{PREFIX}_op": t_op,
+    f"{PREFIX}_trip": t_trip, f"{PREFIX}_client": t_client,
 }
+
 
 def layout():
     if not session.get("user"):
@@ -122,13 +163,22 @@ def layout():
             *refresh_components,
             create_smart_drawer("costs-drawer"),
             filters,
-            html.Div(id="ops-costs-body", children=get_skeleton(SCREEN_ID)),
+            dcc.Loading(
+                id="costs-loading",
+                type="dot",
+                color="#228be6",
+                children=html.Div(id="ops-costs-body", children=get_skeleton(SCREEN_ID)),
+            ),
         ],
     )
 
+
 FILTER_IDS = ["cost-year", "cost-month", "cost-empresa", "cost-unidad", "cost-tipo-unidad", "cost-no-viaje", "cost-operador", "cost-tipo-operacion", "cost-cliente"]
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="ops-costs-body", render_body=_render_ops_costs_body, filter_ids=FILTER_IDS)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID, body_output_id="ops-costs-body", render_body=_render_ops_costs_body, filter_ids=FILTER_IDS,
+    global_token_output_id="current-page-token-store",
+)
 
 register_drawer_callback(drawer_id="costs-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
 

@@ -44,10 +44,9 @@ CHECKBOX_FILTERS = [
     {"id": "route-circuito", "label": "Ruta Circuito"},
 ]
 
-FILTER_IDS = (
-    ["route-year", "route-month"]
-    + [f["id"] for f in ADDITIONAL_FILTERS]
-)
+DATE_FILTER_IDS   = ["route-year", "route-month"]        # disparan refresh automáticamente
+MANUAL_FILTER_IDS = [f["id"] for f in ADDITIONAL_FILTERS]  # solo se aplican al hacer clic en Aplicar
+FILTER_IDS        = DATE_FILTER_IDS + MANUAL_FILTER_IDS     # lista completa (para drawer/otros usos)
 
 t_main = TableWidget(
     f"{PREFIX}_main",
@@ -151,7 +150,7 @@ def _build_map_figure(ctx, theme, selected_rk=None, show_legend=True):
     fig.update_layout(
         mapbox=dict(style="open-street-map", center=dict(lat=c_lat, lon=c_lon), zoom=zoom),
         margin=dict(l=0, r=0, t=0, b=0), height=620, autosize=True,
-        paper_bgcolor="rgba(0,0,0,0)", showlegend=show_legend,
+        paper_bgcolor=Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT_CARD, showlegend=show_legend,
         legend=dict(
             bgcolor="rgba(25,25,25,0.88)" if is_dark else "rgba(255,255,255,0.92)",
             font=dict(color="#fff" if is_dark else "#1A1B1E", size=10),
@@ -164,11 +163,12 @@ def _build_map_figure(ctx, theme, selected_rk=None, show_legend=True):
 
 
 def _empty_map(theme):
+    is_dark = theme == "dark"
     fig = go.Figure()
     fig.update_layout(
         mapbox=dict(style="open-street-map", center=dict(lat=23.63, lon=-102.55), zoom=4),
         margin=dict(l=0, r=0, t=0, b=0), height=620,
-        paper_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor=Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT_CARD,
         annotations=[dict(text="Sin datos de coordenadas", x=0.5, y=0.5,
                           xref="paper", yref="paper", showarrow=False,
                           font=dict(size=16, color="gray"))],
@@ -288,8 +288,14 @@ def layout():
     ])
 
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="ops-routes-body",
-                                             render_body=_render_ops_routes_body, filter_ids=FILTER_IDS)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID, body_output_id="ops-routes-body",
+    render_body=_render_ops_routes_body,
+    filter_ids=DATE_FILTER_IDS,
+    manual_filter_ids=MANUAL_FILTER_IDS,
+    apply_trigger_id="route-year-apply-btn",
+    global_token_output_id="current-page-token-store",
+)
 
 
 @callback(Output("routes-map-graph", "figure"), Output("routes-legend-store", "data"),
@@ -330,12 +336,7 @@ def _on_search(search_val):
     return {"quickFilterText": search_val or ""}
 
 
-for _cb in CHECKBOX_FILTERS:
-    @callback(Output(_cb["id"], "variant"), Output(_cb["id"], "color"),
-              Input(_cb["id"], "n_clicks"), prevent_initial_call=True)
-    def _toggle_btn(n_clicks):
-        is_active = (n_clicks or 0) % 2 == 1
-        return ("filled", "blue") if is_active else ("default", "gray")
+# Checkbox filters: no extra callback needed — dmc.Checkbox handles checked state natively
 
 
 register_drawer_callback(drawer_id="route-drawer", widget_registry=WIDGET_REGISTRY,

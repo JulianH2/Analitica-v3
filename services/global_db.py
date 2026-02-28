@@ -22,7 +22,9 @@ def execute_global_query(query_sql, params=None):
             result = conn.execute(text(query_sql), params or {})
             if result.returns_rows:
                 columns = result.keys()
-                return [dict(zip(columns, row)) for row in result.fetchall()]
+                data = [dict(zip(columns, row)) for row in result.fetchall()]
+                conn.commit()
+                return data
             conn.commit()
             return True
     except Exception as e:

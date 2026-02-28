@@ -48,7 +48,6 @@ c_trend = ChartWidget(f"{PREFIX}_trend", DynamicInvTrendStrategy(SCREEN_ID, "val
 c_area = ChartWidget(f"{PREFIX}_area", WorkshopHorizontalBarStrategy(SCREEN_ID, "valuation_by_area", "Valorización Actual por Área", has_detail=True, layout_config={"height": 450}))
 
 t_fam = TableWidget(f"{SCREEN_ID}-valuation_by_family", WorkshopTableStrategy(SCREEN_ID, "valuation_by_family", title="Valorización Actual por Familia, Subfamilia, Insumo y Medida"))
-t_hist = TableWidget(f"{SCREEN_ID}-inventory_history", WorkshopTableStrategy(SCREEN_ID, "inventory_history", title="Historial Detallado"))
 
 def _render_taller_inventory_body(ctx):
     theme = session.get("theme", "dark")
@@ -85,14 +84,7 @@ def _render_taller_inventory_body(ctx):
                 p="md",
                 withBorder=True,
                 style={"height": "100%", "backgroundColor": "transparent"},
-                children=[dmc.Tabs(value="fam", children=[
-                    dmc.TabsList([
-                        dmc.TabsTab("Por Familia", value="fam"),
-                        dmc.TabsTab("Historial Detallado", value="hist")
-                    ]),
-                    dmc.TabsPanel(dmc.ScrollArea(h=390, children=[t_fam.render(ctx, theme=theme)]), value="fam", pt="xs"),
-                    dmc.TabsPanel(dmc.ScrollArea(h=390, children=[t_hist.render(ctx, theme=theme)]), value="hist", pt="xs"),
-                ])]
+                children=[dmc.ScrollArea(h=390, children=[t_fam.render(ctx, theme=theme)])]
             )]),
         ]),
         dmc.Space(h=50),
@@ -102,7 +94,7 @@ WIDGET_REGISTRY = {
     f"{PREFIX}_ini": w_ini, f"{PREFIX}_ent": w_ent, f"{PREFIX}_sal": w_sal, f"{PREFIX}_his": w_his, f"{PREFIX}_act": w_act,
     f"{PREFIX}_cmp": w_cmp, f"{PREFIX}_reg": w_reg, f"{PREFIX}_con": w_con, f"{PREFIX}_sin": w_sin,
     f"{PREFIX}_trend": c_trend, f"{PREFIX}_area": c_area,
-    f"{SCREEN_ID}-valuation_by_family": t_fam, f"{SCREEN_ID}-inventory_history": t_hist,
+    f"{SCREEN_ID}-valuation_by_family": t_fam,
 }
 
 def layout():
@@ -133,7 +125,10 @@ def layout():
 
 FILTER_IDS = ["inv-year", "inv-month", "inv-empresa", "inv-almacen", "inv-familia", "inv-insumo", "inv-estado", "inv-unidad-medida"]
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="taller-inv-body", render_body=_render_taller_inventory_body, filter_ids=FILTER_IDS)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID, body_output_id="taller-inv-body", render_body=_render_taller_inventory_body, filter_ids=FILTER_IDS,
+    global_token_output_id="current-page-token-store",
+)
 
 register_drawer_callback(drawer_id="inv-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
 

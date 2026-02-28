@@ -16,7 +16,7 @@ from components.visual_widget import ChartWidget
 from components.table_widget import TableWidget
 from components.drawer_manager import create_smart_drawer, register_drawer_callback
 from components.filter_manager import create_filter_section, register_filter_modal_callback
-from strategies.administration import AdminKPIStrategy, AdminGaugeStrategy, AdminTrendChartStrategy, AdminHistoricalForecastLineStrategy, AdminDonutChartStrategy, AdminBarChartStrategy, AdminTableStrategy
+from strategies.administration import AdminKPIStrategy, AdminGaugeStrategy, AdminTrendChartStrategy, AdminHistoricalForecastLineStrategy, AdminDonutChartStrategy, AdminHorizontalBarStrategy, AdminTableStrategy
 
 dash.register_page(__name__, path="/administration-payables", title="Cuentas por Pagar")
 
@@ -34,22 +34,23 @@ def skeleton_admin_payables():
         html.Div(style={"marginTop": "1.5rem"}, children=[html.Div(style={"display": "flex", "gap": "0.5rem", "marginBottom": "1rem", "borderBottom": "1px solid rgba(255,255,255,0.1)"}, children=[skeleton_box("32px", "140px") for _ in range(3)]), skeleton_chart("400px")]),
     ])
 
-k_init = SmartWidget(f"{PREFIX}_init", AdminKPIStrategy(SCREEN_ID, "initial_balance", "Saldo Inicial", "tabler:database-import", "indigo"))
-k_cxp = SmartWidget(f"{PREFIX}_cxp", AdminKPIStrategy(SCREEN_ID, "accounts_payable", "CxP", "tabler:file-invoice", "blue"))
-k_debit = SmartWidget(f"{PREFIX}_debit", AdminKPIStrategy(SCREEN_ID, "debit_notes", "Notas Cargo", "tabler:receipt", "orange"))
-k_credit = SmartWidget(f"{PREFIX}_credit", AdminKPIStrategy(SCREEN_ID, "credit_notes", "Notas Crédito", "tabler:file-minus", "teal"))
-k_adv = SmartWidget(f"{PREFIX}_adv", AdminKPIStrategy(SCREEN_ID, "advances", "Anticipo", "tabler:receipt-2", "green"))
-k_total = SmartWidget(f"{PREFIX}_total", AdminKPIStrategy(SCREEN_ID, "payables_total", "CxP Total", "tabler:sum", "violet"))
-k_pay = SmartWidget(f"{PREFIX}_pay", AdminKPIStrategy(SCREEN_ID, "supplier_payments", "Pago Proveedores", "tabler:truck-delivery", "red"))
-k_bal = SmartWidget(f"{PREFIX}_bal", AdminKPIStrategy(SCREEN_ID, "final_balance", "Saldo", "tabler:wallet", "yellow"))
+k_init = SmartWidget(f"{PREFIX}_init", AdminKPIStrategy(SCREEN_ID, "initial_balance", "Saldo Inicial", "tabler:database-import", "indigo"), height=100)
+k_cxp = SmartWidget(f"{PREFIX}_cxp", AdminKPIStrategy(SCREEN_ID, "accounts_payable", "CxP", "tabler:file-invoice", "blue"), height=100)
+k_debit = SmartWidget(f"{PREFIX}_debit", AdminKPIStrategy(SCREEN_ID, "debit_notes", "Notas Cargo", "tabler:receipt", "orange"), height=100)
+k_credit = SmartWidget(f"{PREFIX}_credit", AdminKPIStrategy(SCREEN_ID, "credit_notes", "Notas Crédito", "tabler:file-minus", "teal"), height=100)
+k_adv = SmartWidget(f"{PREFIX}_adv", AdminKPIStrategy(SCREEN_ID, "advances", "Anticipo", "tabler:receipt-2", "green"), height=100)
+k_total = SmartWidget(f"{PREFIX}_total", AdminKPIStrategy(SCREEN_ID, "payables_total", "CxP Total", "tabler:sum", "violet"), height=100)
+k_pay = SmartWidget(f"{PREFIX}_pay", AdminKPIStrategy(SCREEN_ID, "supplier_payments", "Pago Proveedores", "tabler:truck-delivery", "red"), height=100)
+k_bal = SmartWidget(f"{PREFIX}_bal", AdminKPIStrategy(SCREEN_ID, "final_balance", "Saldo", "tabler:wallet", "yellow"), height=100)
 
-g_eff = SmartWidget(f"{PREFIX}_eff", AdminGaugeStrategy(SCREEN_ID, "payment_efficiency", "CXP vs Pagado", "red", icon="tabler:target", layout_config={"height": 220}))
-g_days = SmartWidget(f"{PREFIX}_days", AdminGaugeStrategy(SCREEN_ID, "average_payment_days", "Promedio Días Pago", "yellow", icon="tabler:calendar", layout_config={"height": 220}))
+g_eff = SmartWidget(f"{PREFIX}_eff", AdminGaugeStrategy(SCREEN_ID, "payment_efficiency", "CXP vs Pagado", "red", icon="tabler:target", layout_config={"height": 300}))
+g_days = SmartWidget(f"{PREFIX}_days", AdminGaugeStrategy(SCREEN_ID, "average_payment_days", "Promedio Días Pago", "yellow", icon="tabler:calendar", inverse=True, layout_config={"height": 300}))
 
-c_mix = ChartWidget(f"{PREFIX}_mix", AdminDonutChartStrategy(SCREEN_ID, "payables_by_status", "Saldo por Clasificación", has_detail=True, layout_config={"height": 400}))
-c_stack = ChartWidget(f"{PREFIX}_stack", AdminBarChartStrategy(SCREEN_ID, "suppliers_by_range", "Saldo por Proveedor", has_detail=True, layout_config={"height": 500}))
+c_mix = ChartWidget(f"{PREFIX}_mix", AdminDonutChartStrategy(SCREEN_ID, "payables_by_status", "Saldo por Clasificación", has_detail=True, layout_config={"height": 580}))
+c_stack = ChartWidget(f"{PREFIX}_stack", AdminHorizontalBarStrategy(SCREEN_ID, "suppliers_by_range", "Saldo por Proveedor", has_detail=True, layout_config={"height": 580}))
 
-t_aging = TableWidget(f"{PREFIX}_aging", AdminTableStrategy(SCREEN_ID, "aging_by_supplier", "Antigüedad de Saldos", "tabler:clock", "orange"))
+_t_aging_strategy = AdminTableStrategy(SCREEN_ID, "aging_by_supplier", "Antigüedad de Saldos", "orange", "tabler:clock", pivot_col=1)
+t_aging = TableWidget(f"{PREFIX}_aging", _t_aging_strategy)
 
 class DynamicPayTrendStrategy(AdminTrendChartStrategy):
     def __init__(self, screen_id, key, base_title, has_detail=True, color="red"):
@@ -69,26 +70,63 @@ def _render_payables_body(ctx):
 
     return html.Div([
         dmc.Title("Cuentas por Pagar", order=3, mb="lg", c=_dmc("dimmed")),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(180px, 1fr))", "gap": "0.6rem", "marginBottom": "1rem"}, children=[
-            k_init.render(ctx, theme=theme),
-            k_cxp.render(ctx, theme=theme),
-            k_debit.render(ctx, theme=theme),
-            k_credit.render(ctx, theme=theme),
-            k_adv.render(ctx, theme=theme),
-            k_total.render(ctx, theme=theme),
-            k_pay.render(ctx, theme=theme),
-            k_bal.render(ctx, theme=theme),
-        ]),
-        html.Div(style={"display": "grid", "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))", "gap": "0.8rem", "marginBottom": "1.5rem"}, children=[
-            g_eff.render(ctx, theme=theme),
-            g_days.render(ctx, theme=theme)
-        ]),
-        c_mix.render(ctx, h=400, theme=theme),
-        dmc.Space(h="md"),
-        dmc.Grid(gutter="lg", mb="xl", children=[
-            dmc.GridCol(span=_dmc({"base": 12, "lg": 6}), children=[html.Div(style={"height": "500px", "overflowY": "auto"}, children=[t_aging.render(ctx, theme=theme)])]),
-            dmc.GridCol(span=_dmc({"base": 12, "lg": 6}), children=[c_stack.render(ctx, h=500, theme=theme)])
-        ]),
+
+        # ── Bloque 1: Gauges apilados | Donut | Saldo por Proveedor ─
+        html.Div(
+            style={
+                "display": "grid",
+                "gridTemplateColumns": "1fr 1fr 2fr",
+                "gap": "1.5rem",
+                "marginBottom": "2rem",
+                "alignItems": "stretch",
+            },
+            children=[
+            
+                # Gauges
+                html.Div(
+                    style={
+                        "display": "flex",
+                        "flexDirection": "column",
+                        "gap": "1rem",
+                    },
+                    children=[
+                        g_eff.render(ctx, theme=theme),
+                        g_days.render(ctx, theme=theme),
+                    ],
+                ),
+
+                # Dona misma altura total que gauges
+                c_mix.render(ctx, h=460, theme=theme),
+
+                # Barras
+                c_stack.render(ctx, h=460, theme=theme),
+            ],
+        ),
+        # ── Bloque 2: KPIs acumulados ────────────────────────────────
+        html.Div(
+           style={
+               "display": "grid",
+               "gridTemplateColumns": "repeat(4, 1fr)",
+               "gap": "1rem",
+               "marginBottom": "2rem",
+           },
+           children=[
+               k_init.render(ctx, theme=theme),
+               k_cxp.render(ctx, theme=theme),
+               k_debit.render(ctx, theme=theme),
+               k_credit.render(ctx, theme=theme),
+
+               k_adv.render(ctx, theme=theme),
+               k_total.render(ctx, theme=theme),
+               k_pay.render(ctx, theme=theme),
+               k_bal.render(ctx, theme=theme),
+           ],
+        ) , 
+
+        # ── Bloque 3: Antigüedad de saldos ──────────────────────────
+        dmc.Divider(my="sm"),
+        html.Div(style={"height": "300px", "overflowY": "auto", "overflowX": "auto", "marginBottom": "1rem"},
+                 children=[t_aging.render(ctx, theme=theme)]),
         dmc.Paper(
             p="md",
             withBorder=False,
@@ -147,7 +185,10 @@ def layout():
 
 FILTER_IDS = ["pay-year", "pay-month", "pay-empresa", "pay-proveedor", "pay-tipo-proveedor", "pay-concepto-proveedor"]
 
-data_manager.register_dash_refresh_callbacks(screen_id=SCREEN_ID, body_output_id="admin-payables-body", render_body=_render_payables_body, filter_ids=FILTER_IDS)
+data_manager.register_dash_refresh_callbacks(
+    screen_id=SCREEN_ID, body_output_id="admin-payables-body", render_body=_render_payables_body, filter_ids=FILTER_IDS,
+    global_token_output_id="current-page-token-store",
+)
 
 register_drawer_callback(drawer_id="pay-drawer", widget_registry=WIDGET_REGISTRY, screen_id=SCREEN_ID, filter_ids=FILTER_IDS)
 

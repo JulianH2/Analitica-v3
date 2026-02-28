@@ -1,3 +1,5 @@
+import calendar
+import datetime
 import dash_mantine_components as dmc
 from dash import dcc, html
 from dash_iconify import DashIconify
@@ -14,18 +16,24 @@ from design_system import (
     Shadows,
     dmc as _dmc,
 )
+from components.card_wrapper import make_card
+from services.time_service import TimeService
+from utils.helpers import format_value
 from typing import Any
 import math
 from flask import session
+
+_ts = TimeService()
 
 
 COMPACT_HEIGHT_THRESHOLD = 130
 
 
 class SmartWidget:
-    def __init__(self, widget_id: str, strategy: Any):
+    def __init__(self, widget_id: str, strategy: Any, height: int | None = None):
         self.widget_id = widget_id
         self.strategy = strategy
+        self._height = height
 
     def render(self, data_context: Any, mode: str = "auto", theme: str = "dark"):
         try:
@@ -35,7 +43,7 @@ class SmartWidget:
             config = {"title": "Error", "value": "Err"}
 
         layout = getattr(self.strategy, "layout", {})
-        card_height = layout.get("height", 195)
+        card_height = self._height or layout.get("height", 195)
 
         is_compact = card_height < COMPACT_HEIGHT_THRESHOLD
         if theme == "auto":
@@ -65,9 +73,13 @@ class SmartWidget:
                 figure = None
 
         val = config.get("main_value") or config.get("value")
+        is_no_data = not figure and val in (None, "---", "N/A", "")
 
         if is_compact:
             return self._render_compact(config, card_height, theme)
+
+        if is_no_data and not config.get("is_chart"):
+            return self._render_no_data(config, card_height, theme)
 
         if figure and val and not config.get("is_chart", False):
             return self._render_combined(config, figure, card_height, theme)
@@ -94,33 +106,26 @@ class SmartWidget:
                 style={"flex": 1},
             )
         else:
+            _bg = Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT_CARD
             figure.update_layout(
                 template="zam_dark" if is_dark else "zam_light",
                 font=dict(color=Colors.TEXT_DARK if is_dark else Colors.TEXT_LIGHT),
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor=_bg,
+                plot_bgcolor=_bg,
+                height=None,
             )
 
             content = dcc.Graph(
                 figure=figure,
-                config={"displayModeBar": False},
-                style={"flex": 1, "height": "100%", "minHeight": 0},
+                config={"displayModeBar": False, "responsive": True},
+                style={"height": "100%", "width": "100%"},
             )
 
-        return dmc.Paper(
-            p="sm",
-            radius="md",
-            withBorder=True,
-            shadow=None,
-            style={
-                "height": height,
-                "backgroundColor": DS.TRANSPARENT,
-                "border": DS.CARD_BORDER_LIGHT if theme != "dark" else DS.CARD_BORDER_DARK,
-                "boxShadow": "none",
-                "overflow": "hidden",
-                "display": "flex",
-                "flexDirection": "column",
-            },
+        _HEADER_H = 38
+        chart_h = (height - _HEADER_H) if isinstance(height, int) else None
+        chart_h_style = f"{chart_h}px" if chart_h else "calc(100% - 38px)"
+
+        return make_card(
             children=dmc.Stack(
                 h="100%",
                 gap=0,
@@ -128,15 +133,50 @@ class SmartWidget:
                     header,
                     html.Div(
                         style={
-                            "flex": 1,
+                            "height": chart_h_style,
                             "marginTop": "-5px",
-                            "minHeight": 0,
                             "overflow": "hidden",
                         },
                         children=content,
                     ),
                 ],
             ),
+            height=height,
+            is_dark=is_dark,
+            p="sm", # type: ignore
+        )
+
+    def _render_no_data(self, config, height, theme):
+        is_dark = theme == "dark"
+        header = self._build_header(config)
+        muted = Colors.TEXT_DARK_SECONDARY if is_dark else Colors.TEXT_LIGHT_SECONDARY
+
+        empty = dmc.Center(
+            dmc.Stack(
+                gap=4,
+                align="center",
+                children=[
+                    DashIconify(icon="tabler:database-off", width=22, color=muted),
+                    dmc.Text(
+                        "Sin datos",
+                        size=_dmc("10px"),
+                        fw=_dmc(500),
+                        style={"color": muted},
+                    ),
+                ],
+            ),
+            style={"flex": 1, "opacity": 0.65},
+        )
+
+        return make_card(
+            children=dmc.Stack(
+                h="100%",
+                gap=4,
+                children=[header, empty],
+            ),
+            height=height,
+            is_dark=is_dark,
+            p="sm",
         )
 
     def _render_compact(self, config, height, theme="light"):
@@ -149,13 +189,13 @@ class SmartWidget:
             or getattr(self.strategy, "color", "gray")
         )
         hex_color = DS.COLOR_MAP.get(color, color) if not color.startswith("#") else color
-
+    
         display_val = config.get("main_value") or config.get("value", "---")
         is_inverse = config.get("inverse", False)
-
+    
         delta_info = self._get_primary_delta(config, is_inverse)
         has_detail = getattr(self.strategy, "has_detail", False)
-
+    
         header = dmc.Group(
             justify="space-between",
             align="center",
@@ -176,34 +216,16 @@ class SmartWidget:
                         "flex": 1,
                     },
                 ),
-                dmc.Group(
-                    gap=2,
-                    wrap="nowrap",
-                    style={"flexShrink": 0},
-                    children=[
-                        dmc.ThemeIcon(
-                            DashIconify(icon=icon, width=12),
-                            variant="light",
-                            color=_dmc(hex_color),
-                            size="xs",
-                            radius="sm",
-                            style={"flexShrink": 0},
-                        ),
-                        dmc.ActionIcon(
-                            DashIconify(icon="tabler:layers-linked", width=10),
-                            variant="subtle",
-                            color="gray",
-                            size="xs",
-                            id={"type": "open-smart-drawer", "index": self.widget_id},
-                            style={"flexShrink": 0},
-                        )
-                        if has_detail
-                        else html.Div(),
-                    ],
+                dmc.ThemeIcon(
+                    DashIconify(icon=icon, width=12),
+                    variant="light",
+                    color=_dmc(hex_color),
+                    size="xs",
+                    radius="sm",
                 ),
             ],
         )
-
+    
         value_section = dmc.Group(
             justify="space-between",
             align="center",
@@ -214,122 +236,7 @@ class SmartWidget:
                 dmc.Text(
                     display_val,
                     fw=_dmc(700),
-                    fz=_dmc("1.1rem"),
-                    lh=_dmc("1"),
-                    c=_dmc(main_text_color),
-                    style={
-                        "whiteSpace": "nowrap",
-                        "overflow": "hidden",
-                        "textOverflow": "ellipsis",
-                        "flex": 1,
-                    },
-                ),
-                delta_info if delta_info else html.Div(),
-            ],
-        )
-
-        footer = self._build_compact_footer(config, is_inverse, theme)
-
-        return dmc.Paper(
-            p="xs",
-            radius="md",
-            withBorder=True,
-            shadow=None,
-            style={
-                "height": height,
-                "backgroundColor": Colors.TRANSPARENT,
-                "border": DS.CARD_BORDER_LIGHT if theme != "dark" else DS.CARD_BORDER_DARK,
-                "boxShadow": "none",
-                "overflow": "hidden",
-                "display": "flex",
-                "flexDirection": "column",
-            },
-            children=dmc.Stack(
-                justify="space-between",
-                h="100%",
-                gap=2,
-                children=[header, value_section, footer],
-            ),
-        )
-
-    def _render_scalar(self, config, height, theme):
-        main_text_color = Colors.TEXT_DARK if theme == "dark" else Colors.TEXT_LIGHT
-        header = self._build_header(config)
-
-        display_val = config.get("main_value") or config.get("value", "---")
-        is_inverse = config.get("inverse", False)
-
-        delta_info = self._get_primary_delta(config, is_inverse)
-
-        value_section = dmc.Group(
-            justify="space-between",
-            align="baseline",
-            w="100%",
-            wrap="nowrap",
-            gap="xs",
-            children=[
-                dmc.Text(
-                    display_val,
-                    fw=_dmc(700),
-                    size=_dmc("1.8rem"),
-                    lh=1.1,
-                    c=_dmc(main_text_color),
-                    style={
-                        "whiteSpace": "nowrap",
-                        "overflow": "hidden",
-                        "textOverflow": "ellipsis",
-                        "flex": 1,
-                    },
-                ),
-                delta_info if delta_info else html.Div(),
-            ],
-        )
-
-        footer = self._build_footer(config, height, theme)
-
-        return dmc.Paper(
-            p="sm",
-            radius="md",
-            withBorder=True,
-            shadow=None,
-            style={
-                "height": height,
-                "backgroundColor": DS.TRANSPARENT,
-                "border": DS.CARD_BORDER_LIGHT if theme != "dark" else DS.CARD_BORDER_DARK,
-                "boxShadow": "none",
-                "overflow": "hidden",
-                "display": "flex",
-                "flexDirection": "column",
-            },
-            children=dmc.Stack(
-                justify="space-between",
-                h="100%",
-                gap=4,
-                children=[header, value_section, footer],
-            ),
-        )
-
-    def _render_combined(self, config, figure, height, theme):
-        is_dark = theme == "dark"
-        main_text_color = Colors.TEXT_DARK if is_dark else Colors.TEXT_LIGHT
-        header = self._build_header(config)
-
-        display_val = config.get("main_value") or config.get("value", "---")
-        is_inverse = config.get("inverse", False)
-
-        delta_info = self._get_primary_delta(config, is_inverse)
-
-        value_section = dmc.Group(
-            justify="space-between",
-            align="baseline",
-            w="100%",
-            wrap="nowrap",
-            gap="xs",
-            children=[
-                dmc.Text(
-                    display_val,
-                    fw=_dmc(700),
-                    size=_dmc("1.6rem"),
+                    fz=_dmc("1rem"),
                     lh=1,
                     c=_dmc(main_text_color),
                     style={
@@ -342,6 +249,73 @@ class SmartWidget:
                 delta_info if delta_info else html.Div(),
             ],
         )
+    
+        compact_footer = self._build_compact_footer(config, is_inverse, theme)
+
+        return make_card(
+            children=dmc.Stack(
+                justify="flex-start",
+                h="100%",
+                gap=4,
+                children=[header, value_section, compact_footer],
+            ),
+            height=height,
+            is_dark=theme == "dark",
+            p="xs",
+        )
+
+    def _render_scalar(self, config, height, theme):
+        main_text_color = Colors.TEXT_DARK if theme == "dark" else Colors.TEXT_LIGHT
+        header = self._build_header(config)
+
+        display_val = config.get("main_value") or config.get("value", "---")
+
+        value_section = dmc.Text(
+            display_val,
+            fw=_dmc(700),
+            size=_dmc("1.5rem"),
+            lh=1,
+            c=_dmc(main_text_color),
+            style={
+                "whiteSpace": "nowrap",
+                "overflow": "hidden",
+                "textOverflow": "ellipsis",
+            },
+        )
+
+        footer = self._build_footer(config, height, theme)
+
+        return make_card(
+            children=dmc.Stack(
+                justify="flex-start",
+                h="100%",
+                gap=6,
+                children=[header, value_section, footer],
+            ),
+            height=height,
+            is_dark=theme == "dark",
+            p="sm",
+        )
+
+    def _render_combined(self, config, figure, height, theme):
+        is_dark = theme == "dark"
+        main_text_color = Colors.TEXT_DARK if is_dark else Colors.TEXT_LIGHT
+        header = self._build_header(config)
+
+        display_val = config.get("main_value") or config.get("value", "---")
+
+        value_section = dmc.Text(
+            display_val,
+            fw=_dmc(700),
+            size=_dmc("1.6rem"),
+            lh=1,
+            c=_dmc(main_text_color),
+            style={
+                "whiteSpace": "nowrap",
+                "overflow": "hidden",
+                "textOverflow": "ellipsis",
+            },
+        )
 
         has_needle = any(
             getattr(s, "type", "") == "path"
@@ -350,12 +324,12 @@ class SmartWidget:
 
         figure.update_traces(
             selector=dict(type="indicator"),
-            number=dict(font=dict(size=1, color="rgba(0,0,0,0)")),
+            mode="gauge",
         )
 
         if is_dark and has_needle:
-            needle_color = "#e8eaed"
-            hub_color = "#1a1a2e"
+            needle_color = Colors.TEXT_DARK
+            hub_color = Colors.BG_DARK
             for shape in (figure.layout.shapes or []):
                 if getattr(shape, "type", "") == "path":
                     shape.fillcolor = needle_color
@@ -370,18 +344,20 @@ class SmartWidget:
             font=dict(color=main_text_color),
         )
 
-        gauge_height = int(height * 0.50)
+        _RESERVED = 200
+        gauge_height = max(90, height - _RESERVED)
 
         figure.update_traces(
             selector=dict(type="indicator"),
-            domain={"x": [0.02, 0.98], "y": [0.0, 1.0]},
+            domain={"x": [0.30, 0.70], "y": [0.0, 1.0]},
         )
 
+        _bg = Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT_CARD
         figure.update_layout(
             height=gauge_height,
-            margin=dict(t=5, b=5, l=10, r=10),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(t=30, b=5, l=5, r=5),
+            paper_bgcolor=_bg,
+            plot_bgcolor=_bg,
         )
 
         chart = dcc.Graph(
@@ -398,25 +374,17 @@ class SmartWidget:
 
         footer = self._build_footer(config, height, theme)
 
-        return dmc.Paper(
-            p="sm",
-            radius="md",
-            withBorder=True,
-            shadow=None,
-            style={
-                "height": height,
-                "backgroundColor": DS.TRANSPARENT,
-                "border": DS.CARD_BORDER_LIGHT if theme != "dark" else DS.CARD_BORDER_DARK,
-                "boxShadow": "none",
-                "overflow": "hidden",
-                "display": "flex",
-                "flexDirection": "column",
-            },
+        return make_card(
             children=dmc.Stack(
                 h="100%",
                 gap=3,
+                justify="space-between",
                 children=[header, value_section, chart, footer],
             ),
+            height=height,
+            is_dark=is_dark,
+            overflow="visible",
+            p="md",
         )
 
     def _build_header(self, config):
@@ -481,8 +449,8 @@ class SmartWidget:
 
         badge_text, badge_color = self._safe_format_delta(delta, delta_fmt)
 
-        if is_inverse and badge_color in (DS.SUCCESS[5], DS.DANGER[5]):
-            badge_color = DS.DANGER[5] if badge_color == DS.SUCCESS[5] else DS.SUCCESS[5]
+        if is_inverse and badge_color in (Colors.POSITIVE, Colors.NEGATIVE):
+            badge_color = Colors.NEGATIVE if badge_color == Colors.POSITIVE else Colors.POSITIVE
 
         if badge_text:
             return dmc.Badge(
@@ -494,19 +462,36 @@ class SmartWidget:
             )
         return None
 
+    def _daily_meta_str(self, config) -> str | None:
+        """Returns formatted 'meta al día' = target_raw / days_in_month * current_day, or None."""
+        raw_node = config.get("raw_data") or {}
+        target_raw = raw_node.get("target")
+        if not isinstance(target_raw, (int, float)) or target_raw <= 0:
+            return None
+        today = datetime.date.today()
+        days_in_month = calendar.monthrange(today.year, today.month)[1]
+        daily_meta = target_raw / days_in_month * today.day
+        target_fmt = config.get("target_formatted") or ""
+        if isinstance(target_fmt, str) and target_fmt.startswith("$"):
+            return format_value(daily_meta, "$")
+        if isinstance(target_fmt, str) and target_fmt.endswith("%"):
+            return f"{daily_meta:.1f}%"
+        return f"{int(daily_meta):,}"
+
     def _build_compact_footer(self, config, is_inverse, theme="dark"):
-        label_color = "#9ca3af" if theme == "dark" else "#6b7280"
-        value_color = "#e8eaed" if theme == "dark" else "#1d1d1b"
+        label_color = Colors.TEXT_DARK_SECONDARY if theme == "dark" else Colors.TEXT_LIGHT_SECONDARY
+        value_color = Colors.TEXT_DARK if theme == "dark" else Colors.TEXT_LIGHT
 
         label = config.get("label_prev_year", "vs Ant.")
         value = config.get("vs_last_year_formatted")
 
         if value in (None, "---", "N/A", ""):
-            if config.get("target_formatted") and config.get("target_formatted") not in (
-                "---",
-                "N/A",
-            ):
-                label = "Meta:"
+            daily = self._daily_meta_str(config)
+            if daily:
+                label = "Meta al día:"
+                value = daily
+            elif config.get("target_formatted") and config.get("target_formatted") not in ("---", "N/A"):
+                label = "Meta mensual:"
                 value = config.get("target_formatted")
             else:
                 return html.Div(style={"height": "4px"})
@@ -546,9 +531,9 @@ class SmartWidget:
         if delta_fmt and isinstance(delta_fmt, str) and delta_fmt not in ("N/A", "---", ""):
             delta_num = self._safe_to_float(delta_fmt)
             if delta_num > 0:
-                return delta_fmt, DS.SUCCESS[5]
+                return delta_fmt, Colors.POSITIVE
             if delta_num < 0:
-                return delta_fmt, DS.DANGER[5]
+                return delta_fmt, Colors.NEGATIVE
             return delta_fmt, "gray"
 
         delta_num = self._safe_to_float(delta)
@@ -557,17 +542,17 @@ class SmartWidget:
             return "0%", "gray"
 
         badge_text = f"{delta_num:+.1f}%"
-        badge_color = DS.SUCCESS[5] if delta_num > 0 else DS.DANGER[5]
+        badge_color = Colors.POSITIVE if delta_num > 0 else Colors.NEGATIVE
 
         return badge_text, badge_color
 
     def _build_footer(self, config, height=200, theme="dark"):
         footer_items = []
         is_inverse = config.get("inverse", False)
-        max_items = 2 if height < 180 else 3
+        max_items = 3 if height < 180 else 4
 
-        label_color = "#9ca3af" if theme == "dark" else "#6b7280"
-        value_color = "#e8eaed" if theme == "dark" else "#1d1d1b"
+        label_color = Colors.TEXT_DARK_SECONDARY if theme == "dark" else Colors.TEXT_LIGHT_SECONDARY
+        value_color = Colors.TEXT_DARK if theme == "dark" else Colors.TEXT_LIGHT
 
         def make_row(label, value, delta=None, delta_fmt=None):
             if value in (None, "---", "N/A", ""):
@@ -577,9 +562,9 @@ class SmartWidget:
             badge_text, badge_color = self._safe_format_delta(delta, delta_fmt)
 
             if badge_text and badge_text not in ("0%", "N/A"):
-                if is_inverse and badge_color in (DS.SUCCESS[5], DS.DANGER[5]):
+                if is_inverse and badge_color in (Colors.POSITIVE, Colors.NEGATIVE):
                     badge_color = (
-                        DS.DANGER[5] if badge_color == DS.SUCCESS[5] else DS.SUCCESS[5]
+                        Colors.NEGATIVE if badge_color == Colors.POSITIVE else Colors.POSITIVE
                     )
 
                 badge = dmc.Badge(
@@ -614,7 +599,7 @@ class SmartWidget:
             )
 
         prev_row = make_row(
-            config.get("label_prev_year", "vs Ant."),
+            config.get("label_prev_year", f"vs {_ts.previous_year}"),
             config.get("vs_last_year_formatted"),
             config.get("vs_last_year_delta"),
             config.get("vs_last_year_delta_formatted"),
@@ -623,15 +608,21 @@ class SmartWidget:
             footer_items.append(prev_row)
 
         meta_row = None
+        meta_dia_row = None
         if not config.get("hide_meta", False):
             meta_row = make_row(
-                config.get("label_target", "Meta"),
+                config.get("label_target", "Meta mensual"),
                 config.get("target_formatted"),
                 config.get("target_delta"),
                 config.get("target_delta_formatted"),
             )
+            daily = self._daily_meta_str(config)
+            if daily:
+                meta_dia_row = make_row("Meta al día", daily)
         if meta_row and len(footer_items) < max_items:
             footer_items.append(meta_row)
+        if meta_dia_row and len(footer_items) < max_items:
+            footer_items.append(meta_dia_row)
 
         ytd_row = make_row(
             config.get("label_ytd", "YTD"),

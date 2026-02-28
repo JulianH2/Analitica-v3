@@ -1,7 +1,10 @@
 import math
+import dash_ag_grid as dag
 import dash_mantine_components as dmc
 import plotly.graph_objects as go
-from design_system import DesignSystem, SemanticColors, dmc as _dmc
+from dash import html
+from dash_iconify import DashIconify
+from design_system import DesignSystem, Colors, SemanticColors, ComponentSizes, Space, Typography, dmc as _dmc
 from utils.helpers import safe_get
 from .base_strategy import KPIStrategy
 from .chart_engine import ChartEngine
@@ -34,10 +37,12 @@ class WorkshopKPIStrategy(KPIStrategy):
             "vs_last_year_formatted": node.get("vs_last_year_formatted"),
             "vs_last_year_delta": node.get("vs_last_year_delta"),
             "vs_last_year_delta_formatted": node.get("vs_last_year_delta_formatted"),
-            "label_prev_year": node.get("label_prev_year", "Año Ant"),
+            "label_prev_year": node.get("label_prev_year", "Año Ant."),
             "target_formatted": node.get("target_formatted"),
+            "target_delta": node.get("target_delta"),
             "target_delta_formatted": node.get("target_delta_formatted"),
-            "trend": node.get("trend_direction"),
+            "trend": node.get("trend"),
+            "trend_direction": node.get("trend_direction"),
             "ytd_formatted": node.get("ytd_formatted"),
             "ytd_delta": node.get("ytd_delta"),
             "ytd_delta_formatted": node.get("ytd_delta_formatted"),
@@ -52,7 +57,7 @@ class WorkshopKPIStrategy(KPIStrategy):
         return config
 
     def _render_standard_view(self, ctx, theme):
-        return dmc.Text("Detalle de métrica de mantenimiento.", size="sm", c=_dmc(SemanticColors.TEXT_MUTED))
+        return dmc.Text("Detalle de métrica de mantenimiento.", size="sm", c=_dmc("dimmed"))
 class WorkshopGaugeStrategy(KPIStrategy):
     def __init__(self, screen_id, key, title="", color="blue", icon="tabler:gauge", has_detail=True, variant=None, use_needle=False, layout_config=None):
         super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
@@ -81,23 +86,34 @@ class WorkshopGaugeStrategy(KPIStrategy):
             "has_detail": self.has_detail,
             "is_table": False,
             "is_chart": False,
+            "color": self.color,
             "value": node.get("value_formatted", "---"),
+            "main_value": node.get("value_formatted", "---"),
             "vs_last_year_formatted": node.get("vs_last_year_formatted"),
             "vs_last_year_delta": node.get("vs_last_year_delta"),
             "vs_last_year_delta_formatted": node.get("vs_last_year_delta_formatted"),
-            "label_prev_year": node.get("label_prev_year"),
+            "label_prev_year": node.get("label_prev_year", "Año Ant."),
             "target_formatted": node.get("target_formatted"),
+            "target_delta": node.get("target_delta"),
+            "target_delta_formatted": node.get("target_delta_formatted"),
+            "trend": node.get("trend"),
+            "trend_direction": node.get("trend_direction"),
+            "ytd_formatted": node.get("ytd_formatted"),
+            "ytd_delta": node.get("ytd_delta"),
+            "ytd_delta_formatted": node.get("ytd_delta_formatted"),
+            "status": node.get("status"),
+            "status_color": node.get("status_color") or self.color,
             "meta_text": f"Meta: {node.get('target_formatted')}" if node.get("target_formatted") else "",
             "hide_meta": self.use_needle,
             "raw_data": node,
         }
-        if self.key == "availability_percent":
+        if self.key in ("availability_percent", "current_valuation"):
             cfg["vs_last_year_formatted"] = None
             cfg["vs_last_year_delta"] = None
             cfg["vs_last_year_delta_formatted"] = None
         return cfg
 
-    def get_figure(self, ctx, theme="light"):
+    def get_figure(self, ctx, theme="dark"):
         raw_node = self._resolve_kpi_data(ctx, self.screen_id, self.key)
 
         if self.use_needle:
@@ -148,8 +164,8 @@ class WorkshopGaugeStrategy(KPIStrategy):
                     "tickfont": {"size": 9, "color": "#9ca3af" if is_dark else "#888"},
                     "nticks": 6,
                 },
-                "bar": {"color": "rgba(0,0,0,0)", "thickness": 0},
-                "bgcolor": "rgba(0,0,0,0)",
+                "bar": {"color": Colors.TRANSPARENT, "thickness": 0},
+                "bgcolor": Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT_CARD,
                 "borderwidth": 0,
                 "steps": [
                     {"range": [0, 60],  "color": "#c92a2a"},
@@ -210,8 +226,8 @@ class WorkshopGaugeStrategy(KPIStrategy):
             template="zam_dark" if is_dark else "zam_light",
             height=height,
             margin=dict(l=20, r=20, t=30, b=15),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor=Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT_CARD,
+            plot_bgcolor=Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT_CARD,
             annotations=[
                 dict(x=0.5, y=0.38, text=f"<b>{current_val:.0f}%</b>",
                     showarrow=False,
@@ -226,7 +242,7 @@ class WorkshopGaugeStrategy(KPIStrategy):
         return fig
 
     def _render_standard_view(self, ctx, theme):
-        return dmc.Text("Análisis de eficiencia de mantenimiento.", size="sm", c=_dmc(SemanticColors.TEXT_MUTED))
+        return dmc.Text("Análisis de eficiencia de mantenimiento.", size="sm", c=_dmc("dimmed"))
 class WorkshopTrendChartStrategy(KPIStrategy):
     def __init__(self, screen_id, key, title="", color="blue", icon="tabler:chart-line", has_detail=True, variant=None, layout_config=None):
         super().__init__(screen_id, key, title, color, icon, has_detail, variant, layout_config)
@@ -241,7 +257,7 @@ class WorkshopTrendChartStrategy(KPIStrategy):
             "raw_data": {},
         }
 
-    def get_figure(self, ctx, theme="light"):
+    def get_figure(self, ctx, theme="dark"):
         node = self._resolve_chart_data(ctx, self.screen_id, self.key)
         fig = ChartEngine.render_trend(node, theme, self.layout)
         if fig is None:
@@ -263,7 +279,7 @@ class WorkshopDonutChartStrategy(KPIStrategy):
             "raw_data": {},
         }
 
-    def get_figure(self, ctx, theme="light"):
+    def get_figure(self, ctx, theme="dark"):
         node = self._resolve_chart_data(ctx, self.screen_id, self.key)
         fig = ChartEngine.render_donut(node, theme, self.layout)
         if fig is None:
@@ -285,7 +301,7 @@ class WorkshopHorizontalBarStrategy(KPIStrategy):
             "raw_data": {},
         }
 
-    def get_figure(self, ctx, theme="light"):
+    def get_figure(self, ctx, theme="dark"):
         node = self._resolve_chart_data(ctx, self.screen_id, self.key)
         fig = ChartEngine.render_horizontal_bar(node, theme, self.layout)
         if fig is None:
@@ -307,7 +323,7 @@ class WorkshopBarChartStrategy(KPIStrategy):
             "raw_data": {},
         }
 
-    def get_figure(self, ctx, theme="light"):
+    def get_figure(self, ctx, theme="dark"):
         node = self._resolve_chart_data(ctx, self.screen_id, self.key)
         fig = ChartEngine.render_bar_chart(node, theme, self.layout)
         if fig is None:
@@ -329,7 +345,7 @@ class WorkshopComboChartStrategy(KPIStrategy):
             "raw_data": {},
         }
 
-    def get_figure(self, ctx, theme="light"):
+    def get_figure(self, ctx, theme="dark"):
         node = self._resolve_chart_data(ctx, self.screen_id, self.key)
         fig = ChartEngine.render_combo_chart(node, theme, self.layout)
         if fig is None:
@@ -348,9 +364,11 @@ class WorkshopTableStrategy:
         self.variant = variant
 
     def _get_data(self, ctx):
+        from flask import session
         from services.data_manager import data_manager
 
-        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {})
+        screen_map = data_manager.get_screen_map(session.get("current_db")) or {}
+        screen_config = screen_map.get(self.screen_id, {})
         inject_paths = screen_config.get("inject_paths", {})
 
         if self.variant:
@@ -394,48 +412,134 @@ class WorkshopTableStrategy:
             "raw_data": export_data,
         }
 
-    def render(self, ctx, mode="dashboard", theme="light"):
-        node = self._resolve_table_data(ctx)
-        if not node:
-            return dmc.Text("Sin datos de tabla", c=_dmc("dimmed"), ta="center", py="xl")
-        data_source = node.get("data", node)
-        headers = data_source.get("headers", [])
-        rows = data_source.get("rows", [])
-        summary = node.get("summary", {})
-        total_row = data_source.get("total_row")
-
+    def render(self, ctx, mode="dashboard", theme="dark"):
+        headers, rows = self._get_data(ctx)
         if not headers or not rows:
-            return dmc.Text("Sin datos", c=_dmc("dimmed"), ta="center", py="xl")
-        table_body = []
-        for row in rows[:50]:
-            table_body.append(dmc.TableTr([dmc.TableTd(str(cell), style={"fontSize": "11px"}) for cell in row]))
+            return dmc.Center(style={"height": 200}, children=[
+                dmc.Stack(align="center", gap=Space.XS, children=[
+                    DashIconify(icon="tabler:table-off", width=40, color=Colors.NEXA_GRAY),
+                    dmc.Text("Sin datos disponibles", size="xs", c=_dmc("dimmed"), style={"fontFamily": Typography.FAMILY}),
+                ])
+            ])
 
-        if summary:
-            table_body.append(dmc.TableTr([
-                dmc.TableTd(
-                    str(summary.get(h.lower().replace(" ", "_"), "---")),
-                    style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": DesignSystem.SLATE[0]},
-                )
-                for h in headers
-            ]))
-        elif total_row:
-            table_body.append(dmc.TableTr([
-                dmc.TableTd(
-                    str(cell),
-                    style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": "#f8f9fa"},
-                )
-                for cell in total_row
-            ]))
+        if mode in ["analyst", "analysis"]:
+            return self._render_simple_table(headers, rows, theme)
 
+        unique_key = f"{self.screen_id}-{self.key}"
+
+        column_defs = []
+        for i, h in enumerate(headers):
+            col_def = {
+                "field": f"col_{i}",
+                "headerName": h,
+                "sortable": True,
+                "resizable": True,
+                "suppressMenu": True,
+                "tooltipField": f"col_{i}",
+            }
+            if i == 0:
+                col_def.update({"pinned": "left", "width": 90, "flex": 0})
+            else:
+                col_def.update({"minWidth": 120, "flex": 1})
+            column_defs.append(col_def)
+
+        row_data = []
+        for row in rows:
+            if isinstance(row, (list, tuple)):
+                row_data.append({f"col_{i}": (v if v is not None else "") for i, v in enumerate(row)})
+            elif isinstance(row, dict):
+                row_data.append({f"col_{i}": (row.get(h, "") or "") for i, h in enumerate(headers)})
+
+        def _parse_cell(v):
+            if isinstance(v, (int, float)):
+                return float(v) if v == v else None
+            if not isinstance(v, str):
+                return None
+            s = v.strip()
+            if s in ("", "---", "-"):
+                return None
+            neg = s.startswith("-")
+            s = s.lstrip("+-$").strip()
+            mult = 1.0
+            if s.endswith("B"):
+                mult = 1e9; s = s[:-1]
+            elif s.endswith("M"):
+                mult = 1e6; s = s[:-1]
+            elif s.endswith("m"):
+                mult = 1e3; s = s[:-1]
+            elif s.upper().endswith("K"):
+                mult = 1e3; s = s[:-1]
+            elif s.endswith("%"):
+                return None
+            try:
+                num = float(s.replace(",", "")) * mult
+                return -num if neg else num
+            except ValueError:
+                return None
+
+        total_row = {}
+        for i in range(len(headers)):
+            field = f"col_{i}"
+            if i == 0:
+                total_row[field] = "TOTAL"
+                continue
+            vals = [r.get(field, "") for r in row_data]
+            nums = [_parse_cell(v) for v in vals]
+            valid = [n for n in nums if n is not None]
+            if valid and len(valid) == len(vals):
+                s = sum(valid)
+                first = str(vals[0]).strip().lstrip("-")
+                is_currency = first.startswith("$")
+                a = abs(s)
+                if is_currency:
+                    if a >= 1e9:
+                        total_row[field] = f"${s/1e9:.1f}B"
+                    elif a >= 1e6:
+                        total_row[field] = f"${s/1e6:.1f}M"
+                    elif a >= 1e3:
+                        total_row[field] = f"${s/1e3:.1f}m"
+                    else:
+                        total_row[field] = f"${s:,.0f}"
+                else:
+                    total_row[field] = f"{int(s):,}" if s == int(s) else f"{s:,.2f}"
+            else:
+                total_row[field] = ""
+
+        grid = dag.AgGrid(
+            id={"type": "ag-grid-dashboard", "index": unique_key},
+            rowData=row_data,
+            columnDefs=column_defs,
+            defaultColDef={"sortable": True, "resizable": True, "filter": False},
+            dashGridOptions={
+                "domLayout": "autoHeight",
+                "pagination": True,
+                "paginationPageSize": 20,
+                "rowHeight": ComponentSizes.TABLE_ROW_HEIGHT,
+                "headerHeight": ComponentSizes.TABLE_HEADER_HEIGHT,
+                "suppressFieldDotNotation": True,
+                "quickFilterText": "",
+                "pinnedBottomRowData": [total_row],
+            },
+            style={"width": "100%"},
+            className=f"ag-theme-alpine{'-dark' if theme == 'dark' else ''} compact",
+        )
+
+        return html.Div(
+            style={"height": "100%", "display": "flex", "flexDirection": "column"},
+            children=[html.Div(style={"flex": 1, "minHeight": "250px", "overflow": "hidden"}, children=grid)],
+        )
+
+    def _render_simple_table(self, headers, rows, theme="dark"):
+        is_dark = theme == "dark"
+        cell_style = {"fontSize": "11px", "color": "#e8eaed" if is_dark else "#1d1d1b"}
+        head_style = {"fontSize": "11px", "fontWeight": "bold", "color": "#9ca3af" if is_dark else "#6b7280"}
+        table_body = [
+            dmc.TableTr([dmc.TableTd(str(cell), style=cell_style) for cell in row])
+            for row in rows[:100]
+        ]
         return dmc.Table(
             [
-                dmc.TableThead(dmc.TableTr([
-                    dmc.TableTh(
-                        h,
-                        style={"fontSize": "11px", "fontWeight": "bold", "backgroundColor": DesignSystem.SLATE[0]},
-                    )
-                    for h in headers
-                ])),
+                dmc.TableThead(dmc.TableTr([dmc.TableTh(h, style=head_style) for h in headers])),
                 dmc.TableTbody(table_body),
             ],
             striped="odd",
@@ -445,9 +549,11 @@ class WorkshopTableStrategy:
         )
 
     def _resolve_table_data(self, ctx):
+        from flask import session
         from services.data_manager import data_manager
 
-        screen_config = data_manager.SCREEN_MAP.get(self.screen_id, {})
+        screen_map = data_manager.get_screen_map(session.get("current_db")) or {}
+        screen_config = screen_map.get(self.screen_id, {})
         inject_paths = screen_config.get("inject_paths", {})
 
         if self.variant:

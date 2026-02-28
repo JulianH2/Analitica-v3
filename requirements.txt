@@ -24,4 +24,5 @@ djangorestframework
 mssql-django
 
 sentry-sdk==2.48.0
-pydantic==2.6.1
+pydantic>=2.12
+pydantic-ai==1.63.0

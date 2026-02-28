@@ -72,10 +72,10 @@ class Colors:
     BG_DARK_CARD: Final[str] = "#62686e"      
 
 
-    PLOT_BG_DARK: Final[str] = "rgba(0,0,0,0)"
+    PLOT_BG_DARK: Final[str] = "#62686e"
     PLOT_GRID_DARK: Final[str] = "#4a4a4a"
-    
-    PLOT_BG_LIGHT: Final[str] = "rgba(0,0,0,0)"
+
+    PLOT_BG_LIGHT: Final[str] = "#ffffff"
     PLOT_GRID_LIGHT: Final[str] = "#e2e8f0"
 
 
@@ -109,9 +109,10 @@ class Colors:
 
 
     SLATE: Final[List[str]] = [
-        "#f8fafc", "#f2f2f2", "#e2e8f0", "#cbd5e1", 
-        "#94a3b8", "#808080", "#757575F9", 
-        "#62686e",
+        "#FFFFFF", "#FFFFFF", "#FFFFFF", 
+        "#FFFFFF", 
+        "#3b4249", "#3b4249", "#3b4249", 
+        "#3b4249",
         "#1d1d1b",
         "#0f172a"  
     ]
@@ -527,8 +528,8 @@ class PlotlyConfig:
         is_dark = theme == "dark"
         
         return dict(
-            paper_bgcolor=Colors.TRANSPARENT,
-            plot_bgcolor=Colors.TRANSPARENT,
+            paper_bgcolor=Colors.PLOT_BG_DARK if is_dark else Colors.PLOT_BG_LIGHT,
+            plot_bgcolor=Colors.PLOT_BG_DARK if is_dark else Colors.PLOT_BG_LIGHT,
             margin=dict(t=35, b=45, l=50, r=20),
             colorway=ChartColors.DEFAULT,
             font=dict(
@@ -546,7 +547,7 @@ class PlotlyConfig:
             ),
             yaxis=dict(
                 showgrid=True,
-                gridcolor=Colors.BG_DARK_SECONDARY if is_dark else Colors.BG_LIGHT_SECONDARY,
+                gridcolor=Colors.PLOT_GRID_DARK if is_dark else Colors.PLOT_GRID_LIGHT,
                 gridwidth=1,
                 zeroline=False,
                 tickfont=dict(
@@ -781,6 +782,8 @@ class DesignSystem:
     WHITE = Colors.WHITE
     CARD_BORDER_LIGHT = Colors.CARD_BORDER_LIGHT
     CARD_BORDER_DARK = Colors.CARD_BORDER_DARK
+    CARD_SHADOW_LIGHT = Shadows.SM
+    CARD_SHADOW_DARK = Shadows.SM_DARK
     COLOR_MAP = Colors.COLOR_MAP
     
 

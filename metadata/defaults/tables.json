@@ -3,6 +3,7 @@
     "table_name": "h_viaje",
     "type": "fact",
     "pk": "no_viaje",
+    "description": "Resultados financieros y operativos del viaje. Contiene las métricas calculadas para cada viaje: ingresos (flete), costos totales, utilidad y KPIs como costo por kilómetro e ingreso por viaje.",
     "date_column": "fecha_real_viaje",
     "fields": {
       "subtotal": "decimal",
@@ -40,7 +41,7 @@
     "type": "dim",
     "pk": "no_viaje",
     "date_column": "fecha_liquidacion",
-    "description": "Tabla operativa de viajes con detalles de ruta y kilometraje",
+    "description": "Registro detallado de cada viaje de la flota. Conecta unidad, operador, ruta y datos de rendimiento (kilómetros, combustible, sueldo del operador).",
     "fields": {
       "no_viaje": "integer",
       "ind_cargado": "integer",
@@ -91,6 +92,7 @@
     "type": "dim",
     "pk": "id_ruta",
     "label_column": "ruta",
+    "description": "Catálogo de rutas operativas por plaza de origen y destino. Incluye distancia oficial en kilómetros y tiempo estimado.",
     "fields": {
       "kms_ruta": "decimal",
       "ruta": "string",
@@ -115,7 +117,8 @@
     "table_name": "d_plaza",
     "type": "dim",
     "pk": "id_plaza",
-    "columns": { "plaza": "string", "id_plaza": "integer" },
+    "description": "Plazas o puntos de origen usados en las rutas de transporte.",
+    "fields": { "plaza": "string", "id_plaza": "integer" },
     "joins": {
       "geo_origen": {
         "target_table": "d_plaza_georeferencia_origen",
@@ -128,7 +131,8 @@
     "table_name": "d_plaza",
     "type": "dim",
     "pk": "id_plaza",
-    "columns": { "plaza": "string", "id_plaza": "integer" },
+    "description": "Plazas o puntos de destino usados en las rutas de transporte.",
+    "fields": { "plaza": "string", "id_plaza": "integer" },
     "joins": {
       "geo_destino": {
         "target_table": "d_plaza_georeferencia_destino",
@@ -141,7 +145,8 @@
     "table_name": "d_plaza",
     "type": "dim",
     "pk": "id_plaza",
-    "columns": {
+    "description": "Catálogo de plazas (origen/destino) para rutas y análisis geográfico.",
+    "fields": {
       "plaza": "string",
       "id_plaza": "integer"
     },
@@ -157,7 +162,8 @@
     "table_name": "d_plaza_georeferencia",
     "type": "dim",
     "pk": "id_plaza",
-    "columns": {
+    "description": "Coordenadas (lat/lon) de las plazas para mapas y análisis geográfico.",
+    "fields": {
       "id_plaza": "integer",
       "latpos": "string",
       "lonpos": "string"
@@ -167,7 +173,8 @@
     "table_name": "d_plaza_georeferencia",
     "type": "dim",
     "pk": "id_plaza",
-    "columns": {
+    "description": "Coordenadas de plazas de origen (alias de d_plaza_georeferencia).",
+    "fields": {
       "id_plaza": "integer",
       "latpos": "string",
       "lonpos": "string"
@@ -177,7 +184,8 @@
     "table_name": "d_plaza_georeferencia",
     "type": "dim",
     "pk": "id_plaza",
-    "columns": {
+    "description": "Coordenadas de plazas de destino (alias de d_plaza_georeferencia).",
+    "fields": {
       "id_plaza": "integer",
       "latpos": "string",
       "lonpos": "string"
@@ -186,7 +194,8 @@
   "h_viajes_gastos_liquidacion": {
     "table_name": "h_viajes_gastos_liquidacion",
     "type": "fact",
-    "pk": "id_comp", 
+    "pk": "id_comp",
+    "description": "Desglose de cada partida de gasto asociada a un viaje (combustible, casetas, etc.) proveniente de liquidaciones. Máximo detalle para análisis de costos operativos.", 
     "fields": {
       "id_comp": "integer",
       "monto_concepto": "decimal",
@@ -230,26 +239,37 @@
     "type": "dim",
     "pk": "id_unidad",
     "label_column": "id_unidad",
+    "description": "Catálogo maestro de cada unidad de la flota (tractocamión, remolque). Incluye número económico, placas, marca, modelo y fechas de ciclo de vida.",
     "fields": {
       "modelo": "string",
       "id_unidad": "string",
-      "id_marca": "integer"
+      "id_marca": "integer",
+      "id_flota": "integer",
+      "id_clasificacion_unidad": "integer",
+      "id_tipo_unidad": "integer"
     },
     "joins": {
-      "marca_unidad": {
-        "target_table": "d_marca_unidad",
-        "type": "INNER",
-        "on": "d_unidad.id_marca = d_marca_unidad.id_marca_unidad"
-      },
+      "marca": { "target_table": "d_marca_unidad", "type": "LEFT", "on": "d_unidad.id_marca = d_marca_unidad.id_marca_unidad" },
       "tipo_unidad": {
         "target_table": "d_tipo_unidad",
         "type": "INNER",
         "on": "d_unidad.id_tipo_unidad = d_tipo_unidad.id_tipo_unidad"
       },
-      "flota": {
+      "area": {
         "target_table": "d_area",
         "type": "LEFT",
         "on": "d_unidad.id_area = d_area.id_area"
+      },
+      "flota": { "target_table": "d_flota", "type": "LEFT", "on": "d_unidad.id_flota = d_flota.id_flota" },
+      "clasificacion": { 
+        "target_table": "d_relacion_clasificacion_tipounidad", 
+        "type": "LEFT", 
+        "on": "d_unidad.id_clasificacion_unidad = d_relacion_clasificacion_tipounidad.id_clasificacion_unidad AND d_unidad.id_tipo_unidad = d_relacion_clasificacion_tipounidad.id_tipo_unidad" 
+      },
+      "tipo_operacion": {
+        "target_table": "d_tipo_operacion_os",
+        "type": "LEFT",
+        "on": "d_unidad.id_tipo_operacion = d_tipo_operacion_os.id_tipo_operacion"
       }
     }
   },
@@ -257,13 +277,19 @@
     "table_name": "d_personal",
     "type": "dim",
     "pk": "id_personal",
-    "label_column": "nombre"
+    "label_column": "nombre",
+    "description": "Catálogo de operadores (conductores) de la flota. Incluye datos de contacto y vencimiento de licencias.",
+    "fields": {
+      "id_personal": "integer",
+      "nombre": "string"
+    }
   },
   "d_trafico_cliente": {
     "table_name": "d_trafico_cliente",
     "type": "dim",
     "pk": "id_cliente",
     "label_column": "nombre_cliente",
+    "description": "Catálogo de clientes a los que se presta servicio de transporte. Base para ingresos y rentabilidad por cuenta.",
     "fields": {
       "id_cliente": "integer",
       "nombre_cliente": "string"
@@ -273,6 +299,7 @@
     "table_name": "d_factura",
     "type": "dim",
     "pk": "pk_pbi_trafico_guia",
+    "description": "Catálogo de facturas emitidas. Relaciona documento fiscal con cliente para análisis de cuentas por cobrar.",
     "fields": {
       "pk_pbi_trafico_guia": "integer",
       "id_cliente": "integer"
@@ -289,6 +316,7 @@
     "table_name": "d_trafico_guia",
     "type": "dim",
     "pk": "pk_guia",
+    "description": "Guía de carga o Carta Porte. Documento que ampara el transporte de mercancías (remitente, destinatario, mercancía).",
     "joins": {
       "estatus_guia": {
         "target_table": "d_estatus_guia",
@@ -311,6 +339,7 @@
     "table_name": "h_relacion_viaje_cp",
     "type": "fact",
     "pk": "id_relacion",
+    "description": "Relación entre un viaje y las Cartas Porte (guías) asociadas. Conecta operación logística con documentación.",
     "joins": {
       "guia": {
         "target_table": "d_trafico_guia",
@@ -329,6 +358,7 @@
     "type": "dim",
     "pk": "id_concepto",
     "label_column": "descripcion_concepto",
+    "description": "Conceptos de gasto y deducciones en liquidaciones de viaje (peajes, viáticos, etc.).",
     "fields": {
       "concepto": "string",
       "id_concepto": "integer",
@@ -346,14 +376,15 @@
     "table_name": "d_trafico_concepto_clasificacion",
     "type": "dim",
     "pk": "id_clasificacion",
-    "columns": {
+    "description": "Clasificación de alto nivel de conceptos de gasto (Combustible, Casetas, Viáticos, Mantenimiento).",
+    "fields": {
       "nombre": "string",
       "id_clasificacion": "integer"
     }
   },
   "d_meta_tiempo": {
     "table_name": "d_meta_tiempo",
-    "description": "Tabla de presupuestos y metas diarias/mensuales",
+    "description": "Metas y objetivos (plan/presupuesto) por fecha para KPIs: ingresos, costos, km, combustible, cartera, taller, etc.",
     "type": "fact",
     "pk": "fecha",
     "date_column": "fecha",
@@ -368,24 +399,46 @@
       "meta_costo_tallerexterno": "decimal",
       "meta_costo_tallerllantas": "decimal",
       "meta_costo_mtto_x_km": "decimal",
+      "meta_valorizacion_almacen": "decimal",
       "fecha": "date"
+    }
+  },
+  "d_empresa": {
+    "table_name": "d_empresa",
+    "description": "Catálogo maestro de empresas del grupo. Nivel jerárquico superior al área/sucursal.",
+    "type": "dim",
+    "pk": "id_empresa",
+    "label_column": "empresa",
+    "fields": {
+      "id_empresa": "integer",
+      "empresa": "string",
+      "estatus_empresa": "string",
+      "rfc": "string"
     }
   },
   "d_area": {
     "table_name": "d_area",
-    "description": "Sucursales o bases operativas",
+    "description": "Catálogo de áreas geográficas u operativas (sucursales, zonas). Base para análisis por ubicación.",
     "type": "dim",
     "pk": "id_area",
-    "label_column": "no_area",
+    "label_column": "area",
     "fields": {
       "id_area": "integer",
+      "id_empresa": "integer",
       "no_abrev_area": "string",
       "area": "string"
+    },
+    "joins": {
+      "empresa": {
+        "target_table": "d_empresa",
+        "type": "INNER",
+        "on": "d_area.id_empresa = d_empresa.id_empresa"
+      }
     }
   },
   "d_tipo_operacion": {
     "table_name": "d_tipo_operacion",
-    "description": "Giro del servicio (ej. Refinados, Contenedor, Carga General)",
+    "description": "Tipos de operación logística (Carga General, Especializada, Refinados, Contenedor, etc.).",
     "type": "dim",
     "pk": "id_tipo_operacion",
     "fields": {
@@ -398,6 +451,7 @@
     "table_name": "d_liquidacion",
     "type": "dim",
     "pk": "pk_liquidacion",
+    "description": "Registro de cada liquidación: conciliación de gastos de viaje del operador contra anticipo (saldo a favor del operador o de la empresa).",
     "business_key": [
       "id_area",
       "no_liquidacion"
@@ -406,27 +460,37 @@
   "d_trafico_gpogasto": {
     "table_name": "d_trafico_gpogasto",
     "type": "dim",
-    "pk": "id_gpogasto"
+    "pk": "id_gpogasto",
+    "description": "Grupos de gasto de alto nivel que agrupan conceptos (Combustibles, Peajes, Mantenimiento) para análisis financiero."
   },
   "d_tipo_unidad": {
     "table_name": "d_tipo_unidad",
     "type": "dim",
-    "pk": "id_tipo_unidad"
+    "pk": "id_tipo_unidad",
+    "label_column": "tipo_unidad",
+    "description": "Catálogo de tipos de vehículo (tractocamión, remolque, torton, etc.) para análisis por categoría.",
+    "fields": {
+      "id_tipo_unidad": "integer",
+      "tipo_unidad": "string"
+    }
   },
   "d_estatus_guia": {
     "table_name": "d_estatus_guia",
     "type": "dim",
-    "pk": "id_estatus_guia"
+    "pk": "id_estatus_guia",
+    "description": "Estados de una guía de transporte (En tránsito, Entregada, etc.)."
   },
   "d_guia_proceso_cancelasat": {
     "table_name": "d_guia_proceso_cancelasat",
     "type": "dim",
-    "pk": "factura"
+    "pk": "factura",
+    "description": "Relación de guías con proceso de cancelación SAT (facturación electrónica)."
   },
   "d_marca_unidad": {
     "table_name": "d_marca_unidad",
     "type": "dim",
     "pk": "id_marca_unidad",
+    "description": "Catálogo de marcas de vehículos de la flota. Análisis por fabricante.",
     "fields": {
       "marca_unidad": "string",
       "id_marca_unidad": "integer"
@@ -437,7 +501,7 @@
     "type": "fact",
     "pk": "fk_factura", 
     "date_column": "fecha_factura",
-    "description": "Histórico de saldos y montos facturados",
+    "description": "Histórico de saldos y montos facturados por factura: facturado, cobrado, notas de crédito/cargo y saldo acumulado.",
     "fields": {
       "fk_factura": "integer",
       "id_area": "integer",
@@ -477,6 +541,7 @@
     "type": "dim",
     "pk": "num_ncredito",
     "date_column": "fecha",
+    "description": "Notas de crédito aplicadas a facturas (devoluciones o bonificaciones).",
     "fields": {
       "num_ncredito": "integer",
       "monto_credito": "decimal",
@@ -490,6 +555,7 @@
     "type": "dim",
     "pk": "num_ncargo",
     "date_column": "fecha",
+    "description": "Notas de cargo aplicadas a facturas (cargos adicionales).",
     "fields": {
       "num_ncargo": "integer",
       "monto_cargo": "decimal",
@@ -503,6 +569,7 @@
     "type": "fact",
     "pk": "id_cobro", 
     "date_column": "fecha_consulta",
+    "description": "Registro de cobros aplicados a facturas (monto y fecha de cobro).",
     "fields": {
       "monto_cobrado": "decimal",
       "fecha_consulta": "date",
@@ -513,6 +580,7 @@
     "table_name": "d_cxc_rango_vencimiento",
     "type": "dim",
     "pk": "id_rango_vencimiento",
+    "description": "Rangos de antigüedad de saldos en cuentas por cobrar (ej. 0-30 días, 31-60 días).",
     "fields": {
       "id_rango_vencimiento": "integer",
       "desc_rango_vencimiento": "string",
@@ -524,6 +592,7 @@
     "type": "fact",
     "pk": "id",
     "date_column": "fecha_consulta",
+    "description": "Histórico de saldos por proveedor: CXP, notas de cargo/crédito, pagos y saldo final.",
     "fields": {
       "id_rango_vencimiento": "integer",
       "id_proveedor": "integer",
@@ -550,6 +619,7 @@
     "table_name": "d_cxp_rango_vencimiento",
     "type": "dim",
     "pk": "id_rango_vencimiento",
+    "description": "Rangos de antigüedad de saldos en cuentas por pagar (proveedores).",
     "fields": {
       "id_rango_vencimiento": "integer",
       "clasificacion": "string",
@@ -561,6 +631,7 @@
     "type": "dim",
     "pk": "id_proveedor",
     "label_column": "nombre_proveedor",
+    "description": "Catálogo de proveedores para análisis de cuentas por pagar.",
     "fields": {
       "id_proveedor": "integer",
       "nombre_proveedor": "string"
@@ -571,6 +642,7 @@
     "type": "dim",
     "pk": "id_banco",
     "label_column": "descripcion_banco",
+    "description": "Catálogo de cuentas bancarias. Relaciona con institución SAT para reportes.",
     "fields": {
       "id_banco": "integer",
       "descripcion_banco": "string",
@@ -590,6 +662,7 @@
     "type": "fact",
     "pk": "pk_bancos_saldos",
     "date_column": "fecha_periodo",
+    "description": "Saldos bancarios por período: inicial, ingresos, egresos y final (pesos/dólares).",
     "fields": {
       "saldo_inicial_consolidado": "decimal",
       "saldo_inicial_pesos": "decimal",
@@ -611,6 +684,7 @@
     "type": "fact",
     "pk": "num_documento",
     "date_column": "fecha_movimiento",
+    "description": "Movimientos de tesorería por cuenta bancaria: ingresos y egresos (pesos/dólares) por concepto.",
     "fields": {
       "ingresos_consolidado": "decimal",
       "egresos_consolidado": "decimal",
@@ -625,7 +699,7 @@
     },
     "joins": {
       "banco": { "target_table": "d_banco", "type": "INNER", "on": "h_bancos_movimientos.id_banco = d_banco.id_banco" },
-      "area": { "target_table": "d_area", "type": "INNER", "on": "h_bancos_movimientos.id_areacont = d_area.id_areacont" },
+      "area": { "target_table": "d_area", "type": "INNER", "on": "h_bancos_movimientos.id_areacont = d_area.id_area" },
       "concepto": { "target_table": "d_banco_concepto", "type": "INNER", "on": "h_bancos_movimientos.id_concepto = d_banco_concepto.id_concepto" }
     }
   },
@@ -633,6 +707,7 @@
     "table_name": "d_banco_sat",
     "type": "dim",
     "pk": "id_bancosat",
+    "description": "Catálogo de instituciones bancarias según el SAT (clave y razón social).",
     "fields": {
       "id_bancosat": "integer",
       "descripcion": "string",
@@ -644,6 +719,7 @@
     "table_name": "d_banco_concepto",
     "type": "dim",
     "pk": "id_concepto",
+    "description": "Conceptos de movimiento bancario para clasificar ingresos y egresos.",
     "fields": {
       "id_concepto": "integer",
       "descripcion": "string"
@@ -654,6 +730,7 @@
     "type": "dim",
     "pk": "id_orden_servicio",
     "date_column": "fecha_cierre",
+    "description": "Órdenes de servicio de mantenimiento. Información clave para costos, tiempos y unidades.",
     "fields": {
       "id_orden": "integer",
       "fecha_cierre": "date"
@@ -663,86 +740,346 @@
       "refacciones": { "target_table": "h_taller_gasto_refacciones", "type": "LEFT", "on": "d_orden_servicio.id_orden = h_taller_gasto_refacciones.id_orden" },
       "gasto_ext": { "target_table": "h_taller_gasto_taller_externo", "type": "LEFT", "on": "d_orden_servicio.id_orden = h_taller_gasto_taller_externo.id_orden" },
       "llantas_nuevas": { "target_table": "h_llantas_nueva", "type": "LEFT", "on": "d_orden_servicio.id_orden = h_llantas_nueva.id_orden" },
-      "llantas_renovadas": { "target_table": "h_llantas_renovada", "type": "LEFT", "on": "d_orden_servicio.id_orden = h_llantas_renovada.id_orden" }
+      "llantas_renovadas": { "target_table": "h_llantas_renovada", "type": "LEFT", "on": "d_orden_servicio.id_orden = h_llantas_renovada.id_orden" },
+      "tipo_operacion": { "target_table": "d_tipo_operacion_os", "type": "LEFT", "on": "d_orden_servicio.id_tipo_operacion = d_tipo_operacion_os.id_tipo_operacion" },
+      "area": { "target_table": "d_area", "type": "LEFT", "on": "d_orden_servicio.id_area = d_area.id_area" },
+      "razon": { "target_table": "d_razon_reparacion", "type": "LEFT", "on": "d_orden_servicio.id_razon = d_razon_reparacion.id_razon" },
+      "unidad": { "target_table": "d_unidad", "type": "LEFT", "on": "d_orden_servicio.id_unidad = d_unidad.id_unidad" }
     }
   },
   "d_mo_orden": {
     "table_name": "d_mo_orden",
     "type": "fact",
     "pk": "id_mo_orden",
+    "description": "Mano de obra asociada a órdenes de servicio (duración y costo).",
     "fields": {
       "duracion": "decimal",
       "costo": "decimal",
-      "id_orden": "integer"
+      "id_orden": "integer",
+      "id_detalle_orden": "integer"
     },
     "joins": {
-      "servicio": { "target_table": "d_orden_servicio", "type": "INNER", "on": "d_mo_orden.id_orden = d_orden_servicio.id_orden" }
+      "servicio": { "target_table": "d_orden_servicio", "type": "INNER", "on": "d_mo_orden.id_orden = d_orden_servicio.id_orden" },
+      "detalle": { "target_table": "d_orden_servicio_det", "type": "LEFT", "on": "d_mo_orden.id_detalle_orden = d_orden_servicio_det.id_detalle_orden" }
     }
   },
   "h_taller_gasto_refacciones": {
     "table_name": "h_taller_gasto_refacciones",
     "type": "fact",
     "pk": "id_gasto_refaccion",
+    "description": "Costo de refacciones utilizadas en órdenes de servicio. Análisis de gasto en mantenimiento.",
     "fields": {
       "monto_gto_ref": "decimal",
-      "id_orden": "integer"
+      "id_orden": "integer",
+      "id_detalle_orden": "integer"
     },
     "joins": {
-      "servicio": { "target_table": "d_orden_servicio", "type": "INNER", "on": "h_taller_gasto_refacciones.id_orden = d_orden_servicio.id_orden" }
+      "servicio": { "target_table": "d_orden_servicio", "type": "INNER", "on": "h_taller_gasto_refacciones.id_orden = d_orden_servicio.id_orden" },
+      "detalle": { "target_table": "d_orden_servicio_det", "type": "LEFT", "on": "h_taller_gasto_refacciones.id_detalle_orden = d_orden_servicio_det.id_detalle_orden" }
     }
   },
   "h_taller_gasto_taller_externo": {
     "table_name": "h_taller_gasto_taller_externo",
     "type": "fact",
     "pk": "fk_pbi_orden_servicio",
+    "description": "Costos de mantenimiento en talleres externos (mano de obra y refacciones subcontratadas).",
     "fields": {
       "costo_mano_obra_ext": "decimal",
       "costo_refacciones_ext": "decimal",
-      "id_orden": "integer"
+      "id_orden": "integer",
+      "id_detalle_orden": "integer"
     },
     "joins": {
-      "servicio": {
-        "target_table": "d_orden_servicio",
-        "type": "INNER",
-        "on": "h_taller_gasto_taller_externo.id_orden = d_orden_servicio.id_orden"
-      }
+      "servicio": { "target_table": "d_orden_servicio", "type": "INNER", "on": "h_taller_gasto_taller_externo.id_orden = d_orden_servicio.id_orden" },
+      "detalle": { "target_table": "d_orden_servicio_det", "type": "LEFT", "on": "h_taller_gasto_taller_externo.id_detalle_orden = d_orden_servicio_det.id_detalle_orden" }
     }
   },
   "h_llantas_nueva": {
     "table_name": "h_llantas_nueva",
     "type": "dim",
     "pk": "id_orden",
+    "description": "Costo y cantidad de llantas nuevas instaladas. Análisis por unidad o taller.",
     "fields": {
       "monto_llantas_nva": "decimal",
-      "id_orden": "integer"
+      "id_orden": "integer",
+      "id_familia": "integer", 
+      "id_subfamilia": "integer"
+    },
+    "joins": {
+      "servicio": { "target_table": "d_orden_servicio", "type": "INNER", "on": "h_llantas_nueva.id_orden = d_orden_servicio.id_orden" },
+      "familia": { "target_table": "d_familia", "type": "LEFT", "on": "h_llantas_nueva.id_familia = d_familia.id_familia" },
+      "subfamilia": { "target_table": "d_subfamilia", "type": "LEFT", "on": "h_llantas_nueva.id_subfamilia = d_subfamilia.id_subfamilia" }
     }
   },
   "h_llantas_renovada": {
     "table_name": "h_llantas_renovada",
     "type": "dim",
     "pk": "id_orden",
+    "description": "Costo y cantidad de llantas renovadas/usadas instaladas por unidad y tipo de reparación.",
     "fields": {
       "monto_llantas_ren": "decimal",
-      "id_orden": "integer"
+      "id_orden": "integer",
+      "id_familia": "integer", 
+      "id_subfamilia": "integer"
+    },
+    "joins": {
+      "servicio": { "target_table": "d_orden_servicio", "type": "INNER", "on": "h_llantas_renovada.id_orden = d_orden_servicio.id_orden" },
+      "familia": { "target_table": "d_familia", "type": "LEFT", "on": "h_llantas_renovada.id_familia = d_familia.id_familia" },
+      "subfamilia": { "target_table": "d_subfamilia", "type": "LEFT", "on": "h_llantas_renovada.id_subfamilia = d_subfamilia.id_subfamilia" }
     }
   },
   "h_unidad_indicadores_mes_diario": {
     "table_name": "h_unidad_indicadores_mes_diario",
     "type": "fact",
     "date_column": "fecha_fin",
+    "description": "Indicadores mensuales por unidad: días disponibles, días en mes, días en taller.",
     "fields": {
       "dias_disponibles": "decimal",
       "dias_mes": "decimal",
+      "dias_taller": "decimal",
       "id_unidad": "string"
+    },
+    "joins": {
+      "unidad": { 
+        "target_table": "d_unidad", 
+        "type": "LEFT", 
+        "on": "h_unidad_indicadores_mes_diario.id_unidad = d_unidad.id_unidad" 
+      }
     }
   },
   "d_unidad_kilometros_diarios": {
     "table_name": "d_unidad_kilometros_diarios",
     "type": "fact",
     "date_column": "fecha",
+    "description": "Kilometraje diario recorrido por unidad. Base para rendimiento y costo por km.",
     "fields": {
       "kms_recorridos": "decimal",
       "id_unidad": "string"
+    }
+  },
+  "d_tipo_operacion_os": {
+    "table_name": "d_tipo_operacion_os",
+    "type": "dim",
+    "pk": "id_tipo_operacion",
+    "description": "Tipos de operación dentro de órdenes de servicio (clasificación del trabajo realizado).",
+    "fields": {
+      "id_tipo_operacion": "integer",
+      "tipo_operacion": "string"
+    }
+  },
+  "d_razon_reparacion": {
+    "table_name": "d_razon_reparacion",
+    "type": "dim",
+    "pk": "id_razon",
+    "description": "Motivos de reparación (preventivo, correctivo). Análisis de frecuencia de mantenimientos.",
+    "fields": {
+      "id_razon": "integer",
+      "preventivo": "string",
+      "razon": "string"
+    },
+    "joins": {
+      "tipo_razon": { 
+        "target_table": "d_tipo_razon", 
+        "type": "LEFT", 
+        "on": "d_razon_reparacion.preventivo = d_tipo_razon.cve_tipo_razon" 
+      }
+    }
+  },
+  "d_familia": {
+    "table_name": "d_familia",
+    "type": "dim",
+    "pk": "id_familia",
+    "description": "Familias de refacciones (categorías de alto nivel).",
+    "fields": { "id_familia": "integer", "familia": "string" }
+  },
+  "d_subfamilia": {
+    "table_name": "d_subfamilia",
+    "type": "dim",
+    "pk": "id_subfamilia",
+    "description": "Subfamilias de refacciones para análisis granular de costos y consumos.",
+    "fields": { "id_subfamilia": "integer", "subfamilia": "string" }
+  },
+  "d_componente": {
+    "table_name": "d_componente",
+    "type": "dim",
+    "pk": "id_componente",
+    "description": "Componentes o piezas de vehículos que se reparan o reemplazan. Análisis por componente.",
+    "fields": { "id_componente": "integer", "componente": "string", "id_familia": "integer", "id_subfamilia": "integer" },
+    "joins": {
+      "familia": { "target_table": "d_familia", "type": "LEFT", "on": "d_componente.id_familia = d_familia.id_familia" },
+      "subfamilia": { "target_table": "d_subfamilia", "type": "LEFT", "on": "d_componente.id_subfamilia = d_subfamilia.id_subfamilia" }
+    }
+  },
+  "d_orden_servicio_det": {
+    "table_name": "d_orden_servicio_det",
+    "type": "dim",
+    "pk": "id_detalle_orden",
+    "description": "Detalle de tareas y componentes por orden de servicio. Análisis granular de trabajos.",
+    "fields": {
+      "id_detalle_orden": "integer",
+      "id_componente": "integer",
+      "id_orden": "integer"
+    },
+    "joins": {
+      "componente": { "target_table": "d_componente", "type": "LEFT", "on": "d_orden_servicio_det.id_componente = d_componente.id_componente" }
+    }
+  },
+  "d_flota": {
+    "table_name": "d_flota",
+    "type": "dim",
+    "pk": "id_flota",
+    "description": "Agrupación de unidades por flota. Análisis de rendimiento y costos por flota.",
+    "fields": {
+      "id_flota": "integer",
+      "desc_flota": "string"
+    }
+  },
+  "d_tipo_razon": {
+    "table_name": "d_tipo_razon",
+    "type": "dim",
+    "pk": "cve_tipo_razon",
+    "description": "Tipos de razón de reparación (preventivo/correctivo). Causas de mantenimiento.",
+    "fields": {
+      "cve_tipo_razon": "string",
+      "tipo_razon": "string"
+    }
+  },
+  "d_relacion_clasificacion_tipounidad": {
+    "table_name": "d_relacion_clasificacion_tipounidad",
+    "type": "dim",
+    "pk": "pk_pbi_relacion_tipounidad_clasificacion",
+    "description": "Relación entre clasificación de unidad y tipo de unidad. Análisis de flota por tipo y clasificación.",
+    "fields": {
+      "id_clasificacion_unidad": "integer",
+      "id_tipo_unidad": "integer",
+      "nombre_clasificacion": "string",
+      "nombre_tipo_unidad": "string"
+    }
+  },
+  "h_orden_compra": {
+    "table_name": "h_orden_compra",
+    "type": "fact",
+    "pk": "id_orden_compra",
+    "date_column": "fecha_orden",
+    "description": "Órdenes de compra de refacciones, combustible e insumos. Análisis de gastos por compra.",
+    "fields": {
+      "id_orden_compra": "integer",
+      "monto_subtotal_calc_mn": "decimal",
+      "id_tipo_orden": "integer",
+      "id_area": "integer",
+      "id_proveedor": "integer",
+      "id_control_insumo": "integer"
+    },
+    "joins": {
+      "tipo_orden": { 
+        "target_table": "d_tipo_orden", 
+        "type": "LEFT", 
+        "on": "h_orden_compra.id_tipo_orden = d_tipo_orden.id_tipoorden" 
+      },
+      "area": {
+        "target_table": "d_area",
+        "type": "LEFT",
+        "on": "h_orden_compra.id_area = d_area.id_area"
+      },
+      "proveedor": {
+        "target_table": "d_proveedores_compra",
+        "type": "LEFT",
+        "on": "h_orden_compra.id_proveedor = d_proveedores_compra.id_proveedor"
+      },
+      "insumo": {
+        "target_table": "d_control_insumo",
+        "type": "LEFT",
+        "on": "h_orden_compra.id_control_insumo = d_control_insumo.id_control_insumo"
+      }
+    }
+  },
+  "d_tipo_orden": {
+    "table_name": "d_tipo_orden",
+    "type": "dim",
+    "pk": "id_tipoorden",
+    "description": "Tipos de orden de compra para clasificación de gastos.",
+    "fields": {
+      "id_tipoorden": "integer",
+      "tipo_orden": "string"
+    }
+  },
+  "d_proveedores_compra": {
+    "table_name": "d_proveedores_compra",
+    "type": "dim",
+    "pk": "id_proveedor",
+    "description": "Proveedores del taller. Análisis de compras por proveedor.",
+    "fields": {
+      "id_proveedor": "integer",
+      "razon_social": "string"
+    }
+  },
+  "d_control_insumo": {
+    "table_name": "d_control_insumo",
+    "type": "dim",
+    "pk": "id_control_insumo",
+    "description": "Forma de gestión de insumos (stock, no stock, combustible). Control y consumo.",
+    "fields": {
+      "id_control_insumo": "integer",
+      "control_insumo": "string"
+    }
+  },
+  "h_inventario_cierre_mes": {
+    "table_name": "h_inventario_cierre_mes",
+    "type": "fact",
+    "date_column": "fecha_periodo",
+    "description": "Histórico valorizado del inventario de refacciones al cierre de cada mes (inicio, entradas, salidas, final).",
+    "fields": {
+      "costeo_inicio": "decimal",
+      "costeo_entradas": "decimal",
+      "costeo_salidas": "decimal",
+      "costeo_final": "decimal"
+    }
+  },
+  "h_inventario_almacen": {
+    "table_name": "h_inventario_almacen",
+    "type": "fact",
+    "date_column": "fecha_ultima_compra",
+    "description": "Stock actual de refacciones por almacén: valorización, cantidades (actual, mínima, máxima).",
+    "fields": {
+      "pk_inv_almacen": "integer",
+      "valorizacion_actual": "decimal",
+      "cantidad_insumo": "decimal",
+      "cantidad_maxima": "decimal",
+      "cantidad_minima": "decimal",
+      "id_area": "integer",
+      "id_insumo": "integer"
+    },
+    "joins": {
+      "area": { "target_table": "d_area", "type": "LEFT", "on": "h_inventario_almacen.id_area = d_area.id_area" },
+      "insumo": { "target_table": "d_insumo", "type": "LEFT", "on": "h_inventario_almacen.id_insumo = d_insumo.id_insumo" }
+    }
+  },
+  "d_unidad_medida": {
+    "table_name": "d_unidad_medida",
+    "type": "dim",
+    "pk": "id_unidad_medida",
+    "description": "Unidades de medida para inventario (litros, piezas, metros, etc.).",
+    "fields": {
+      "id_unidad_medida": "integer",
+      "descripcion": "string"
+    }
+  },
+  "d_insumo": {
+    "table_name": "d_insumo",
+    "type": "dim",
+    "pk": "id_insumo",
+    "description": "Catálogo maestro de refacciones y consumibles del taller. Clasificación por familia y subfamilia.",
+    "fields": {
+      "id_insumo": "integer",
+      "insumo_nombre": "string",
+      "id_familia": "integer",
+      "id_subfamilia": "integer",
+      "unidad_medida": "integer"
+    },
+    "joins": {
+      "familia": { "target_table": "d_familia", "type": "LEFT", "on": "d_insumo.id_familia = d_familia.id_familia" },
+      "subfamilia": { "target_table": "d_subfamilia", "type": "LEFT", "on": "d_insumo.id_subfamilia = d_subfamilia.id_subfamilia" },
+      "um": { "target_table": "d_unidad_medida", "type": "LEFT", "on": "d_insumo.unidad_medida = d_unidad_medida.id_unidad_medida" }
     }
   }
 }

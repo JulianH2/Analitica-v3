@@ -5,6 +5,11 @@ from design_system import ChartColors, Colors, ComponentSizes, GaugeConfig, Typo
 from services.time_service import TimeService
 
 
+def _chart_bg(is_dark: bool) -> str:
+    """Return the card-matching chart background for the current theme."""
+    return Colors.BG_DARK_CARD if is_dark else Colors.BG_LIGHT_CARD
+
+
 def safe_float(val, default=0.0):
     if val is None:
         return default
@@ -112,7 +117,7 @@ class ChartEngine:
             if val >= 1e6:
                 text_labels.append(f"{short}<br>{val/1e6:.1f}M ({pct:.0f}%)")
             elif val >= 1e3:
-                text_labels.append(f"{short}<br>{val/1e3:.0f}k ({pct:.0f}%)")
+                text_labels.append(f"{short}<br>{val/1e3:.0f}m ({pct:.0f}%)")
             else:
                 text_labels.append(f"{short}<br>{val:,.0f} ({pct:.0f}%)")
 
@@ -158,7 +163,9 @@ class ChartEngine:
         fig.update_traces(domain=dict(x=[0.15, 0.85], y=[0.05, 0.95]))
 
         fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
+            template="zam_dark" if is_dark else "zam_light",
+            paper_bgcolor=_chart_bg(is_dark),
+            plot_bgcolor=_chart_bg(is_dark),
             height=fig_height,
             margin=dict(t=45, b=45, l=75, r=75),
             showlegend=False,
@@ -170,6 +177,7 @@ class ChartEngine:
     @staticmethod
     def render_trend(node, theme="dark", layout_config=None):
         layout_config = layout_config or {}
+        is_dark = theme == "dark"
         ts = TimeService()
 
         if not node:
@@ -186,58 +194,129 @@ class ChartEngine:
         if not categories or not series_list:
             return None
 
+        def _fmt_bar(v):
+            if v is None:
+                return ""
+            a = abs(v)
+            if a >= 1e6:
+                return f"{v/1e6:.1f}M"
+            if a >= 1e3:
+                return f"{v/1e3:.1f}m"
+            return f"{v:.2f}" if v != int(v) else str(int(v))
+
+        # Build customdata from tooltip_data (role="tooltip" columns)
+        tooltip_data_list = data_source.get("tooltip_data", [])
+        tooltip_keys = []
+        for td in tooltip_data_list:
+            if isinstance(td, dict) and td:
+                tooltip_keys = list(td.keys())
+                break
+        tooltip_cd = None
+        tooltip_ht = None
+        if tooltip_keys:
+            tooltip_cd = [
+                [tooltip_data_list[i].get(k) for k in tooltip_keys]
+                if i < len(tooltip_data_list) and tooltip_data_list[i]
+                else [None] * len(tooltip_keys)
+                for i in range(len(categories))
+            ]
+            def _td_fmt(key, idx):
+                # Percent series: "% Utilidad", "% Gasto", etc.
+                if "%" in key:
+                    return f"<br>&nbsp;{key}: %{{customdata[{idx}]:.1f}}%"
+                # Decimal series (rendimiento, ratios)
+                if any(w in key.lower() for w in ("rendimiento", "ratio", "eficiencia")):
+                    return f"<br>&nbsp;{key}: %{{customdata[{idx}]:.2f}}"
+                # Default: integer number with comma separator
+                return f"<br>&nbsp;{key}: %{{customdata[{idx}]:,.0f}}"
+            extra = "".join([_td_fmt(k, i) for i, k in enumerate(tooltip_keys)])
+            tooltip_ht = f"%{{y:,.0f}}{extra}<extra></extra>"
+
         fig = go.Figure()
 
         for idx, s in enumerate(series_list):
             s_name = s.get("name", "")
             s_data = s.get("data", [])
+            s_type = s.get("type", "bar")   # explicit type from series spec
+            s_lower = s_name.lower()
 
-            if "Meta" in s_name or "Objetivo" in s_name:
+            # Color detection — case-insensitive so "Año actual" and "Año Actual" both match
+            if "meta" in s_lower or "objetivo" in s_lower:
                 base_color = Colors.CHART_TARGET
-            elif curr_year in s_name or "Actual" in s_name:
+            elif curr_year in s_name or "actual" in s_lower:
                 base_color = Colors.CHART_CURRENT
-            elif prev_year in s_name or "Anterior" in s_name:
+            elif prev_year in s_name or "anterior" in s_lower:
                 base_color = Colors.CHART_PREVIOUS
             else:
                 base_color = ChartColors.CHART_COLORS[idx % len(ChartColors.CHART_COLORS)]
 
-            past_y = [safe_float(y) if i < curr_month else None for i, y in enumerate(s_data)]
-            future_y = [safe_float(y) if i >= curr_month - 1 else None for i, y in enumerate(s_data)]
+            # Decide render mode
+            is_line_series = "meta" in s_lower or "objetivo" in s_lower or s_type == "line"
+            is_prev_year   = "anterior" in s_lower or (prev_year in s_name and "actual" not in s_lower)
 
-            if "Meta" in s_name:
+            if is_line_series:
+                # Reference line — dotted (meta / objetivo / explicit type:line)
                 fig.add_trace(go.Scatter(
                     x=categories,
-                    y=s_data,
-                    name="Meta",
+                    y=[safe_float(v) for v in s_data],
+                    name=s_name,
                     mode="lines+markers",
                     line=dict(color=base_color, width=2, dash="dot"),
-                    marker=dict(size=6),
+                    marker=dict(size=5),
                 ))
-            else:
+            elif is_prev_year:
+                # Previous year — ALL months are actual data, render solid
+                clean_data = [safe_float(y) for y in s_data]
                 fig.add_trace(go.Bar(
                     x=categories,
-                    y=past_y,
-                    name=s_name.replace(curr_year, "Actual").replace(prev_year, "Anterior"),
+                    y=clean_data,
+                    name=s_name,
                     marker=dict(color=base_color, cornerradius=6),
                     width=0.38,
                     offsetgroup=str(idx),
+                    text=[_fmt_bar(v) for v in clean_data],
+                    textposition="auto",
+                    textfont=dict(size=9),
+                    cliponaxis=False,
+                    **({"customdata": tooltip_cd, "hovertemplate": tooltip_ht} if tooltip_cd else {}),
                 ))
+            else:
+                # Current year — solid for past months, transparent for projected future
+                past_y   = [safe_float(y) if i < curr_month else None for i, y in enumerate(s_data)]
+                future_y = [safe_float(y) if i >= curr_month - 1 else None for i, y in enumerate(s_data)]
+                display_name = s_name.replace(curr_year, "Actual").replace(prev_year, "Anterior")
 
                 fig.add_trace(go.Bar(
                     x=categories,
+                    y=past_y,
+                    name=display_name,
+                    marker=dict(color=base_color, cornerradius=6),
+                    width=0.38,
+                    offsetgroup=str(idx),
+                    text=[_fmt_bar(v) for v in past_y],
+                    textposition="auto",
+                    textfont=dict(size=9),
+                    cliponaxis=False,
+                    **({"customdata": tooltip_cd, "hovertemplate": tooltip_ht} if tooltip_cd else {}),
+                ))
+                fig.add_trace(go.Bar(
+                    x=categories,
                     y=future_y,
-                    name=f"{s_name} (proy.)",
+                    name=f"{display_name} (proy.)",
                     marker=dict(color=base_color, opacity=0.45, cornerradius=6),
                     width=0.38,
                     offsetgroup=str(idx),
                     showlegend=False,
+                    **({"customdata": tooltip_cd, "hovertemplate": tooltip_ht} if tooltip_cd else {}),
                 ))
 
         h_val = layout_config.get("height")
         plot_height = h_val if isinstance(h_val, (int, float)) else ComponentSizes.CHART_HEIGHT_BASE
 
         fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
+            template="zam_dark" if is_dark else "zam_light",
+            paper_bgcolor=_chart_bg(is_dark),
+            plot_bgcolor=_chart_bg(is_dark),
             height=plot_height,
             barmode="group",
             hovermode="x unified",
@@ -247,7 +326,14 @@ class ChartEngine:
 
     @staticmethod
     def render_gauge(raw_node, theme="dark", layout_config=None, hex_color=None):
+        def _fmt_num(v, prefix=""):
+            """Formatea sin decimales si el valor es entero, con 2 decimales si no lo es."""
+            if v is None:
+                return f"{prefix}---"
+            return f"{prefix}{int(v):,}" if v == int(v) else f"{prefix}{v:,.2f}"
+
         layout_config = layout_config or {}
+        is_dark = theme == "dark"
         ts = TimeService()
 
         if not raw_node or not isinstance(raw_node, dict):
@@ -260,70 +346,182 @@ class ChartEngine:
         vs_last_year = safe_float(raw_node.get("vs_last_year")) if raw_node.get("vs_last_year") else None
 
         percentage = (current / target * 100) if target and target > 0 else 0
-        # Color dinámico: si hay meta, basado en % alcanzado; si no, usar el color del widget
+
         if target and target > 0:
             gauge_color = GaugeConfig.get_gauge_color(percentage)
+            display_value = percentage
+            gauge_range = [0, 110]
+            threshold_val = 100
         else:
             gauge_color = hex_color or Colors.BAR_BLUE
-
-        max_val = safe_max(current, target or 0, vs_last_year or 0, 100)
+            display_value = current
+            max_val = safe_max(current, target or 0, vs_last_year or 0, 100)
+            gauge_range = [0, max_val * 1.1]
+            threshold_val = max_val
 
         fig = go.Figure()
+
         fig.add_trace(go.Indicator(
-            mode="gauge+number",
-            value=current,
-            number={"font": {"size": Typography.KPI_SMALL, "family": Typography.FAMILY}, "valueformat": ",.0f"},
+            mode="gauge",
+            value=display_value,
+            domain={"x": [0, 1], "y": [0.12, 0.82]},
+            number={"font": {"color": Colors.TRANSPARENT}},
             gauge={
-                "axis": {"range": [0, max_val * 1.1], "tickwidth": 1},
+                "axis": {"range": gauge_range, "tickwidth": 1},
                 "bar": {"color": gauge_color},
-                "bgcolor": Colors.TRANSPARENT,
+                "bgcolor": _chart_bg(is_dark),
                 "borderwidth": 0,
                 "threshold": {
-                    "line": {"color": Colors.CHART_TARGET, "width": 4},
+                    "line": {"color": Colors.CHART_TARGET, "width": 3},
                     "thickness": 0.8,
-                    "value": target if target else max_val,
+                    "value": threshold_val,
                 },
             },
         ))
 
-        if target:
-            fig.add_annotation(
+        annotations = []
+
+        if target and target > 0:
+            annotations.append(dict(
                 x=0.5,
-                y=0.18,
-                text=f"<b>META:</b> {target:,.0f}",
+                y=0.25,
+                text=f"<b>{percentage:.1f}%</b>",
                 showarrow=False,
-                font=dict(size=Typography.BADGE, color=Colors.CHART_TARGET, family=Typography.FAMILY),
                 xref="paper",
                 yref="paper",
-            )
+                font=dict(size=10, family=Typography.FAMILY),
+                bgcolor=Colors.TRANSPARENT,
+                bordercolor=Colors.TRANSPARENT,
+                borderwidth=0,
+            ))
+
+        annotations.append(dict(
+            x=0.5,
+            y=0,
+            text=_fmt_num(current),
+            showarrow=False,
+            xref="paper",
+            yref="paper",
+            font=dict(size=11, family=Typography.FAMILY),
+            bgcolor=Colors.TRANSPARENT,
+            bordercolor=Colors.TRANSPARENT,
+            borderwidth=0,
+        ))
 
         if vs_last_year:
-            fig.add_annotation(
+            annotations.append(dict(
                 x=0.5,
-                y=0.05,
-                text=f"Año {prev_year}: {vs_last_year:,.0f}",
+                y=0.08,
+                text=f"Año {prev_year}: {_fmt_num(vs_last_year, '$')}",
                 showarrow=False,
-                font=dict(size=Typography.XS, color=Colors.CHART_PREVIOUS, family=Typography.FAMILY),
                 xref="paper",
                 yref="paper",
-            )
+                font=dict(size=10, color=Colors.CHART_PREVIOUS, family=Typography.FAMILY),
+                bgcolor=Colors.TRANSPARENT,
+                bordercolor=Colors.TRANSPARENT,
+                borderwidth=0,
+            ))
 
         fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
+            template="zam_dark" if is_dark else "zam_light",
+            paper_bgcolor=_chart_bg(is_dark),
+            plot_bgcolor=_chart_bg(is_dark),
             height=layout_config.get("height", ComponentSizes.KPI_HEIGHT_NORMAL),
-            margin=dict(l=15, r=15, t=25, b=5),
+            margin=dict(l=10, r=10, t=65, b=40),
             hovermode=False,
-        )
+            annotations=annotations
+       )
+
         return fig
+
+    _MAX_LABEL = 10
+
+    @staticmethod
+    def _fmt_bar_label(v):
+        return f"${v/1e6:.1f}M" if v >= 1e6 else f"${v/1e3:.1f}m" if v >= 1000 else f"${v:.0f}"
+
+    @staticmethod
+    def _trunc(label):
+        s = str(label)
+        return s if len(s) <= ChartEngine._MAX_LABEL else s[:ChartEngine._MAX_LABEL - 1] + "…"
 
     @staticmethod
     def render_horizontal_bar(node, theme="dark", layout_config=None):
         layout_config = layout_config or {}
+        is_dark = theme == "dark"
 
         if not node:
             return None
 
         data_source = node.get("data", node)
+        levels = data_source.get("levels")
+
+        # ── Multi-level: Plotly buttons to switch between dimension levels ──
+        if levels and len(levels) > 1:
+            max_bars = max((len(lv.get("categories", [])) for lv in levels), default=5)
+            calculated_height = max(layout_config.get("height", 250), max_bars * 36 + 120)
+
+            first = levels[0]
+            first_cats = first.get("categories", [])
+            first_vals = [safe_float(v) for v in first.get("values", [])]
+            first_disp = [ChartEngine._trunc(c) for c in first_cats]
+
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                x=first_vals,
+                y=first_disp,
+                orientation="h",
+                marker=dict(color=Colors.CHART_GOLD, cornerradius=6),
+                width=0.60,
+                text=[ChartEngine._fmt_bar_label(v) for v in first_vals],
+                textposition="outside",
+                customdata=first_cats,
+                hovertemplate="<b>%{customdata}</b><br>$%{x:,.0f}<extra></extra>",
+            ))
+
+            buttons = []
+            for lv in levels:
+                cats = lv.get("categories", [])
+                vals = [safe_float(v) for v in lv.get("values", [])]
+                disp = [ChartEngine._trunc(c) for c in cats]
+                buttons.append({
+                    "label": f"Por {lv['name']}",
+                    "method": "update",
+                    "args": [{"x": [vals], "y": [disp], "text": [[ChartEngine._fmt_bar_label(v) for v in vals]], "customdata": [cats]}],
+                })
+
+            btn_bg = "rgba(30,30,50,0.85)" if is_dark else "rgba(235,235,245,0.9)"
+            btn_border = "rgba(80,80,120,0.5)" if is_dark else "rgba(180,180,200,0.7)"
+
+            fig.update_layout(
+                template="zam_dark" if is_dark else "zam_light",
+                paper_bgcolor=_chart_bg(is_dark),
+                plot_bgcolor=_chart_bg(is_dark),
+                height=calculated_height,
+                margin=dict(t=70, b=40, l=10, r=80),
+                showlegend=False,
+                xaxis=dict(showgrid=True, zeroline=False, tickformat="$,.0f", side="top"),
+                yaxis=dict(type="category", autorange="reversed", automargin=True),
+                bargap=0.8,
+                updatemenus=[{
+                    "type": "buttons",
+                    "direction": "right",
+                    "active": 0,
+                    "buttons": buttons,
+                    "pad": {"r": 0, "t": 4},
+                    "showactive": True,
+                    "x": 0.0,
+                    "xanchor": "left",
+                    "y": 1.06,
+                    "yanchor": "bottom",
+                    "bgcolor": btn_bg,
+                    "bordercolor": btn_border,
+                    "font": {"size": 11, "family": Typography.FAMILY},
+                }],
+            )
+            return fig
+
+        # ── Single-level (original behaviour) ───────────────────────────
         categories = [str(c) for c in (data_source.get("categories") or data_source.get("labels") or [])]
         values = [safe_float(v) for v in data_source.get("values", [])]
         target_val = safe_float(data_source.get("target") or data_source.get("goal"))
@@ -332,38 +530,37 @@ class ChartEngine:
             return None
 
         num_bars = len(categories)
-        calculated_height = max(layout_config.get("height", 600), num_bars * 50 + 100)
-        avg_value = sum(values) / len(values) if values else 0
+        calculated_height = max(layout_config.get("height", 250), num_bars * 36 + 80)
+        disp_cats = [ChartEngine._trunc(c) for c in categories]
 
         fig = go.Figure()
         fig.add_trace(go.Bar(
             x=values,
-            y=categories,
+            y=disp_cats,
             orientation="h",
             marker=dict(color=Colors.CHART_GOLD, cornerradius=6),
-            width=0.80,
-            text=[
-                f"${v/1e6:.1f}M" if v >= 1e6 else f"${v/1e3:.1f}k" if v >= 1000 else f"${v:.0f}"
-                for v in values
-            ],
+            width=0.60,
+            text=[ChartEngine._fmt_bar_label(v) for v in values],
             textposition="outside",
-            hovertemplate="<b>%{y}</b><br>Valor: $%{x:,.2f}<extra></extra>",
+            customdata=categories,
+            hovertemplate="<b>%{customdata}</b><br>$%{x:,.0f}<extra></extra>",
         ))
 
-        if target_val > 0 or avg_value > 0:
-            ref_val = target_val if target_val > 0 else avg_value
+        if target_val > 0:
             fig.add_vline(
-                x=ref_val,
+                x=target_val,
                 line_width=2,
                 line_dash="dot",
                 line_color=Colors.CHART_TARGET,
-                annotation_text=f"META: ${ref_val:,.0f}",
+                annotation_text=f"META: ${target_val:,.0f}",
                 annotation_position="top",
                 annotation_font=dict(size=Typography.XS, color=Colors.CHART_TARGET, family=Typography.FAMILY),
             )
 
         fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
+            template="zam_dark" if is_dark else "zam_light",
+            paper_bgcolor=_chart_bg(is_dark),
+            plot_bgcolor=_chart_bg(is_dark),
             height=calculated_height,
             margin=dict(t=50, b=40, l=10, r=80),
             showlegend=False,
@@ -376,7 +573,8 @@ class ChartEngine:
     @staticmethod
     def render_line_chart(node, theme="dark", layout_config=None, current_month_only=False):
         layout_config = layout_config or {}
-    
+        is_dark = theme == "dark"
+
         if not node:
             return None
     
@@ -421,14 +619,17 @@ class ChartEngine:
                     x=categories,
                     y=s_data,
                     name=s_name,
-                    marker_color=s_color
+                    marker_color=s_color,
+                    width=0.65,
                 ))
-    
+
         height_val = layout_config.get("height", ComponentSizes.CHART_HEIGHT_MD)
         plotly_height = height_val if isinstance(height_val, int) else None
     
         fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
+            template="zam_dark" if is_dark else "zam_light",
+            paper_bgcolor=_chart_bg(is_dark),
+            plot_bgcolor=_chart_bg(is_dark),
             margin=dict(t=30, b=40, l=50, r=30),
             height=plotly_height,
             autosize=True,
@@ -446,12 +647,13 @@ class ChartEngine:
             xaxis=dict(tickangle=-45, tickfont=dict(size=10)),
             yaxis=dict(tickfont=dict(size=10)),
         )
-    
+
         return fig
     
     @staticmethod
     def render_stacked_bar(node, theme="dark", layout_config=None):
         layout_config = layout_config or {}
+        is_dark = theme == "dark"
 
         if not node:
             return None
@@ -475,13 +677,16 @@ class ChartEngine:
                 y=s_data,
                 name=s_name,
                 marker=dict(color=base_color, cornerradius=6),
+                width=0.65,
             ))
 
         h_val = layout_config.get("height")
         plot_height = h_val if isinstance(h_val, (int, float)) else ComponentSizes.CHART_HEIGHT_BASE
 
         fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
+            template="zam_dark" if is_dark else "zam_light",
+            paper_bgcolor=_chart_bg(is_dark),
+            plot_bgcolor=_chart_bg(is_dark),
             height=plot_height,
             barmode="stack",
             hovermode="x unified",
@@ -492,6 +697,7 @@ class ChartEngine:
     @staticmethod
     def render_cash_flow(node, theme="dark", layout_config=None):
         layout_config = layout_config or {}
+        is_dark = theme == "dark"
 
         if not node:
             return None
@@ -505,14 +711,16 @@ class ChartEngine:
             return None
 
         fig = go.Figure()
-        fig.add_trace(go.Bar(x=categories, y=ingresos, name="Ingresos", marker=dict(color=Colors.POSITIVE, cornerradius=6)))
-        fig.add_trace(go.Bar(x=categories, y=[-e for e in egresos], name="Egresos", marker=dict(color=Colors.NEGATIVE, cornerradius=6)))
+        fig.add_trace(go.Bar(x=categories, y=ingresos, name="Ingresos", marker=dict(color=Colors.POSITIVE, cornerradius=6), width=0.65))
+        fig.add_trace(go.Bar(x=categories, y=[-e for e in egresos], name="Egresos", marker=dict(color=Colors.NEGATIVE, cornerradius=6), width=0.65))
 
         h_val = layout_config.get("height")
         plot_height = h_val if isinstance(h_val, (int, float)) else ComponentSizes.CHART_HEIGHT_BASE
 
         fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
+            template="zam_dark" if is_dark else "zam_light",
+            paper_bgcolor=_chart_bg(is_dark),
+            plot_bgcolor=_chart_bg(is_dark),
             height=plot_height,
             barmode="relative",
             hovermode="x unified",
@@ -523,12 +731,13 @@ class ChartEngine:
     @staticmethod
     def render_multi_line(node, theme="dark", layout_config=None, forecast_mode=False):
         layout_config = layout_config or {}
+        is_dark = theme == "dark"
 
         if not node:
             return None
 
         data_source = node.get("data", node)
-        categories = data_source.get("categories", [])
+        categories = data_source.get("categories") or data_source.get("months") or []
         series_list = data_source.get("series", [])
 
         if not categories or not series_list:
@@ -555,7 +764,9 @@ class ChartEngine:
         plot_height = h_val if isinstance(h_val, (int, float)) else ComponentSizes.CHART_HEIGHT_BASE
 
         fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
+            template="zam_dark" if is_dark else "zam_light",
+            paper_bgcolor=_chart_bg(is_dark),
+            plot_bgcolor=_chart_bg(is_dark),
             height=plot_height,
             hovermode="x unified",
             legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="center", x=0.5),
@@ -565,12 +776,13 @@ class ChartEngine:
     @staticmethod
     def render_bar_chart(node, theme="dark", layout_config=None):
         layout_config = layout_config or {}
+        is_dark = theme == "dark"
 
         if not node:
             return None
 
         data_source = node.get("data", node)
-        categories = data_source.get("categories", [])
+        categories = [str(c) for c in data_source.get("categories", [])]
         series_list = data_source.get("series", [])
 
         if not categories:
@@ -585,22 +797,28 @@ class ChartEngine:
             fig.add_trace(go.Bar(x=categories, y=s_data, name=s_name, marker_color=s_color))
 
         fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
+            template="zam_dark" if is_dark else "zam_light",
+            paper_bgcolor=_chart_bg(is_dark),
+            plot_bgcolor=_chart_bg(is_dark),
             height=layout_config.get("height", ComponentSizes.CHART_HEIGHT_MD),
             margin=dict(t=30, b=40, l=40, r=20),
             showlegend=len(series_list) > 1,
+            xaxis=dict(type="category"),
         )
         return fig
 
     @staticmethod
     def render_combo_chart(node, theme="dark", layout_config=None):
         layout_config = layout_config or {}
+        is_dark = theme == "dark"
 
         if not node:
             return None
 
         data_source = node.get("data", node)
-        categories = data_source.get("categories", [])
+        # Convert all category labels to str so Plotly always uses a categorical
+        # axis regardless of whether the DB returns integer or string IDs.
+        categories = [str(c) for c in data_source.get("categories", [])]
         series_list = data_source.get("series", [])
 
         if not categories or not series_list:
@@ -625,14 +843,17 @@ class ChartEngine:
                     yaxis="y2",
                 ))
             else:
-                fig.add_trace(go.Bar(x=categories, y=s_data, name=s_name, marker_color=s_color))
+                fig.add_trace(go.Bar(x=categories, y=s_data, name=s_name, marker_color=s_color, width=0.65))
 
         fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
+            template="zam_dark" if is_dark else "zam_light",
+            paper_bgcolor=_chart_bg(is_dark),
+            plot_bgcolor=_chart_bg(is_dark),
             height=layout_config.get("height", ComponentSizes.CHART_HEIGHT_MD),
             margin=dict(t=30, b=40, l=40, r=40),
             legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center"),
             hovermode="x unified",
+            xaxis=dict(type="category"),
             yaxis=dict(title=""),
             yaxis2=dict(title="", overlaying="y", side="right"),
         )
@@ -721,10 +942,10 @@ class ChartEngine:
         )])
 
         fig.update_layout(
-            template="plotly_dark" if theme == "dark" else "plotly",
+            template="zam_dark" if is_dark else "zam_light",
             margin=dict(t=10, b=10, l=10, r=10),
             height=None,
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor=_chart_bg(is_dark),
+            plot_bgcolor=_chart_bg(is_dark),
         )
         return fig
